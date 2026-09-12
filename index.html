@@ -226,8 +226,8 @@ button.tile.off:active{transform:none;}
 .choice.correct{border-color:var(--jade); background:var(--jade-soft); color:var(--jade-deep);}
 .choice.wrong{border-color:var(--verm); background:color-mix(in srgb, var(--verm) 12%, var(--card)); color:var(--verm);}
 .tile-choices{display:flex; gap:10px; flex-wrap:wrap; justify-content:center;}
-/* 9択ピッカー: 3x3の巨大表示をやめ、画面幅に応じた1行9列(34ピッカーの行と同サイズ感)に */
-.numpick{display:grid; grid-template-columns:repeat(9,1fr); gap:clamp(3px,1vw,6px); max-width:min(440px, 97vw); margin:8px auto 0;}
+/* 9択ピッカー: 3x3配置のまま、牌をひと回り小さく(幅追従・タップ領域は確保) */
+.numpick{display:grid; grid-template-columns:repeat(3,1fr); gap:clamp(6px,1.8vw,9px); max-width:min(224px, 60vw); margin:8px auto 0;}
 .numpick .tile{width:100%; max-width:none;}
 .numpick34{display:grid; grid-template-columns:repeat(9,1fr); gap:clamp(3px,1vw,6px); max-width:min(440px, 97vw); margin:8px auto 0;}
 .numpick34 .tile{width:100%; max-width:none; padding:0;}
