@@ -56,7 +56,7 @@ body{
   font-family:'M PLUS Rounded 1c','Noto Sans JP',system-ui,sans-serif;
   min-height:100vh;
 }
-button{font-family:inherit; cursor:pointer;}
+button{font-family:inherit; cursor:pointer; touch-action:manipulation;} /* タップ遅延(ダブルタップズーム待ち)排除 */
 .app{max-width:var(--content-max); margin:0 auto; min-height:100vh; display:flex; flex-direction:column; position:relative;}
 
 /* ---------- header ---------- */
@@ -106,6 +106,7 @@ button{font-family:inherit; cursor:pointer;}
 .btn.red{background:var(--verm); box-shadow:0 4px 0 var(--verm-deep);}
 .btn.gold{background:var(--gold); box-shadow:0 4px 0 var(--gold-deep);}
 .btn:disabled{background:var(--locked); box-shadow:0 4px 0 var(--line); color:var(--card);}
+.btn.pressing{transform:translateY(3px); box-shadow:0 1px 0 var(--jade-deep); background:var(--jade-deep); color:#fff; opacity:.95;}
 
 /* ---------- lesson ---------- */
 .lesson{position:fixed; inset:0; z-index:40; background:var(--paper); display:none; flex-direction:column;}
@@ -148,6 +149,11 @@ button.tile.wrong::after{content:'✕'; position:absolute; top:1px; right:1px; w
   display:flex; align-items:center; justify-content:center; z-index:2; line-height:1;}
 button.tile.miss{outline:3px dashed var(--gold-deep); outline-offset:1px;
   background:color-mix(in srgb, var(--gold) 15%, var(--tile-face));}
+/* 選択不可(4枚使用済み): 薄グレー地+減彩。タップしても反応しない */
+button.tile.off{opacity:.5; filter:grayscale(.65);
+  background:color-mix(in srgb, var(--ink-soft) 14%, var(--tile-face));
+  box-shadow:none; cursor:default; transform:none;}
+button.tile.off:active{transform:none;}
 .tile-choices .tile{width:clamp(54px, 15vw, 66px);}
 
 /* ---------- situation card ---------- */
@@ -791,6 +797,13 @@ function handHTML(str){
    contextにあるデータをrevealが「隠す」構造（存在と表示の分離）。
    T0-T3は難易度でなく表示情報量のプリセット。L/COURSES等の状態には依存しない。 */
 const TV_SEAT={E:'東',S:'南',W:'西',N:'北'};
+// ドラ表示牌→実ドラ変換（麻雀の標準規則: 数牌は次の数字・9→1、風牌は東南西北の循環、三元牌は白發中の循環）
+function doraFromIndicator(cd){
+  if(cd.length===2){ const n=+cd[0]; return (n===9?1:n+1)+cd[1]; }
+  const winds='ESWN', dragons='BGR';
+  if(winds.includes(cd)) return winds[(winds.indexOf(cd)+1)%4];
+  return dragons[(dragons.indexOf(cd)+1)%3];
+}
 const TV_REVEAL={
   T0:{},
   T1:{myRiver:1,riichiRivers:1,honbaKyotaku:1},
@@ -822,10 +835,12 @@ function tableHTML(context,reveal){
   const me=context.seat||null;
   const seats=['E','S','W','N'];
   const ranks=(rv.scores&&context.scores)?tvRanks(context.scores):null;
-  // ドラ: doraIndicators=表示牌（「ドラ表示」）、dora=ドラ直接指定（旧situ互換・「ドラ」）。意味を混同しない。
+  // ドラ: doraIndicators=表示牌、dora=ドラ直接指定（旧situ互換）。意味を混同しない。
+  // 実機レビュー第2回: 戦略判断問題では「表示牌からドラを特定する」ことは学習目的でないため、
+  // 表示レイヤーで実ドラへ変換して「ドラ：○○」を見せる（データ構造doraIndicatorsは不変更）。
   let doraHtml;
   if(context.dora) doraHtml='ドラ '+(Array.isArray(context.dora)?context.dora:[context.dora]).map(d=>tileHTML(d)).join('');
-  else doraHtml='ドラ表示 '+(context.doraIndicators||[]).map(d=>tileHTML(d)).join('');
+  else doraHtml='ドラ '+(context.doraIndicators||[]).map(d=>tileHTML(doraFromIndicator(d))).join('');
   let h='<div class="tv">';
   h+='<div class="tv-info"><span>'+(context.round||'')+'</span>'
     +(context.turn?'<span class="sub">'+context.turn+'巡目</span>':'')
@@ -1792,7 +1807,10 @@ const QFORMATS={
       for(let n=0;n<9;n++) for(let k=0;k<q.counts[n];k++) html+=tileHTML((n+1)+q.suit);
       html+='</div>';
       html+='<div class="numpick" onpointerdown="pickDrag(event,\'np\')">';
-      for(let n=1;n<=9;n++) html+='<button class="tile" id="np-'+n+'">'+tileFace(n+q.suit)+'</button>';
+      for(let n=1;n<=9;n++){
+        const off=q.counts[n-1]>=4;  // 公開情報(手牌)で4枚使用済み → 選択不可
+        html+='<button class="tile'+(off?' off':'')+'" id="np-'+n+'"'+(off?' disabled':'')+'>'+tileFace(n+q.suit)+'</button>';
+      }
       html+='</div>';
       L.sel=new Set();
       return html;
@@ -1826,7 +1844,7 @@ const QFORMATS={
       html+='<div class="q-text">どれを切る？</div>';
       if(q.ctx) html+='<div class="q-ctx">'+q.ctx+'</div>';
       html+='<div class="hand">'+sortTiles(parseHand(q.hand)).map((t,i)=>
-        '<button class="tile '+(t.length===2?t[1]:'z')+'" id="ht-'+i+'" data-t="'+t+'" onclick="selTile('+i+')">'
+        '<button class="tile '+(t.length===2?t[1]:'z')+'" id="ht-'+i+'" data-t="'+t+'" onpointerdown="selTile('+i+')">'
         +tileFace(t)+'</button>').join('')+'</div>';
       html+='<p style="text-align:center;color:var(--ink-soft);font-size:12px;font-weight:700;">牌をタップして選択</p>';
       return html;
@@ -1858,7 +1876,7 @@ const QFORMATS={
       else if(q.hand) html+=handHTML(q.hand);
       html+='<div class="tile-choices">'+q.tchoices.map((tc,i)=>
         '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;">'
-        +'<button class="tile" id="ch-'+i+'" onclick="selChoice('+i+')">'+tileFace(tc.t)+'</button>'
+        +'<button class="tile" id="ch-'+i+'" onpointerdown="selChoice('+i+')">'+tileFace(tc.t)+'</button>'
         +(tc.lab?'<span style="font-size:11px;font-weight:800;color:var(--ink-soft)">'+tc.lab+'</span>':'')
         +'</div>').join('')+'</div>';
       return html;
@@ -1884,15 +1902,18 @@ const QFORMATS={
         html+='<div style="font-size:12px;font-weight:800;color:var(--ink-soft);margin:10px 4px 4px;">① この1シャンテンの形は？</div>';
         html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">'
           +[1,2,3,4].map(i=>'<button class="choice" style="padding:10px 8px;font-size:13px;" id="pat-'+i
-            +'" onclick="selPat('+i+')">'+U1_PATTERNS[i].name+'</button>').join('')+'</div>';
+            +'" onpointerdown="selPat('+i+')">'+U1_PATTERNS[i].name+'</button>').join('')+'</div>';
         html+='<div style="font-size:12px;font-weight:800;color:var(--ink-soft);margin:12px 4px 4px;">② 受け入れ牌をすべて選択</div>';
         const codes=[];
         for(let n=1;n<=9;n++)codes.push(n+'m');
         for(let n=1;n<=9;n++)codes.push(n+'p');
         for(let n=1;n<=9;n++)codes.push(n+'s');
         for(const z of 'ESWNBGR')codes.push(z);
-        html+='<div class="numpick34" onpointerdown="pickDrag(event,\'np34\')">'+codes.map(cd=>
-          '<button class="tile" id="np34-'+cd+'">'+tileFace(cd)+'</button>').join('')+'</div>';
+        const IDX=cd=>cd.length===1?27+'ESWNBGR'.indexOf(cd):({m:0,p:9,s:18}[cd[1]])+(+cd[0]-1);
+        html+='<div class="numpick34" onpointerdown="pickDrag(event,\'np34\')">'+codes.map(cd=>{
+          const off=q.counts34[IDX(cd)]>=4;  // 公開情報(手牌)で4枚使用済み → 選択不可
+          return '<button class="tile'+(off?' off':'')+'" id="np34-'+cd+'"'+(off?' disabled':'')+'>'+tileFace(cd)+'</button>';
+        }).join('')+'</div>';
         html+='<p style="text-align:center;color:var(--ink-soft);font-size:11px;font-weight:700;margin:6px 0 0;">なぞって連続選択もできるよ</p>';
         L.sel=new Set();
         L.patSel=null;
@@ -1904,7 +1925,10 @@ const QFORMATS={
       for(let n=0;n<9;n++) for(let k=0;k<q.counts[n];k++) html+=tileHTML((n+1)+q.suit);
       html+='</div>';
       html+='<div class="numpick" onpointerdown="pickDrag(event,\'np\')">';
-      for(let n=1;n<=9;n++) html+='<button class="tile" id="np-'+n+'">'+tileFace(n+q.suit)+'</button>';
+      for(let n=1;n<=9;n++){
+        const off=q.counts[n-1]>=4;  // 公開情報(手牌)で4枚使用済み → 選択不可
+        html+='<button class="tile'+(off?' off':'')+'" id="np-'+n+'"'+(off?' disabled':'')+'>'+tileFace(n+q.suit)+'</button>';
+      }
       html+='</div>';
       L.sel=new Set();
       return html;
@@ -1958,7 +1982,7 @@ const QFORMATS={
       html+='<div class="q-text">'+q.q+'</div>';
       html+=tableHTML(q.context, q.context.reveal||'T0');
       html+='<div class="choices">'+q.choices.map((ch,i)=>
-        '<button class="choice" id="ch-'+i+'" onclick="selChoice('+i+')">'+ch+'</button>').join('')+'</div>';
+        '<button class="choice" id="ch-'+i+'" onpointerdown="selChoice('+i+')">'+ch+'</button>').join('')+'</div>';
       return html;
     },
     answer(q){ return {kind:'choiceIndex', index:L.sel}; },
@@ -1983,7 +2007,7 @@ const QFORMATS={
       else if(q.context) html+=tableHTML(q.context, q.context.reveal||'T0');  // v3ネイティブcontext問題（Compare variant等）
       else if(q.hand) html+=handHTML(q.hand);
       html+='<div class="choices">'+q.choices.map((ch,i)=>
-        '<button class="choice" id="ch-'+i+'" onclick="selChoice('+i+')">'+ch+'</button>').join('')+'</div>';
+        '<button class="choice" id="ch-'+i+'" onpointerdown="selChoice('+i+')">'+ch+'</button>').join('')+'</div>';
       return html;
     },
     answer(q){ return {kind:'choiceIndex', index:L.sel}; },
@@ -2063,12 +2087,16 @@ function selTile(i){
 }
 function toggleNum(n){
   if(L.checked) return;
+  const eln=document.getElementById('np-'+n);
+  if(eln&&eln.disabled) return;  // 4枚使用済み牌は選択不可
   if(L.sel.has(n)) L.sel.delete(n); else L.sel.add(n);
   document.getElementById('np-'+n).classList.toggle('sel',L.sel.has(n));
   renderFoot();
 }
 function toggle34(cd){
   if(L.checked) return;
+  const elc=document.getElementById('np34-'+cd);
+  if(elc&&elc.disabled) return;  // 4枚使用済み牌は選択不可
   if(L.sel.has(cd)) L.sel.delete(cd); else L.sel.add(cd);
   document.getElementById('np34-'+cd).classList.toggle('sel',L.sel.has(cd));
   renderFoot();
@@ -2077,7 +2105,7 @@ function toggle34(cd){
 // 最初に触れた牌の状態で「選択モード/解除モード」を決め、ドラッグ中は同じ操作を適用する。
 function pickDrag(ev,kind){
   if(!L||L.checked) return;
-  const inPicker=b=>b&&b.id&&b.id.indexOf(kind+'-')===0;
+  const inPicker=b=>b&&b.id&&b.id.indexOf(kind+'-')===0&&!b.disabled;
   const start=ev.target.closest?ev.target.closest('button.tile'):null;
   if(!inPicker(start)) return;
   ev.preventDefault();
@@ -2120,7 +2148,16 @@ function renderFoot(){
   const qNow=L.qs[L.idx];
   const patReady=!(qNow&&qNow.full)||L.patSel!=null;
   const ready=L.sel!==null&&(!(L.sel instanceof Set)||L.sel.size>0)&&patReady;
-  foot.innerHTML='<button class="btn" '+(ready?'':'disabled')+' onclick="check()">こたえあわせ</button>';
+  foot.innerHTML='<button class="btn" id="answer-btn" '+(ready?'':'disabled')+' onclick="answerNow(this)">こたえあわせ</button>';
+}
+// こたえあわせ: 押した瞬間に押下状態+disabledで反応を見せ、描画後に判定する(二重タップ防止)。
+// 判定はローカルで即時完了するため人工的な待ち時間は入れない。
+function answerNow(btn){
+  if(!L||L.checked) return;
+  btn.disabled=true;
+  btn.classList.add('pressing');
+  btn.textContent='判定中…';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{ if(L&&!L.checked) check(); }));
 }
 
 /* ================= Compareフロー（P4-A） =================
@@ -2262,6 +2299,7 @@ function renderFeedback(q,cat,res,ratingRes,fb){
 
 /* ================= 判定（薄いオーケストレーション） ================= */
 function check(){
+  if(L.checked) return;  // 二重実行防止(連打対策)
   const q=L.qs[L.idx];
   const elapsed=Date.now()-(L.qStart||Date.now());
   const fmt=QFORMATS[qFormatKey(q)];
