@@ -1,3 +1,7 @@
+<!doctype html>
+<html lang="ja">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>雀トレ</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&family=Noto+Sans+JP:wght@400;500;700&display=swap">
 <style>
@@ -23,6 +27,11 @@
   --verm:#d8433b; --verm-deep:#a92e28; --gold:#e8a93c; --gold-deep:#b97f1e;
   --blue:#2c76b8; --sgreen:#2e7d32; --mred:#b3282d;
   --locked:#c3ccc6; --overlay:rgba(16,27,22,.55);
+  /* 実機レビュー第1回: 画面幅追従トークン(clamp/vwで連続追従・固定px脱却) */
+  --content-max:480px;
+  --node-size:clamp(74px, 21vw, 96px);
+  --node-off:clamp(46px, 15vw, 66px);
+  --tile-w:clamp(38px, 10.5vw, 48px);
 }
 :root:not([data-theme="light"]){}
 @media (prefers-color-scheme: dark){
@@ -48,49 +57,49 @@ body{
   min-height:100vh;
 }
 button{font-family:inherit; cursor:pointer;}
-.app{max-width:430px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; position:relative;}
+.app{max-width:var(--content-max); margin:0 auto; min-height:100vh; display:flex; flex-direction:column; position:relative;}
 
 /* ---------- header ---------- */
 .hud{position:sticky; top:0; z-index:20; background:var(--paper); display:flex; align-items:center;
   justify-content:space-between; padding:12px 16px 8px; border-bottom:2px solid var(--line);}
-.hud .stat{display:flex; align-items:center; gap:5px; font-weight:800; font-size:16px;}
+.hud .stat{display:flex; align-items:center; gap:5px; font-weight:800; font-size:clamp(15px, 4.3vw, 19px);}
 .hud .stat small{font-size:11px; color:var(--ink-soft); font-weight:700;}
-.logo{font-weight:800; font-size:18px; letter-spacing:.06em; color:var(--jade); display:flex; align-items:center; gap:6px;}
+.logo{font-weight:800; font-size:clamp(17px, 4.8vw, 21px); letter-spacing:.06em; color:var(--jade); display:flex; align-items:center; gap:6px;}
 
 /* ---------- path ---------- */
 .path-wrap{flex:1; padding:8px 0 96px; overflow-y:auto;}
 .section-band{margin:18px 16px 6px; background:var(--jade); color:#fff; border-radius:14px;
   padding:12px 16px; box-shadow:0 4px 0 var(--jade-deep);}
-.section-band h2{margin:0; font-size:15px; letter-spacing:.08em;}
-.section-band p{margin:2px 0 0; font-size:12px; opacity:.92;}
+.section-band h2{margin:0; font-size:clamp(15px, 4.1vw, 18px); letter-spacing:.08em;}
+.section-band p{margin:2px 0 0; font-size:clamp(11.5px, 3.2vw, 13.5px); opacity:.92;}
 .path{display:flex; flex-direction:column; align-items:center; gap:22px; padding:22px 0 6px; position:relative;}
-.node{width:78px; height:78px; border-radius:50%; border:none; position:relative;
+.node{width:var(--node-size); height:var(--node-size); border-radius:50%; border:none; position:relative;
   background:var(--card); box-shadow:0 6px 0 var(--line); display:flex; flex-direction:column;
   align-items:center; justify-content:center; transition:transform .08s;}
 .node:active{transform:translateY(4px); box-shadow:0 2px 0 var(--line);}
-.node .ico{font-size:28px; line-height:1;}
+.node .ico{font-size:clamp(27px, 7.6vw, 35px); line-height:1;}
 .node.done{background:var(--gold); box-shadow:0 6px 0 var(--gold-deep);}
 .node.done .ico{filter:none;}
 .node.next{background:var(--jade); box-shadow:0 6px 0 var(--jade-deep);}
-.node.next .ico{font-size:30px;}
+.node.next .ico{font-size:clamp(29px, 8vw, 37px);}
 .node .crowns{position:absolute; bottom:-8px; background:var(--card); border:2px solid var(--line);
   border-radius:999px; font-size:10px; font-weight:800; padding:1px 7px; color:var(--gold-deep);}
-.node.l{transform:translateX(-58px);} .node.r{transform:translateX(58px);}
-.node.l:active{transform:translateX(-58px) translateY(4px);} .node.r:active{transform:translateX(58px) translateY(4px);}
-.node-label{font-size:11px; font-weight:800; color:var(--ink-soft); margin-top:-14px;}
-.node-label.l{transform:translateX(-58px);} .node-label.r{transform:translateX(58px);}
+.node.l{transform:translateX(calc(-1*var(--node-off)));} .node.r{transform:translateX(var(--node-off));}
+.node.l:active{transform:translateX(calc(-1*var(--node-off))) translateY(4px);} .node.r:active{transform:translateX(var(--node-off)) translateY(4px);}
+.node-label{font-size:clamp(11px, 3.3vw, 14px); font-weight:800; color:var(--ink-soft); margin-top:-14px;}
+.node-label.l{transform:translateX(calc(-1*var(--node-off)));} .node-label.r{transform:translateX(var(--node-off));}
 
 /* ---------- bottom nav ---------- */
-.nav{position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:430px;
+.nav{position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:var(--content-max);
   background:var(--card); border-top:2px solid var(--line); display:flex; z-index:30;}
-.nav button{flex:1; background:none; border:none; padding:10px 0 12px; display:flex; flex-direction:column;
-  align-items:center; gap:2px; font-size:11px; font-weight:800; color:var(--ink-soft);}
+.nav button{flex:1; background:none; border:none; padding:clamp(10px,2.8vw,13px) 0 calc(clamp(12px,3vw,14px) + env(safe-area-inset-bottom)); display:flex; flex-direction:column;
+  align-items:center; gap:2px; font-size:clamp(10.5px, 3vw, 12.5px); font-weight:800; color:var(--ink-soft);}
 .nav button.on{color:var(--jade);}
-.nav button span.i{font-size:22px; line-height:1;}
+.nav button span.i{font-size:clamp(22px, 6.2vw, 27px); line-height:1;}
 
 /* ---------- generic card / buttons ---------- */
 .card{background:var(--card); border:2px solid var(--line); border-radius:18px; padding:16px; margin:12px 16px;}
-.btn{display:block; width:100%; border:none; border-radius:14px; padding:14px; font-size:16px; font-weight:800;
+.btn{display:block; width:100%; border:none; border-radius:14px; padding:clamp(13px,3.8vw,16px); font-size:clamp(15.5px, 4.3vw, 17.5px); font-weight:800;
   background:var(--jade); color:#fff; box-shadow:0 4px 0 var(--jade-deep); transition:transform .08s;}
 .btn:active{transform:translateY(3px); box-shadow:0 1px 0 var(--jade-deep);}
 .btn.gray{background:var(--card); color:var(--ink-soft); box-shadow:0 4px 0 var(--line); border:2px solid var(--line);}
@@ -101,16 +110,16 @@ button{font-family:inherit; cursor:pointer;}
 /* ---------- lesson ---------- */
 .lesson{position:fixed; inset:0; z-index:40; background:var(--paper); display:none; flex-direction:column;}
 .lesson.show{display:flex;}
-.lesson-inner{max-width:430px; margin:0 auto; width:100%; height:100%; display:flex; flex-direction:column; position:relative;}
+.lesson-inner{max-width:var(--content-max); margin:0 auto; width:100%; height:100%; display:flex; flex-direction:column; position:relative;}
 .lesson-top{display:flex; align-items:center; gap:10px; padding:14px 16px;}
 .lesson-top .x{background:none; border:none; font-size:22px; color:var(--ink-soft); font-weight:800; padding:2px 6px;}
 .pbar{flex:1; height:14px; background:var(--line); border-radius:999px; overflow:hidden;}
 .pbar>div{height:100%; background:var(--jade); border-radius:999px; width:0%; transition:width .3s;}
 .hearts{font-weight:800; color:var(--verm); font-size:15px; white-space:nowrap;}
-.q-area{flex:1; overflow-y:auto; padding:6px 16px 230px;}
-.q-type{font-size:12px; font-weight:800; color:var(--jade); letter-spacing:.1em; margin:6px 0 2px;}
-.q-text{font-size:18px; font-weight:800; margin:4px 0 12px; line-height:1.5; text-wrap:balance;}
-.q-ctx{font-size:13px; color:var(--ink-soft); font-weight:700; background:var(--jade-soft);
+.q-area{flex:1; overflow-y:auto; padding:6px clamp(8px, 4vw, 16px) calc(120px + env(safe-area-inset-bottom));}
+.q-type{font-size:clamp(11.5px, 3.2vw, 13.5px); font-weight:800; color:var(--jade); letter-spacing:.1em; margin:6px 0 2px;}
+.q-text{font-size:clamp(17px, 4.8vw, 21px); font-weight:800; margin:4px 0 12px; line-height:1.5; text-wrap:balance;}
+.q-ctx{font-size:clamp(12.5px, 3.5vw, 14.5px); color:var(--ink-soft); font-weight:700; background:var(--jade-soft);
   border-radius:10px; padding:8px 12px; margin-bottom:12px;}
 
 /* ---------- tiles ---------- */
@@ -118,15 +127,28 @@ button{font-family:inherit; cursor:pointer;}
 .tile{background:var(--tile-face); border:1px solid var(--tile-edge);
   border-radius:5px; box-shadow:0 3px 0 var(--tile-shadow), inset 0 1px 0 #fff;
   user-select:none; position:relative; padding:0; overflow:hidden;
-  width:40px; aspect-ratio:5/7; height:auto;}
+  width:var(--tile-w); aspect-ratio:5/7; height:auto;}
 .tile svg{width:100%; height:100%; display:block;}
-.hand .tile{flex:1 1 0; min-width:0; max-width:40px;}
+.hand .tile{flex:1 1 0; min-width:0; max-width:var(--tile-w);}
 button.tile{transition:transform .08s;}
-button.tile.sel{transform:translateY(-6px); outline:3px solid var(--jade); outline-offset:1px;}
-button.tile.correct{outline:3px solid var(--jade); outline-offset:1px;}
-button.tile.wrong{outline:3px solid var(--verm); outline-offset:1px;}
-button.tile.miss{outline:3px dashed var(--gold-deep); outline-offset:1px;}
-.tile-choices .tile{width:58px;}
+/* 選択中: 太枠+緑地+浮き+影+✓バッジ(色だけに依存しない複合表現)。開示時のcorrect/miss/wrongとは別表現 */
+button.tile.sel{transform:translateY(-6px); outline:4px solid var(--jade); outline-offset:1px;
+  background:color-mix(in srgb, var(--jade) 20%, var(--tile-face));
+  box-shadow:0 8px 14px rgba(14,122,76,.35), 0 3px 0 var(--tile-shadow), inset 0 1px 0 #fff;}
+button.tile.sel::after{content:'✓'; position:absolute; top:1px; right:1px; width:16px; height:16px;
+  background:var(--jade); color:#fff; font-size:11px; font-weight:800; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; z-index:2; line-height:1;}
+/* 開示: 選んで正解=緑(浮きなし)/見逃し=金点線/誤選択=赤+✕ */
+button.tile.correct{outline:4px solid var(--jade); outline-offset:1px;
+  background:color-mix(in srgb, var(--jade) 14%, var(--tile-face));}
+button.tile.wrong{outline:4px solid var(--verm); outline-offset:1px;
+  background:color-mix(in srgb, var(--verm) 14%, var(--tile-face));}
+button.tile.wrong::after{content:'✕'; position:absolute; top:1px; right:1px; width:16px; height:16px;
+  background:var(--verm); color:#fff; font-size:11px; font-weight:800; border-radius:50%;
+  display:flex; align-items:center; justify-content:center; z-index:2; line-height:1;}
+button.tile.miss{outline:3px dashed var(--gold-deep); outline-offset:1px;
+  background:color-mix(in srgb, var(--gold) 15%, var(--tile-face));}
+.tile-choices .tile{width:clamp(54px, 15vw, 66px);}
 
 /* ---------- situation card ---------- */
 .situ{background:var(--card); border:2px solid var(--line); border-radius:12px; padding:9px 12px; margin-bottom:10px;}
@@ -150,7 +172,7 @@ button.tile.miss{outline:3px dashed var(--gold-deep); outline-offset:1px;}
   border-radius:12px; padding:8px 12px; font-size:12.5px; font-weight:800;}
 .tv-info .sub{color:var(--ink-soft);}
 .tv-dora{margin-left:auto; display:inline-flex; align-items:center; gap:4px; color:var(--ink-soft); font-size:11.5px;}
-.tv-dora .tile{width:24px;}
+.tv-dora .tile{width:clamp(22px, 6vw, 27px);}
 .tv-note{font-size:12px; font-weight:800; color:var(--verm); padding:0 2px;}
 .tv-opps{display:flex; flex-direction:column; gap:6px;}
 .tv-opp{background:var(--card); border:2px solid var(--line); border-radius:12px; padding:7px 10px;}
@@ -176,9 +198,9 @@ button.tile.miss{outline:3px dashed var(--gold-deep); outline-offset:1px;}
 .tv-me-head{display:flex; align-items:center; gap:6px; font-size:12.5px; margin-bottom:6px;}
 .tv-hand{display:flex; align-items:center; gap:8px;}
 .tv-hand .hand{flex:1 1 0; min-width:0; margin:0; gap:2px;}
-.tv-hand .hand .tile{max-width:24px;}
+.tv-hand .hand .tile{max-width:clamp(22px, 6.2vw, 28px);}
 .tv-draw{flex:0 0 auto; display:flex; flex-direction:column; align-items:center; gap:1px; padding-left:8px; border-left:2px solid var(--line);}
-.tv-draw .tile{width:26px;}
+.tv-draw .tile{width:clamp(24px, 6.6vw, 30px);}
 .tv-draw span{font-size:9.5px; font-weight:800; color:var(--ink-soft);}
 /* 開発用TableViewプレビュー */
 .tvprev{position:fixed; inset:0; z-index:70; background:var(--paper); display:none; flex-direction:column;}
@@ -188,19 +210,19 @@ button.tile.miss{outline:3px dashed var(--gold-deep); outline-offset:1px;}
 .tvprev-head button{border:2px solid var(--line); background:var(--card); border-radius:8px; font-weight:800;
   font-size:12px; padding:5px 9px; color:var(--ink-soft);}
 .tvprev-head button.on{border-color:var(--jade); color:var(--jade);}
-.tvprev-body{flex:1; overflow-y:auto; padding:12px 16px 40px; max-width:430px; margin:0 auto; width:100%;}
+.tvprev-body{flex:1; overflow-y:auto; padding:12px 16px 40px; max-width:var(--content-max); margin:0 auto; width:100%;}
 
 /* ---------- choices ---------- */
 .choices{display:flex; flex-direction:column; gap:10px;}
 .choice{border:2px solid var(--line); background:var(--card); color:var(--ink); border-radius:14px;
-  padding:13px 14px; font-size:15px; font-weight:700; text-align:left; box-shadow:0 3px 0 var(--line);}
+  padding:clamp(12px,3.6vw,15px) 14px; font-size:clamp(14.5px, 4vw, 16.5px); font-weight:700; text-align:left; box-shadow:0 3px 0 var(--line);}
 .choice.sel{border-color:var(--jade); color:var(--jade); background:var(--jade-soft); box-shadow:0 3px 0 var(--jade-deep);}
 .choice.correct{border-color:var(--jade); background:var(--jade-soft); color:var(--jade-deep);}
 .choice.wrong{border-color:var(--verm); background:color-mix(in srgb, var(--verm) 12%, var(--card)); color:var(--verm);}
 .tile-choices{display:flex; gap:10px; flex-wrap:wrap; justify-content:center;}
-.numpick{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; max-width:300px; margin:6px auto 0;}
+.numpick{display:grid; grid-template-columns:repeat(3,1fr); gap:clamp(9px,2.8vw,13px); max-width:min(340px, 88vw); margin:6px auto 0;}
 .numpick .tile{width:100%; max-width:none;}
-.numpick34{display:grid; grid-template-columns:repeat(9,1fr); gap:5px; max-width:400px; margin:8px auto 0;}
+.numpick34{display:grid; grid-template-columns:repeat(9,1fr); gap:clamp(3px,1vw,6px); max-width:min(440px, 97vw); margin:8px auto 0;}
 .numpick34 .tile{width:100%; max-width:none; padding:0;}
 .numpick,.numpick34{touch-action:none; user-select:none; -webkit-user-select:none;}
 
@@ -209,17 +231,24 @@ button.tile.miss{outline:3px dashed var(--gold-deep); outline-offset:1px;}
   border-top:2px solid var(--line); padding:14px 16px calc(14px + env(safe-area-inset-bottom));}
 .lesson-foot.ok{background:var(--jade-soft); border-top-color:var(--jade);}
 .lesson-foot.ng{background:color-mix(in srgb, var(--verm) 10%, var(--card)); border-top-color:var(--verm);}
-.fb-title{font-weight:800; font-size:17px; margin:0 0 4px;}
+.fb-title{font-weight:800; font-size:clamp(16.5px, 4.6vw, 19px); margin:0 0 4px;}
 .fb-title.ok{color:var(--jade-deep);} .fb-title.ng{color:var(--verm);} .fb-title.mid{color:var(--gold-deep);}
 .lesson-foot.mid{background:color-mix(in srgb, var(--gold) 12%, var(--card)); border-top-color:var(--gold);}
 .fb-rate{margin:0 0 6px; font-size:13px; font-weight:800; font-variant-numeric:tabular-nums;}
 .fb-rate.up{color:var(--jade-deep);} .fb-rate.down{color:var(--verm);}
-.rating-strip{display:flex; align-items:center; justify-content:center; gap:14px; margin:12px 16px 0;
-  background:var(--card); border:2px solid var(--line); border-radius:14px; padding:10px 14px;
-  font-weight:800; font-size:13px; font-variant-numeric:tabular-nums;}
+.rating-strip{display:flex; align-items:center; justify-content:center; gap:clamp(10px,3.5vw,18px); margin:12px 16px 0;
+  background:var(--card); border:2px solid var(--line); border-radius:14px; padding:clamp(10px,2.8vw,13px) 14px;
+  font-weight:800; font-size:clamp(12.5px, 3.6vw, 15px); font-variant-numeric:tabular-nums;}
 .rating-strip .lab{color:var(--ink-soft); font-size:12px;}
-.rating-strip b{font-size:16px;}
-.fb-exp{font-size:13.5px; line-height:1.6; color:var(--ink); margin:0 0 12px; font-family:'Noto Sans JP',sans-serif;}
+.rating-strip b{font-size:clamp(15px, 4.4vw, 19px);}
+.fb-exp{font-size:clamp(13px, 3.7vw, 15px); line-height:1.6; color:var(--ink); margin:0 0 12px; font-family:'Noto Sans JP',sans-serif;}
+/* 回答結果カード: 問題の直下に連続して表示(問題→結果→解説→つづける の流れ) */
+.fb-card{border:2px solid var(--line); border-radius:16px; padding:14px 16px; margin:16px 0 8px;
+  background:var(--card);}
+.fb-card.ok{border-color:var(--jade); background:var(--jade-soft);}
+.fb-card.mid{border-color:var(--gold); background:color-mix(in srgb, var(--gold) 10%, var(--card));}
+.fb-card.ng{border-color:var(--verm); background:color-mix(in srgb, var(--verm) 8%, var(--card));}
+.fb-card .fb-exp:last-child{margin-bottom:0;}
 
 /* ---------- result / shop / profile ---------- */
 .center-col{display:flex; flex-direction:column; align-items:center; gap:10px; padding:40px 24px; text-align:center;}
@@ -1160,7 +1189,7 @@ const COURSES=[
  {q:'満貫になるのは何翻から？',choices:['3翻','4翻','5翻','6翻'],a:2,exp:'5翻から満貫（子8,000/親12,000）。※4翻30符は7,700点。「切り上げ満貫」ルールを採用する場合もあります。'},
  {q:'親の30符3翻、ロンの点数は？',choices:['3,900点','4,800点','5,800点','7,700点'],a:2,exp:'基本点=30×2^5=960。親のロンは×6=5,760→切り上げて5,800点。子なら3,900点です。'},
 ]},
-{id:'waits',title:'待ち当て',icon:'🔍',section:1,desc:'4枚形〜13枚形の待ちを全部当てよう。問題は毎回自動生成！',type:'waits'},
+{id:'waits',title:'待ち当て',icon:'🔍',section:1,desc:'「完成まであと1枚」の最後の1枚＝待ちを当てよう。4枚形〜13枚形・毎回自動生成！',type:'waits'},
 {id:'ukeire1',title:'受け入れ当て',icon:'🧩',section:1,desc:'1シャンテンの手牌。テンパイに近づく牌（受け入れ）を全部当てよう。問題は毎回自動生成！',type:'ukeire1'},
 {id:'nanikiru',title:'1択何切る',icon:'🀄',section:1,desc:'シャンテンを保って受け入れ最大の1枚を。問題は毎回自動生成！',type:'discard',questions:[
  {id:'nk1',lv:3,fs:'nk:sh0:mg4',hand:'234556m456p678s88s',a:'5m',exp:'打5萬で23456萬の形が残り、1・4・7萬の三面張（受け11枚）。打2萬（4・7萬の7枚）より圧倒的に広いテンパイです。'},
@@ -1642,12 +1671,12 @@ function openCourse(id){
   if(c.type==='waits'){
     inner+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
       +[4,7,10,13].map(n=>'<button class="btn'+(n>=10?' gold':'')+'" onclick="startLesson(\'waits\','+n+')">'+n+'枚形</button>').join('')
-      +'</div><p style="margin-top:12px;">枚数が多いほど難しい！ 手牌の待ちを<b>すべて</b>選んで正解だよ。</p>';
+      +'</div><p style="margin-top:12px;">どの形も「完成まであと1枚」。その最後の1枚＝<b>待ち</b>を全部当てよう。枚数が多いほど難しい！</p>';
   }else if(c.type==='ukeire1'){
     inner+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
       +[7,10,13].map(n=>'<button class="btn" onclick="startLesson(\'ukeire1\','+n+')">'+n+'枚形</button>').join('')
       +'<button class="btn gold" onclick="startLesson(\'ukeire1\',34)">本番形</button>'
-      +'</div><p style="margin-top:12px;">手牌はテンパイまであと1枚（1シャンテン）。引いてくるとテンパイになる牌を<b>すべて</b>選んで正解だよ。<b>本番形</b>は実戦と同じ13枚の手牌から、全34種の牌で答える発展形！</p>';
+      +'</div><p style="margin-top:12px;">手牌はテンパイまであと1歩（1シャンテン）。形を完成に近づける牌＝<b>受け入れ</b>を全部当てよう。「待ち当て」が完成の最後の1枚なら、こちらは<b>完成へ近づく牌</b>を探す問題。<b>本番形</b>は実戦と同じ13枚・全34種で答える発展形！</p>';
   }else{
     inner+='<button class="btn" onclick="startLesson(\''+id+'\')">レッスン開始</button>';
     if(id==='riichi'&&devUIVisible()){
@@ -1745,6 +1774,12 @@ function qFormatKey(q){
   if(q.tchoices) return 'tchoices';
   return 'mcq';
 }
+// 部分形の完成目標(生成ロジックと一致: genSuitTenpai/genSuitIishantenはともに (枚数-1)/3 面子+雀頭 を目標に生成)
+function goalLabel(level){
+  if(level===4) return '1面子＋雀頭（3枚組1つ＋同じ牌2枚）';
+  if(level===13) return '4面子＋雀頭（アガリの形）';
+  return ((level-1)/3)+'面子＋雀頭';
+}
 const QFORMATS={
   waits:{
     cat:'waits', scoring:'waits',
@@ -1752,7 +1787,7 @@ const QFORMATS={
     render(q){
       let html='';
       html+='<div class="q-type">待ち当て・'+q.level+'枚形</div>';
-      html+='<div class="q-text">この手牌の待ちを<u>すべて</u>選ぼう</div>';
+      html+='<div class="q-text">この'+q.level+'枚は【'+goalLabel(q.level)+'】まであと1枚。手牌を完成させる最後の1枚（待ち）を<u>すべて</u>選ぼう</div>';
       html+='<div class="hand">';
       for(let n=0;n<9;n++) for(let k=0;k<q.counts[n];k++) html+=tileHTML((n+1)+q.suit);
       html+='</div>';
@@ -1778,7 +1813,7 @@ const QFORMATS={
     feedback(q,res){
       return {
         ansText:'正解の待ち： '+q.waits.join('・')+'（'+SUITCH[q.suit]+'子）',
-        expText:'待ちの数：'+q.waits.length+'種。複合形は「雀頭を固定して考える」「面子を抜いて考える」と見えやすいよ。'
+        expText:'【'+goalLabel(q.level)+'】を完成させる最後の1枚が「待ち」。この形は'+q.waits.length+'種。複合形は「雀頭を固定して考える」「面子を抜いて考える」と見えやすいよ。'
       };
     },
   },
@@ -1844,7 +1879,7 @@ const QFORMATS={
       if(q.full){
         // 本番形: パターン判定 + 全34種ピッカーの二段回答
         html+='<div class="q-type">受け入れ当て・1シャンテン・本番形（13枚）</div>';
-        html+='<div class="q-text">①1シャンテンの形を見抜き、②受け入れを<u>すべて</u>選ぼう</div>';
+        html+='<div class="q-text">①1シャンテンの形を見抜き、②テンパイに近づく牌（受け入れ）を<u>すべて</u>選ぼう</div>';
         html+=handHTML(countsToStr(q.counts34));
         html+='<div style="font-size:12px;font-weight:800;color:var(--ink-soft);margin:10px 4px 4px;">① この1シャンテンの形は？</div>';
         html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">'
@@ -1864,7 +1899,7 @@ const QFORMATS={
         return html;
       }
       html+='<div class="q-type">受け入れ当て・1シャンテン・'+q.level+'枚形</div>';
-      html+='<div class="q-text">テンパイに近づく牌（受け入れ）を<u>すべて</u>選ぼう</div>';
+      html+='<div class="q-text">目指すのは【'+goalLabel(q.level)+'】。いまはテンパイまであと1歩（1シャンテン）。この形を完成に近づける牌（受け入れ）を<u>すべて</u>選ぼう</div>';
       html+='<div class="hand">';
       for(let n=0;n<9;n++) for(let k=0;k<q.counts[n];k++) html+=tileHTML((n+1)+q.suit);
       html+='</div>';
@@ -1909,7 +1944,7 @@ const QFORMATS={
       }
       return {
         ansText:'正解の受け入れ： '+q.accepts.join('・')+'（'+SUITCH[q.suit]+'子）'+diff,
-        expText:'受け入れは'+q.accepts.length+'種。「あとどの2枚が入れば聴牌か」をブロック（面子・対子・ターツ）で数えると見えやすいよ。足りないターツの両側と、雀頭候補のくっつきを忘れずに。'
+        expText:'この形をテンパイへ近づける牌＝「受け入れ」は'+q.accepts.length+'種。「あとどの2枚が入れば聴牌か」をブロック（面子・対子・ターツ）で数えると見えやすいよ。足りないターツの両側と、雀頭候補のくっつきを忘れずに。'
       };
     },
   },
@@ -2206,16 +2241,23 @@ function renderFeedback(q,cat,res,ratingRes,fb){
   const mark=cat?qualityMark(res.S,cat):null;
   const cls=mark?mark.cls:(res.isCorrect?'ok':'ng');
   const title=mark?mark.label:(res.isCorrect?'せいかい！ 🎉':'ざんねん…');
-  foot.className='lesson-foot '+cls;
-  foot.innerHTML='<p class="fb-title '+cls+'">'+title+'</p>'
+  // 実機レビュー第1回: 結果・解説は問題の直下にカードで連続表示し、
+  // 下部固定フットにはボタンだけを残す(問題とフィードバックの間の巨大空白を解消)
+  const staminaOut=!staminaFree()&&S.hearts<=0&&!res.isCorrect;
+  const card='<div class="fb-card '+(staminaOut?'ng':cls)+'" id="fb-card">'
+    +'<p class="fb-title '+(staminaOut?'ng':cls)+'">'+(staminaOut?'スタミナが切れた…':title)+'</p>'
     +ratingLine+dbgLine
-    +(fb.ansText?'<p class="fb-exp"><b>'+fb.ansText+'</b></p>':'')
+    +(!staminaOut&&fb.ansText?'<p class="fb-exp"><b>'+fb.ansText+'</b></p>':'')
     +'<p class="fb-exp">'+fb.expText+'</p>'
-    +'<button class="btn'+(cls==='ng'?' red':'')+'" onclick="next()">つづける</button>';
-  if(!staminaFree()&&S.hearts<=0&&!res.isCorrect){
-    foot.innerHTML='<p class="fb-title ng">スタミナが切れた…</p>'+ratingLine+'<p class="fb-exp">'+fb.expText+'</p>'
-      +'<button class="btn red" onclick="quitLesson();staminaModal()">レッスン終了</button>';
-  }
+    +'</div>';
+  const area=document.getElementById('q-area');
+  area.insertAdjacentHTML('beforeend',card);
+  foot.className='lesson-foot '+cls;
+  foot.innerHTML=staminaOut
+    ?'<button class="btn red" onclick="quitLesson();staminaModal()">レッスン終了</button>'
+    :'<button class="btn'+(cls==='ng'?' red':'')+'" onclick="next()">つづける</button>';
+  const fc=document.getElementById('fb-card');
+  if(fc&&fc.scrollIntoView) fc.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
 /* ================= 判定（薄いオーケストレーション） ================= */
