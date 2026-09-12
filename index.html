@@ -119,7 +119,7 @@ button{font-family:inherit; cursor:pointer; touch-action:manipulation;} /* タ�
 .hearts{font-weight:800; color:var(--verm); font-size:15px; white-space:nowrap;}
 .q-area{flex:1; overflow-y:auto; padding:6px clamp(8px, 4vw, 16px) calc(120px + env(safe-area-inset-bottom));}
 .q-type{font-size:clamp(11.5px, 3.2vw, 13.5px); font-weight:800; color:var(--jade); letter-spacing:.1em; margin:6px 0 2px;}
-.q-text{font-size:clamp(17px, 4.8vw, 21px); font-weight:800; margin:4px 0 12px; line-height:1.5; text-wrap:balance;}
+.q-text{font-size:clamp(17px, 4.8vw, 21px); font-weight:800; margin:4px 0 12px; line-height:1.5;}
 .q-ctx{font-size:clamp(12.5px, 3.5vw, 14.5px); color:var(--ink-soft); font-weight:700; background:var(--jade-soft);
   border-radius:10px; padding:8px 12px; margin-bottom:12px;}
 
@@ -1808,10 +1808,10 @@ const QFORMATS={
     render(q){
       let html='';
       html+='<div class="q-type">待ち当て・'+q.level+'枚形</div>';
-      // 第3回レビュー: 毎問の説明は省き短文に(構造の説明はコースモーダルへ分離)
+      // 短文化: スマホ1〜2行以内・不自然な改行を避ける(構造説明はコースモーダルへ分離済み)
       html+='<div class="q-text">'+(q.level===13
-        ?'この手牌のアガリ牌（待ち）を<u>すべて</u>選ぼう'
-        :'【'+(((q.level-1)/3))+'面子＋雀頭】になる待ちを<u>すべて</u>選ぼう')+'</div>';
+        ?'この手牌の待ちを全部選ぼう'
+        :'【'+(((q.level-1)/3))+'面子＋雀頭】の待ちを全部選ぼう')+'</div>';
       html+='<div class="hand">';
       for(let n=0;n<9;n++) for(let k=0;k<q.counts[n];k++) html+=tileHTML((n+1)+q.suit);
       html+='</div>';
@@ -1906,7 +1906,7 @@ const QFORMATS={
       if(q.full){
         // 本番形: パターン判定 + 全34種ピッカーの二段回答
         html+='<div class="q-type">受け入れ当て・1シャンテン・本番形（13枚）</div>';
-        html+='<div class="q-text">①1シャンテンの形を見抜き、②テンパイに近づく牌（受け入れ）を<u>すべて</u>選ぼう</div>';
+        html+='<div class="q-text">1シャンテンの形と受け入れを答えよう</div>';
         html+=handHTML(countsToStr(q.counts34));
         html+='<div style="font-size:12px;font-weight:800;color:var(--ink-soft);margin:10px 4px 4px;">① この1シャンテンの形は？</div>';
         html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">'
@@ -1928,8 +1928,8 @@ const QFORMATS={
         L.patSel=null;
         return html;
       }
-      html+='<div class="q-type">受け入れ当て・1シャンテン・'+q.level+'枚形</div>';
-      html+='<div class="q-text">目指すのは【'+goalLabel(q.level)+'】。いまはテンパイまであと1歩（1シャンテン）。この形を完成に近づける牌（受け入れ）を<u>すべて</u>選ぼう</div>';
+      html+='<div class="q-type">受け入れ当て・'+q.level+'枚形・目標【'+(((q.level-1)/3))+'面子＋雀頭】</div>';
+      html+='<div class="q-text">テンパイに近づく牌（受け入れ）を全部選ぼう</div>';
       html+='<div class="hand">';
       for(let n=0;n<9;n++) for(let k=0;k<q.counts[n];k++) html+=tileHTML((n+1)+q.suit);
       html+='</div>';
@@ -2302,8 +2302,8 @@ function renderFeedback(q,cat,res,ratingRes,fb){
   foot.innerHTML=staminaOut
     ?'<button class="btn red" onclick="quitLesson();staminaModal()">レッスン終了</button>'
     :'<button class="btn'+(cls==='ng'?' red':'')+'" onclick="next()">つづける</button>';
-  const fc=document.getElementById('fb-card');
-  if(fc&&fc.scrollIntoView) fc.scrollIntoView({behavior:'smooth',block:'nearest'});
+  // 解説全体が固定ボタンの上に見える位置まで自動スクロール(カード末尾+下余白をボトム合わせ)
+  requestAnimationFrame(()=>{ area.scrollTo({top:area.scrollHeight, behavior:'smooth'}); });
 }
 
 /* ================= 判定（薄いオーケストレーション） ================= */
