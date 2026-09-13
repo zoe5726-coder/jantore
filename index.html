@@ -29,8 +29,9 @@
   --locked:#c3ccc6; --overlay:rgba(16,27,22,.55);
   /* 実機レビュー第1回: 画面幅追従トークン(clamp/vwで連続追従・固定px脱却) */
   --content-max:480px;
-  --node-size:clamp(74px, 21vw, 96px);
-  --node-off:clamp(46px, 15vw, 66px);
+  --node-size:clamp(50px, 14vw, 60px);   /* 第7段階: 1画面に5〜7マス見える密度へ縮小(旧74-96px) */
+  --node-off:clamp(30px, 9vw, 42px);     /* 蛇行の左右振れもコンパクトに(旧46-66px) */
+  --road-w:min(82vw, 330px);             /* ロード主線の幅。左右は将来のキャラ/装飾用の余白 */
   --tile-w:clamp(38px, 10.5vw, 48px);
 }
 :root:not([data-theme="light"]){}
@@ -72,22 +73,36 @@ button{font-family:inherit; cursor:pointer; touch-action:manipulation;} /* タ�
   padding:12px 16px; box-shadow:0 4px 0 var(--jade-deep);}
 .section-band h2{margin:0; font-size:clamp(15px, 4.1vw, 18px); letter-spacing:.08em;}
 .section-band p{margin:2px 0 0; font-size:clamp(11.5px, 3.2vw, 13.5px); opacity:.92;}
-.path{display:flex; flex-direction:column; align-items:center; gap:22px; padding:22px 0 6px; position:relative;}
+/* ロード本体(lesson-path)と将来の装飾レイヤーを分離できる構造。
+   deco-layerは現状空で非表示相当(pointer-events:none)。キャラ・吹き出し等は将来ここへ */
+.subtheme-road{position:relative; width:var(--road-w); margin:0 auto;}
+.subtheme-road .deco-layer{position:absolute; inset:0; pointer-events:none; z-index:0;}
+.subtheme-road .path{position:relative; z-index:1;}
+.path{display:flex; flex-direction:column; align-items:center; gap:10px; padding:12px 0 4px; position:relative;}
 .node{width:var(--node-size); height:var(--node-size); border-radius:50%; border:none; position:relative;
   background:var(--card); box-shadow:0 6px 0 var(--line); display:flex; flex-direction:column;
   align-items:center; justify-content:center; transition:transform .08s;}
 .node:active{transform:translateY(4px); box-shadow:0 2px 0 var(--line);}
-.node .ico{font-size:clamp(27px, 7.6vw, 35px); line-height:1;}
+.node .ico{font-size:clamp(20px, 5.6vw, 25px); line-height:1;}
 .node.done{background:var(--gold); box-shadow:0 6px 0 var(--gold-deep);}
 .node.done .ico{filter:none;}
 .node.next{background:var(--jade); box-shadow:0 6px 0 var(--jade-deep);}
-.node.next .ico{font-size:clamp(29px, 8vw, 37px);}
+.node.next .ico{font-size:clamp(22px, 6vw, 27px);}
 .node .crowns{position:absolute; bottom:-8px; background:var(--card); border:2px solid var(--line);
   border-radius:999px; font-size:10px; font-weight:800; padding:1px 7px; color:var(--gold-deep);}
 .node.done{color:#fff; font-weight:900;}            /* クリア済み: 金地+白✓ */
 .node.locked{background:var(--locked); box-shadow:0 6px 0 var(--line); cursor:default;}
-.node.locked .ico{font-size:clamp(21px, 5.8vw, 27px); opacity:.8;}
-.node.final{outline:3px solid var(--gold); outline-offset:3px;}  /* 小テーマ最終「まとめ」 */
+.node.locked .ico{font-size:clamp(16px, 4.4vw, 20px); opacity:.8;}
+.node.final{outline:2.5px solid var(--gold); outline-offset:2px;}  /* 小テーマ最終「まとめ」 */
+/* ロード演出(第7段階): クリア直後のマスのポップ / 次マスのアンロック(Lesson Clearより弱い)
+   transformは蛇行(translateX)が使うため、拡大は.icoへ・ノード本体は光のみ */
+.node.just-cleared .ico{animation:nodePop .55s cubic-bezier(.34,1.56,.64,1);}
+.node.just-unlocked{animation:unlockGlow var(--m-unlock,.6s) ease;}
+.node.just-unlocked .ico{animation:nodePop var(--m-unlock,.6s) cubic-bezier(.34,1.56,.64,1);}
+@keyframes nodePop{0%{transform:scale(.4);}55%{transform:scale(1.25);}100%{transform:scale(1);}}
+@keyframes unlockGlow{0%{box-shadow:0 6px 0 var(--jade-deep),0 0 0 0 rgba(31,164,107,.55);}
+  70%{box-shadow:0 6px 0 var(--jade-deep),0 0 0 10px rgba(31,164,107,0);}
+  100%{box-shadow:0 6px 0 var(--jade-deep),0 0 0 0 rgba(31,164,107,0);}}
 
 /* 大テーマ帯(theme-band): SECTION帯の下・小テーマ見出しの上の階層 */
 .theme-band{margin:16px 16px 0; background:var(--card); border:2px solid var(--line); border-radius:14px;
@@ -105,7 +120,7 @@ button{font-family:inherit; cursor:pointer; touch-action:manipulation;} /* タ�
 
 .node.l{transform:translateX(calc(-1*var(--node-off)));} .node.r{transform:translateX(var(--node-off));}
 .node.l:active{transform:translateX(calc(-1*var(--node-off))) translateY(4px);} .node.r:active{transform:translateX(var(--node-off)) translateY(4px);}
-.node-label{font-size:clamp(11px, 3.3vw, 14px); font-weight:800; color:var(--ink-soft); margin-top:-14px;}
+.node-label{font-size:clamp(9.5px, 2.7vw, 11.5px); font-weight:800; color:var(--ink-soft); margin-top:-8px;}
 .node-label.l{transform:translateX(calc(-1*var(--node-off)));} .node-label.r{transform:translateX(var(--node-off));}
 
 /* ---------- bottom nav ---------- */
@@ -259,14 +274,59 @@ button.tile.off:active{transform:none;}
 .lesson-foot.ng{background:color-mix(in srgb, var(--verm) 10%, var(--card)); border-top-color:var(--verm);}
 .fb-title{font-weight:800; font-size:clamp(16.5px, 4.6vw, 19px); margin:0 0 4px;}
 .fb-title.ok{color:var(--jade-deep);} .fb-title.ng{color:var(--verm);} .fb-title.mid{color:var(--gold-deep);}
-/* コンボ演出: 小さくポップするピルのみ(全画面演出なし)。節目(5,10,…)は金色で少し強調 */
-.combo-pop{display:inline-block; margin:0 0 6px; padding:4px 12px; border-radius:999px;
+/* ================= 第7段階: ゲームフィール ================= */
+/* 通常コンボ: 「正解！」と同じ行の右側に常時見える(解説カード2段目から昇格) */
+.fb-head{display:flex; align-items:center; justify-content:space-between; gap:6px 10px; flex-wrap:wrap;}
+.fb-head .fb-title{margin:0;}
+.fb-combo{display:inline-block; padding:3px 11px; border-radius:999px; white-space:nowrap;
   background:var(--jade-soft); color:var(--jade-deep); font-weight:900;
-  font-size:clamp(13px, 3.6vw, 15px); animation:comboPop .35s cubic-bezier(.34,1.56,.64,1);}
-.combo-pop.big{background:var(--gold); color:#fff; font-size:clamp(15px, 4.2vw, 18px);
-  box-shadow:0 2px 0 var(--gold-deep);}
-.combo-end{margin:0 0 6px; color:var(--ink-soft); font-size:clamp(11px, 3.1vw, 12.5px);}
+  font-size:clamp(12.5px, 3.5vw, 14.5px); animation:comboPop var(--m-answer,.26s) cubic-bezier(.34,1.56,.64,1);}
+.fb-combo.big{background:var(--gold); color:#fff; box-shadow:0 2px 0 var(--gold-deep);}
+.combo-end{margin:2px 0 4px; color:var(--ink-soft); font-size:clamp(11px, 3.1vw, 12.5px);}
 @keyframes comboPop{from{transform:scale(.5); opacity:0;} to{transform:scale(1); opacity:1;}}
+
+/* Level1: 正解/不正解の軽い反応(0.2〜0.4秒)。牌・選択肢そのものが動く */
+.tile.correct,.choice.correct{animation:okPop var(--m-answer,.26s) cubic-bezier(.34,1.56,.64,1);}
+.tile.wrong,.choice.wrong{animation:ngShake var(--m-wrong,.32s) ease;}
+.fb-card{animation:cardIn var(--m-answer,.26s) ease-out;}
+@keyframes okPop{0%{transform:scale(1);} 45%{transform:translateY(-4px) scale(1.07);} 100%{transform:none;}}
+@keyframes ngShake{0%,100%{transform:none;} 25%{transform:translateX(-3px);} 55%{transform:translateX(3px);} 80%{transform:translateX(-2px);}}
+@keyframes cardIn{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;}}
+
+/* Level3〜6: 中央オーバーレイ演出(#fx)。pointer-events:noneで進行を一切ブロックしない */
+.fx{position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+  z-index:60; pointer-events:none;}
+.fx.show{display:flex;}
+.fx .fx-box{display:flex; flex-direction:column; align-items:center; gap:4px; text-align:center;
+  padding:22px 34px; border-radius:22px; background:var(--overlay); color:#fff;
+  animation:fxIn .9s cubic-bezier(.34,1.56,.64,1) both;}
+.fx .fx-ico{font-size:clamp(40px, 12vw, 54px); line-height:1.1;}
+.fx .fx-t{font-size:clamp(19px, 5.4vw, 24px); font-weight:900; letter-spacing:.06em;}
+.fx .fx-s{font-size:clamp(12.5px, 3.6vw, 15px); font-weight:800; opacity:.9;}
+.fx.fx-combo .fx-box{background:rgba(16,27,22,.78);}
+.fx.fx-clear .fx-box{background:var(--jade); box-shadow:0 6px 0 var(--jade-deep);}
+.fx.fx-sub .fx-box{background:var(--gold); box-shadow:0 6px 0 var(--gold-deep); animation-duration:1.05s;}
+.fx.fx-theme .fx-box{background:linear-gradient(160deg,var(--gold),var(--verm)); box-shadow:0 6px 0 var(--gold-deep); animation-duration:1.15s;}
+@keyframes fxIn{0%{transform:scale(.35); opacity:0;} 45%{transform:scale(1.08); opacity:1;}
+  62%{transform:scale(1);} 82%{transform:scale(1); opacity:1;} 100%{transform:scale(1); opacity:1;}}
+.fx.fade .fx-box{animation:fxOut .22s ease-in both;}
+@keyframes fxOut{from{transform:scale(1); opacity:1;} to{transform:scale(.9); opacity:0;}}
+
+/* リザルトの順次表示(全体で1秒前後)+EXPポップ */
+.stag{opacity:0; animation:stagIn .3s ease-out forwards;}
+@keyframes stagIn{from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:none;}}
+.res-box.exp-pop .v{display:inline-block; animation:expPop .5s cubic-bezier(.34,1.56,.64,1) both;
+  animation-delay:inherit;}
+@keyframes expPop{0%{transform:scale(.6);} 55%{transform:scale(1.18);} 100%{transform:scale(1);}}
+
+/* prefers-reduced-motion: 大きな動きを止め、ほぼ即時表示(進行はJS側タイマーで別途短縮) */
+@media (prefers-reduced-motion: reduce){
+  .tile.correct,.choice.correct,.tile.wrong,.choice.wrong,.fb-card,.fb-combo,
+  .node.just-cleared .ico,.node.just-unlocked,.node.just-unlocked .ico,
+  .fx .fx-box,.fx.fade .fx-box,.res-box.exp-pop .v{animation:none !important;}
+  .stag{animation:none !important; opacity:1;}
+  .streak-celebrate,.sc-flame{animation:none !important;}
+}
 .lesson-foot.mid{background:color-mix(in srgb, var(--gold) 12%, var(--card)); border-top-color:var(--gold);}
 .fb-rate{margin:0 0 6px; font-size:13px; font-weight:800; font-variant-numeric:tabular-nums;}
 .fb-rate.up{color:var(--jade-deep);} .fb-rate.down{color:var(--verm);}
@@ -297,6 +357,9 @@ button.tile.off:active{transform:none;}
 .streak-celebrate{background:linear-gradient(180deg,var(--gold),#f0bc55); border-radius:20px;
   padding:18px 34px; color:#fff; box-shadow:0 5px 0 var(--gold-deep); width:min(280px,80%);
   animation:scpop .45s cubic-bezier(.2,1.6,.4,1);}
+/* リザルト順次表示と併用時: scpopが.stagのstagInを上書きしてopacity:0のまま
+   になるのを防ぐ(両アニメーションを併走・delayはインラインのanimation-delayが両方に適用) */
+.streak-celebrate.stag{animation:scpop .45s cubic-bezier(.2,1.6,.4,1), stagIn .3s ease-out forwards;}
 .streak-celebrate .sc-flame{font-size:clamp(38px,11vw,48px); line-height:1;}
 .streak-celebrate .sc-num{font-size:clamp(46px,14vw,60px); font-weight:800; line-height:1.05;
   text-shadow:0 2px 0 rgba(0,0,0,.15); font-variant-numeric:tabular-nums;}
@@ -399,6 +462,10 @@ button.tile.off:active{transform:none;}
     <div class="lesson-foot" id="lesson-foot"></div>
   </div>
 </div>
+
+<!-- 第7段階: 演出オーバーレイ(コンボ節目/Lesson Clear/小テーマ・大テーマ制覇)。
+     pointer-events:noneのため操作・進行は一切ブロックしない -->
+<div class="fx" id="fx" aria-hidden="true"></div>
 
 <div class="modal-bg" id="modal-bg" onclick="if(event.target===this)closeModal()">
   <div class="modal" id="modal-body"></div>
@@ -1316,17 +1383,20 @@ const COURSES=[
    ・各小テーマの最終レッスン(配列末尾)は「まとめ」(★表示)。レッスン数は小テーマごとに自由。 */
 const THEMES=[
  {id:'th_rules', course:'rules', title:'麻雀のきほん', sub:'ルール・アガリの形を知る',
+  qn:6,  // 静的プールが6問のため全問1周(重複出題はしない)。プール拡充後にqnを外せば既定10問
   subThemes:[
    // 静的プール(6問)のため難易度差は未設定(diff:null=全プールから抽選)。構造上は将来diffで分割可能
    {id:'st_rules_kihon', title:'きほんのき', lessons:[{diff:null},{diff:null},{diff:null}]},
    {id:'st_rules_matome', title:'総復習', lessons:[{diff:null},{diff:null}]},
   ]},
  {id:'th_yaku', course:'yaku', title:'役を覚える', sub:'アガリに必要な「役」',
+  qn:6,  // 静的プール6問(同上)
   subThemes:[
    {id:'st_yaku_kihon', title:'よく出る役', lessons:[{diff:null},{diff:null},{diff:null}]},
    {id:'st_yaku_matome', title:'総復習', lessons:[{diff:null},{diff:null}]},
   ]},
  {id:'th_score', course:'score', title:'点数計算', sub:'符と翻から点数を出す',
+  qn:6,  // 静的プール6問(同上)
   subThemes:[
    {id:'st_score_kihon', title:'点数のきほん', lessons:[{diff:null},{diff:null},{diff:null}]},
    {id:'st_score_matome', title:'総復習', lessons:[{diff:null},{diff:null}]},
@@ -1363,6 +1433,7 @@ const THEMES=[
     {diff:{lvRange:[6,7]}},{diff:{lvRange:[7,8]}},{diff:{lvRange:[7,9]}},{diff:{lvRange:[5,9]}}]},
   ]},
  {id:'th_riichi', course:'riichi', title:'リーチ判断', sub:'曲げるかダマか（実測検証済み）',
+  qn:5,  // 承認済み13問のみ・lv帯プールが5〜8問のため5問維持(10にすると帯難易度が崩れる)
   subThemes:[                                  // 承認済み13問プール(lv2..5)をlv帯で抽選(問題・正解は無変更)
    {id:'st_ri_1', title:'きほん', lessons:[
     {diff:{lvRange:[2,3]}},{diff:{lvRange:[2,3]}},{diff:{lvRange:[2,3]}}]},
@@ -1378,10 +1449,15 @@ const SECTIONS=[
 ];
 /* テーマ階層ヘルパー: 進捗はテーマ内の通しレッスン番号(小テーマをまたいだ連番)で管理 */
 function themeOf(id){ return THEMES.find(t=>t.id===id); }
+// 1レッスンの問題数(第7段階: 原則10問・1レッスン2〜3分想定)。
+// lesson.qn > subTheme.qn > theme.qn > 既定10 の順で上書きできる
+// (将来: 超入門8問・まとめ12問などをデータ側だけで設定可能)
+const LESSON_QN_DEFAULT=10;
 function themeLessons(t){                      // 小テーマを平坦化した通しレッスン一覧
   const out=[];
   t.subThemes.forEach(st=>st.lessons.forEach((ls,i)=>out.push(
-    {sub:st,diff:ls.diff||null,subIdx:i,isLast:i===st.lessons.length-1})));
+    {sub:st,diff:ls.diff||null,subIdx:i,isLast:i===st.lessons.length-1,
+     qn:ls.qn||st.qn||t.qn||LESSON_QN_DEFAULT})));
   return out;
 }
 function themeFrontier(t){ return Math.min(S.roadProgress[t.id]||0,themeLessons(t).length); }
@@ -1431,6 +1507,45 @@ const PROTO_VISIBLE_COURSES=['rules','yaku','score','waits','ukeire1','nanikiru'
 function protoCourseVisible(id){ return !PROTOTYPE_MODE||PROTO_VISIBLE_COURSES.includes(id); }
 function staminaFree(){ return PROTOTYPE_MODE||S.owned.stamina; }   // プロトタイプはスタミナ消費なし
 function devUIVisible(){ return !PROTOTYPE_MODE||S.dev||location.hash==='#dev'; }
+
+/* ================= 演出設定（第7段階） =================
+   時間は全てここで一元管理(ms)。実機調整はこの数値を変えるだけ。
+   CSSアニメにも --m-* カスタムプロパティとして反映される。 */
+const MOTION={
+  answer:260,          // Level1: 正解/不正解の軽い反応
+  wrong:320,
+  comboMilestone:1000, // Level3: 5/10コンボ節目(0.8〜1.2秒目安)
+  lessonClear:1400,    // Level4: LESSON CLEAR(1〜2秒目安)
+  subthemeClear:1600,  // Level5: 小テーマ制覇(Lesson Clearより少し強い)
+  themeClear:1800,     // Level6: 大テーマ制覇
+  resultStagger:110,   // リザルト各項目の表示間隔(全体で1秒前後)
+  unlock:600,          // 次マスのアンロック(Lesson Clearより弱い)
+};
+try{
+  document.documentElement.style.setProperty('--m-answer',MOTION.answer+'ms');
+  document.documentElement.style.setProperty('--m-wrong',MOTION.wrong+'ms');
+  document.documentElement.style.setProperty('--m-unlock',MOTION.unlock+'ms');
+}catch(e){}
+// 節目コンボ: キー=コンボ数・値=サブ文言。20,30…は行を足すだけで拡張できる
+const COMBO_MILESTONES={5:'いい調子！',10:'PERFECT!'};
+function reducedMotion(){
+  try{ return matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){ return false; }
+}
+/* 中央オーバーレイ演出。pointer-events:noneで進行を塞がず、報酬・状態は一切ここで扱わない
+   (報酬ロジックはanimation/timeoutに依存させない=finishLesson側で先に確定済み) */
+let FX_TIMER=null;
+function playFx(inner,cls,dur,done){
+  const el=document.getElementById('fx');
+  // reduced-motion時はオーバーレイ演出を出さず、ほぼ即時に次へ(進行はタイマーのみで保証)
+  if(!el||reducedMotion()){ if(done)setTimeout(done,0); return; }
+  if(FX_TIMER){ clearTimeout(FX_TIMER); FX_TIMER=null; }
+  el.innerHTML='<div class="fx-box">'+inner+'</div>';
+  el.className='fx show '+cls;
+  FX_TIMER=setTimeout(()=>{
+    el.classList.add('fade');
+    FX_TIMER=setTimeout(()=>{ el.className='fx'; el.innerHTML=''; FX_TIMER=null; if(done)done(); },220);
+  },dur);
+}
 
 function renderHUD(){
   document.getElementById('hud-streak').textContent=S.streak;
@@ -1848,6 +1963,9 @@ function renderPath(){
       let gi=0;  // テーマ内の通しレッスン番号(小テーマをまたいで連番・蛇行も連続)
       t.subThemes.forEach(st=>{
         html+='<div class="subtheme-head"><span>'+st.title+'</span></div>';
+        // subtheme-road: ロード本体(path)と将来の装飾レイヤー(deco-layer)を分離。
+        // キャラ・吹き出し等は将来deco-layerへ配置(現状は空・非干渉)
+        html+='<div class="subtheme-road"><div class="deco-layer" aria-hidden="true"></div>';
         html+='<div class="path">';
         st.lessons.forEach((ls,i)=>{
           const idx=gi++;
@@ -1855,13 +1973,19 @@ function renderPath(){
           const isFinal=i===st.lessons.length-1;   // 小テーマ最終=まとめ(★)
           const off=offsets[idx%offsets.length];
           const ico=state==='done'?'✓':(state==='locked'?'🔒':(isFinal?'★':c.icon));
-          html+='<button class="node '+state+(isFinal?' final':'')+' '+off+'"'
+          // 直近クリア/解放マスの演出クラス(afterLessonでのロード復帰時に一度だけ)
+          let fx='';
+          if(ROAD_FX&&ROAD_FX.theme===t.id){
+            if(idx===ROAD_FX.cleared) fx=' just-cleared';
+            else if(idx===ROAD_FX.unlocked) fx=' just-unlocked';
+          }
+          html+='<button class="node '+state+(isFinal?' final':'')+' '+off+fx+'"'
             +(state==='locked'?' disabled':'')
             +' onclick="startThemeLesson(\''+t.id+'\','+idx+')">'
             +'<span class="ico">'+ico+'</span></button>';
           html+='<div class="node-label '+off+'">'+(isFinal?'まとめ':'Lesson '+(i+1))+'</div>';
         });
-        html+='</div>';
+        html+='</div></div>';
       });
     });
     // テーマ未整備のコース(開発フルモードの隠しコース等)は従来どおりのコースノードで表示
@@ -1972,12 +2096,13 @@ function startLesson(id,waitLevel){
 /* ================= 学習ロード(テーマ制・第6段階) ================= */
 // レッスンのdiff(出題条件)に従って5問を毎回生成/抽選する。問題はマスに固定しない。
 // 麻雀ロジック(生成器・判定・採点)は既存のものをそのまま呼ぶだけで、一切変更しない。
-function buildThemeQuestions(c,diff){
+function buildThemeQuestions(c,diff,n){
+  n=n||LESSON_QN_DEFAULT;
   const pick=a=>a[Math.floor(Math.random()*a.length)];
   const qs=[];
   if(c.type==='waits'){
     const lvls=(diff&&diff.waitsLevels)||[4,7,10,13];
-    for(let i=0;i<5;i++){
+    for(let i=0;i<n;i++){
       const level=pick(lvls);
       const seed=(Math.random()*0x7fffffff)|0;
       const rng=mulberry32(seed);
@@ -1992,8 +2117,11 @@ function buildThemeQuestions(c,diff){
     }
   }else if(c.type==='ukeire1'){
     const lvls=(diff&&diff.ukeireLevels)||[7,10,13,34];
-    const patPlan=shuffle([1,2,3,4,1+Math.floor(Math.random()*4)]);  // 実戦形は4パターン網羅
-    for(let i=0;i<5;i++){
+    // 実戦形: 4パターンを必ず網羅し、残り枠はランダム
+    const patPlan=[1,2,3,4];
+    while(patPlan.length<n) patPlan.push(1+Math.floor(Math.random()*4));
+    shuffle(patPlan);
+    for(let i=0;i<n;i++){
       const level=pick(lvls);
       const seed=(Math.random()*0x7fffffff)|0;
       const rng=mulberry32(seed);
@@ -2010,7 +2138,7 @@ function buildThemeQuestions(c,diff){
     }
   }else if(c.type==='discard'){
     const r=(diff&&diff.lvRange)||[2,9];
-    for(let i=0;i<5;i++){
+    for(let i=0;i<n;i++){
       const target=r[0]+Math.floor(Math.random()*(r[1]-r[0]+1));
       const g=genNanikiruAt(target);            // ±1Lv妥協・フォールバックは既存実装のまま
       if(g) qs.push(g);
@@ -2018,10 +2146,10 @@ function buildThemeQuestions(c,diff){
   }else if(c.id==='riichi'){
     const r=(diff&&diff.lvRange)||[2,5];
     let pool=c.questions.filter(q=>q.lv>=r[0]&&q.lv<=r[1]);
-    if(pool.length<5) pool=c.questions;         // 帯のプールが5問未満なら全プールから(承認済み13問のみ)
-    return shuffle(pool.slice()).slice(0,5);
+    if(pool.length<n) pool=c.questions;         // 帯のプールがn問未満なら全プールから(承認済み13問のみ)
+    return shuffle(pool.slice()).slice(0,n);
   }else{
-    return shuffle(c.questions.slice()).slice(0,5);  // 静的プール(rules/yaku/score)
+    return shuffle(c.questions.slice()).slice(0,n);  // 静的プール(rules/yaku/score)
   }
   return qs;
 }
@@ -2036,7 +2164,7 @@ function startThemeLesson(tid,idx){
   }
   if(!staminaFree()&&S.hearts<=0){ staminaModal(); return; }
   const c=COURSES.find(x=>x.id===t.course);
-  const qs=buildThemeQuestions(c,list[idx].diff);
+  const qs=buildThemeQuestions(c,list[idx].diff,list[idx].qn);
   if(!qs.length) return;
   // ロード＝学ぶ場所: レーティングは動かさない（トレーニングのみ変動）
   L={course:c,themeId:tid,lessonIndex:idx,qs,idx:0,correct:0,sel:null,checked:false,done:false,
@@ -2048,6 +2176,7 @@ function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.rando
 function quitLesson(){
   document.getElementById('lesson').classList.remove('show');
   L=null; renderHUD(); renderPath();
+  ROAD_FX=null;  // ✕離脱時は復帰演出を持ち越さない
 }
 
 /* ================= 出題 ================= */
@@ -2576,20 +2705,22 @@ function renderFeedback(q,cat,res,ratingRes,fb){
   // 実機レビュー第1回: 結果・解説は問題の直下にカードで連続表示し、
   // 下部固定フットにはボタンだけを残す(問題とフィードバックの間の巨大空白を解消)
   const staminaOut=!staminaFree()&&S.hearts<=0&&!res.isCorrect;
-  // コンボ演出: 回答直後に軽くポップするだけ(全画面演出なし・テンポ優先)。節目(5,10,15…)は少し強調。
+  // コンボ表示(第7段階): 「正解！」と同じ行の右側に配置して常に目に入るように。
+  // 節目(COMBO_MILESTONES)は加えて中央オーバーレイの専用演出(下)。
   // 不正解時は責めずに「コンボ終了」を小さく出すのみ(2連続以上続いていた場合のみ)。
-  let comboLine='';
+  let comboChip='', comboEnd='';
+  const milestone=!staminaOut&&res.isCorrect&&COMBO_MILESTONES[L.combo]!=null;
   if(!staminaOut){
     if(res.isCorrect&&(L.combo||0)>=2){
-      const milestone=L.combo>=5&&L.combo%5===0;
-      comboLine='<div class="combo-pop'+(milestone?' big':'')+'">🔥 '+L.combo+' COMBO!</div>';
+      comboChip='<span class="fb-combo'+(milestone?' big':'')+'">🔥 '+L.combo+' COMBO</span>';
     }else if(!res.isCorrect&&(L.prevCombo||0)>=2){
-      comboLine='<div class="combo-end">コンボ終了（'+L.prevCombo+'まで続いた）</div>';
+      comboEnd='<div class="combo-end">コンボ終了（'+L.prevCombo+'まで続いた）</div>';
     }
   }
   const card='<div class="fb-card '+(staminaOut?'ng':cls)+'" id="fb-card">'
-    +'<p class="fb-title '+(staminaOut?'ng':cls)+'">'+(staminaOut?'スタミナが切れた…':title)+'</p>'
-    +comboLine+ratingLine+dbgLine
+    +'<div class="fb-head"><p class="fb-title '+(staminaOut?'ng':cls)+'">'
+    +(staminaOut?'スタミナが切れた…':title)+'</p>'+comboChip+'</div>'
+    +comboEnd+ratingLine+dbgLine
     +(!staminaOut&&fb.ansText?'<p class="fb-exp"><b>'+fb.ansText+'</b></p>':'')
     +'<p class="fb-exp">'+fb.expText+'</p>'
     +'</div>';
@@ -2609,6 +2740,11 @@ function renderFeedback(q,cat,res,ratingRes,fb){
     const target=fc2.offsetHeight<=visible-16 ? area.scrollHeight : cardTop-8;
     area.scrollTo({top:target, behavior:'smooth'});
   });
+  // 節目コンボ専用演出(Level3): 中央に約1秒ポップ。解説は上で既に表示済み・進行も塞がない
+  if(milestone){
+    playFx('<div class="fx-ico">🔥</div><div class="fx-t">'+L.combo+' COMBO!</div>'
+      +'<div class="fx-s">'+COMBO_MILESTONES[L.combo]+'</div>','fx-combo',MOTION.comboMilestone);
+  }
 }
 
 /* ================= 判定（薄いオーケストレーション） ================= */
@@ -2630,14 +2766,26 @@ function check(){
   renderFeedback(q,cat,res,ratingRes,fmt.feedback(q,res));
 }
 function next(){
+  // 二重実行防止(第7段階): 未回答時・終了処理後の「つづける」連打では進まない
+  // (renderQがL.checked=falseへ戻すため、連打の2回目以降はここで止まる)
+  if(!L||L.done||!L.checked) return;
   L.idx++;
   if(L.course.compare&&L.idx>=L.qs.length&&!L.contrastShown){ showContrast(); return; }
   if(L.idx>=L.qs.length){ finishLesson(); } else { renderQ(); }
 }
 
 /* ================= レッスン終了 ================= */
+// 直近クリアしたマス/解放されたマスの演出用メモ(ロード復帰時に一度だけ使用・保存しない)
+let ROAD_FX=null;
 function finishLesson(){
+  /* 状態確定フェーズ: 報酬(EXP/gems)・王冠・roadProgress・streak・自己ベストを
+     ここで一度だけ確定する。演出(タイマー/CSS animation)には一切依存させず、
+     L.doneガードで「つづける」連打等による二重発火・二重付与を防ぐ(第7段階) */
+  if(L.done) return;
+  L.done=true;
   document.getElementById('pbar-fill').style.width='100%';
+  const foot0=document.getElementById('lesson-foot');
+  foot0.className='lesson-foot'; foot0.innerHTML='';   // クリア演出中の誤タップ防止
   const xp=10+L.correct*3;
   const gems=5+(L.correct===L.qs.length?10:0);
   S.xp+=xp; S.gems+=gems;
@@ -2645,10 +2793,18 @@ function finishLesson(){
   if(!L.course.training) S.crowns[cid]=Math.min(5,(S.crowns[cid]||0)+1);
   // 学習ロード(テーマ制): 現在フロンティアのマスをクリアしたら次のマスを解放。
   // クリア済みマスの再挑戦(lessonIndex<フロンティア)では進捗は動かさない。
+  // フロンティア前進時=初回クリア時のみ、小テーマ制覇/大テーマ制覇イベントを検出。
+  const roadEvents=[];
   if(L.themeId!=null){
     const t=themeOf(L.themeId);
+    const list=themeLessons(t);
     const cur=S.roadProgress[t.id]||0;
-    if(L.lessonIndex===cur&&cur<themeLessons(t).length) S.roadProgress[t.id]=cur+1;
+    if(L.lessonIndex===cur&&cur<list.length){
+      S.roadProgress[t.id]=cur+1;
+      ROAD_FX={theme:t.id,cleared:cur,unlocked:(cur+1<list.length)?cur+1:null};
+      if(list[cur].isLast) roadEvents.push({type:'subtheme',title:list[cur].sub.title});
+      if(cur+1===list.length) roadEvents.push({type:'theme',title:t.title});
+    }
   }
   // レッスン単位のクリア時間(開始→終了。バックグラウンド時間の除外は将来ネイティブ化時に精密化)
   const duration=Date.now()-(L.startedAt||Date.now());
@@ -2677,6 +2833,33 @@ function finishLesson(){
     bestInfo={key,isBest,prevMs:prev?prev.ms:null,ms:duration};
   }
   save();
+  // ここまでで報酬・進捗はすべて確定済み。以降は演出のみ:
+  // 最終問題 →(つづける)→ LESSON CLEAR →(小テーマCOMPLETE)→(大テーマMASTER)→ リザルト
+  playClearSequence(roadEvents,()=>renderResult({xp,duration,firstToday,bestInfo,cid}));
+}
+/* Level4〜6の演出パイプライン: LESSON CLEAR(必須)→小テーマ制覇→大テーマ制覇の順に
+   中央オーバーレイを連続再生してからリザルトへ。時間はMOTIONで一元管理。
+   reduced-motion時はplayFx側で各120ms程度に短縮され、進行はタイマーのみで保証される */
+function playClearSequence(events,then){
+  const isTr=L&&L.course.training;
+  const seq=[{cls:'fx-clear',dur:MOTION.lessonClear,
+    html:'<div class="fx-ico">✓</div><div class="fx-t">'+(isTr?'TRAINING':'LESSON')+' CLEAR!</div>'}];
+  (events||[]).forEach(ev=>{
+    if(ev.type==='subtheme') seq.push({cls:'fx-sub',dur:MOTION.subthemeClear,
+      html:'<div class="fx-ico">🏅</div><div class="fx-t">'+ev.title+' COMPLETE!</div><div class="fx-s">小テーマ制覇！</div>'});
+    else seq.push({cls:'fx-theme',dur:MOTION.themeClear,
+      html:'<div class="fx-ico">👑</div><div class="fx-t">'+ev.title+' MASTER!</div><div class="fx-s">テーマ制覇！</div>'});
+  });
+  let i=0;
+  (function step(){
+    if(i>=seq.length){ if(then)then(); return; }
+    const s=seq[i++];
+    playFx(s.html,s.cls,s.dur,step);
+  })();
+}
+function renderResult(ctx){
+  if(!L) return;                                // 演出中に✕で離脱した場合は描画しない(状態は確定済み)
+  const {xp,duration,firstToday,bestInfo,cid}=ctx;
   const area=document.getElementById('q-area');
   const perfect=L.correct===L.qs.length;
   const accuracy=Math.round(L.correct/L.qs.length*100);
@@ -2687,13 +2870,18 @@ function finishLesson(){
     ratingSummary='<div class="rating-strip" style="margin:8px 0 0;"><span class="lab">📈 '+CAT_LABEL[L.rcat]+'</span>'
       +'<b style="color:var(--'+(up?'jade-deep':'verm')+')">'+r0+' → '+r1+(up?' ▲':' ▼')+'</b></div>';
   }
+  // リザルトの順次表示(第7段階): 見出し→EXP→正解率→…を短い間隔で(全体約1秒・reduced時は即時表示)
+  let SI=2;                                      // 0=絵文字, 1=見出し, 以降は登場順
+  const stagStyle=i=>' style="animation-delay:'+(i*MOTION.resultStagger)+'ms"';
   // 当日初回の学習達成のみ、連続記録を大きく祝う(同日2回目以降は通常リザルト)
   const streakCelebrate=firstToday
-    ?'<div class="streak-celebrate"><div class="sc-flame">🔥</div>'
+    ?'<div class="streak-celebrate stag"'+stagStyle(SI++)+'><div class="sc-flame">🔥</div>'
       +'<div class="sc-num">'+S.streak+'</div><div class="sc-label">日連続！</div>'
       +'<p class="sc-sub">今日の学習を達成しました</p></div>'
     :'';
-  const statBox=(v,k)=>'<div class="res-box"><div class="v">'+v+'</div><div class="k">'+k+'</div></div>';
+  const statBox=(v,k,extra)=>'<div class="res-box stag'+(extra||'')+'"'+stagStyle(SI++)+'>'
+    +'<div class="v">'+v+'</div><div class="k">'+k+'</div></div>';
+  const noteStyle='color:var(--ink-soft);font-size:12px;margin:2px 0 0;';
   let stats;
   if(L.course.training&&bestInfo){
     // トレーニング: 正解率・今回タイム・自己ベスト・ランクが中心(ランク基準は設定データ・未設定種別は非表示)
@@ -2704,28 +2892,31 @@ function finishLesson(){
       +statBox(bestInfo.isBest?fmtDur(duration,true):fmtDur(bestInfo.prevMs,true),'BEST')
       +(rank?statBox(rank,'ランク'):'')
       +'</div>'
-      +(bestInfo.isBest?'<div class="best-badge">🏅 自己ベスト！</div>':'')
-      +'<div style="display:flex;gap:10px;justify-content:center;"><span class="xp-chip" style="font-size:12px;padding:6px 12px;">+'+xp+' EXP</span></div>'
+      +(bestInfo.isBest?'<div class="best-badge stag"'+stagStyle(SI++)+'>🏅 自己ベスト！</div>':'')
+      +'<div class="stag"'+stagStyle(SI++)+'><span class="xp-chip" style="font-size:12px;padding:6px 12px;">+'+xp+' EXP</span></div>'
       +ratingSummary;
   }else{
-    // 通常ロード: EXP・正解率・最大コンボ・クリア時間(res-gridはflex-wrapで2×2に自然折返し)
+    // 通常ロード: EXP(獲得ポップ付き)・正解率・最大コンボ・クリア時間(flex-wrapで自然折返し)
     stats='<div class="res-grid">'
-      +statBox('+'+xp,'EXP')
+      +statBox('+'+xp,'EXP',' exp-pop')
       +statBox(accuracy+'%','正解率')
       +statBox('🔥'+(L.maxCombo||0),'最大コンボ')
       +statBox(fmtDur(duration),'クリアタイム')
       +'</div>'
       +(L.themeId
-        ?'<p style="color:var(--ink-soft);font-size:12px;margin:2px 0 0;">📍 '+themeOf(L.themeId).title+'：'
-          +(S.roadProgress[L.themeId]||0)+'/'+themeLessons(themeOf(L.themeId)).length+' レッスン</p>'
-        :'<p style="color:var(--ink-soft);font-size:12px;margin:2px 0 0;">👑 '+L.course.title+'：'+(S.crowns[cid]||0)+'/5</p>');
+        ?'<p class="stag" style="'+noteStyle+'animation-delay:'+(SI++)*MOTION.resultStagger+'ms">📍 '
+          +themeOf(L.themeId).title+'：'+(S.roadProgress[L.themeId]||0)+'/'+themeLessons(themeOf(L.themeId)).length+' レッスン</p>'
+        :'<p class="stag" style="'+noteStyle+'animation-delay:'+(SI++)*MOTION.resultStagger+'ms">👑 '
+          +L.course.title+'：'+(S.crowns[cid]||0)+'/5</p>');
   }
   area.innerHTML='<div class="center-col" style="gap:12px;">'
-    +'<div class="big-emoji">'+(perfect?'🏆':'🐦')+'</div>'
-    +'<h2 style="margin:0;">'+(L.course.training?'トレーニング完了！':(perfect?'パーフェクト！':'レッスンクリア！'))+'</h2>'
+    +'<div class="big-emoji stag"'+stagStyle(0)+'>'+(perfect?'🏆':'🐦')+'</div>'
+    +'<h2 class="stag" style="margin:0;animation-delay:'+MOTION.resultStagger+'ms">'
+    +(L.course.training?'トレーニング完了！':(perfect?'パーフェクト！':'レッスンクリア！'))+'</h2>'
     +streakCelebrate
     +stats
     +'</div>';
+  area.scrollTop=0;
   const foot=document.getElementById('lesson-foot');
   foot.className='lesson-foot';
   foot.innerHTML='<button class="btn" onclick="afterLesson()">つづける</button>';
@@ -2733,6 +2924,13 @@ function finishLesson(){
 function afterLesson(){
   document.getElementById('lesson').classList.remove('show');
   L=null; renderHUD(); renderPath();
+  // ロード復帰演出(第7段階): クリアしたマス(✓ポップ)と解放された次マス(ロック解除グロー)が
+  // 見える位置へスクロール。演出情報は一度使ったら破棄(再描画では再生しない)
+  if(ROAD_FX){
+    const el=document.querySelector('.node.just-unlocked')||document.querySelector('.node.just-cleared');
+    if(el){ try{ el.scrollIntoView({block:'center'}); }catch(e){} }
+    ROAD_FX=null;
+  }
   if(!PROTOTYPE_MODE&&!S.owned.adfree) showAd();  // プロトタイプでは広告モックを出さない
 }
 
