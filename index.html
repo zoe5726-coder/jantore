@@ -304,7 +304,6 @@ button.tile.off:active{transform:none;}
 .fx .fx-t{font-size:clamp(19px, 5.4vw, 24px); font-weight:900; letter-spacing:.06em;}
 .fx .fx-s{font-size:clamp(12.5px, 3.6vw, 15px); font-weight:800; opacity:.9;}
 .fx.fx-combo .fx-box{background:rgba(16,27,22,.78);}
-.fx.fx-clear .fx-box{background:var(--jade); box-shadow:0 6px 0 var(--jade-deep);}
 .fx.fx-sub .fx-box{background:var(--gold); box-shadow:0 6px 0 var(--gold-deep); animation-duration:1.05s;}
 .fx.fx-theme .fx-box{background:linear-gradient(160deg,var(--gold),var(--verm)); box-shadow:0 6px 0 var(--gold-deep); animation-duration:1.15s;}
 @keyframes fxIn{0%{transform:scale(.35); opacity:0;} 45%{transform:scale(1.08); opacity:1;}
@@ -1515,8 +1514,7 @@ const MOTION={
   answer:260,          // Level1: 正解/不正解の軽い反応
   wrong:320,
   comboMilestone:1000, // Level3: 5/10コンボ節目(0.8〜1.2秒目安)
-  lessonClear:1400,    // Level4: LESSON CLEAR(1〜2秒目安)
-  subthemeClear:1600,  // Level5: 小テーマ制覇(Lesson Clearより少し強い)
+  subthemeClear:1600,  // Level5: 小テーマ制覇(通常Lessonは中間演出なしで直接リザルト)
   themeClear:1800,     // Level6: 大テーマ制覇
   resultStagger:110,   // リザルト各項目の表示間隔(全体で1秒前後)
   unlock:600,          // 次マスのアンロック(Lesson Clearより弱い)
@@ -2834,21 +2832,18 @@ function finishLesson(){
   }
   save();
   // ここまでで報酬・進捗はすべて確定済み。以降は演出のみ:
-  // 最終問題 →(つづける)→ LESSON CLEAR →(小テーマCOMPLETE)→(大テーマMASTER)→ リザルト
+  // 通常は直接リザルト。初回制覇時のみ COMPLETE または MASTER を1回だけ挟む
   playClearSequence(roadEvents,()=>renderResult({xp,duration,firstToday,bestInfo,cid}));
 }
-/* Level4〜6の達成演出: 上位が下位を包含し、常に1回だけ表示(第7段階追補)。
-   優先順位: 大テーマMASTER > 小テーマCOMPLETE > LESSON CLEAR。
-   MASTERは「Lessonクリア+小テーマ制覇+大テーマ制覇」、COMPLETEは「Lessonクリア+小テーマ制覇」
-   の意味を包含する。制覇済み再挑戦はイベントが発火しないためLESSON CLEARのみ。
+/* 達成演出(第7段階追補×2): 上位が下位を包含し、出るのは最大1回。
+   優先順位: 大テーマMASTER > 小テーマCOMPLETE > (なし=直接リザルト)。
+   通常Lesson・トレーニング・制覇済み再挑戦は中間演出も待ち時間もなく直接リザルトへ
+   (達成の表示はリザルトページ自体が担うため「LESSON CLEAR!」中間演出は廃止)。
    reduced-motion時はplayFx側でスキップされ、進行はタイマーのみで保証される */
 function playClearSequence(events,then){
-  const isTr=L&&L.course.training;
   const ev=(events||[]).find(e=>e.type==='theme')||(events||[]).find(e=>e.type==='subtheme')||null;
-  const s=!ev
-    ?{cls:'fx-clear',dur:MOTION.lessonClear,
-      html:'<div class="fx-ico">✓</div><div class="fx-t">'+(isTr?'TRAINING':'LESSON')+' CLEAR!</div>'}
-    :ev.type==='subtheme'
+  if(!ev){ if(then)then(); return; }
+  const s=ev.type==='subtheme'
     ?{cls:'fx-sub',dur:MOTION.subthemeClear,
       html:'<div class="fx-ico">🏅</div><div class="fx-t">'+ev.title+' COMPLETE!</div><div class="fx-s">小テーマ制覇！</div>'}
     :{cls:'fx-theme',dur:MOTION.themeClear,
