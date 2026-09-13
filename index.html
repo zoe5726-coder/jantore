@@ -259,6 +259,37 @@ button.tile.off:active{transform:none;}
 
 /* ---------- result / shop / profile ---------- */
 .center-col{display:flex; flex-direction:column; align-items:center; gap:10px; padding:40px 24px; text-align:center;}
+/* ---------- 第5段階: リザルト/連続記録/カレンダー ---------- */
+.res-grid{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; width:100%;}
+.res-box{background:var(--card); border:2px solid var(--line); border-radius:14px;
+  padding:clamp(10px,2.8vw,14px) clamp(12px,3.4vw,18px); min-width:clamp(84px,24vw,104px);}
+.res-box .v{font-size:clamp(19px,5.4vw,24px); font-weight:800; font-variant-numeric:tabular-nums;}
+.res-box .k{font-size:clamp(10.5px,3vw,12px); color:var(--ink-soft); font-weight:700; margin-top:2px;}
+.best-badge{background:var(--gold); color:#fff; font-weight:800; border-radius:999px;
+  padding:8px 20px; box-shadow:0 3px 0 var(--gold-deep); font-size:clamp(14px,4vw,16px);}
+.streak-celebrate{background:linear-gradient(180deg,var(--gold),#f0bc55); border-radius:20px;
+  padding:18px 34px; color:#fff; box-shadow:0 5px 0 var(--gold-deep); width:min(280px,80%);
+  animation:scpop .45s cubic-bezier(.2,1.6,.4,1);}
+.streak-celebrate .sc-flame{font-size:clamp(38px,11vw,48px); line-height:1;}
+.streak-celebrate .sc-num{font-size:clamp(46px,14vw,60px); font-weight:800; line-height:1.05;
+  text-shadow:0 2px 0 rgba(0,0,0,.15); font-variant-numeric:tabular-nums;}
+.streak-celebrate .sc-label{font-size:clamp(17px,5vw,21px); font-weight:800;}
+.streak-celebrate .sc-sub{margin:6px 0 0; font-size:clamp(11px,3.2vw,12.5px); font-weight:700; opacity:.94;}
+@keyframes scpop{0%{transform:scale(.6); opacity:0;} 100%{transform:scale(1); opacity:1;}}
+.cal-head{display:flex; align-items:center; justify-content:space-between; margin:10px 0 6px;}
+.cal-head b{font-size:15px;}
+.cal-head button{border:2px solid var(--line); background:var(--card); border-radius:10px;
+  font-weight:800; font-size:15px; padding:4px 12px; color:var(--ink-soft);}
+.cal{display:grid; grid-template-columns:repeat(7,1fr); gap:4px; text-align:center;}
+.cal .dow{font-size:10.5px; font-weight:800; color:var(--ink-soft); padding:2px 0;}
+.cal-day{aspect-ratio:1; display:flex; align-items:center; justify-content:center;
+  border-radius:50%; font-size:12.5px; font-weight:700; color:var(--ink);}
+.cal-day.done{background:var(--jade); color:#fff;}
+.cal-day.protected{background:var(--gold); color:#fff;}
+.cal-day.today{outline:2.5px solid var(--jade-deep); outline-offset:1px;}
+.cal-legend{display:flex; gap:12px; justify-content:center; font-size:10.5px; font-weight:700;
+  color:var(--ink-soft); margin-top:8px;}
+.cal-legend i{display:inline-block; width:11px; height:11px; border-radius:50%; margin-right:4px; vertical-align:-1px;}
 .big-emoji{font-size:64px;}
 .xp-chip{background:var(--gold); color:#fff; font-weight:800; border-radius:12px; padding:8px 18px; box-shadow:0 3px 0 var(--gold-deep);}
 .shop-item{display:flex; gap:12px; align-items:center;}
@@ -300,7 +331,7 @@ button.tile.off:active{transform:none;}
   <div class="hud">
     <div class="logo">🐦 雀トレ</div>
     <div style="display:flex; gap:14px;">
-      <div class="stat" title="連続学習">🔥<span id="hud-streak">0</span><small>日</small></div>
+      <div class="stat" title="連続学習" style="cursor:pointer;" onclick="showStreakDetail()">🔥<span id="hud-streak">0</span><small>日</small></div>
       <div class="stat" title="ジェム">💎<span id="hud-gems">0</span></div>
       <div class="stat" title="スタミナ">❤️<span id="hud-hearts">5</span></div>
     </div>
@@ -1258,14 +1289,18 @@ const SECTIONS=[
 /* ================= 状態管理 ================= */
 const DEFAULT_STATE={schemaVersion:1,xp:0,hearts:5,gems:120,streak:0,lastDay:null,avatar:'🐦',
   owned:{adfree:false,stamina:false,avatars:false},freeze:0,crowns:{},best:{},answered:0,correct:0,
-  ratings:{waits:30,nanikiru:30,riichi:30},ratingN:{waits:0,nanikiru:0,riichi:0},seenNk:{},seenRq:{},bestStreak:0,dev:false};
+  ratings:{waits:30,nanikiru:30,riichi:30},ratingN:{waits:0,nanikiru:0,riichi:0},seenNk:{},seenRq:{},bestStreak:0,
+  learningDays:{},trainingBest:{},dev:false};
 let S=loadState();
 if((S.bestStreak||0)<S.streak) S.bestStreak=S.streak;  // 旧データ互換: 最長記録を現在値で初期化
+// 旧データ互換: 日別履歴が無い場合、最終学習日だけ'completed'として補完(過去の全履歴は復元不能)
+if(S.lastDay&&!S.learningDays[S.lastDay]) S.learningDays[S.lastDay]='completed';
 function loadState(){
   try{
     const raw=localStorage.getItem('jantore-v1');
     if(raw){ const s=JSON.parse(raw); return Object.assign({},DEFAULT_STATE,s,{owned:Object.assign({},DEFAULT_STATE.owned,s.owned||{}),crowns:s.crowns||{},best:s.best||{},
-      ratings:Object.assign({},DEFAULT_STATE.ratings,s.ratings||{}),ratingN:Object.assign({},DEFAULT_STATE.ratingN,s.ratingN||{}),seenNk:s.seenNk||{},seenRq:s.seenRq||{}}); }
+      ratings:Object.assign({},DEFAULT_STATE.ratings,s.ratings||{}),ratingN:Object.assign({},DEFAULT_STATE.ratingN,s.ratingN||{}),seenNk:s.seenNk||{},seenRq:s.seenRq||{},
+      learningDays:s.learningDays||{},trainingBest:s.trainingBest||{}}); }
   }catch(e){}
   return JSON.parse(JSON.stringify(DEFAULT_STATE));
 }
@@ -1294,6 +1329,30 @@ function renderHUD(){
   document.getElementById('hud-gems').textContent=S.gems;
   document.getElementById('hud-hearts').textContent=staminaFree()?'∞':S.hearts;
   document.getElementById('nav-av').textContent=S.avatar;
+}
+
+/* ================= レッスン/トレーニングの時間・ランク（第5段階） ================= */
+// 経過msを読みやすく: 60秒未満=「42秒」(trainingは0.1秒精度「38.4秒」)、以上=「1:24」
+function fmtDur(ms,precise){
+  const s=ms/1000;
+  if(s<60) return (precise?s.toFixed(1):Math.round(s))+'秒';
+  const m=Math.floor(s/60), r=Math.round(s%60);
+  return m+':'+String(r).padStart(2,'0');
+}
+/* トレーニングのタイムランク閾値(秒・種別ごと)。
+   【DEV/provisional】数値はすべて開発用の仮値であり正式基準ではない——正式値は後日ゾエが設定する。
+   種別キーは trainingBest と同じ粒度(将来 waits_4 / ukeire_13 等も追加可能)。
+   エントリが無い種別はランク非表示。thresholds順: S→A→B、超過はC。 */
+const TRAINING_RANK_THRESHOLDS={
+  waits:   {S:40, A:70, B:110},   // DEV/provisional
+  nanikiru:{S:50, A:90, B:140},   // DEV/provisional
+  riichi:  {S:35, A:60, B:100},   // DEV/provisional
+};
+function rankForTime(typeKey,ms){
+  const th=TRAINING_RANK_THRESHOLDS[typeKey];
+  if(!th) return null;                 // 基準未設定の種別はランクを出さない
+  const sec=ms/1000;
+  return sec<=th.S?'S':sec<=th.A?'A':sec<=th.B?'B':'C';
 }
 
 /* ================= スキルレーティング（v2.2仕様） ================= */
@@ -1649,7 +1708,7 @@ function startTraining(cat){
     ? shuffle(SR_RIICHI_QUESTIONS.slice()).slice(0,7)
     : new Array(7).fill(null);
   L={course,qs,idx:0,correct:0,sel:null,checked:false,done:false,
-     rcat:cat,ratingStart:S.ratings[cat],bigMiss:0};
+     rcat:cat,ratingStart:S.ratings[cat],bigMiss:0,startedAt:Date.now()};
   document.getElementById('lesson').classList.add('show');
   renderQ();
 }
@@ -1762,7 +1821,7 @@ function startLesson(id,waitLevel){
     qs=shuffle(c.questions.slice()).slice(0,5);
   }
   // ロード＝学ぶ場所: レーティングは動かさない（トレーニングのみ変動）
-  L={course:c,qs,idx:0,correct:0,sel:null,checked:false,done:false,rcat:null,ratingStart:null};
+  L={course:c,qs,idx:0,correct:0,sel:null,checked:false,done:false,rcat:null,ratingStart:null,startedAt:Date.now()};
   document.getElementById('lesson').classList.add('show');
   renderQ();
 }
@@ -2200,7 +2259,7 @@ function startCompare(groupId){
   const qs=g.variants.map((v,i)=>buildVariantQuestion(g,v,i));
   L={course:{id:'cmp-'+g.id,title:'くらべる問題',compare:g,training:false},
      qs,idx:0,correct:0,sel:null,checked:false,done:false,
-     rcat:null,ratingStart:null,bigMiss:0,contrastShown:false};
+     rcat:null,ratingStart:null,bigMiss:0,contrastShown:false,startedAt:Date.now()};
   document.getElementById('lesson').classList.add('show');
   renderQ();
 }
@@ -2349,8 +2408,11 @@ function finishLesson(){
   S.xp+=xp; S.gems+=gems;
   const cid=L.course.id;
   if(!L.course.training) S.crowns[cid]=Math.min(5,(S.crowns[cid]||0)+1);
-  // streak
+  // レッスン単位のクリア時間(開始→終了。バックグラウンド時間の除外は将来ネイティブ化時に精密化)
+  const duration=Date.now()-(L.startedAt||Date.now());
+  // streak: 「この完了でその日の学習を初達成したか」を更新前に判定(当日初回のみ祝う)
   const today=todayStr();
+  const firstToday=!(S.lastDay===today&&S.streak>0);
   if(S.lastDay!==today){
     if(S.lastDay){
       const gap=Math.round((new Date(today)-new Date(S.lastDay))/86400000);
@@ -2361,27 +2423,66 @@ function finishLesson(){
     S.lastDay=today;
   }else if(S.streak===0){ S.streak=1; }
   if(S.streak>(S.bestStreak||0)) S.bestStreak=S.streak;  // 最長連続記録
+  // 日別学習履歴(カレンダー用)。将来'protected'(連続記録ブロック)と区別するため状態文字列で保存
+  if(S.learningDays[today]!=='protected') S.learningDays[today]='completed';
+  // トレーニング自己ベスト(完走時のみ・種別ごとに分離。将来waits_4等の粒度キーも同じ器で持てる)
+  let bestInfo=null;
+  if(L.course.training&&L.rcat){
+    const key=L.rcat;
+    const prev=S.trainingBest[key];
+    const isBest=!prev||duration<prev.ms;
+    if(isBest) S.trainingBest[key]={ms:duration,at:today};
+    bestInfo={key,isBest,prevMs:prev?prev.ms:null,ms:duration};
+  }
   save();
   const area=document.getElementById('q-area');
   const perfect=L.correct===L.qs.length;
+  const accuracy=Math.round(L.correct/L.qs.length*100);
   let ratingSummary='';
   if(L.rcat){
     const r0=Math.floor(L.ratingStart), r1=Math.floor(S.ratings[L.rcat]);
     const up=S.ratings[L.rcat]>=L.ratingStart;
-    ratingSummary='<div class="rating-strip" style="margin:4px 0 0;"><span class="lab">📈 '+CAT_LABEL[L.rcat]+'</span>'
+    ratingSummary='<div class="rating-strip" style="margin:8px 0 0;"><span class="lab">📈 '+CAT_LABEL[L.rcat]+'</span>'
       +'<b style="color:var(--'+(up?'jade-deep':'verm')+')">'+r0+' → '+r1+(up?' ▲':' ▼')+'</b></div>';
   }
-  area.innerHTML='<div class="center-col">'
+  // 当日初回の学習達成のみ、連続記録を大きく祝う(同日2回目以降は通常リザルト)
+  const streakCelebrate=firstToday
+    ?'<div class="streak-celebrate"><div class="sc-flame">🔥</div>'
+      +'<div class="sc-num">'+S.streak+'</div><div class="sc-label">日連続！</div>'
+      +'<p class="sc-sub">今日の学習を達成しました</p></div>'
+    :'';
+  const statBox=(v,k)=>'<div class="res-box"><div class="v">'+v+'</div><div class="k">'+k+'</div></div>';
+  let stats;
+  if(L.course.training&&bestInfo){
+    // トレーニング: 正解率・今回タイム・自己ベスト・ランクが中心(ランク基準は設定データ・未設定種別は非表示)
+    const rank=rankForTime(bestInfo.key,duration);
+    stats='<div class="res-grid">'
+      +statBox(accuracy+'%','正解率')
+      +statBox(fmtDur(duration,true),'今回タイム')
+      +statBox(bestInfo.isBest?fmtDur(duration,true):fmtDur(bestInfo.prevMs,true),'BEST')
+      +(rank?statBox(rank,'ランク'):'')
+      +'</div>'
+      +(bestInfo.isBest?'<div class="best-badge">🏅 自己ベスト！</div>':'')
+      +'<div style="display:flex;gap:10px;justify-content:center;"><span class="xp-chip" style="font-size:12px;padding:6px 12px;">+'+xp+' EXP</span></div>'
+      +ratingSummary;
+  }else{
+    // 通常ロード: EXP・正解率・クリア時間が中心
+    stats='<div class="res-grid">'
+      +statBox('+'+xp,'EXP')
+      +statBox(accuracy+'%','正解率')
+      +statBox(fmtDur(duration),'クリアタイム')
+      +'</div>'
+      +'<p style="color:var(--ink-soft);font-size:12px;margin:2px 0 0;">👑 '+L.course.title+'：'+(S.crowns[cid]||0)+'/5</p>';
+  }
+  area.innerHTML='<div class="center-col" style="gap:12px;">'
     +'<div class="big-emoji">'+(perfect?'🏆':'🐦')+'</div>'
-    +'<h2 style="margin:0;">'+(perfect?'パーフェクト！':'レッスンクリア！')+'</h2>'
-    +'<p style="color:var(--ink-soft);font-weight:700;margin:0;">'+L.qs.length+'問中 '+L.correct+'問正解</p>'
-    +'<div style="display:flex;gap:10px;"><span class="xp-chip">+'+xp+' XP</span><span class="xp-chip" style="background:var(--jade);box-shadow:0 3px 0 var(--jade-deep);">+'+gems+' 💎</span></div>'
-    +ratingSummary
-    +(L.course.training?'':'<p style="color:var(--ink-soft);font-size:12px;">👑 '+L.course.title+'：'+S.crowns[cid]+'/5</p>')
+    +'<h2 style="margin:0;">'+(L.course.training?'トレーニング完了！':(perfect?'パーフェクト！':'レッスンクリア！'))+'</h2>'
+    +streakCelebrate
+    +stats
     +'</div>';
   const foot=document.getElementById('lesson-foot');
   foot.className='lesson-foot';
-  foot.innerHTML='<button class="btn" onclick="afterLesson()">ホームへ</button>';
+  foot.innerHTML='<button class="btn" onclick="afterLesson()">つづける</button>';
 }
 function afterLesson(){
   document.getElementById('lesson').classList.remove('show');
@@ -2518,6 +2619,39 @@ function renderTvPrev(){
 function closeTvPrev(){ document.getElementById('tvprev').classList.remove('show'); }
 
 /* ================= モーダル ================= */
+/* ================= 連続記録詳細・カレンダー（第5段階） ================= */
+let CAL_OFFSET=0;  // 表示中の月(0=今月, -1=先月, ...)
+function showStreakDetail(off){
+  CAL_OFFSET=(off===undefined)?0:CAL_OFFSET+off;
+  const now=new Date();
+  const base=new Date(now.getFullYear(), now.getMonth()+CAL_OFFSET, 1);
+  const y=base.getFullYear(), m=base.getMonth();
+  const todayKey=todayStr();
+  const dayKey=d=>[y,String(m+1).padStart(2,'0'),String(d).padStart(2,'0')].join('-');
+  const daysInMonth=new Date(y,m+1,0).getDate();
+  const firstDow=new Date(y,m,1).getDay();
+  let grid='<div class="cal">'+'日月火水木金土'.split('').map(d=>'<span class="dow">'+d+'</span>').join('');
+  for(let i=0;i<firstDow;i++) grid+='<span></span>';
+  for(let d=1;d<=daysInMonth;d++){
+    const st=S.learningDays[dayKey(d)];  // 'completed' | 'protected'(将来の連続記録ブロック) | undefined
+    const cls=(st==='completed'?' done':st==='protected'?' protected':'')
+      +(dayKey(d)===todayKey?' today':'');
+    grid+='<span class="cal-day'+cls+'">'+d+'</span>';
+  }
+  grid+='</div>';
+  openModal('<h3 style="margin-top:0;">🔥 '+S.streak+'日連続</h3>'
+    +'<p style="margin:0 0 4px;color:var(--ink-soft);font-weight:700;font-size:13px;">最長 '+(S.bestStreak||0)+'日</p>'
+    +'<div class="cal-head">'
+    +'<button onclick="showStreakDetail(-1)">‹</button>'
+    +'<b>'+y+'年'+(m+1)+'月</b>'
+    +'<button onclick="showStreakDetail(1)">›</button></div>'
+    +grid
+    +'<div class="cal-legend">'
+    +'<span><i style="background:var(--jade)"></i>学習した日</span>'
+    +'<span><i style="background:var(--gold)"></i>記録ブロック(予定)</span>'
+    +'<span><i style="border:2px solid var(--jade-deep)"></i>今日</span>'
+    +'</div>');
+}
 function openModal(html){
   document.getElementById('modal-body').innerHTML=html;
   document.getElementById('modal-bg').classList.add('show');
