@@ -2837,25 +2837,23 @@ function finishLesson(){
   // 最終問題 →(つづける)→ LESSON CLEAR →(小テーマCOMPLETE)→(大テーマMASTER)→ リザルト
   playClearSequence(roadEvents,()=>renderResult({xp,duration,firstToday,bestInfo,cid}));
 }
-/* Level4〜6の演出パイプライン: LESSON CLEAR(必須)→小テーマ制覇→大テーマ制覇の順に
-   中央オーバーレイを連続再生してからリザルトへ。時間はMOTIONで一元管理。
-   reduced-motion時はplayFx側で各120ms程度に短縮され、進行はタイマーのみで保証される */
+/* Level4〜6の達成演出: 上位が下位を包含し、常に1回だけ表示(第7段階追補)。
+   優先順位: 大テーマMASTER > 小テーマCOMPLETE > LESSON CLEAR。
+   MASTERは「Lessonクリア+小テーマ制覇+大テーマ制覇」、COMPLETEは「Lessonクリア+小テーマ制覇」
+   の意味を包含する。制覇済み再挑戦はイベントが発火しないためLESSON CLEARのみ。
+   reduced-motion時はplayFx側でスキップされ、進行はタイマーのみで保証される */
 function playClearSequence(events,then){
   const isTr=L&&L.course.training;
-  const seq=[{cls:'fx-clear',dur:MOTION.lessonClear,
-    html:'<div class="fx-ico">✓</div><div class="fx-t">'+(isTr?'TRAINING':'LESSON')+' CLEAR!</div>'}];
-  (events||[]).forEach(ev=>{
-    if(ev.type==='subtheme') seq.push({cls:'fx-sub',dur:MOTION.subthemeClear,
-      html:'<div class="fx-ico">🏅</div><div class="fx-t">'+ev.title+' COMPLETE!</div><div class="fx-s">小テーマ制覇！</div>'});
-    else seq.push({cls:'fx-theme',dur:MOTION.themeClear,
-      html:'<div class="fx-ico">👑</div><div class="fx-t">'+ev.title+' MASTER!</div><div class="fx-s">テーマ制覇！</div>'});
-  });
-  let i=0;
-  (function step(){
-    if(i>=seq.length){ if(then)then(); return; }
-    const s=seq[i++];
-    playFx(s.html,s.cls,s.dur,step);
-  })();
+  const ev=(events||[]).find(e=>e.type==='theme')||(events||[]).find(e=>e.type==='subtheme')||null;
+  const s=!ev
+    ?{cls:'fx-clear',dur:MOTION.lessonClear,
+      html:'<div class="fx-ico">✓</div><div class="fx-t">'+(isTr?'TRAINING':'LESSON')+' CLEAR!</div>'}
+    :ev.type==='subtheme'
+    ?{cls:'fx-sub',dur:MOTION.subthemeClear,
+      html:'<div class="fx-ico">🏅</div><div class="fx-t">'+ev.title+' COMPLETE!</div><div class="fx-s">小テーマ制覇！</div>'}
+    :{cls:'fx-theme',dur:MOTION.themeClear,
+      html:'<div class="fx-ico">👑</div><div class="fx-t">'+ev.title+' MASTER!</div><div class="fx-s">テーマ制覇！</div>'};
+  playFx(s.html,s.cls,s.dur,then);
 }
 function renderResult(ctx){
   if(!L) return;                                // 演出中に✕で離脱した場合は描画しない(状態は確定済み)
