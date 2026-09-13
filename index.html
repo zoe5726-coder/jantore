@@ -283,6 +283,12 @@ button.tile.off:active{transform:none;}
   font-size:clamp(12.5px, 3.5vw, 14.5px); animation:comboPop var(--m-answer,.26s) cubic-bezier(.34,1.56,.64,1);}
 .fb-combo.big{background:var(--gold); color:#fff; box-shadow:0 2px 0 var(--gold-deep);}
 .combo-end{margin:2px 0 4px; color:var(--ink-soft); font-size:clamp(11px, 3.1vw, 12.5px);}
+/* レッスン内復習: 「もう一度」チップ(責めないポジティブ表示)と復習クリアの小表示 */
+.rv-chip{display:inline-block; margin:0 0 8px; padding:4px 12px; border-radius:999px;
+  background:var(--jade-soft); color:var(--jade-deep); font-weight:800;
+  font-size:clamp(11.5px, 3.2vw, 13px);}
+.rv-clear{margin:2px 0 4px; color:var(--jade-deep); font-weight:800;
+  font-size:clamp(11.5px, 3.2vw, 12.5px);}
 @keyframes comboPop{from{transform:scale(.5); opacity:0;} to{transform:scale(1); opacity:1;}}
 
 /* Level1: 正解/不正解の軽い反応(0.2〜0.4秒)。牌・選択肢そのものが動く */
@@ -1452,6 +1458,9 @@ function themeOf(id){ return THEMES.find(t=>t.id===id); }
 // lesson.qn > subTheme.qn > theme.qn > 既定10 の順で上書きできる
 // (将来: 超入門8問・まとめ12問などをデータ側だけで設定可能)
 const LESSON_QN_DEFAULT=10;
+// レッスン内復習(第7段階追加改善): 間違えた問題を同じレッスン内で取り返す
+const REVIEW_GAP=2;   // 不正解の直後に出さず、最低この問数だけ別問題を挟んでから再出題
+const REVIEW_MAX=2;   // 1問あたりの復習回数上限(初回→復習1→復習2)。超えたらneedsReviewとして残す
 function themeLessons(t){                      // 小テーマを平坦化した通しレッスン一覧
   const out=[];
   t.subThemes.forEach(st=>st.lessons.forEach((ls,i)=>out.push(
@@ -2165,10 +2174,29 @@ function startThemeLesson(tid,idx){
   const qs=buildThemeQuestions(c,list[idx].diff,list[idx].qn);
   if(!qs.length) return;
   // ロード＝学ぶ場所: レーティングは動かさない（トレーニングのみ変動）
+  // baseN=基本問題数(EXP/正解率/PERFECTの基準)。review=レッスン内復習キュー(ロードのレッスン専用。
+  // トレーニングはタイム比較、Compareは条件比較が目的のため復習は入れない)
   L={course:c,themeId:tid,lessonIndex:idx,qs,idx:0,correct:0,sel:null,checked:false,done:false,
-     rcat:null,ratingStart:null,startedAt:Date.now(),combo:0,maxCombo:0};
+     rcat:null,ratingStart:null,startedAt:Date.now(),combo:0,maxCombo:0,
+     baseN:qs.length,baseAnswered:0,seq:0,review:[]};
   document.getElementById('lesson').classList.add('show');
   renderQ();
+}
+/* 復習キューから次に出す1問を選ぶ。出せる問題がなければnull。
+   strict(基本問題が残っている間): 間隔REVIEW_GAP以上空いたものだけ差し込む。
+   relaxed(基本問題を出し切った回収フェーズ): 最も間隔が空いたものから出す
+   (最終問題でミスした場合など間隔を満たせないときも、レッスン終了保証を優先して出す)。
+   出題する問題は元Questionの浅いコピー(_rv付き)で、選択/開示などのUI状態は一切持たない */
+function pickReview(relaxed){
+  if(!L||!L.review) return null;
+  const cand=L.review.map((e,k)=>({e,k})).filter(x=>!x.e.resolved&&!x.e.needsReview&&!x.e.inFlight);
+  if(!cand.length) return null;
+  const gap=x=>L.seq-x.e.lastMissSeq;
+  let pick=cand.filter(x=>gap(x)>=REVIEW_GAP).sort((a,b)=>a.e.lastMissSeq-b.e.lastMissSeq)[0]||null;
+  if(!pick&&relaxed) pick=cand.sort((a,b)=>gap(b)-gap(a))[0];
+  if(!pick) return null;
+  pick.e.attempts++; pick.e.inFlight=true;
+  return Object.assign({},pick.e.q,{_rv:{k:pick.k,attempt:pick.e.attempts}});
 }
 function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
 function quitLesson(){
@@ -2474,10 +2502,18 @@ function renderQ(){
   }
   const q=L.qs[L.idx];
   L.sel=null; L.checked=false;
-  document.getElementById('pbar-fill').style.width=(L.idx/L.qs.length*100)+'%';
+  // 進捗バー: 復習ありレッスンは「基本問題の消化率」(復習問題ではバーを進めない。
+  // 基本10問終了後の復習回収フェーズは満タンのまま、下の復習チップで残数を示す)
+  const frac=L.review?Math.min(1,L.baseAnswered/(L.baseN||1)):(L.idx/L.qs.length);
+  document.getElementById('pbar-fill').style.width=(frac*100)+'%';
   document.getElementById('lesson-hearts').textContent='❤️'+(staminaFree()?'∞':S.hearts);
   const area=document.getElementById('q-area');
   let pre='';
+  // 復習問題の表示: 責めずに「もう一度」のポジティブな一言だけ(第7段階追加改善)
+  if(q._rv&&L.review){
+    const rest=L.review.filter(e=>!e.resolved&&!e.needsReview).length;
+    pre+='<div class="rv-chip">🔁 もう一度チャレンジ！'+(rest>1?'（復習 あと'+rest+'問）':'')+'</div>';
+  }
   if(q.compareId){
     pre+='<div class="q-type">くらべる問題 '+q.compareStep+'</div>';
     if(q.showCompareBanner) pre+=compareBannerHTML(q);
@@ -2644,7 +2680,26 @@ function applyOutcome(q,cat,qid,res,elapsed){
   if(res.isCorrect){ L.combo=(L.combo||0)+1; if(L.combo>(L.maxCombo||0)) L.maxCombo=L.combo; }
   else L.combo=0;
   if(cat) L.bigMiss = res.S<0.5 ? (L.bigMiss||0)+1 : 0;
-  S.answered++; if(res.isCorrect){S.correct++; L.correct++;}
+  // L.correctは「基本問題の初回回答」だけを数える(EXP/正解率/PERFECTの基準)。
+  // 復習(_rv付き)の正解はEXP・正解率へ加算しない(復習はEXP稼ぎでなく学習機会)
+  S.answered++; if(res.isCorrect){S.correct++; if(!q._rv) L.correct++;}
+  // レッスン内復習キュー管理(ロードのレッスンのみ。L.reviewはstartThemeLessonでのみ初期化)
+  if(L.review){
+    L.seq++;
+    if(!q._rv) L.baseAnswered++;
+    if(q._rv){
+      const e=L.review[q._rv.k];
+      if(e){
+        e.inFlight=false;
+        if(res.isCorrect){ e.resolved=true; }               // 復習クリア
+        else if(e.attempts>=REVIEW_MAX){ e.needsReview=true; } // 上限到達: 未解決のまま記録に残す
+        else { e.lastMissSeq=L.seq; }                        // 間隔を空けてキューの後ろへ
+      }
+    }else if(!res.isCorrect){
+      L.review.push({q,no:L.seq,attempts:0,resolved:false,needsReview:false,
+        lastMissSeq:L.seq,inFlight:false});
+    }
+  }
   if(!res.isCorrect&&!staminaFree()){ S.hearts=Math.max(0,S.hearts-1); }
   // レーティング更新＋回答ログ（トレーニングのみ。ロードは学ぶ場所なので変動なし。XPには影響しない）
   let ratingRes=null;
@@ -2715,10 +2770,12 @@ function renderFeedback(q,cat,res,ratingRes,fb){
       comboEnd='<div class="combo-end">コンボ終了（'+L.prevCombo+'まで続いた）</div>';
     }
   }
+  // 復習クリア: さっき間違えた問題を取り返せたことを小さく示す(コンボ節目より弱い表示のみ)
+  const rvClear=(!staminaOut&&q._rv&&res.isCorrect)?'<div class="rv-clear">🔁 復習クリア ✓</div>':'';
   const card='<div class="fb-card '+(staminaOut?'ng':cls)+'" id="fb-card">'
     +'<div class="fb-head"><p class="fb-title '+(staminaOut?'ng':cls)+'">'
     +(staminaOut?'スタミナが切れた…':title)+'</p>'+comboChip+'</div>'
-    +comboEnd+ratingLine+dbgLine
+    +rvClear+comboEnd+ratingLine+dbgLine
     +(!staminaOut&&fb.ansText?'<p class="fb-exp"><b>'+fb.ansText+'</b></p>':'')
     +'<p class="fb-exp">'+fb.expText+'</p>'
     +'</div>';
@@ -2769,6 +2826,13 @@ function next(){
   if(!L||L.done||!L.checked) return;
   L.idx++;
   if(L.course.compare&&L.idx>=L.qs.length&&!L.contrastShown){ showContrast(); return; }
+  // レッスン内復習の差し込み: 間隔を満たした復習問題を次の1問として出す。
+  // 基本問題を出し切った後は、残った復習を回収し切るまでレッスンを終了しない
+  // (基本問題数の消化だけでは終了しない。needsReviewだけが残った時点で終了可能)
+  if(L.review){
+    const nq=pickReview(L.idx>=L.qs.length);
+    if(nq){ L.qs.splice(L.idx,0,nq); renderQ(); return; }
+  }
   if(L.idx>=L.qs.length){ finishLesson(); } else { renderQ(); }
 }
 
@@ -2784,8 +2848,11 @@ function finishLesson(){
   document.getElementById('pbar-fill').style.width='100%';
   const foot0=document.getElementById('lesson-foot');
   foot0.className='lesson-foot'; foot0.innerHTML='';   // クリア演出中の誤タップ防止
+  // L.correct=基本問題の初回正解数(復習正解は含まない)。復習で問題数が増えても
+  // 最大EXPは従来どおり(10問なら40)。パーフェクトも基本問題の初回全正解のみ
+  const baseN=L.baseN||L.qs.length;
   const xp=10+L.correct*3;
-  const gems=5+(L.correct===L.qs.length?10:0);
+  const gems=5+(L.correct===baseN?10:0);
   S.xp+=xp; S.gems+=gems;
   const cid=L.course.id;
   if(!L.course.training) S.crowns[cid]=Math.min(5,(S.crowns[cid]||0)+1);
@@ -2830,6 +2897,26 @@ function finishLesson(){
     if(isBest) S.trainingBest[key]={ms:duration,at:today};
     bestInfo={key,isBest,prevMs:prev?prev.ms:null,ms:duration};
   }
+  // レッスン内復習の結果を専用ストアへ記録(既存の回答ログjantore-anslog-v1には手を付けない。
+  // ロードのレッスンは元々レーティング対象外でanslogへ書いていないため、復習の二重記録も発生しない。
+  // needsReviewを含むこの記録は将来の「あとで復習」「弱点トレーニング」「AI Coach」の入力になる)
+  if(L.review&&L.review.length){
+    try{
+      const k='jantore-reviewlog-v1';
+      const arr=JSON.parse(localStorage.getItem(k)||'[]');
+      L.review.forEach(e=>{
+        let qid=null;
+        try{ const f=QFORMATS[qFormatKey(e.q)]; qid=f.qid?f.qid(e.q):null; }catch(_){}
+        arr.push({at:new Date().toISOString(),themeId:L.themeId||null,
+          lessonIndex:(L.lessonIndex!=null?L.lessonIndex:null),course:L.course.id,
+          originalQuestionId:qid,seed:(e.q.seed!=null?e.q.seed:null),fs:e.q.fs||null,
+          lv:(e.q.lv!=null?e.q.lv:null),firstMissNo:e.no,isReview:true,
+          reviewAttempts:e.attempts,resolved:!!e.resolved,needsReview:!!e.needsReview});
+      });
+      if(arr.length>500) arr.splice(0,arr.length-500);
+      localStorage.setItem(k,JSON.stringify(arr));
+    }catch(e){}
+  }
   save();
   // ここまでで報酬・進捗はすべて確定済み。以降は演出のみ:
   // 通常は直接リザルト。初回制覇時のみ COMPLETE または MASTER を1回だけ挟む
@@ -2854,8 +2941,11 @@ function renderResult(ctx){
   if(!L) return;                                // 演出中に✕で離脱した場合は描画しない(状態は確定済み)
   const {xp,duration,firstToday,bestInfo,cid}=ctx;
   const area=document.getElementById('q-area');
-  const perfect=L.correct===L.qs.length;
-  const accuracy=Math.round(L.correct/L.qs.length*100);
+  // 正解率・PERFECTは基本問題の初回回答のみで判定(復習で取り返しても書き換えない=従来と比較可能)
+  const baseN=L.baseN||L.qs.length;
+  const perfect=L.correct===baseN;
+  const accuracy=Math.round(L.correct/baseN*100);
+  const rv=(L.review&&L.review.length)?{n:L.review.length,ok:L.review.filter(e=>e.resolved).length}:null;
   let ratingSummary='';
   if(L.rcat){
     const r0=Math.floor(L.ratingStart), r1=Math.floor(S.ratings[L.rcat]);
@@ -2895,7 +2985,9 @@ function renderResult(ctx){
       +statBox(accuracy+'%','正解率')
       +statBox('🔥'+(L.maxCombo||0),'最大コンボ')
       +statBox(fmtDur(duration),'クリアタイム')
+      +(rv?statBox(rv.ok+'/'+rv.n+(rv.ok===rv.n?' ✓':''),'復習クリア'):'')
       +'</div>'
+      +(rv&&rv.ok===rv.n?'<div class="best-badge stag"'+stagStyle(SI++)+'>🔁 復習コンプリート！ぜんぶ取り返した！</div>':'')
       +(L.themeId
         ?'<p class="stag" style="'+noteStyle+'animation-delay:'+(SI++)*MOTION.resultStagger+'ms">📍 '
           +themeOf(L.themeId).title+'：'+(S.roadProgress[L.themeId]||0)+'/'+themeLessons(themeOf(L.themeId)).length+' レッスン</p>'
