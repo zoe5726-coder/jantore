@@ -317,6 +317,62 @@ button.tile.off:active{transform:none;}
 .fx.fade .fx-box{animation:fxOut .22s ease-in both;}
 @keyframes fxOut{from{transform:scale(1); opacity:1;} to{transform:scale(.9); opacity:0;}}
 
+/* ================= 第8段階: Daily Engagement ================= */
+/* 今日の学習状況(ストリーク)+つづきから */
+.today-strip{margin:10px 16px 0; background:var(--card); border:2px solid var(--line); border-radius:12px;
+  padding:8px 12px; display:flex; align-items:center; gap:8px; cursor:pointer;}
+.today-strip .ts-streak{font-size:clamp(12.5px,3.5vw,14px); white-space:nowrap;}
+.today-strip .ts-state{flex:1; min-width:0; font-size:clamp(10.5px,3vw,12px); color:var(--ink-soft); font-weight:700;}
+.today-strip .ts-state.done{color:var(--jade-deep);}
+.today-strip .ts-go{border:none; background:var(--jade); color:#fff; font-weight:800; border-radius:999px;
+  padding:6px 12px; font-size:clamp(11px,3.1vw,12.5px); box-shadow:0 2px 0 var(--jade-deep); white-space:nowrap;}
+.today-strip .ts-go:active{transform:translateY(2px); box-shadow:none;}
+/* 今日のミッションカード(コンパクト・ロードを圧迫しない) */
+.mission-card{margin:8px 16px 0; background:var(--card); border:2px solid var(--line); border-radius:12px;
+  padding:8px 12px 10px;}
+.mission-card .mc-head{display:flex; justify-content:space-between; align-items:center;
+  font-weight:800; font-size:clamp(12.5px,3.5vw,14px); margin-bottom:4px;}
+.mission-card .mc-count{color:var(--jade-deep); background:var(--jade-soft); border-radius:999px;
+  padding:2px 10px; font-size:clamp(11px,3.1vw,12.5px);}
+.mission-card .mc-count.comp{background:var(--gold); color:#fff; box-shadow:0 2px 0 var(--gold-deep);}
+.mission-card .mc-item{display:flex; align-items:center; gap:6px; padding:3px 0;
+  font-size:clamp(11.5px,3.2vw,13px); font-weight:700; color:var(--ink);}
+.mission-card .mc-item.done{color:var(--jade-deep);}
+.mission-card .mc-prog{margin-left:auto; color:var(--ink-soft); font-size:clamp(10.5px,3vw,12px);
+  font-variant-numeric:tabular-nums;}
+.mission-card .mc-bar{display:block; width:64px; height:6px; border-radius:3px; background:var(--line); overflow:hidden; flex:none;}
+.mission-card .mc-bar i{display:block; height:100%; background:var(--jade); border-radius:3px;}
+.mission-card .mc-tomorrow{margin-top:4px; color:var(--ink-soft); font-size:clamp(10.5px,3vw,12px);}
+/* ミッション達成トースト: 上部の小チップ。操作を塞がない */
+.toast{position:fixed; top:calc(10px + env(safe-area-inset-top)); left:50%;
+  transform:translateX(-50%) translateY(-16px); max-width:min(86vw,340px);
+  background:var(--card); border:2px solid var(--jade); border-radius:14px; padding:8px 16px;
+  box-shadow:0 4px 12px rgba(0,0,0,.18); z-index:70; pointer-events:none;
+  opacity:0; transition:opacity .22s ease, transform .22s ease; text-align:center;}
+.toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+.toast .toast-t{font-weight:900; color:var(--jade-deep); font-size:clamp(12.5px,3.5vw,14px);}
+.toast .toast-s{font-weight:700; color:var(--ink-soft); font-size:clamp(11px,3.1vw,12.5px);}
+/* 宝箱ノード: レッスンより少し小さく・金アクセント。available時のみ軽いpulse */
+.chest-node{width:calc(var(--node-size)*.82); height:calc(var(--node-size)*.82); border-radius:16px;
+  border:2.5px solid var(--gold); background:var(--card); position:relative;
+  display:flex; align-items:center; justify-content:center; box-shadow:0 4px 0 var(--gold-deep);}
+.chest-node .ci{font-size:clamp(19px,5.2vw,24px); line-height:1;}
+.chest-node.locked{border-color:var(--line); background:var(--locked); box-shadow:0 4px 0 var(--line);}
+.chest-node.locked .ci{opacity:.55; filter:grayscale(.6);}
+.chest-node.available{animation:chestPulse 1.6s ease-in-out infinite;}
+.chest-node.available:active{transform:translateY(3px); box-shadow:0 1px 0 var(--gold-deep);}
+.chest-node.claimed{background:var(--jade-soft); animation:none;}
+.chest-node.claimed .ci{opacity:.6;}
+.chest-node .cb{position:absolute; right:-6px; top:-6px; background:var(--jade); color:#fff;
+  border-radius:50%; width:18px; height:18px; font-size:11px; font-weight:900;
+  display:flex; align-items:center; justify-content:center; box-shadow:0 1px 0 var(--jade-deep);}
+@keyframes chestPulse{0%,100%{transform:scale(1); box-shadow:0 4px 0 var(--gold-deep);}
+  50%{transform:scale(1.07); box-shadow:0 4px 0 var(--gold-deep),0 0 0 6px rgba(232,169,60,.18);}}
+/* 宝箱OPEN/DAILY COMPLETEオーバーレイ配色 */
+.fx.fx-chest .fx-box{background:var(--gold); box-shadow:0 6px 0 var(--gold-deep);}
+.fx.fx-daily .fx-box{background:linear-gradient(160deg,var(--jade),var(--jade-deep)); box-shadow:0 6px 0 var(--jade-deep);}
+.fx .fx-s2{font-size:clamp(11.5px,3.2vw,13px); font-weight:800; opacity:.85; margin-top:2px;}
+
 /* リザルトの順次表示(全体で1秒前後)+EXPポップ */
 .stag{opacity:0; animation:stagIn .3s ease-out forwards;}
 @keyframes stagIn{from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:none;}}
@@ -331,6 +387,8 @@ button.tile.off:active{transform:none;}
   .fx .fx-box,.fx.fade .fx-box,.res-box.exp-pop .v{animation:none !important;}
   .stag{animation:none !important; opacity:1;}
   .streak-celebrate,.sc-flame{animation:none !important;}
+  .chest-node.available{animation:none !important;}
+  .toast{transition:none !important;}
 }
 .lesson-foot.mid{background:color-mix(in srgb, var(--gold) 12%, var(--card)); border-top-color:var(--gold);}
 .fb-rate{margin:0 0 6px; font-size:13px; font-weight:800; font-variant-numeric:tabular-nums;}
@@ -468,9 +526,11 @@ button.tile.off:active{transform:none;}
   </div>
 </div>
 
-<!-- 第7段階: 演出オーバーレイ(コンボ節目/Lesson Clear/小テーマ・大テーマ制覇)。
+<!-- 第7段階: 演出オーバーレイ(コンボ節目/小テーマ・大テーマ制覇/宝箱/DAILY COMPLETE)。
      pointer-events:noneのため操作・進行は一切ブロックしない -->
 <div class="fx" id="fx" aria-hidden="true"></div>
+<!-- 第8段階: ミッション達成トースト(上部の小チップ・進行やコンボ演出と共存) -->
+<div class="toast" id="toast" aria-hidden="true"></div>
 
 <div class="modal-bg" id="modal-bg" onclick="if(event.target===this)closeModal()">
   <div class="modal" id="modal-body"></div>
@@ -1408,33 +1468,33 @@ const THEMES=[
   ]},
  {id:'th_waits', course:'waits', title:'待ちの基本', sub:'待ちの形を見抜こう',
   subThemes:[                                  // 小テーマ間=枚数(4→7→10→13)で大きく段階化
-   {id:'st_waits_4', title:'4枚形', lessons:[  // 小テーマ内=まとめで前形を混ぜて反復
+   {id:'st_waits_4', title:'4枚形', chest:{after:2}, lessons:[  // 小テーマ内=まとめで前形を混ぜて反復
     {diff:{waitsLevels:[4]}},{diff:{waitsLevels:[4]}},{diff:{waitsLevels:[4]}},{diff:{waitsLevels:[4]}}]},
-   {id:'st_waits_7', title:'7枚形', lessons:[
+   {id:'st_waits_7', title:'7枚形', chest:{after:3}, lessons:[
     {diff:{waitsLevels:[7]}},{diff:{waitsLevels:[7]}},{diff:{waitsLevels:[7]}},{diff:{waitsLevels:[7]}},{diff:{waitsLevels:[4,7]}}]},
-   {id:'st_waits_10', title:'10枚形', lessons:[
+   {id:'st_waits_10', title:'10枚形', chest:{after:2}, lessons:[
     {diff:{waitsLevels:[10]}},{diff:{waitsLevels:[10]}},{diff:{waitsLevels:[10]}},{diff:{waitsLevels:[7,10]}}]},
-   {id:'st_waits_13', title:'13枚形', lessons:[
+   {id:'st_waits_13', title:'13枚形', chest:{after:2}, lessons:[
     {diff:{waitsLevels:[13]}},{diff:{waitsLevels:[13]}},{diff:{waitsLevels:[13]}},{diff:{waitsLevels:[10,13]}}]},
   ]},
  {id:'th_ukeire', course:'ukeire1', title:'受け入れ', sub:'テンパイする牌を探そう',
   subThemes:[                                  // 1シャンテンの最小は7枚のため4枚形の小テーマは無し
-   {id:'st_uk_7', title:'7枚形', lessons:[
+   {id:'st_uk_7', title:'7枚形', chest:{after:2}, lessons:[
     {diff:{ukeireLevels:[7]}},{diff:{ukeireLevels:[7]}},{diff:{ukeireLevels:[7]}},{diff:{ukeireLevels:[7]}}]},
-   {id:'st_uk_10', title:'10枚形', lessons:[
+   {id:'st_uk_10', title:'10枚形', chest:{after:2}, lessons:[
     {diff:{ukeireLevels:[10]}},{diff:{ukeireLevels:[10]}},{diff:{ukeireLevels:[10]}},{diff:{ukeireLevels:[7,10]}}]},
-   {id:'st_uk_13', title:'13枚形', lessons:[
+   {id:'st_uk_13', title:'13枚形', chest:{after:2}, lessons:[
     {diff:{ukeireLevels:[13]}},{diff:{ukeireLevels:[13]}},{diff:{ukeireLevels:[13]}},{diff:{ukeireLevels:[10,13]}}]},
-   {id:'st_uk_full', title:'実戦形', lessons:[
+   {id:'st_uk_full', title:'実戦形', chest:{after:3}, lessons:[
     {diff:{ukeireLevels:[34]}},{diff:{ukeireLevels:[34]}},{diff:{ukeireLevels:[34]}},{diff:{ukeireLevels:[34]}},{diff:{ukeireLevels:[13,34]}}]},
   ]},
  {id:'th_nanikiru', course:'nanikiru', title:'何切る', sub:'受け入れ最大の1枚を選ぶ',
   subThemes:[                                  // 既存lv(作問時難易度)帯で小テーマ間を段階化・小テーマ内も帯を少しずつ上げる
-   {id:'st_nk_1', title:'きほん', lessons:[
+   {id:'st_nk_1', title:'きほん', chest:{after:2}, lessons:[
     {diff:{lvRange:[2,3]}},{diff:{lvRange:[2,3]}},{diff:{lvRange:[2,4]}},{diff:{lvRange:[2,4]}}]},
-   {id:'st_nk_2', title:'中級', lessons:[
+   {id:'st_nk_2', title:'中級', chest:{after:2}, lessons:[
     {diff:{lvRange:[4,5]}},{diff:{lvRange:[4,6]}},{diff:{lvRange:[5,6]}},{diff:{lvRange:[3,6]}}]},
-   {id:'st_nk_3', title:'上級', lessons:[
+   {id:'st_nk_3', title:'上級', chest:{after:2}, lessons:[
     {diff:{lvRange:[6,7]}},{diff:{lvRange:[7,8]}},{diff:{lvRange:[7,9]}},{diff:{lvRange:[5,9]}}]},
   ]},
  {id:'th_riichi', course:'riichi', title:'リーチ判断', sub:'曲げるかダマか（実測検証済み）',
@@ -1475,7 +1535,7 @@ function themeFrontier(t){ return Math.min(S.roadProgress[t.id]||0,themeLessons(
 const DEFAULT_STATE={schemaVersion:1,xp:0,hearts:5,gems:120,streak:0,lastDay:null,avatar:'🐦',
   owned:{adfree:false,stamina:false,avatars:false},freeze:0,crowns:{},best:{},answered:0,correct:0,
   ratings:{waits:30,nanikiru:30,riichi:30},ratingN:{waits:0,nanikiru:0,riichi:0},seenNk:{},seenRq:{},bestStreak:0,
-  learningDays:{},trainingBest:{},roadProgress:{},dev:false};
+  learningDays:{},trainingBest:{},roadProgress:{},daily:null,chests:{},dev:false};
 let S=loadState();
 if((S.bestStreak||0)<S.streak) S.bestStreak=S.streak;  // 旧データ互換: 最長記録を現在値で初期化
 // 旧データ互換: 日別履歴が無い場合、最終学習日だけ'completed'として補完(過去の全履歴は復元不能)
@@ -1492,7 +1552,8 @@ function loadState(){
     const raw=localStorage.getItem('jantore-v1');
     if(raw){ const s=JSON.parse(raw); return Object.assign({},DEFAULT_STATE,s,{owned:Object.assign({},DEFAULT_STATE.owned,s.owned||{}),crowns:s.crowns||{},best:s.best||{},
       ratings:Object.assign({},DEFAULT_STATE.ratings,s.ratings||{}),ratingN:Object.assign({},DEFAULT_STATE.ratingN,s.ratingN||{}),seenNk:s.seenNk||{},seenRq:s.seenRq||{},
-      learningDays:s.learningDays||{},trainingBest:s.trainingBest||{},roadProgress:s.roadProgress||{}}); }
+      learningDays:s.learningDays||{},trainingBest:s.trainingBest||{},roadProgress:s.roadProgress||{},
+      daily:s.daily||null,chests:s.chests||{}}); }
   }catch(e){}
   return JSON.parse(JSON.stringify(DEFAULT_STATE));
 }
@@ -1527,6 +1588,9 @@ const MOTION={
   themeClear:1800,     // Level6: 大テーマ制覇
   resultStagger:110,   // リザルト各項目の表示間隔(全体で1秒前後)
   unlock:600,          // 次マスのアンロック(Lesson Clearより弱い)
+  toast:1300,          // ミッション達成トースト(テンポを止めない軽い表示)
+  dailyComplete:1600,  // DAILY COMPLETE(トーストより一段強い・COMPLETE級)
+  chest:1000,          // 宝箱OPEN
 };
 try{
   document.documentElement.style.setProperty('--m-answer',MOTION.answer+'ms');
@@ -1552,6 +1616,90 @@ function playFx(inner,cls,dur,done){
     el.classList.add('fade');
     FX_TIMER=setTimeout(()=>{ el.className='fx'; el.innerHTML=''; FX_TIMER=null; if(done)done(); },220);
   },dur);
+}
+
+/* ================= Daily Engagement（第8段階） ================= */
+/* デイリーミッション定義: 条件は必ずここに集約(画面各所へベタ書きしない)。
+   追加・変更はこの配列を書き換えるだけ。rewardは将来の報酬用フィールド(通貨経済は未実装) */
+const DAILY_MISSIONS=[
+ {id:'dm_lesson', icon:'📗', title:'レッスンを1回クリア', type:'lesson', target:1,
+  desc:'学習ロードのレッスンを完了する(トレーニングは対象外)', reward:null},
+ {id:'dm_xp', icon:'⚡', title:'100 EXPかせぐ', type:'xp', target:100,
+  desc:'学習ロードのレッスンで実際に獲得したEXPのみ(宝箱ボーナスは対象外)', reward:null},
+ {id:'dm_combo', icon:'🔥', title:'5 COMBOを達成', type:'combo', target:1,
+  desc:'レッスン中に5連続正解(復習問題での到達もOK)', reward:null},
+];
+/* 進捗はローカル日付(todayStr・第5段階でローカルY-M-D化済み)単位。日付が変われば新規初期化し、
+   過去日の進捗は持ち越さない。保存先はS.daily(jantore-v1内)={date,progress,completed,completedAt} */
+function ensureDaily(){
+  const today=todayStr();
+  if(!S.daily||S.daily.date!==today){
+    S.daily={date:today,progress:{},completed:false,completedAt:null};
+    DAILY_MISSIONS.forEach(m=>S.daily.progress[m.id]=0);
+    save();
+  }
+  if(!S.daily.progress) S.daily.progress={};
+  return S.daily;
+}
+function missionProgress(m){ return Math.min(ensureDaily().progress[m.id]||0,m.target); }
+function missionDone(m){ return missionProgress(m)>=m.target; }
+function missionDoneCount(){ return DAILY_MISSIONS.filter(missionDone).length; }
+let DAILY_FX_PENDING=false;  // DAILY COMPLETE演出の予約(解説を邪魔しないタイミング=リザルトで再生)
+function bumpMission(id,amt){
+  const d=ensureDaily();
+  const m=DAILY_MISSIONS.find(x=>x.id===id); if(!m||amt<=0) return;
+  const before=d.progress[id]||0;
+  if(before>=m.target) return;                 // 二重達成防止
+  d.progress[id]=Math.min(m.target,before+amt);
+  if(d.progress[id]>=m.target){
+    queueToast('✓ デイリーミッション達成！',m.title);
+    // 3つ全達成→DAILY COMPLETE(1日1回のみ。completedフラグで再表示を防ぐ)
+    if(!d.completed&&DAILY_MISSIONS.every(missionDone)){
+      d.completed=true; d.completedAt=new Date().toISOString();
+      DAILY_FX_PENDING=true;
+    }
+  }
+  save();
+}
+/* ミッション達成トースト: 画面上部の小さなチップ。pointer-events:noneでレッスン進行・
+   コンボ演出・解説と共存し、順番に1つずつ約1.3秒で自然に消える(全画面演出にしない) */
+let TOAST_Q=[],TOAST_ON=false;
+function queueToast(title,sub){ TOAST_Q.push({title,sub}); pumpToast(); }
+function pumpToast(){
+  if(TOAST_ON||!TOAST_Q.length) return;
+  const el=document.getElementById('toast');
+  if(!el){ TOAST_Q=[]; return; }
+  TOAST_ON=true;
+  const t=TOAST_Q.shift();
+  el.innerHTML='<div class="toast-t">'+t.title+'</div>'+(t.sub?'<div class="toast-s">'+t.sub+'</div>':'');
+  el.classList.add('show');
+  setTimeout(()=>{
+    el.classList.remove('show');
+    setTimeout(()=>{ TOAST_ON=false; pumpToast(); },reducedMotion()?20:260);
+  },reducedMotion()?300:MOTION.toast);
+}
+/* ロード上の宝箱(第8段階): レッスンではない任意受取のボーナス。位置は小テーマのデータ
+   (chest:{after:N}=そのN個目のレッスンの後)で指定。roadProgressには一切含めず、
+   受け取らなくても次のレッスンへ進める。報酬は仮のボーナスEXP(通貨経済は未実装)。
+   宝箱EXPはDailyのEXPミッションへは加算しない(学習EXPのみが対象) */
+const CHEST_REWARD_XP=20;
+function chestState(cid,need,tid){
+  if(S.chests[cid]) return 'claimed';
+  const t=themeOf(tid);
+  return (t&&themeFrontier(t)>=need)?'available':'locked';
+}
+function claimChest(cid,need,tid){
+  if(chestState(cid,need,tid)!=='available') return;   // locked/claimedは受け取れない(二重付与防止)
+  S.chests[cid]='claimed';
+  S.xp+=CHEST_REWARD_XP;
+  save();
+  playFx('<div class="fx-ico">🎁</div><div class="fx-t">宝箱OPEN!</div>'
+    +'<div class="fx-s">ボーナス +'+CHEST_REWARD_XP+' EXP</div>','fx-chest',MOTION.chest);
+  renderHUD(); renderPath();
+}
+function scrollToNext(){
+  const el=document.querySelector('.node.next');
+  if(el){ try{ el.scrollIntoView({block:'center',behavior:reducedMotion()?'auto':'smooth'}); }catch(e){} }
 }
 
 function renderHUD(){
@@ -1946,7 +2094,34 @@ function startTraining(cat){
 /* ================= コースパス ================= */
 function renderPath(){
   const wrap=document.getElementById('path-wrap');
-  let html='<div class="rating-strip"><span class="lab">📈 レーティング</span>'
+  ensureDaily();
+  // ホーム優先順位(第8段階): ①今日の学習状況(ストリーク)+つづきから ②今日のミッション
+  // ③レーティング ④学習ロード。情報過多にしないためカードはコンパクトに保つ
+  const learnedToday=S.lastDay===todayStr()&&S.streak>0;
+  let html='<div class="today-strip" onclick="showStreakDetail()">'
+    +'<span class="ts-streak">🔥 <b>'+S.streak+'日連続</b></span>'
+    +'<span class="ts-state'+(learnedToday?' done':'')+'">'
+    +(learnedToday?'✓ 今日の学習完了':'今日の学習はまだです')+'</span>'
+    +'<button class="ts-go" onclick="event.stopPropagation();scrollToNext()">▶ つづきから</button>'
+    +'</div>';
+  const dDone=missionDoneCount();
+  const dAll=DAILY_MISSIONS.length;
+  html+='<div class="mission-card">'
+    +'<div class="mc-head"><span>🎯 今日のミッション</span>'
+    +'<span class="mc-count'+(S.daily.completed?' comp':'')+'">'
+    +(S.daily.completed?'COMPLETE ✓':dDone+'/'+dAll)+'</span></div>'
+    +DAILY_MISSIONS.map(m=>{
+      const cur=missionProgress(m), done=missionDone(m);
+      if(done) return '<div class="mc-item done">✓ '+m.title+'</div>';
+      const pct=Math.round(cur/m.target*100);
+      return '<div class="mc-item">'+m.icon+' '+m.title
+        +(m.target>1?'<span class="mc-prog">'+cur+'/'+m.target+'</span>'
+          +'<span class="mc-bar"><i style="width:'+pct+'%"></i></span>':'')
+        +'</div>';
+    }).join('')
+    +(S.daily.completed?'<div class="mc-tomorrow">今日のミッション達成！ロードはこのまま続けて遊べるよ。また明日！</div>':'')
+    +'</div>';
+  html+='<div class="rating-strip"><span class="lab">📈 レーティング</span>'
     +'<span>待ち <b>'+Math.floor(S.ratings.waits)+'</b></span>'
     +'<span>何切る <b>'+Math.floor(S.ratings.nanikiru)+'</b></span>'
     +'<span>リーチ <b>'+Math.floor(S.ratings.riichi)+'</b></span></div>';
@@ -1991,6 +2166,15 @@ function renderPath(){
             +' onclick="startThemeLesson(\''+t.id+'\','+idx+')">'
             +'<span class="ico">'+ico+'</span></button>';
           html+='<div class="node-label '+off+'">'+(isFinal?'まとめ':'Lesson '+(i+1))+'</div>';
+          // 宝箱(第8段階): レッスンではない任意受取ノード。中央配置で蛇行の番号は消費しない
+          if(st.chest&&st.chest.after===i+1){
+            const need=gi;                       // ここまでのレッスンをクリアしたら受取可
+            const cs=chestState(st.id,need,t.id);
+            html+='<button class="chest-node '+cs+'"'+(cs==='locked'?' disabled':'')
+              +' onclick="claimChest(\''+st.id+'\','+need+',\''+t.id+'\')">'
+              +'<span class="ci">🎁</span>'+(cs==='claimed'?'<span class="cb">✓</span>':'')+'</button>';
+            html+='<div class="node-label">ボーナス</div>';
+          }
         });
         html+='</div></div>';
       });
@@ -2679,6 +2863,8 @@ function applyOutcome(q,cat,qid,res,elapsed){
   L.prevCombo=L.combo||0;
   if(res.isCorrect){ L.combo=(L.combo||0)+1; if(L.combo>(L.maxCombo||0)) L.maxCombo=L.combo; }
   else L.combo=0;
+  // デイリーミッション: 5COMBO到達(学習ロードのみ・復習中の到達もOK・二重達成はbump側で防止)
+  if(L.themeId!=null&&L.combo>=5) bumpMission('dm_combo',1);
   if(cat) L.bigMiss = res.S<0.5 ? (L.bigMiss||0)+1 : 0;
   // L.correctは「基本問題の初回回答」だけを数える(EXP/正解率/PERFECTの基準)。
   // 復習(_rv付き)の正解はEXP・正解率へ加算しない(復習はEXP稼ぎでなく学習機会)
@@ -2888,6 +3074,13 @@ function finishLesson(){
   if(S.streak>(S.bestStreak||0)) S.bestStreak=S.streak;  // 最長連続記録
   // 日別学習履歴(カレンダー用)。将来'protected'(連続記録ブロック)と区別するため状態文字列で保存
   if(S.learningDays[today]!=='protected') S.learningDays[today]='completed';
+  // デイリーミッション進行(第8段階): 学習ロードのレッスンのみ対象(トレーニング/Compareは対象外)。
+  // EXPミッションは実際に付与された学習EXP(復習水増しなし・宝箱ボーナス対象外)。
+  // ストリークとは独立: ミッション未達成でもストリークは上の既存処理どおり継続する
+  if(L.themeId!=null){
+    bumpMission('dm_lesson',1);
+    bumpMission('dm_xp',xp);
+  }
   // トレーニング自己ベスト(完走時のみ・種別ごとに分離。将来waits_4等の粒度キーも同じ器で持てる)
   let bestInfo=null;
   if(L.course.training&&L.rcat){
@@ -3005,6 +3198,14 @@ function renderResult(ctx){
   const foot=document.getElementById('lesson-foot');
   foot.className='lesson-foot';
   foot.innerHTML='<button class="btn" onclick="afterLesson()">つづける</button>';
+  // DAILY COMPLETE(第8段階): 3ミッション全達成のその日1回だけ、解説を邪魔しない
+  // リザルト表示のタイミングで再生(COMPLETE/MASTER演出の後に順番に流れる。操作は塞がない)
+  if(DAILY_FX_PENDING){
+    DAILY_FX_PENDING=false;
+    playFx('<div class="fx-ico">🎯</div><div class="fx-t">DAILY COMPLETE!</div>'
+      +'<div class="fx-s">今日のミッション達成！　🔥 '+S.streak+'日連続</div>'
+      +'<div class="fx-s2">また明日！</div>','fx-daily',MOTION.dailyComplete);
+  }
 }
 function afterLesson(){
   document.getElementById('lesson').classList.remove('show');
