@@ -318,6 +318,32 @@ button.tile.off:active{transform:none;}
 @keyframes fxOut{from{transform:scale(1); opacity:1;} to{transform:scale(.9); opacity:0;}}
 
 /* ================= 第8段階: Daily Engagement ================= */
+/* ホーム画面: カードを縦に積む構造(将来カードを追記可能) */
+.home-wrap{padding:4px 0 96px;}
+.hc-continue{display:flex; align-items:center; gap:12px; width:calc(100% - 32px); margin:10px 16px 0;
+  border:none; background:var(--jade); color:#fff; border-radius:14px; padding:13px 16px;
+  box-shadow:0 4px 0 var(--jade-deep); text-align:left; cursor:pointer;}
+.hc-continue:active{transform:translateY(3px); box-shadow:0 1px 0 var(--jade-deep);}
+.hc-continue .hc-play{font-size:clamp(19px,5.2vw,23px); line-height:1;}
+.hc-continue .hc-txt{display:flex; flex-direction:column; gap:1px; min-width:0;}
+.hc-continue .hc-txt b{font-size:clamp(14.5px,4vw,16.5px); letter-spacing:.04em;}
+.hc-continue .hc-txt span{font-size:clamp(11px,3.1vw,12.5px); opacity:.92; font-weight:700;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.today-strip .ts-cal{font-size:clamp(14px,4vw,17px); opacity:.75;}
+/* コースの現在地フローティングボタン(ロードが長くなっても現在地へ一発。過去マス閲覧の邪魔をしない) */
+.loc-btn{position:fixed; right:14px; bottom:calc(78px + env(safe-area-inset-bottom)); z-index:25;
+  border:none; background:var(--jade); color:#fff; font-weight:800; border-radius:999px;
+  padding:9px 14px; font-size:clamp(11px,3.1vw,12.5px); box-shadow:0 3px 0 var(--jade-deep),0 4px 10px rgba(0,0,0,.15);}
+.loc-btn:active{transform:translateY(2px); box-shadow:0 1px 0 var(--jade-deep);}
+/* マイページ: 雀力レーティング */
+.rt-row{display:flex; justify-content:space-between; align-items:center; padding:5px 2px;
+  font-size:clamp(12.5px,3.5vw,14px); font-weight:700; border-bottom:1px solid var(--line);}
+.rt-row:last-child{border-bottom:none;}
+.rt-row b{font-variant-numeric:tabular-nums; font-size:clamp(14px,3.9vw,16px);}
+.rt-row i{font-style:normal; color:var(--ink-soft); font-size:clamp(11px,3.1vw,12.5px);}
+.rt-more{margin-top:4px;}
+.rt-more summary{font-size:clamp(11.5px,3.2vw,13px); font-weight:800; color:var(--jade-deep);
+  cursor:pointer; padding:4px 0;}
 /* 今日の学習状況(ストリーク)+つづきから */
 .today-strip{margin:10px 16px 0; background:var(--card); border:2px solid var(--line); border-radius:12px;
   padding:8px 12px; display:flex; align-items:center; gap:8px; cursor:pointer;}
@@ -490,8 +516,17 @@ button.tile.off:active{transform:none;}
     </div>
   </div>
 
+  <!-- ホーム(第8段階追加改善): 今日やること・継続状況を見る場所。
+       home-bodyはカードを縦に積む構造で、将来「今日の復習」「おすすめトレーニング」等の
+       カードをここへ追加するだけで拡張できる(今回は3カードのみ) -->
   <div id="screen-home" class="screen show">
+    <div class="home-wrap" id="home-body"></div>
+  </div>
+
+  <!-- コース: 学習ロードを進める場所(ロードが主役。日々の情報カードは置かない) -->
+  <div id="screen-course" class="screen">
     <div class="path-wrap" id="path-wrap"></div>
+    <button class="loc-btn" onclick="scrollToNext()">📍 現在地へ</button>
   </div>
 
   <div id="screen-training" class="screen">
@@ -506,8 +541,10 @@ button.tile.off:active{transform:none;}
     <div style="padding:4px 0 96px;" id="profile-body"></div>
   </div>
 
+  <!-- 4タブ構成(第8段階追加改善): ホーム=今日 / コース=学ぶ / トレーニング=鍛える / マイページ=自分を見る -->
   <div class="nav">
-    <button id="nav-home" class="on" onclick="showScreen('home')"><span class="i">🀄</span>コース</button>
+    <button id="nav-home" class="on" onclick="showScreen('home')"><span class="i">🏠</span>ホーム</button>
+    <button id="nav-course" onclick="showScreen('course')"><span class="i">📚</span>コース</button>
     <button id="nav-training" onclick="showScreen('training')"><span class="i">🎯</span>トレーニング</button>
     <button id="nav-shop" onclick="showScreen('shop')"><span class="i">🛍️</span>ショップ</button>
     <button id="nav-profile" onclick="showScreen('profile')"><span class="i" id="nav-av">🐦</span>マイページ</button>
@@ -1698,7 +1735,10 @@ function claimChest(cid,need,tid){
   renderHUD(); renderPath();
 }
 function scrollToNext(){
-  const el=document.querySelector('.node.next');
+  // 「つづきから」と同じマス(進行中テーマ優先)へスクロール。見つからなければ最初のnextマス
+  const nx=(typeof nextLessonInfo==='function')?nextLessonInfo():null;
+  const el=(nx&&document.querySelector('.node[data-th="'+nx.tid+'"][data-idx="'+nx.idx+'"]'))
+    ||document.querySelector('.node.next');
   if(el){ try{ el.scrollIntoView({block:'center',behavior:reducedMotion()?'auto':'smooth'}); }catch(e){} }
 }
 
@@ -2037,14 +2077,81 @@ function validateV3(){
 /* ================= 画面切替 ================= */
 function showScreen(name){
   if(PROTOTYPE_MODE&&name==='shop') name='home';  // プロトタイプではショップへ遷移しない
-  for(const n of ['home','training','shop','profile']){
+  for(const n of ['home','course','training','shop','profile']){
     document.getElementById('screen-'+n).classList.toggle('show',n===name);
     document.getElementById('nav-'+n).classList.toggle('on',n===name);
   }
-  if(name==='home') renderPath();
+  if(name==='home') renderHome();
+  if(name==='course') renderPath();
   if(name==='training') renderTraining();
   if(name==='shop') renderShop();
   if(name==='profile') renderProfile();
+}
+/* ================= ホーム画面（第8段階追加改善） =================
+   目的:「開いた瞬間に今日何をすればいいか分かる」。①今日の学習状況(ストリーク)
+   ②今日のミッション ③つづきから、の3カード。成績(レーティング)はマイページへ。 */
+function nextLessonInfo(){
+  // 次に進めるレッスン: 進行中(1つ以上クリア済み)の未完了テーマを最優先し、
+  // なければ表示順で最初の未完了テーマ(=学びかけの場所へ戻る「つづきから」の意味)
+  let first=null;
+  for(let si=0;si<SECTIONS.length;si++){
+    for(const t of THEMES){
+      const c=COURSES.find(x=>x.id===t.course);
+      if(!c||c.section!==si||!protoCourseVisible(c.id)) continue;
+      const list=themeLessons(t), fr=themeFrontier(t);
+      if(fr<list.length){
+        const ls=list[fr];
+        const info={tid:t.id,idx:fr,icon:c.icon,title:t.title,sub:ls.sub.title,
+          label:ls.isLast?'まとめ':'Lesson '+(ls.subIdx+1)};
+        if(fr>0) return info;
+        if(!first) first=info;
+      }
+    }
+  }
+  return first;
+}
+function goContinue(){                          // ホームの「つづきから」→コースの対象マスへ
+  showScreen('course');
+  requestAnimationFrame(()=>requestAnimationFrame(scrollToNext));
+}
+function renderHome(){
+  ensureDaily();
+  const el=document.getElementById('home-body');
+  if(!el) return;
+  const learnedToday=S.lastDay===todayStr()&&S.streak>0;
+  // ①ストリーク(タップで既存カレンダー。streak/freeze/learningDaysロジックは無変更)
+  const streakCard='<div class="today-strip" onclick="showStreakDetail()">'
+    +'<span class="ts-streak">🔥 <b>'+S.streak+'日連続</b></span>'
+    +'<span class="ts-state'+(learnedToday?' done':'')+'">'
+    +(learnedToday?'✓ 今日の学習完了':'今日の学習はまだです')+'</span>'
+    +'<span class="ts-cal">📅</span></div>';
+  // ②今日のミッション(第8段階のロジックそのまま・表示場所のみホームへ)
+  const dDone=missionDoneCount();
+  const missionCard='<div class="mission-card">'
+    +'<div class="mc-head"><span>🎯 今日のミッション</span>'
+    +'<span class="mc-count'+(S.daily.completed?' comp':'')+'">'
+    +(S.daily.completed?'COMPLETE ✓':dDone+'/'+DAILY_MISSIONS.length)+'</span></div>'
+    +DAILY_MISSIONS.map(m=>{
+      const cur=missionProgress(m), done=missionDone(m);
+      if(done) return '<div class="mc-item done">✓ '+m.title+'</div>';
+      const pct=Math.round(cur/m.target*100);
+      return '<div class="mc-item">'+m.icon+' '+m.title
+        +(m.target>1?'<span class="mc-prog">'+cur+'/'+m.target+'</span>'
+          +'<span class="mc-bar"><i style="width:'+pct+'%"></i></span>':'')
+        +'</div>';
+    }).join('')
+    +(S.daily.completed?'<div class="mc-tomorrow">今日のミッション達成！ロードはこのまま続けて遊べるよ。また明日！</div>':'')
+    +'</div>';
+  // ③つづきから(次に進む 大テーマ─小テーマ Lesson を明示。タップでコースの対象マスへ)
+  const nx=nextLessonInfo();
+  const contCard='<button class="hc-continue" onclick="goContinue()">'
+    +'<span class="hc-play">▶</span>'
+    +'<span class="hc-txt"><b>つづきから</b>'
+    +(nx?'<span>'+nx.icon+' '+nx.title+' ─ '+nx.sub+' '+nx.label+'</span>'
+        :'<span>全レッスンクリア！ロードは何度でも復習できます</span>')
+    +'</span></button>';
+  // 将来カード(今日の復習・おすすめトレーニング・週間目標等)は下へ追記するだけで拡張できる
+  el.innerHTML=streakCard+missionCard+contCard;
 }
 
 /* ================= トレーニングハブ ================= */
@@ -2056,13 +2163,20 @@ function bandText(cat){
 }
 function renderTraining(){
   const el=document.getElementById('training-body');
+  // 各カードは対応するRating(能力)だけを表示。BEST=自己ベストタイム、ランク=タイム評価で
+  // 三者は別概念のまま(第8段階追加改善)。全カテゴリ一覧はマイページの雀力レーティングへ
   const card=(cat,icon,title,desc,bandOverride)=>{
+    const best=S.trainingBest[cat];
+    const rank=best?rankForTime(cat,best.ms):null;
     return '<div class="card">'
       +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">'
       +'<span style="font-size:30px;">'+icon+'</span>'
       +'<div style="flex:1;"><b style="font-size:15px;">'+title+'</b>'
       +'<div style="font-size:12px;color:var(--ink-soft);font-weight:700;">'+desc+'</div></div>'
-      +'<b style="font-size:22px;font-variant-numeric:tabular-nums;">'+Math.floor(S.ratings[cat])+'</b></div>'
+      +'<div style="text-align:center;"><div style="font-size:9.5px;color:var(--ink-soft);font-weight:800;letter-spacing:.08em;">RATING</div>'
+      +'<b style="font-size:22px;font-variant-numeric:tabular-nums;">'+Math.floor(S.ratings[cat])+'</b></div></div>'
+      +(best?'<p style="font-size:11.5px;color:var(--gold-deep);margin:0 0 4px;font-weight:800;">🏅 BEST '
+        +fmtDur(best.ms,true)+(rank?'　ランク'+rank:'')+'</p>':'')
       +'<p style="font-size:11px;color:var(--ink-soft);margin:0 0 10px;font-weight:700;">'+(bandOverride||bandText(cat)+'（あなたのレーティングに合わせて自動調整）')+'</p>'
       +'<button class="btn" onclick="startTraining(\''+cat+'\')">トレーニング開始（7問）</button>'
       +'</div>';
@@ -2094,37 +2208,9 @@ function startTraining(cat){
 /* ================= コースパス ================= */
 function renderPath(){
   const wrap=document.getElementById('path-wrap');
-  ensureDaily();
-  // ホーム優先順位(第8段階): ①今日の学習状況(ストリーク)+つづきから ②今日のミッション
-  // ③レーティング ④学習ロード。情報過多にしないためカードはコンパクトに保つ
-  const learnedToday=S.lastDay===todayStr()&&S.streak>0;
-  let html='<div class="today-strip" onclick="showStreakDetail()">'
-    +'<span class="ts-streak">🔥 <b>'+S.streak+'日連続</b></span>'
-    +'<span class="ts-state'+(learnedToday?' done':'')+'">'
-    +(learnedToday?'✓ 今日の学習完了':'今日の学習はまだです')+'</span>'
-    +'<button class="ts-go" onclick="event.stopPropagation();scrollToNext()">▶ つづきから</button>'
-    +'</div>';
-  const dDone=missionDoneCount();
-  const dAll=DAILY_MISSIONS.length;
-  html+='<div class="mission-card">'
-    +'<div class="mc-head"><span>🎯 今日のミッション</span>'
-    +'<span class="mc-count'+(S.daily.completed?' comp':'')+'">'
-    +(S.daily.completed?'COMPLETE ✓':dDone+'/'+dAll)+'</span></div>'
-    +DAILY_MISSIONS.map(m=>{
-      const cur=missionProgress(m), done=missionDone(m);
-      if(done) return '<div class="mc-item done">✓ '+m.title+'</div>';
-      const pct=Math.round(cur/m.target*100);
-      return '<div class="mc-item">'+m.icon+' '+m.title
-        +(m.target>1?'<span class="mc-prog">'+cur+'/'+m.target+'</span>'
-          +'<span class="mc-bar"><i style="width:'+pct+'%"></i></span>':'')
-        +'</div>';
-    }).join('')
-    +(S.daily.completed?'<div class="mc-tomorrow">今日のミッション達成！ロードはこのまま続けて遊べるよ。また明日！</div>':'')
-    +'</div>';
-  html+='<div class="rating-strip"><span class="lab">📈 レーティング</span>'
-    +'<span>待ち <b>'+Math.floor(S.ratings.waits)+'</b></span>'
-    +'<span>何切る <b>'+Math.floor(S.ratings.nanikiru)+'</b></span>'
-    +'<span>リーチ <b>'+Math.floor(S.ratings.riichi)+'</b></span></div>';
+  // コース=学習ロード専用画面(第8段階追加改善)。ストリーク/ミッションはホームへ、
+  // レーティングはマイページ・トレーニングへ移設し、開いた瞬間にSECTION→ロードが見える
+  let html='';
   const offsets=['','l','r','','l','r'];
   // 階層: SECTION帯 → 大テーマ帯(theme-band) → 小テーマ見出し(subtheme-head) → レッスンマス(node)
   SECTIONS.forEach((sec,si)=>{
@@ -2163,6 +2249,7 @@ function renderPath(){
           }
           html+='<button class="node '+state+(isFinal?' final':'')+' '+off+fx+'"'
             +(state==='locked'?' disabled':'')
+            +' data-th="'+t.id+'" data-idx="'+idx+'"'
             +' onclick="startThemeLesson(\''+t.id+'\','+idx+')">'
             +'<span class="ico">'+ico+'</span></button>';
           html+='<div class="node-label '+off+'">'+(isFinal?'まとめ':'Lesson '+(i+1))+'</div>';
@@ -3291,6 +3378,30 @@ function confirmBuy(id){
 /* ================= マイページ ================= */
 const AVATARS_FREE=['🐦','🐤'];
 const AVATARS_PAID=['🦜','🦉','🐦‍⬛','🕊️'];
+/* 雀力レーティング(マイページ・第8段階追加改善)。
+   計測済み=S.ratingsに実データがあるカテゴリのみ数値表示。将来カテゴリは架空値を
+   出さず「― 未計測」として折りたたみ内に表示(Rating計測へ接続されたら自動で数値化) */
+const RATING_CATALOG=[
+ {key:'waits',label:'待ち'},{key:'nanikiru',label:'何切る'},{key:'riichi',label:'リーチ判断'},
+ {key:'katachi',label:'形・牌効率'},{key:'tegumi',label:'手組'},{key:'yaku_r',label:'役'},
+ {key:'score_r',label:'点数'},{key:'naki_r',label:'鳴き判断'},{key:'anzen_r',label:'安全度'},
+ {key:'oshihiki_r',label:'押し引き'},{key:'yomi_r',label:'読み'},{key:'joukyou_r',label:'状況判断'},
+ {key:'alllast_r',label:'オーラス'}];
+function ratingSectionHTML(){
+  const row=(label,val)=>'<div class="rt-row"><span>'+label+'</span>'
+    +(val!=null?'<b>'+Math.floor(val)+'</b>':'<i>― 未計測</i>')+'</div>';
+  const measured=RATING_CATALOG.filter(c=>S.ratings[c.key]!=null);
+  const rest=RATING_CATALOG.filter(c=>S.ratings[c.key]==null);
+  return '<div class="card"><b style="font-size:14px;">📈 雀力レーティング</b>'
+    +'<div style="margin-top:8px;">'
+    +measured.map(c=>row(c.label,S.ratings[c.key])).join('')
+    +'</div>'
+    +(rest.length?'<details class="rt-more"><summary>その他のカテゴリを見る（'+rest.length+'）</summary>'
+      +rest.map(c=>row(c.label,null)).join('')
+      +'<p style="font-size:10.5px;color:var(--ink-soft);margin:6px 0 0;">学習ロードの進行・トレーニング解放にあわせて計測が始まります</p>'
+      +'</details>':'')
+    +'</div>';
+}
 function renderProfile(){
   const el=document.getElementById('profile-body');
   const rate=S.answered?Math.round(S.correct/S.answered*100):0;
@@ -3305,6 +3416,7 @@ function renderProfile(){
     +'<div class="stat-box"><div class="v">'+crownsTotal+'👑</div><div class="k">クラウン</div></div>'
     +'<div class="stat-box"><div class="v">'+rate+'%</div><div class="k">正解率</div></div>'
     +'</div></div>'
+    +ratingSectionHTML()
     +'<div class="card"><b style="font-size:14px;">🎨 アバター</b>'
     +'<div class="avatars" style="margin-top:10px;">'
     +AVATARS_FREE.map(a=>'<button class="av'+(S.avatar===a?' sel':'')+'" onclick="setAv(\''+a+'\')">'+a+'</button>').join('')
@@ -3392,5 +3504,6 @@ function closeModal(){ document.getElementById('modal-bg').classList.remove('sho
 if(PROTOTYPE_MODE){ document.getElementById('nav-shop').style.display='none'; }  // ショップタブ非表示(PROTOTYPE_MODE=falseで復帰)
 initV3();
 if(S.dev){ const v=validateV3(); console.log('[v3検証]', v.ok?'OK':'NG', v.count+'問', v.errors); }
-renderHUD(); renderPath();
+renderHUD(); renderPath();      // コース(ロード)を先に構築しておく
+showScreen('home');             // 起動時の初期画面はホーム(今日の状況→ミッション→つづきから)
 </script>
