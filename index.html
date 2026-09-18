@@ -325,7 +325,14 @@ button.tile.off:active{transform:none;}
 .mg-pulse{animation:mgPulse 1.1s ease-in-out infinite;}
 @keyframes mgPulse{0%,100%{transform:scale(1); box-shadow:0 4px 0 var(--jade-deep);}
   50%{transform:scale(1.05); box-shadow:0 4px 0 var(--jade-deep),0 0 0 6px rgba(31,164,107,.18);}}
-.mg-hand{display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin:2px 0;}
+.mg-hand{display:flex; gap:6px; align-items:center; flex-wrap:nowrap; margin:2px 0;}
+.mg-hand.mg-h8{gap:3px;}
+.mg-hand.mg-h8 .tile{flex:1 1 0; min-width:0; max-width:clamp(30px, 9.4vw, 42px);}
+.mg-hand.mg-h8 .mg-tsumo{margin-left:8px;}
+.mg-hand.mg-h8 + .mg-banner{margin-top:6px;}
+.ch1-cands.cands-8{gap:4px; flex-wrap:nowrap;}
+.ch1-cands.cands-8 .tile{flex:1 1 0; min-width:0; max-width:clamp(30px, 9.4vw, 42px);}
+.ch1-cands.cands-8 .hand-gap{width:8px;}
 .mg-hand .tile{cursor:pointer;}
 .mg-tsumo{margin-left:14px; outline:3px solid var(--gold,#f2b705); outline-offset:2px;}
 .mg-hint{animation:mgHint 1s ease-in-out infinite;}
@@ -1570,6 +1577,12 @@ const THEMES=[
     {diff:{ch1:'c1_4'}},                       // あと1枚！(テンパイと待ち)
     {diff:{ch1:'c1_5'}},                       // ★まとめ: 4枚マスター(LEVEL2〜3相当)
    ]},
+   {id:'st_c2', title:'7枚ミニ麻雀', lessons:[
+    {diff:{ch1:'c2_1'}},                       // 2メンツ+1アタマ
+    {diff:{ch1:'c2_2'}},                       // 7枚ミニ麻雀(LEVEL1→2)
+    {diff:{ch1:'c2_3'}},                       // いらない牌はどれ？(牌姿認識・牌効率ではない)
+    {diff:{ch1:'c2_4'}},                       // ★まとめ: 7枚マスター
+   ]},
   ]},
  {id:'th_rules', course:'rules', title:'麻雀のきほん', sub:'ルール・アガリの形を知る',
   qn:6,  // 静的プールが6問のため全問1周(重複出題はしない)。プール拡充後にqnを外せば既定10問
@@ -2565,7 +2578,30 @@ function ch1MiniWin5(tiles){
   }
   return null;
 }
+/* 7枚ミニ麻雀(C2)のアガリ判定(決定論): 8枚が「2メンツ+1アタマ」に分解できるか。
+   アタマ候補(同一牌ペア)を固定→残り6枚から3枚の選びかたを全探索し、
+   「その3枚」と「残る3枚」が両方メンツなら成立(先頭3枚+後半3枚の決め打ちはしない)。
+   分解(メンツ2組+アタマのインデックス)を返す。ch1IsMentsu再利用のため
+   字牌シュンツ×・8-9-1×・種類混じり×は自動的に保証される */
+function ch1MiniWin8(tiles){
+  if(!tiles||tiles.length!==8) return null;
+  for(let i=0;i<8;i++)for(let j=i+1;j<8;j++){
+    if(tiles[i]!==tiles[j]) continue;                     // アタマ=まったくおなじ2枚
+    const rest=[];
+    for(let k=0;k<8;k++) if(k!==i&&k!==j) rest.push(k);   // 残り6枚(インデックス)
+    // 6枚から3枚を選ぶ全組み合わせ(C(6,3)=20)で2メンツ分解を探索
+    for(let a=0;a<6;a++)for(let b=a+1;b<6;b++)for(let c=b+1;c<6;c++){
+      const g1=[rest[a],rest[b],rest[c]];
+      const g2=rest.filter(k=>!g1.includes(k));
+      if(ch1IsMentsu(g1.map(k=>tiles[k]))&&ch1IsMentsu(g2.map(k=>tiles[k])))
+        return {headIdx:[i,j], mentsuIdx:g1, mentsu2Idx:g2,
+          head:[tiles[i],tiles[j]], mentsu:g1.map(k=>tiles[k]), mentsu2:g2.map(k=>tiles[k])};
+    }
+  }
+  return null;
+}
 /* 待ち判定(決定論): 4枚手牌に34種を1枚ずつ仮追加し、アガリになる牌を列挙。
+   7枚手牌はch1MiniWin8で同様に判定(C2)。
    手牌ですでに4枚つかっている牌は5枚目が存在しないため待ちに出さない */
 const CH1_ALL34=(()=>{const a=[];for(const su of ['m','p','s'])for(let n=1;n<=9;n++)a.push(n+su);
   for(const z of 'ESWNBGR')a.push(z);return a;})();
@@ -2584,10 +2620,11 @@ function ch1HandGrouped(str){
   });
   return html+'</div>';
 }
-function ch1MiniWaits(hand4){
-  if(!hand4||hand4.length!==4) return [];
-  const cnt={}; hand4.forEach(t=>cnt[t]=(cnt[t]||0)+1);
-  return CH1_ALL34.filter(cd=>(cnt[cd]||0)<4&&ch1MiniWin5(hand4.concat([cd])));
+function ch1MiniWaits(hand){
+  if(!hand||(hand.length!==4&&hand.length!==7)) return [];
+  const winFn=hand.length===4?ch1MiniWin5:ch1MiniWin8;
+  const cnt={}; hand.forEach(t=>cnt[t]=(cnt[t]||0)+1);
+  return CH1_ALL34.filter(cd=>(cnt[cd]||0)<4&&winFn(hand.concat([cd])));
 }
 /* ---- ミニ麻雀 実行状態(L.mg)。renderQごとに初期化されるため復習の再挑戦も新品から ---- */
 function ch1MiniInit(q){
@@ -2611,8 +2648,9 @@ function ch1MiniGuide(){
   const mg=L.mg; if(!mg) return '';
   if(mg.won){
     const w=mg.windec;
-    return '<b>アガリ！🎉</b> '+w.mentsu.map(tileLabel).join('・')+'のメンツ＋'
-      +tileLabel(w.head[0])+'のアタマ！';
+    return '<b>アガリ！🎉</b> '+w.mentsu.map(tileLabel).join('・')
+      +(w.mentsu2?'と'+w.mentsu2.map(tileLabel).join('・'):'')
+      +'のメンツ＋'+tileLabel(w.head[0])+'のアタマ！';
   }
   if(mg.phase==='discard'){
     return mg.level===1?'まだアガリじゃない…ひかっている「いらない牌」を切ろう！'
@@ -2633,17 +2671,29 @@ function ch1MiniHTML(){
   // 手牌(+ツモ牌は右にわけて表示)
   const five=mg.tsumo!==null;
   const tiles=mg.hand.concat(five?[mg.tsumo]:[]);
-  html+='<div class="mg-lab">手牌'+(five?'（5枚 — ツモった牌は右はし）':'（4枚）')+'</div>';
-  html+='<div class="mg-hand" id="mg-hand">'+tiles.map((t,i)=>{
-    const isTsumo=five&&i===tiles.length-1;
-    let cls='tile '+(t.length===2?t[1]:'z');
-    if(isTsumo) cls+=' mg-tsumo';
-    if(mg.won){
-      cls+=mg.windec.mentsuIdx.includes(i)?' correct':' miss';   // メンツ=緑/アタマ=金で分解を見せる
-    }else if(mg.phase==='discard'&&mg.level===1&&ch1MiniOk(i)) cls+=' mg-hint';
-    const tap=(mg.phase==='discard'&&!mg.won)?' onpointerdown="ch1MiniDiscard('+i+')"':'';
-    return '<button class="'+cls+'" id="mgt-'+i+'"'+tap+'>'+tileFace(t)+'</button>';
-  }).join('')+'</div>';
+  html+='<div class="mg-lab">手牌（'+tiles.length+'枚'+(five?' — ツモった牌は右はし':'')+'）</div>';
+  const big=tiles.length>6?' mg-h8':'';                          // 7〜8枚: 320pxに収まるサイズへ
+  if(mg.won){
+    // アガリ時: メンツ｜(メンツ)｜アタマ の順に並べ替え、グループ間にスキマを入れて見せる
+    const w=mg.windec;
+    const order=w.mentsuIdx.map(k=>({k,cls:'correct'}))
+      .concat(w.mentsu2Idx?[{gap:1}].concat(w.mentsu2Idx.map(k=>({k,cls:'correct'}))):[])
+      .concat([{gap:1}]).concat(w.headIdx.map(k=>({k,cls:'miss'})));
+    html+='<div class="mg-hand'+big+'" id="mg-hand">'+order.map(o=>{
+      if(o.gap) return '<span class="hand-gap"></span>';
+      const t=tiles[o.k];
+      return '<button class="tile '+(t.length===2?t[1]:'z')+' '+o.cls+'">'+tileFace(t)+'</button>';
+    }).join('')+'</div>';
+  }else{
+    html+='<div class="mg-hand'+big+'" id="mg-hand">'+tiles.map((t,i)=>{
+      const isTsumo=five&&i===tiles.length-1;
+      let cls='tile '+(t.length===2?t[1]:'z');
+      if(isTsumo) cls+=' mg-tsumo';
+      if(mg.phase==='discard'&&mg.level===1&&ch1MiniOk(i)) cls+=' mg-hint';
+      const tap=(mg.phase==='discard'&&!mg.won)?' onpointerdown="ch1MiniDiscard('+i+')"':'';
+      return '<button class="'+cls+'" id="mgt-'+i+'"'+tap+'>'+tileFace(t)+'</button>';
+    }).join('')+'</div>';
+  }
   if(mg.won) html+='<div class="mg-banner">アガリ！</div>';
   // 捨て牌
   html+='<div class="mg-lab">捨て牌</div><div class="mg-disc">'
@@ -2661,7 +2711,8 @@ function ch1MiniDraw(){
   const t=mg.wall.shift();
   mg.tsumo=t;
   const five=mg.hand.concat([t]);
-  const win=ch1MiniWin5(five);          // ツモ→まずアガリ判定(アガリなら切らずにそのままアガリ)
+  // ツモ→まずアガリ判定(アガリなら切らずにそのままアガリ)。5枚=C1/8枚=C2
+  const win=five.length===5?ch1MiniWin5(five):(five.length===8?ch1MiniWin8(five):null);
   if(win){
     mg.won=true; mg.phase='won'; mg.windec=win;
     L.actDone=true;                      // 誘導(teach系)の「つづける」解放フラグを共用
@@ -2811,6 +2862,49 @@ function ch1WaitMulti(handStr,cands,exp){
 function ch1TenpaiMcq(handStr,exp){
   const a=ch1MiniWaits(parseHand(handStr)).length?0:1;
   return {q:'この手牌はテンパイ？',hand:handStr,choices:['テンパイしている','していない'],a,exp,ghand:true};
+}
+
+/* ---- C2用ビルダー(正解は必ずch1MiniWin8/ch1MiniWaitsで算出) ---- */
+function ch1GapsOf(tiles){
+  // 理牌済みタイル列の「つながらない場所」(後ろにスキマを入れるインデックス)を返す
+  const gaps=[];
+  for(let i=0;i<tiles.length-1;i++){
+    const t=tiles[i], n=tiles[i+1];
+    const linked=(t===n)||(t.length===2&&n.length===2&&t[1]===n[1]&&(+n[0]-+t[0])<=1);
+    if(!linked) gaps.push(i);
+  }
+  return gaps;
+}
+function ch1WinMcq8(handStr,exp){
+  const ok=!!ch1MiniWin8(parseHand(handStr));
+  return {q:'この8枚、アガリの形になっている？',hand:handStr,
+    choices:['アガリの形になっている','なっていない'],a:ok?0:1,exp};
+}
+function ch1Part8Multi(handStr,part,q,exp){
+  // 8枚アガリ形から「メンツの6枚(2組とも)」or「アタマの2枚」を選ばせる(分解はch1MiniWin8)
+  const tiles=sortTiles(parseHand(handStr));
+  const win=ch1MiniWin8(tiles);
+  const answers=win?(part==='head'?win.headIdx.slice():win.mentsuIdx.concat(win.mentsu2Idx)):[];
+  answers.sort((a,b)=>a-b);
+  return {pickm:true,tlab:part==='head'?'アタマさがし':'メンツさがし',q,cands:tiles,answers,exp};
+}
+function ch1JunkPick(handStr,opt){
+  /* C2-3 いらない牌さがし(牌姿認識・牌効率ではない):
+     8枚=「メンツ+トイツ2つ+余り1枚」型の固定教材のみを使う。
+     正解(決定論)=「その1枚を除いた7枚に待ちが残る」牌がちょうど1つ、をテストで強制。
+     ※アガリ形の8枚は使わない(完成していたら切らずにアガリ、という既習と矛盾させない) */
+  opt=opt||{};
+  const tiles=sortTiles(parseHand(handStr));
+  const junks=tiles.map((t,i)=>i).filter(i=>{
+    const rest=tiles.slice(); rest.splice(i,1);
+    return ch1MiniWaits(rest).length>0;
+  });
+  const a=junks.length===1?junks[0]:-1;   // 一意でない教材は-1(テストで検出して排除)
+  const q={pick1:true,tlab:'いらない牌さがし',
+    q:opt.q||'この8枚のなかで、どの組にも入っていない“余っている牌”を選ぼう！',
+    cands:tiles,a,exp:opt.exp};
+  if(opt.grouped) q.cgaps=ch1GapsOf(tiles);   // 前半: 組ごとのスキマで見やすく(後半はスキマなし)
+  return q;
 }
 
 /* ---- 11レッスンの中身(キーはTHEMESのdiff.ch1と一致) ---- */
@@ -3071,6 +3165,81 @@ const CH1_LESSONS={
         {exp:'東を切って、2ソーで234s＋55p。テンパイ→待ちをツモ→アガリの流れ、バッチリ！'}),
       ch1Mini(['7p','7p','5s','6s'],['E','B','7s'],'567s77p',
         {exp:'いらない牌を2回切って、7ソーでアガリ！ツモ→たしかめる→切る。もう4枚マスターだね！'}),
+    ]);
+  },
+  /* ===== C2 7枚ミニ麻雀(v1.0) ===== */
+  /* C2-1 2メンツ+1アタマ(C1の拡張。新用語なし) */
+  c2_1(){
+    return [
+      ch1Teach('C1では、3枚の組が1つだったね。メンツ1つ＋アタマ1つでアガリだった！',
+        {tlab:'まえはこうだった',hands:[{label:'1メンツ＋1アタマ（5枚）',hand:'123m55p',g:true}]}),
+      ch1Teach('今度は3枚の組を<b>2つ</b>にしてみよう！<b>2メンツ＋1アタマ</b>、これが7枚ミニ麻雀のアガリだよ。コーツがまじってもOK！',
+        {tlab:'組を2つに！',hands:[{label:'2メンツ＋1アタマ（8枚）',hand:'123m456p77s',g:true},
+          {label:'コーツ入りでもアガリ',hand:'EEE456p77s',g:true}]}),
+      ch1Part8Multi('123m456p77s','mentsu','メンツになっている6枚（2組とも）をぜんぶ選ぼう！',
+        '123mと456p、シュンツが2つ。7ソー2枚はアタマだよ。'),
+      ch1Part8Multi('EEE456p77s','head','この8枚のなかで、アタマの2枚を選ぼう！',
+        '東3枚はコーツ（メンツ）、456pもメンツ。アタマは7ソー2枚！'),
+      ch1Part8Multi('EEEBBB77s','mentsu','メンツになっている6枚をぜんぶ選ぼう！',
+        '東東東と白白白、コーツが2つでもアガリ形になるんだ！'),
+      ch1WinMcq8('234m567s88p','234mと567s、2つのメンツ＋8ピンのアタマ。アガリ！'),
+      ch1WinMcq8('123m456p7s8s','7ソーと8ソーはならんでいるけど、アタマ（おなじ2枚）がない…アガリじゃないよ。'),
+      ch1WinMcq8('ESW456p77s','東・南・西は字牌だからシュンツにならない！メンツが1つたりないよ。'),
+    ];
+  },
+  /* C2-2 7枚ミニ麻雀(LEVEL1誘導→LEVEL2。やることはC1とおなじ) */
+  c2_2(){
+    return [
+      ch1Teach('ここからは<b>7枚</b>ミニ麻雀！牌がふえても、やることはおなじだよ。ツモって、アガリをたしかめて、ちがえば1枚切る！',
+        {tlab:'牌がふえても'}),
+      ch1Mini(['1m','2m','3m','4p','5p','7s','7s'],['6p'],'123m456p77s',
+        {guided:true,exp:'6ピンをツモって123m＋456p＋77s。7枚でも、ツモった瞬間アガリはあるんだ！'}),
+      ch1Mini(['5m','5m','2p','3p','4p','7s','E'],['7s','7s'],'55m234p777s',
+        {guided:true,exp:'東を切って、7ソーをあつめてアガリ！やることはC1とまったくおなじだね。'}),
+      ch1Mini(['3p','4p','5p','8m','8m','G','2s'],['G','G'],'345p88mGGG',
+        {exp:'2ソーはどの組にも入らない…切ってよし！發のコーツができてアガリ！'}),
+      ch1Mini(['1s','2s','3s','6p','6p','R','9m'],['R','R'],'123s66pRRR',
+        {exp:'9マンを切って、中をあつめてアガリ！66pがアタマだよ。'}),
+      {q:'ツモって8枚がアガリの形だったら、どうする？',
+       choices:['切らずにそのままアガリ','1枚切ってからアガリ'],a:0,
+       exp:'アガリならそのままアガリ！これは4枚のときとおなじルールだよ。'},
+    ];
+  },
+  /* C2-3 いらない牌はどれ？(牌姿認識のみ。牌効率・受け入れ比較は一切しない) */
+  c2_3(){
+    return [
+      ch1Teach('切る牌のえらびかたを練習しよう。<b>できている組</b>と、<b>アタマにつかえるトイツ</b>はのこす。どこにも入っていない牌が“いらない牌”だよ。',
+        {tlab:'いらない牌',hands:[{label:'たとえばこの形…東だけ、なかまはずれ！',hand:'123m55p77sE',g:true}]}),
+      ch1JunkPick('123m55p77sE',{grouped:true,
+        exp:'東はどの組にも使っていないから、今回はこれがいらない牌だね。'}),
+      ch1JunkPick('456p33sGG9m',{grouped:true,
+        exp:'456pのメンツと、3ソー・發のトイツをのこす。9マンだけ、なかまはずれ！'}),
+      ch1JunkPick('EE234s66p9m',{
+        exp:'字牌でも、トイツになっている東はアタマやコーツに使える！余っているのは9マンだよ。'}),
+      ch1JunkPick('789s44mNN1p',{
+        exp:'789sのメンツと、4マン・北のトイツをのこして、1ピンを切ろう。'}),
+      {q:'“いらない牌”ってどんな牌？',
+       choices:['どのメンツにもトイツにも入っていない牌','いちばん数字が大きい牌','字牌はぜんぶいらない'],a:0,
+       exp:'組に入っていない牌が“いらない牌”。字牌でもトイツならアタマに使えるから、なんでも切っていいわけじゃないよ。'},
+    ];
+  },
+  /* C2-4 ★まとめ: 7枚マスター(復習Quizは順シャッフル・さいごは自力ミニ麻雀2連戦) */
+  c2_4(){
+    const quiz=shuffle([
+      ch1WinMcq8('111m234s55p','1マンのコーツ＋234sのシュンツ＋5ピンのアタマ。アガリ！'),
+      ch1WinMcq8('ESW123p44s','東・南・西はシュンツにならない！アガリじゃないよ。'),
+      ch1Part8Multi('567m222s99p','head','この8枚のなかで、アタマの2枚を選ぼう！',
+        '567mと222sがメンツ。9ピン2枚がアタマ！'),
+      ch1JunkPick('345p88sWW1m',{exp:'345pのメンツと、8ソー・西のトイツをのこす。1マンが余っているね。'}),
+      Object.assign(ch1WaitMulti('123m55p77s',['5p','7s','4m','W','2p'],
+        '5ピンでも7ソーでもアガリ！トイツが2つあるときは、どちらかがコーツになればいいんだ。'),
+        {q:'この7枚の待ちを、ぜんぶ選ぼう！'}),
+    ]);
+    return quiz.concat([
+      ch1Mini(['2p','3p','4p','9s','9s','6m','7m'],['E','8m'],'234p678m99s',
+        {exp:'東を切って、8マンで678m完成！2メンツ＋1アタマ、みごと！'}),
+      ch1Mini(['4m','5m','6m','2s','2s','7p','8p'],['W','B','9p'],'456m789p22s',
+        {exp:'いらない字牌を2回切って、9ピンでアガリ！ツモ→たしかめる→切る。もう7枚もマスターだね！'}),
     ]);
   },
 };
@@ -3398,7 +3567,7 @@ const QFORMATS={
     qid(q){ return null; },
     render(q){
       ch1MiniInit(q);
-      let html='<div class="q-type">4枚ミニ麻雀'+(q.mini.level===1?'':'・じぶんの力で')+'</div>';
+      let html='<div class="q-type">'+(q.mini.hand.length===7?'7枚':'4枚')+'ミニ麻雀'+(q.mini.level===1?'':'・じぶんの力で')+'</div>';
       html+='<div class="teach-card"><img class="tc-iso" src="'+S1IMG+'" alt="イソピィ">'
         +'<div class="tc-bub" id="mg-guide">'+ch1MiniGuide()+'</div></div>';
       html+='<div id="mg-area">'+ch1MiniHTML()+'</div>';
@@ -3423,7 +3592,8 @@ const QFORMATS={
       let html='<div class="q-type">'+(q.tlab||'おぼえよう')+'</div>';
       html+='<div class="teach-card"><img class="tc-iso" src="'+S1IMG+'" alt="イソピィ">'
         +'<div class="tc-bub">'+q.text+'</div></div>';
-      if(q.hands){ for(const h of q.hands){ html+=(h.label?'<div class="tc-lab">'+h.label+'</div>':'')+handHTML(h.hand); } }
+      if(q.hands){ for(const h of q.hands){ html+=(h.label?'<div class="tc-lab">'+h.label+'</div>':'')
+        +(h.g?ch1HandGrouped(h.hand):handHTML(h.hand)); } }
       else if(q.hand) html+=handHTML(q.hand);
       if(q.act) html+='<div class="ch1-actbox"><button class="btn gray" id="ch1-act" onclick="ch1Act()">'
         +q.act.label+'</button><div id="ch1-act-res" class="tc-actres"></div></div>';
@@ -3442,9 +3612,10 @@ const QFORMATS={
       html+='<div class="q-text">'+q.q+'</div>';
       if(q.hand) html+=(q.grouped?'<div class="tc-lab">手牌</div>'+ch1HandGrouped(q.hand):handHTML(q.hand));
       if(q.grouped) html+='<div class="tc-lab">↓ この中からえらぼう</div>';
-      html+='<div class="ch1-cands">'+q.cands.map((cd,i)=>
+      html+='<div class="ch1-cands'+(q.cands.length>6?' cands-8':'')+'">'+q.cands.map((cd,i)=>
         '<button class="tile '+(cd.length===2?cd[1]:'z')+'" id="ckb-'+i+'" onpointerdown="ch1Pick('+i+')">'
-        +tileFace(cd)+'</button>').join('')+'</div>';
+        +tileFace(cd)+'</button>'
+        +(q.cgaps&&q.cgaps.includes(i)?'<span class="hand-gap"></span>':'')).join('')+'</div>';
       L.sel=null;
       return html;
     },
@@ -3465,9 +3636,10 @@ const QFORMATS={
       html+='<div class="q-text">'+q.q+'</div>';
       if(q.hand) html+=(q.grouped?'<div class="tc-lab">手牌</div>'+ch1HandGrouped(q.hand):handHTML(q.hand));
       if(q.grouped) html+='<div class="tc-lab">↓ この中からえらぼう</div>';
-      html+='<div class="ch1-cands">'+q.cands.map((cd,i)=>
+      html+='<div class="ch1-cands'+(q.cands.length>6?' cands-8':'')+'">'+q.cands.map((cd,i)=>
         '<button class="tile '+(cd.length===2?cd[1]:'z')+'" id="ckb-'+i+'" onpointerdown="ch1Pick('+i+')">'
-        +tileFace(cd)+'</button>').join('')+'</div>';
+        +tileFace(cd)+'</button>'
+        +(q.cgaps&&q.cgaps.includes(i)?'<span class="hand-gap"></span>':'')).join('')+'</div>';
       html+='<p class="ch1-hint">あてはまる牌をぜんぶタップしてね</p>';
       L.sel=new Set();
       return html;
