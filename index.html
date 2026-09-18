@@ -294,6 +294,25 @@ button.tile.off:active{transform:none;}
   font-size:clamp(11.5px, 3.2vw, 13px);}
 .rv-clear{margin:2px 0 4px; color:var(--jade-deep); font-weight:800;
   font-size:clamp(11.5px, 3.2vw, 12.5px);}
+/* ===== 第1章(ツモッピィ v1.0): Teachカード・牌タップ選択 ===== */
+.teach-card{display:flex; align-items:flex-start; gap:10px; margin:4px 0 12px;}
+.tc-iso{width:52px; height:auto; flex:none; border-radius:10px; box-shadow:0 3px 0 rgba(0,0,0,.12);}
+.tc-bub{position:relative; flex:1; background:#fff; border:2px solid var(--line);
+  border-radius:14px; padding:10px 12px; font-size:clamp(13px,3.8vw,15px); font-weight:700; line-height:1.65;}
+.tc-bub::before{content:''; position:absolute; left:-8px; top:18px; width:12px; height:12px;
+  background:#fff; border-left:2px solid var(--line); border-bottom:2px solid var(--line);
+  transform:rotate(45deg);}
+.tc-lab{margin:10px 4px 0; font-size:12px; font-weight:800; color:var(--ink-soft);}
+.term-chip{display:inline-block; padding:1px 8px; border-radius:999px; background:var(--jade-soft,#e3f6ec);
+  color:var(--jade-deep); font-weight:900;}
+.ch1-cands{display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin:14px 0 6px;}
+.ch1-cands .tile{cursor:pointer;}
+.ch1-hint{text-align:center; color:var(--ink-soft); font-size:11px; font-weight:700; margin:2px 0 0;}
+.ch1-actbox{text-align:center; margin-top:12px;}
+.tc-actres{margin-top:10px; font-size:clamp(13px,3.8vw,15px); font-weight:800; line-height:1.6; min-height:1em;}
+.ch1-shake{animation:ch1shake .5s var(--m-ease,ease);}
+@keyframes ch1shake{0%,100%{transform:none;} 20%{transform:translateX(-3px) rotate(-3deg);}
+  45%{transform:translateX(3px) rotate(3deg);} 70%{transform:translateX(-2px);}}
 @keyframes comboPop{from{transform:scale(.5); opacity:0;} to{transform:scale(1); opacity:1;}}
 
 /* Level1: 正解/不正解の軽い反応(0.2〜0.4秒)。牌・選択肢そのものが動く */
@@ -1413,7 +1432,11 @@ const SR_RIICHI_QUESTIONS=[
 /* ---- 教材データ（v2から移設・内容不変更） ---- */
 /* ================= コースデータ ================= */
 const COURSES=[
-{id:'rules',title:'基本ルール',icon:'📖',section:0,desc:'麻雀のきほんのき。和了の形からフリテンまで。',questions:[
+/* 第1章「麻雀を打てる」(正式カリキュラムv1.0・完全初心者向け)。
+   type:'ch1'はTeach/Try/Quiz構成の初心者レッスン(問題はCH1_LESSONSから決定論的に生成) */
+{id:'ch1a',title:'牌を知ろう',icon:'🐣',section:0,type:'ch1',desc:'まずは牌とともだちになろう。',questions:[]},
+{id:'ch1b',title:'組を作ろう',icon:'🧱',section:0,type:'ch1',desc:'メンツ・トイツ・アタマを覚えよう。',questions:[]},
+{id:'rules',title:'基本ルール',icon:'📖',section:1,desc:'麻雀のきほんのき。和了の形からフリテンまで。',questions:[
  {q:'麻雀の和了（あがり）の基本形はどれ？',choices:['4面子＋1雀頭','5面子','7ペア＋1枚','13枚バラバラ'],a:0,exp:'3枚1組の「面子」を4つと、2枚1組の「雀頭」を1つ揃えた計14枚が基本の和了形です。（例外役：七対子・国士無双）'},
  {q:'対局開始時、子の手牌は何枚？',choices:['12枚','13枚','14枚','16枚'],a:1,exp:'全員13枚でスタートし、ツモって14枚になったら1枚捨てます。'},
  {q:'ドラ表示牌が五萬のとき、ドラは？',hand:'5m',choices:['四萬','五萬','六萬','九萬'],a:2,exp:'ドラは表示牌の「次の牌」。五萬の次なので六萬がドラです。'},
@@ -1421,7 +1444,7 @@ const COURSES=[
  {q:'フリテンの説明で正しいのは？',choices:['自分の捨て牌に待ち牌があるとロンできない','フリテンだとツモ和了もできない','相手の捨て牌に待ち牌があるとロンできない','リーチ中だけ発生する'],a:0,exp:'待ち牌のどれか1種でも自分の河にあるとロン不可。ただしツモ和了はできます。'},
  {q:'流局したとき、ノーテンの人はどうなる？',choices:['何も起きない','テンパイ者に罰符を支払う','点数が没収される','次局親になれない'],a:1,exp:'ノーテン罰符は場に合計3,000点。例：テンパイ1人なら3人が1,000点ずつ支払います。'},
 ]},
-{id:'yaku',title:'役',icon:'🎴',section:0,desc:'和了に必要な「役」を覚えよう。',questions:[
+{id:'yaku',title:'役',icon:'🎴',section:1,desc:'和了に必要な「役」を覚えよう。',questions:[
  {q:'リーチを宣言できる条件は？',choices:['門前（鳴いていない）でテンパイしている','2翻以上ある','親のときだけ','ドラを持っている'],a:0,exp:'鳴いていない（門前）テンパイで、1,000点を供託できれば宣言できます。'},
  {q:'タンヤオの条件は？',choices:['2〜8の数牌だけで作る','字牌だけで作る','同じ色だけで作る','1・9を必ず使う'],a:0,exp:'1・9・字牌を使わず、2〜8の数牌のみ。鳴いてもOK（喰いタン）が一般的なルールです。'},
  {q:'ピンフの条件に「含まれない」のはどれ？',choices:['すべて順子で作る','雀頭が役牌でない','リャンメン待ち','刻子をひとつ含む'],a:3,exp:'ピンフは「順子×4＋役牌でない雀頭＋リャンメン待ち」。刻子（同じ牌3枚）が入るとピンフになりません。'},
@@ -1429,7 +1452,7 @@ const COURSES=[
  {q:'東場で南家が「東」を3枚集めた。役になる？',hand:'EEE',choices:['ならない','なる（1翻）','なる（2翻）','ロン和了のときだけなる'],a:1,exp:'東場の「東」は場風牌なので、どの家が刻子にしても1翻。自風（南家なら南）と重なる「ダブ東」なら2翻です。'},
  {q:'ドラを2枚持っていれば役なしでも和了できる？',choices:['できる','できない','ツモならできる','親ならできる'],a:1,exp:'ドラは役ではなく「おまけの翻」。リーチやタンヤオなど、最低1つは役が必要です。'},
 ]},
-{id:'score',title:'点数計算',icon:'🧮',section:0,desc:'符と翻から点数を出せるようになろう。',questions:[
+{id:'score',title:'点数計算',icon:'🧮',section:1,desc:'符と翻から点数を出せるようになろう。',questions:[
  {q:'子の30符4翻、ロンの点数は？',choices:['5,200点','6,400点','7,700点','8,000点'],a:2,exp:'基本点=30×2^(2+4)=1,920。子のロンは×4で7,680→切り上げて7,700点。'},
  {q:'親の満貫ツモ。支払いは？',choices:['2,600オール','3,000オール','4,000オール','6,000オール'],a:2,exp:'親の満貫は12,000点。ツモなら子3人が4,000点ずつ＝4,000オールです。'},
  {q:'子の40符2翻、ロンの点数は？',choices:['2,000点','2,600点','3,200点','3,900点'],a:1,exp:'基本点=40×2^4=640。×4=2,560→切り上げて2,600点。'},
@@ -1437,42 +1460,42 @@ const COURSES=[
  {q:'満貫になるのは何翻から？',choices:['3翻','4翻','5翻','6翻'],a:2,exp:'5翻から満貫（子8,000/親12,000）。※4翻30符は7,700点。「切り上げ満貫」ルールを採用する場合もあります。'},
  {q:'親の30符3翻、ロンの点数は？',choices:['3,900点','4,800点','5,800点','7,700点'],a:2,exp:'基本点=30×2^5=960。親のロンは×6=5,760→切り上げて5,800点。子なら3,900点です。'},
 ]},
-{id:'waits',title:'待ち当て',icon:'🔍',section:1,desc:'「完成まであと1枚」の最後の1枚＝待ちを当てよう。',type:'waits'},
-{id:'ukeire1',title:'受け入れ当て',icon:'🧩',section:1,desc:'1シャンテンの手牌から、テンパイする牌を全部当てよう。',type:'ukeire1'},
-{id:'nanikiru',title:'1択何切る',icon:'🀄',section:1,desc:'シャンテンを保って受け入れ最大の1枚を。',type:'discard',questions:[
+{id:'waits',title:'待ち当て',icon:'🔍',section:2,desc:'「完成まであと1枚」の最後の1枚＝待ちを当てよう。',type:'waits'},
+{id:'ukeire1',title:'受け入れ当て',icon:'🧩',section:2,desc:'1シャンテンの手牌から、テンパイする牌を全部当てよう。',type:'ukeire1'},
+{id:'nanikiru',title:'1択何切る',icon:'🀄',section:2,desc:'シャンテンを保って受け入れ最大の1枚を。',type:'discard',questions:[
  {id:'nk1',lv:3,fs:'nk:sh0:mg4',hand:'234556m456p678s88s',a:'5m',exp:'打5萬で23456萬の形が残り、1・4・7萬の三面張（受け11枚）。打2萬（4・7萬の7枚）より圧倒的に広いテンパイです。'},
  {id:'nk2',lv:4,fs:'nk:sh0:mg4',hand:'2224567m345p6788s',a:'8s',exp:'打8索で222萬を暗刻として活かし、4567萬＋雀頭88索…ではなく222萬＋456萬(or 567萬)の形で3・4・7萬待ち（受け10枚）。手の中の暗刻はくっつけて使うと強い！'},
  {id:'nk3',lv:5,fs:'nk:sh0:mg5',hand:'46677888m678p666s',a:'4m',exp:'打4萬で667788萬＋888…の複合形が残り、なんと5・6・7・8萬の4種待ち（受け9枚）。浮いた4萬を切るだけですが、残る形の強さを見抜けるかがポイント。'},
  {id:'nk4',lv:5,fs:'nk:sh0:mg5',hand:'12367m234777p678s',a:'7p',exp:'打7筒！777筒の暗刻を崩す勇気。77筒を雀頭にして67萬のリャンメン（5・8萬、受け8枚）が残ります。67萬を切ると7萬・6萬の単騎系しか残りません。'},
 ]},
-{id:'riichi',title:'リーチ判断',icon:'📣',section:1,desc:'局面を見て、曲げるかダマか。鳳凰卓の実測データで検証済み。',questions:SR_RIICHI_QUESTIONS},
-{id:'naki',title:'鳴き判断',icon:'🙋',section:2,desc:'ポン・チーの損得を見極めよう。',questions:[
+{id:'riichi',title:'リーチ判断',icon:'📣',section:2,desc:'局面を見て、曲げるかダマか。鳳凰卓の実測データで検証済み。',questions:SR_RIICHI_QUESTIONS},
+{id:'naki',title:'鳴き判断',icon:'🙋',section:3,desc:'ポン・チーの損得を見極めよう。',questions:[
  {q:'ポンする？',situ:{kyoku:'東1局',turn:5,seat:'子',dora:'8p',claim:'G',hand:'567m234p6p88p45sGG'},choices:['ポン','スルー'],a:0,exp:'發ポンで役が確定し、ドラ2（8筒×2）で3,900〜満貫級。打点・速度ともに十分なので積極的に鳴く。'},
  {q:'ピンフ・タンヤオ・リーチを狙える門前の好形1シャンテン。チーすると役が消える。どうする？',choices:['鳴かずに門前で進める','チーして速度を上げる','ポンできる牌を探す','手を崩して守備に回る'],a:0,exp:'鳴いて役がなくなる（＝和了できない）なら鳴きは論外。門前ならリーチ・ピンフ・ツモで打点も伸びます。'},
  {q:'オーラス、トップ目。1,000点でも和了れば逃げ切れる。役があるなら？',choices:['積極的に鳴いて最速で和了る','門前で高打点を狙う','鳴かずにベタオリする','ハイテイまで待つ'],a:0,exp:'順位が確定するなら打点は不要。役が残る鳴きはどんどん入れて、最速の和了を目指しましょう。'},
  {q:'鳴きのデメリットとして正しいのは？',choices:['打点と守備力が下がり、リーチできなくなる','ツモの回数が減る','ドラが使えなくなる','フリテンになる'],a:0,exp:'鳴くと門前役（リーチ・ツモ・ピンフ等）が消えて打点が下がり、手牌が減って降りにくくなります。この対価に見合うかが鳴き判断の軸です。'},
 ]},
-{id:'oshihiki',title:'押し引き',icon:'⚖️',section:2,desc:'押すか、引くか。勝敗を分ける判断。',questions:[
+{id:'oshihiki',title:'押し引き',icon:'⚖️',section:3,desc:'押すか、引くか。勝敗を分ける判断。',questions:[
  {q:'押し引き判断の基本となる比較は？',choices:['自分の手の価値 vs 放銃の危険','自分の点数 vs 相手の点数','ツモの良さ vs 運','捨て牌の枚数 vs 巡目'],a:0,exp:'「和了率×打点」で手の価値を測り、放銃率×失点と比べるのが押し引きの根本です。'},
  {q:'どうする？',situ:{kyoku:'東2局',turn:7,seat:'子',dora:'5p',note:'対面がリーチ中',hand:'24m46p77p234s678sW'},choices:['押す','オリる'],a:1,exp:'愚形×愚形の1シャンテンで打点も安い。この価値の手でリーチに立ち向かう理由がない。まず安全な西から降りよう。'},
  {q:'どうする？',situ:{kyoku:'東4局',turn:9,seat:'子',dora:'8p',note:'上家がリーチ中',hand:'567m234p88p45678s'},choices:['押す','オリる'],a:0,exp:'3/6/9索の三面張テンパイでドラ2（8筒×2）。良形×満貫級のテンパイは押す価値が十分。追いかけリーチで勝負。'},
  {q:'どうする？',situ:{kyoku:'南1局',turn:10,seat:'子',dora:'6p',note:'下家がリーチ中',hand:'24m68m355p24s678sW'},choices:['押す','オリる'],a:1,exp:'まだ2シャンテン。ここからアガリまで到達する確率は低く、無スジを何枚も通すことになる。即ベタオリが正解。'},
  {q:'リーチに対して無スジの牌を押してよいのは、主にどんなとき？',choices:['自分に押す価値のあるテンパイがあるとき','いつでも押してよい','安牌がないときだけ','親のときだけ'],a:0,exp:'無スジは放銃率が高い牌。見合うリターン（良形・高打点のテンパイ）があるときだけ勝負します。'},
 ]},
-{id:'gyakuten',title:'逆転条件',icon:'🔄',section:2,desc:'オーラスの点差計算をマスター。',questions:[
+{id:'gyakuten',title:'逆転条件',icon:'🔄',section:3,desc:'オーラスの点差計算をマスター。',questions:[
  {q:'オーラス2着目、トップと7,900点差。トップから直撃してまくれる最低打点は？',choices:['3,900点','5,200点','7,700点','8,000点'],a:1,exp:'直撃は「自分+X・相手-X」で差が2倍縮みます。5,200×2=10,400>7,900でOK。3,900×2=7,800では100点足りません！'},
  {q:'6,000点差の2着目。トップは子。満貫ツモ（2,000/4,000）で逆転できる？',choices:['できる','できない','親のときだけできる','同点になる'],a:0,exp:'自分が+8,000、トップの子は-2,000。差は10,000縮むので6,000点差は逆転です。ツモは全員から取れるのが強い！'},
  {q:'供託のリーチ棒は誰のもの？',choices:['和了した人','リーチした人に戻る','トップの人','山分けする'],a:0,exp:'供託されたリーチ棒1,000点は次に和了した人のもの。僅差のオーラスでは供託込みで逆転ラインを計算しましょう。'},
  {q:'同点で終局した場合、順位はどう決まる？',choices:['起家に近い方が上位','ジャンケンで決める','和了回数が多い方','同着になる'],a:0,exp:'一般的なルールでは同点の場合、起家（最初の親）に近い席順の方が上位になります。'},
 ]},
-{id:'anzen',title:'安全度',icon:'🛡️',section:3,desc:'現物・スジ・壁。牌の危険度を読む。',questions:[
+{id:'anzen',title:'安全度',icon:'🛡️',section:4,desc:'現物・スジ・壁。牌の危険度を読む。',questions:[
  {q:'リーチに対して最も安全な牌はどれ？',tchoices:[{t:'2m',lab:'現物'},{t:'4p',lab:'スジ'},{t:'W',lab:'2枚切れ'},{t:'5s',lab:'無スジ'}],a:0,exp:'リーチ者自身が捨てた牌（現物）はフリテンのルールにより絶対にロンされません。安全度は 現物 ＞ スジ・2枚切れ字牌 ＞ 無スジ の順。'},
  {q:'1筒がリーチ者の現物。「スジの4筒」が比較的安全な理由は？',choices:['2-3筒のリャンメン待ちならフリテンになるから','4筒は使いにくい牌だから','1筒と4筒は同じ牌扱いだから','カンチャン待ちが存在しないから'],a:0,exp:'4筒がリャンメンで当たるのは「2-3筒」持ちのときだけ。その待ちは1筒（現物）でフリテンなので、リャンメンには当たりません。ただしシャンポン・カンチャン・単騎には当たり得ます。'},
  {q:'7筒が場に4枚見えている。安全度が大きく上がる牌は？',tchoices:[{t:'6p'},{t:'8p'},{t:'9p'},{t:'5p'}],a:2,exp:'9筒がリャンメンで当たるには相手が「7-8筒」を持つ必要がありますが、7筒は4枚全部見えているので不可能（ノーチャンス）。残るはシャンポン・単騎などのみです。'},
  {q:'場に2枚切れの字牌が比較的安全な理由は？',choices:['シャンポン待ちがなくなり、残りは単騎だけだから','字牌は点数が安いから','鳴かれないから','ドラにならないから'],a:0,exp:'残り2枚が見えていればトイツで待たれる（シャンポン）ことがなく、当たるのはラス1枚の単騎待ちのみ。かなり安全です。'},
  {q:'安全度が高い順に並んでいるのはどれ？',choices:['現物 ＞ スジ・2枚切れ字牌 ＞ 無スジ2・8 ＞ 無スジ4〜6','無スジ4〜6 ＞ スジ ＞ 現物','スジ ＞ 現物 ＞ 字牌','どれも同じ'],a:0,exp:'現物が絶対安全。次にスジや枚数の切れた字牌、無スジでも端に近いほど当たる形が少なく、真ん中の4〜6が最も危険です。'},
 ]},
-{id:'betaori',title:'ベタオリ手順',icon:'🏃',section:3,desc:'降りると決めたら完璧に降りる。',questions:[
+{id:'betaori',title:'ベタオリ手順',icon:'🏃',section:4,desc:'降りると決めたら完璧に降りる。',questions:[
  {q:'ベタオリを決めたら、最初に切る牌は？',choices:['現物','手の中の危険牌','字牌','ドラ'],a:0,exp:'降りると決めたら和了は諦め、最も安全な現物から切るのが大原則。手の価値は一切考えなくてOKです。'},
  {q:'現物が1枚しかない。正しい考え方は？',choices:['残り巡目分の安全牌が足りるか数えて計画する','現物を最後まで温存する','諦めて手なりで進める','即座に現物を切って後は運に任せる'],a:0,exp:'流局まで何巡あるかを数え、現物・スジ・切れた字牌で最後まで凌げるかを先に計画します。足りないなら安全度の高い順に配分。'},
  {q:'現物が尽きた。次に切るべきは？',choices:['2枚切れの字牌やスジなど安全度の高い順','ドラの近く','真ん中の無スジ','ツモった牌をそのまま'],a:0,exp:'現物の次は「当たる形が少ない牌」。2枚切れ字牌、スジ、壁（ノーチャンス）の牌の順に安全度で選びます。'},
@@ -1489,6 +1512,30 @@ const COURSES=[
    ・小テーマ内は diff を少しずつ広げ/上げて段階化、小テーマ間は形そのものが変わる大きな段階化。
    ・各小テーマの最終レッスン(配列末尾)は「まとめ」(★表示)。レッスン数は小テーマごとに自由。 */
 const THEMES=[
+ /* ===== 第1章「麻雀を打てる」v1.0 (A1〜B2実装済み。C1以降は後続実装) ===== */
+ {id:'th_ch1a', course:'ch1a', title:'牌を知ろう', sub:'まずは牌とともだちになる',
+  subThemes:[
+   {id:'st_a1', title:'牌の種類', lessons:[
+    {diff:{ch1:'a1_1'}},                       // 牌にさわってみよう(短尺)
+    {diff:{ch1:'a1_2'}},                       // マンズ・ピンズ・ソーズ(短尺)
+    {diff:{ch1:'a1_3'}},                       // 字牌(短尺)
+    {diff:{ch1:'a1_4'}},                       // ★まとめ: 牌はかせ
+   ]},
+  ]},
+ {id:'th_ch1b', course:'ch1b', title:'組を作ろう', sub:'メンツ・トイツ・アタマ',
+  subThemes:[
+   {id:'st_b1', title:'3枚の組', lessons:[
+    {diff:{ch1:'b1_1'}},                       // ならんだ3枚(シュンツ)
+    {diff:{ch1:'b1_2'}},                       // おなじ3枚(コーツ)
+    {diff:{ch1:'b1_3'}},                       // メンツ
+    {diff:{ch1:'b1_4'}},                       // ★字牌のひみつ(字牌はシュンツにできない)
+   ]},
+   {id:'st_b2', title:'2枚の組とアガリ形', lessons:[
+    {diff:{ch1:'b2_1'}},                       // おなじ2枚(トイツ)
+    {diff:{ch1:'b2_2'}},                       // アタマ — トイツの役割
+    {diff:{ch1:'b2_3'}},                       // ★まとめ: 組はかせ
+   ]},
+  ]},
  {id:'th_rules', course:'rules', title:'麻雀のきほん', sub:'ルール・アガリの形を知る',
   qn:6,  // 静的プールが6問のため全問1周(重複出題はしない)。プール拡充後にqnを外せば既定10問
   subThemes:[
@@ -1549,6 +1596,7 @@ const THEMES=[
   ]},
 ];
 const SECTIONS=[
+ {name:'麻雀を打てる',desc:'第1章：麻雀のきほん構造を体で覚える'},
  {name:'入門',desc:'ルール・役・点数のきほん'},
  {name:'初級',desc:'手作りの技術を磨く'},
  {name:'中級',desc:'判断力で差をつける'},
@@ -1622,7 +1670,7 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    開発UI・未検証Compare）を通常操作から隠す。コード・データ・機能は
    一切削除しておらず、このフラグをfalseにすれば全て復帰する。 */
 let PROTOTYPE_MODE=true;
-const PROTO_VISIBLE_COURSES=['rules','yaku','score','waits','ukeire1','nanikiru','riichi'];
+const PROTO_VISIBLE_COURSES=['ch1a','ch1b','rules','yaku','score','waits','ukeire1','nanikiru','riichi'];
 function protoCourseVisible(id){ return !PROTOTYPE_MODE||PROTO_VISIBLE_COURSES.includes(id); }
 function staminaFree(){ return PROTOTYPE_MODE||S.owned.stamina; }   // プロトタイプはスタミナ消費なし
 function devUIVisible(){ return !PROTOTYPE_MODE||S.dev||location.hash==='#dev'; }
@@ -2389,6 +2437,7 @@ function startLesson(id,waitLevel){
 // 麻雀ロジック(生成器・判定・採点)は既存のものをそのまま呼ぶだけで、一切変更しない。
 function buildThemeQuestions(c,diff,n){
   n=n||LESSON_QN_DEFAULT;
+  if(c.type==='ch1') return buildCh1(diff&&diff.ch1);  // 第1章: レッスンごとの固定シナリオ(問題数もレッスン定義側)
   const pick=a=>a[Math.floor(Math.random()*a.length)];
   const qs=[];
   if(c.type==='waits'){
@@ -2444,6 +2493,290 @@ function buildThemeQuestions(c,diff,n){
   }
   return qs;
 }
+/* ============================================================
+   第1章「麻雀を打てる」v1.0 — A1/B1/B2の11レッスン
+   設計原則(指示・カリキュラムv1.0):
+   ・Teach→Try→Quiz→Review。Teachは長文ページ禁止(イソピィの一言+牌+短い説明)
+   ・正解は必ず下の決定論バリデータで決める(人手の思い込みやAIで固定しない)
+   ・未導入用語を問題文に使わない(用語導入順: 体験→意味→名前→使用。カンツ・ターツは第1章未導入)
+   ・教育的な固定例は固定のまま。ランダム化は★まとめ・そっくりさん系のみ
+   ============================================================ */
+/* ---- 決定論バリデータ(生成側とテスト側の両方がこれを使う) ---- */
+function ch1IsRun(tiles){        // シュンツ: 数牌3枚・同じ種類・数字が連続(8-9-1×・種類混じり×・字牌×)
+  if(!tiles||tiles.length!==3) return false;
+  if(tiles.some(t=>t.length!==2)) return false;          // 字牌が混ざればシュンツ不可
+  const su=tiles[0][1];
+  if(tiles.some(t=>t[1]!==su)) return false;             // マンズ・ピンズ・ソーズ混在は不可
+  const ns=tiles.map(t=>+t[0]).sort((a,b)=>a-b);
+  return ns[0]+1===ns[1]&&ns[1]+1===ns[2];               // 9の次に1へは戻らない(8-9-1は連続でない)
+}
+function ch1IsTriplet(tiles){    // コーツ: まったくおなじ牌3枚(字牌も数牌もOK。東東東○・白發中×)
+  return !!tiles&&tiles.length===3&&tiles[0]===tiles[1]&&tiles[1]===tiles[2];
+}
+function ch1IsPair(tiles){       // トイツ: まったくおなじ牌2枚
+  return !!tiles&&tiles.length===2&&tiles[0]===tiles[1];
+}
+function ch1IsMentsu(tiles){ return ch1IsRun(tiles)||ch1IsTriplet(tiles); }
+
+/* ---- 問題ビルダー(正解インデックスは必ずバリデータ/コード比較で算出) ---- */
+function ch1Teach(text,opt){ return Object.assign({ch1t:true,text},opt||{}); }
+function ch1SamePick(target,distractors,opt){
+  // そっくりさん探し: 正解=targetと完全一致する牌(1枚だけ混ぜること)
+  const cands=shuffle([target].concat(distractors));
+  const a=cands.findIndex(cd=>cd===target);
+  return Object.assign({pick1:true,tlab:'そっくりさん探し',q:'この牌とおなじ牌はどれ？',
+    hand:target,cands,a},opt||{});
+}
+function ch1CompleteRun(baseStr,cands,q,opt){
+  // シュンツ完成: 正解=base2枚と合わせてch1IsRunになる牌(候補は1枚だけにすること)
+  const base=parseHand(baseStr);
+  const c2=shuffle(cands.slice());
+  const a=c2.findIndex(cd=>ch1IsRun(base.concat([cd])));
+  return Object.assign({pick1:true,tlab:'ならべてみよう',q,hand:baseStr,cands:c2,a},opt||{});
+}
+function ch1CompleteTriplet(baseStr,cands,q,opt){
+  const base=parseHand(baseStr);
+  const c2=shuffle(cands.slice());
+  const a=c2.findIndex(cd=>ch1IsTriplet(base.concat([cd])));
+  return Object.assign({pick1:true,tlab:'あつめてみよう',q,hand:baseStr,cands:c2,a},opt||{});
+}
+function ch1PairPick(target,distractors,q,opt){
+  const c2=shuffle([target].concat(distractors));
+  const a=c2.findIndex(cd=>ch1IsPair([target,cd]));
+  return Object.assign({pick1:true,tlab:'ペアづくり',q:q||'この牌とペアになる、おなじ牌を選ぼう！',
+    hand:target,cands:c2,a},opt||{});
+}
+function ch1SuitMulti(cands,suit,q,opt){
+  // 種類あつめ: 正解=そのスートの数牌ぜんぶ
+  const c2=shuffle(cands.slice());
+  const answers=c2.map((cd,i)=>({cd,i})).filter(x=>x.cd.length===2&&x.cd[1]===suit).map(x=>x.i);
+  return Object.assign({pickm:true,tlab:'なかまあつめ',q,cands:c2,answers},opt||{});
+}
+function ch1HonorMulti(cands,wantHonor,q,opt){
+  // 字牌/数牌あつめ: 正解=字牌(コード1文字)か数牌(2文字)か
+  const c2=shuffle(cands.slice());
+  const answers=c2.map((cd,i)=>({cd,i})).filter(x=>(x.cd.length===1)===wantHonor).map(x=>x.i);
+  return Object.assign({pickm:true,tlab:'なかまあつめ',q,cands:c2,answers},opt||{});
+}
+function ch1PairMulti(cands,q,opt){
+  // トイツさがし: 正解=リストの中に「ちょうど2枚」ある牌ぜんぶ(3枚以上は並べないこと)
+  const cnt={}; cands.forEach(cd=>cnt[cd]=(cnt[cd]||0)+1);
+  const c2=shuffle(cands.slice());
+  const answers=c2.map((cd,i)=>({cd,i})).filter(x=>cnt[x.cd]===2).map(x=>x.i);
+  return Object.assign({pickm:true,tlab:'トイツさがし',q,cands:c2,answers},opt||{});
+}
+function ch1HeadMulti(handStr,q,opt){
+  // アタマさがし: 形のなかで「ちょうど2枚」の牌がアタマ(3枚はコーツ=メンツ側)。並べたまま出題
+  const tiles=sortTiles(parseHand(handStr));
+  const cnt={}; tiles.forEach(cd=>cnt[cd]=(cnt[cd]||0)+1);
+  const answers=tiles.map((cd,i)=>({cd,i})).filter(x=>cnt[x.cd]===2).map(x=>x.i);
+  return Object.assign({pickm:true,tlab:'アタマさがし',
+    q:q||'この形のなかで、アタマになっている牌を選ぼう！',cands:tiles,answers},opt||{});
+}
+function ch1RunMcq(handStr,exp){
+  const ok=ch1IsRun(parseHand(handStr));
+  return {q:'これはシュンツ？',hand:handStr,choices:['シュンツになっている','なっていない'],a:ok?0:1,exp};
+}
+function ch1MentsuMcq(handStr,exp){
+  const ok=ch1IsMentsu(parseHand(handStr));
+  return {q:'これはメンツ？',hand:handStr,choices:['メンツになっている','なっていない'],a:ok?0:1,exp};
+}
+function ch1RunOrKotsuMcq(handStr,exp){
+  const t=parseHand(handStr);
+  const a=ch1IsRun(t)?0:(ch1IsTriplet(t)?1:-1);  // どちらでもない形はこの型で出題しない(a=-1はテストで検出)
+  return {q:'これはシュンツ？コーツ？',hand:handStr,choices:['シュンツ','コーツ'],a,exp};
+}
+function ch1SuitMcq(tile,exp){
+  const a={m:0,p:1,s:2}[tile[1]];
+  return {q:'この牌はなんズ？',hand:tile,choices:['マンズ','ピンズ','ソーズ'],a,exp};
+}
+function ch1HonorOrNumMcq(tile,exp){
+  const a=tile.length===1?0:1;
+  return {q:'この牌はどっち？',hand:tile,choices:['字牌','数牌'],a,exp};
+}
+
+/* ---- 11レッスンの中身(キーはTHEMESのdiff.ch1と一致) ---- */
+const CH1_LESSONS={
+  /* A1-1 牌にさわってみよう(短尺: Teach2+Try4) */
+  a1_1(){
+    return [
+      ch1Teach('やっほー、ボクはイソピィ！これが麻雀の<span class="term-chip">牌（ハイ）</span>だよ。まずはさわってみよう！',
+        {tlab:'はじめまして',hand:'5m3p7s E',
+         act:{label:'牌にさわってみる',result:'カチャッ♪ いい音！これから牌ととってもなかよくなるよ🐣'}}),
+      ch1Teach('牌にはいろんな絵や数字がかいてあるね。まずは「おなじ牌」を見つけられたらバッチリ！',
+        {tlab:'おなじ牌',hands:[{label:'この2枚は「おなじ牌」',hand:'44p'}]}),
+      ch1SamePick('5m',['6m','5p','E'],{exp:'絵も数字もまったくおなじ牌が「おなじ牌」だよ。'}),
+      ch1SamePick('3p',['3s','2p','8p'],{exp:'まるの絵で数字もおなじ。それが「おなじ牌」！'}),
+      ch1SamePick('7s',['7m','7p','1s'],{exp:'数字がおなじでも、絵がちがうとべつの牌だよ。'}),
+      ch1SamePick('E',['S','W','N'],{exp:'漢字の牌もあるんだ。形までそっくりなのが「おなじ牌」！'}),
+    ];
+  },
+  /* A1-2 マンズ・ピンズ・ソーズ(Teach2+Try/Quiz4) */
+  a1_2(){
+    return [
+      ch1Teach('数字の牌は3しゅるい！漢数字が<span class="term-chip">マンズ</span>、まるが<span class="term-chip">ピンズ</span>、棒が<span class="term-chip">ソーズ</span>だよ。',
+        {tlab:'3つのなかま',hands:[{label:'マンズ',hand:'123m'},{label:'ピンズ',hand:'123p'},{label:'ソーズ',hand:'123s'}]}),
+      ch1SuitMulti(['3m','5p','7m','2s','9m','6p'],'m','マンズをぜんぶ選ぼう！',
+        {exp:'漢数字がかいてあるのがマンズだよ。'}),
+      ch1Teach('ソーズの1はボクの牌！鳥の絵がかいてあるんだ🐦 見つけたらよろしくね！',
+        {tlab:'イソピィのひみつ',hand:'1s'}),
+      ch1SamePick('5p',['5m','5s','3p'],{tlab:'えらんでみよう',q:'5のピンズはどれ？',hand:'',
+        exp:'まるが5つでピンズの5！おなじ5でもマンズ・ソーズはべつの牌だよ。'}),
+      ch1SuitMcq('7s','棒の絵はソーズ！7本かぞえてみてね。'),
+      ch1SuitMcq('2m','漢数字はマンズ。「二萬（リャンマン）」ってよぶよ。'),
+    ];
+  },
+  /* A1-3 字牌(Teach2+Try/Quiz4) */
+  a1_3(){
+    return [
+      ch1Teach('数字がない牌もあるよ。これが<span class="term-chip">字牌（ジハイ）</span>！東・南・西・北と、白・發・中の7しゅるいだよ。',
+        {tlab:'字牌',hands:[{label:'東・南・西・北',hand:'ESWN'},{label:'白・發・中',hand:'BGR'}]}),
+      ch1Teach('数字がかいてあるマンズ・ピンズ・ソーズは、まとめて<span class="term-chip">数牌（カズハイ）</span>とよぶよ。',
+        {tlab:'数牌',hands:[{label:'これはぜんぶ数牌',hand:'3m5p7s'}]}),
+      ch1HonorMulti(['E','5m','R','2p','N','8s'],true,'字牌をぜんぶ選ぼう！',
+        {exp:'数字がなくて漢字（か白いだけ）の牌が字牌だよ。'}),
+      ch1SamePick('E',['S','W','B'],{tlab:'えらんでみよう',q:'東（トン）はどれ？',hand:'',
+        exp:'「東」とかいてあるのが東（トン）。字牌は漢字で見わけよう！'}),
+      ch1HonorMulti(['G','3m','9p','E','1s','W'],false,'数牌をぜんぶ選ぼう！',
+        {exp:'数字がかいてある牌はぜんぶ数牌。マンズもピンズもソーズもなかまだよ。'}),
+      ch1HonorOrNumMcq('B','まっしろな牌は「白（ハク）」。数字がないから字牌だよ。'),
+    ];
+  },
+  /* A1-4 ★牌はかせ(まとめQuiz8問・毎回すこし変わる) */
+  a1_4(){
+    const pick=a=>a[Math.floor(Math.random()*a.length)];
+    const NUM=['1m','4m','8m','2p','5p','9p','3s','6s','7s'];
+    const HON=['E','S','W','N','B','G','R'];
+    const qs=[];
+    for(let k=0;k<2;k++){  // そっくりさん探し×2(毎回ちがう牌)
+      const t=pick(NUM.concat(HON));
+      const ds=shuffle(NUM.concat(HON).filter(x=>x!==t)).slice(0,3);
+      qs.push(ch1SamePick(t,ds,{exp:'絵と数字がまったくおなじ牌をえらべたらOK！'}));
+    }
+    for(const su of shuffle(['m','p','s']).slice(0,2)){  // なかまあつめ×2
+      const inSuit=shuffle(NUM.filter(x=>x[1]===su)).slice(0,3);
+      const out=shuffle(NUM.filter(x=>x[1]!==su).concat(HON)).slice(0,3);
+      const name={m:'マンズ',p:'ピンズ',s:'ソーズ'}[su];
+      qs.push(ch1SuitMulti(inSuit.concat(out),su,name+'をぜんぶ選ぼう！',
+        {exp:{m:'漢数字',p:'まる',s:'棒'}[su]+'の絵が'+name+'だよ。'}));
+    }
+    const hs=shuffle(HON.slice()).slice(0,2).concat(shuffle(NUM.slice()).slice(0,4));
+    qs.push(ch1HonorMulti(hs,true,'字牌をぜんぶ選ぼう！',{exp:'数字がない牌が字牌だよ。'}));
+    qs.push(ch1SuitMcq(pick(NUM),'絵で見わけよう。漢数字=マンズ・まる=ピンズ・棒=ソーズ！'));
+    qs.push(ch1SuitMcq(pick(NUM),'まよったら絵をよく見てね。'));
+    qs.push(ch1HonorOrNumMcq(pick(HON.concat(NUM)),'数字があれば数牌、なければ字牌だよ。'));
+    return shuffle(qs);
+  },
+  /* B1-1 ならんだ3枚=シュンツ(体験→名前の順) */
+  b1_1(){
+    return [
+      ch1CompleteRun('3m4m',['5m','9m','2p','E'],'3・4ときたら、つぎは？ならびがつづく牌を選ぼう！',
+        {tlab:'ならべてみよう',exp:'3・4・5とつづいた！数字がじゅんばんにならぶと、きれいな形になるんだ。'}),
+      ch1Teach('いまつくった「3・4・5」みたいに、おなじ種類で数字がならんだ3枚を<span class="term-chip">シュンツ</span>とよぶよ！',
+        {tlab:'シュンツ',hands:[{label:'これがシュンツ',hand:'345m'}]}),
+      ch1CompleteRun('6p7p',['8p','5m','1p','W'],'6・7につづけて、シュンツをつくろう！',
+        {tlab:'シュンツづくり',exp:'6・7・8でシュンツ！おなじピンズで数字がつづいているね。'}),
+      ch1RunMcq('345m','おなじマンズで3・4・5。りっぱなシュンツ！'),
+      ch1RunMcq('891s','9のつぎは1にもどらないよ。ならびは1〜9のなかだけ。8・9・1はシュンツにならない！'),
+      ch1RunMcq('678p','おなじピンズで6・7・8。これもシュンツだよ。'),
+    ];
+  },
+  /* B1-2 おなじ3枚=コーツ(体験→名前の順) */
+  b1_2(){
+    return [
+      ch1CompleteTriplet('EE',['E','S','5m','G'],'東・東ときたら…おなじ牌をもう1枚あつめよう！',
+        {tlab:'あつめてみよう',exp:'東が3枚そろった！おなじ牌をあつめるのも、きれいな形なんだ。'}),
+      ch1CompleteTriplet('5p5p',['5p','5m','6p','E'],'5ピンをもう1枚あつめよう！',
+        {tlab:'あつめてみよう',exp:'5ピンが3枚！「おなじ牌」だから、5マンや6ピンじゃダメだよ。'}),
+      ch1Teach('おなじ牌が3枚そろった組を<span class="term-chip">コーツ</span>とよぶよ！字牌でも数牌でもOK！',
+        {tlab:'コーツ',hands:[{label:'これもコーツ',hand:'EEE'},{label:'これもコーツ',hand:'555p'}]}),
+      ch1RunOrKotsuMcq('777s','おなじ7ソーが3枚だからコーツ。ならんだ3枚ならシュンツだよ。'),
+      ch1RunOrKotsuMcq('456m','4・5・6とならんでいるからシュンツ。おなじ3枚ならコーツだよ。'),
+      ch1RunOrKotsuMcq('GGG','發（ハツ）が3枚。字牌も、おなじ3枚ならコーツになるよ！'),
+    ];
+  },
+  /* B1-3 メンツ(名前→使用) */
+  b1_3(){
+    return [
+      ch1Teach('シュンツもコーツも、3枚でできた組。まとめて<span class="term-chip">メンツ</span>とよぶよ！',
+        {tlab:'メンツ',hands:[{label:'シュンツもメンツ',hand:'345m'},{label:'コーツもメンツ',hand:'EEE'}]}),
+      ch1MentsuMcq('567s','5・6・7のシュンツ。シュンツはメンツだよ。'),
+      ch1MentsuMcq('4p4p','2枚だけではメンツにならないよ。メンツは3枚の組！'),
+      ch1MentsuMcq('3m4p5s','数字は3・4・5でも、マンズ・ピンズ・ソーズがバラバラ。おなじ種類でないとシュンツにならないんだ。'),
+      ch1MentsuMcq('357m','3・5・7はとびとび。シュンツは1つずつならんだ3枚だよ。'),
+      ch1MentsuMcq('999s','おなじ9ソーが3枚のコーツ。コーツもメンツ！'),
+    ];
+  },
+  /* B1-4 ★字牌のひみつ(失敗体験→理由) */
+  b1_4(){
+    return [
+      ch1Teach('東・南・西…字牌を3つならべてみたら、シュンツになるかな？ためしてみよう！',
+        {tlab:'じっけん',hand:'ESW',
+         act:{label:'ならべてみる',result:'<b>✕ ならばない！</b> 字牌には数字がないから、「ならび」がつくれないんだ…'}}),
+      ch1Teach('そう、<b>字牌はシュンツにできない</b>んだ。でも、おなじ字牌3枚なら<span class="term-chip">コーツ</span>になれるよ！',
+        {tlab:'字牌のひみつ',hands:[{label:'東・南・西 → シュンツ✕',hand:'ESW'},{label:'東・東・東 → コーツ○',hand:'EEE'}]}),
+      ch1MentsuMcq('ESW','東・南・西は数字のならびじゃないから、シュンツにならないよ。'),
+      ch1MentsuMcq('EEE','おなじ東が3枚＝コーツ。コーツはりっぱなメンツ！'),
+      ch1MentsuMcq('BGR','白・發・中も、それぞれちがう字牌。3つならべてもシュンツにはならないよ。'),
+      ch1MentsuMcq('345m','数牌はならべばシュンツ。3・4・5でメンツだよ。'),
+    ];
+  },
+  /* B2-1 トイツ(体験→名前) */
+  b2_1(){
+    return [
+      ch1PairPick('9s',['9m','8s','E'],null,{exp:'まったくおなじ9ソーが2枚。これがペアだよ。'}),
+      ch1PairPick('W',['N','E','5p'],null,{exp:'西（シャー）のペア！字牌もおなじ2枚でペアになるよ。'}),
+      ch1Teach('おなじ牌2枚の組を<span class="term-chip">トイツ</span>とよぶよ。コーツ（3枚）の一歩手前の形だね！',
+        {tlab:'トイツ',hands:[{label:'これがトイツ',hand:'99s'},{label:'これもトイツ',hand:'WW'}]}),
+      ch1PairMulti(['4m','4m','7p','E','E','2s'],'トイツになっている牌をぜんぶ選ぼう！',
+        {exp:'4マンのペアと東のペア。1枚だけの牌はトイツじゃないよ。'}),
+      {q:'これはトイツ？コーツ？',hand:'55p',choices:['トイツ','コーツ'],
+       a:ch1IsPair(parseHand('55p'))?0:1,exp:'おなじ牌2枚=トイツ、3枚=コーツだよ。'},
+    ];
+  },
+  /* B2-2 アタマ — トイツの役割(暗記でなく牌姿で問う) */
+  b2_2(){
+    return [
+      ch1Teach('アガリの形は、メンツを4つ…だけじゃたりない！さいごに<b>トイツが1組</b>ひつようなんだ。',
+        {tlab:'あと1組',hands:[{label:'メンツ4つ＋？',hand:'123m456p789sEEE'}]}),
+      ch1Teach('アガリの形をささえるこのトイツを<span class="term-chip">アタマ</span>とよぶよ。メンツ4つ＋アタマ1つでアガリ！',
+        {tlab:'アタマ',hands:[{label:'メンツ4つ＋アタマ(99s)',hand:'123m456p789sEEE99s'}]}),
+      ch1HeadMulti('345m77p',null,{exp:'3・4・5はシュンツ（メンツ）。のこった7ピン2枚がアタマだよ。'}),
+      ch1HeadMulti('777sEE',null,{exp:'7ソーは3枚だからコーツ（メンツ）。2枚の東がアタマ！枚数で見わけよう。'}),
+      ch1HeadMulti('234p55m',null,{exp:'2・3・4のシュンツと、5マンのペア。ペアのほうがアタマだよ。'}),
+      {q:'この形に、トイツはいくつある？',hand:'3m3m8p8pE',choices:['1つ','2つ','3つ'],
+       a:(h=>{const c={};h.forEach(t=>c[t]=(c[t]||0)+1);const n=Object.values(c).filter(x=>x===2).length;return n-1;})(parseHand('3m3m8p8pE')),
+       exp:'3マンのペアと8ピンのペアで2つ。東は1枚だけだからトイツじゃないよ。'},
+    ];
+  },
+  /* B2-3 ★組はかせ(まとめ9問・順番のみシャッフル) */
+  b2_3(){
+    const qs=[
+      ch1MentsuMcq('ESW','字牌はならべてもシュンツにならない。東・南・西はメンツじゃないよ。'),
+      {q:'この3枚はどれ？',hand:'EEE',choices:['コーツ（メンツ）','トイツ','シュンツ'],
+       a:ch1IsTriplet(parseHand('EEE'))?0:-1,exp:'おなじ東が3枚だからコーツ。コーツはメンツだよ。'},
+      {q:'この東2枚は、アガリの形のなかでどう使える？',hand:'EE',
+       choices:['アタマとして使える','シュンツとして使える','使いみちはない'],
+       a:ch1IsPair(parseHand('EE'))?0:-1,
+       exp:'おなじ2枚＝トイツはアタマになれる！字牌はシュンツにはなれないけど、アタマにもコーツにもなれるよ。'},
+      ch1RunMcq('891m','9のつぎは1にもどらない。8・9・1はシュンツにならないよ。'),
+      {q:'この3枚はどれ？',hand:'678s',choices:['シュンツ','コーツ','トイツ'],
+       a:ch1IsRun(parseHand('678s'))?0:-1,exp:'6・7・8とならんだシュンツ！'},
+      ch1CompleteRun('4s5s',['6s','9s','4m','E'],'4・5につづけて、シュンツをかんせいさせよう！',
+        {tlab:'シュンツづくり',exp:'4・5・6でシュンツ！'}),
+      ch1PairMulti(['G','G','6m','9p','9p','W'],'トイツになっている牌をぜんぶ選ぼう！',
+        {exp:'發のペアと9ピンのペア。おなじ2枚だけがトイツだよ。'}),
+      ch1MentsuMcq('BGR','白・發・中はぜんぶちがう字牌。3つあわせてもメンツにならないよ。'),
+      {q:'この3枚はどれ？',hand:'555p',choices:['コーツ（メンツ）','トイツ'],
+       a:ch1IsTriplet(parseHand('555p'))?0:-1,exp:'おなじ5ピンが3枚だからコーツ！2枚ならトイツだったね。'},
+    ];
+    return shuffle(qs);
+  },
+};
+function buildCh1(key){
+  const f=CH1_LESSONS[key];
+  return f?f():[];
+}
 function startThemeLesson(tid,idx){
   const t=themeOf(tid); if(!t) return;
   const list=themeLessons(t);
@@ -2462,7 +2795,8 @@ function startThemeLesson(tid,idx){
   // トレーニングはタイム比較、Compareは条件比較が目的のため復習は入れない)
   L={course:c,themeId:tid,lessonIndex:idx,qs,idx:0,correct:0,sel:null,checked:false,done:false,
      rcat:null,ratingStart:null,startedAt:Date.now(),combo:0,maxCombo:0,
-     baseN:qs.length,baseAnswered:0,seq:0,review:[]};
+     baseN:qs.length,baseAnswered:0,seq:0,review:[],
+     teachN:qs.filter(x=>x&&x.ch1t).length};  // 第1章: Teach問数(正解率/PERFECT分母から除外)
   document.getElementById('lesson').classList.add('show');
   renderQ();
 }
@@ -2499,6 +2833,9 @@ function quitLesson(){
    挙動はP2-A時点の完全再現（ゴールデンテストで固定）。
    ============================================================ */
 function qFormatKey(q){
+  if(q.ch1t) return 'teach';      // 第1章: 教えるページ(スコア外・check()非経由)
+  if(q.pick1) return 'pickone';   // 第1章: 牌を1枚えらぶ
+  if(q.pickm) return 'pickmulti'; // 第1章: 牌を複数えらぶ
   if(q.sr) return 'riichi';  // P5: 承認済みリーチ判断問題（レーティング対象の2択）
   if(q.u1) return 'ukeire1'; // P5: 1シャンテン受け入れ当て（待ち当てと同UI）
   // 第一情報源: v3 questionType（P1注釈または問題データ自身）
@@ -2746,6 +3083,85 @@ const QFORMATS={
     },
     feedback(q,res){ return {ansText:'正解： '+q.choices[q.a], expText:q.exp||''}; },
   },
+  /* ===== 第1章フォーマット(v1.0) =====
+     teach: イソピィが教えるページ。回答なし・スコア外(teachNext()で進む。check()は通らない)。
+     pickone/pickmulti: 「牌にさわる」Try/Quiz。4択ボタンでなく牌そのものをタップする。
+     C1以降(ミニ麻雀等)でも牌タップUIとして再利用できる小さな拡張として設計 */
+  teach:{
+    cat:null, scoring:'binary',   // scoringは形式上のみ(check()を通らないため未使用)
+    qid(q){ return null; },
+    render(q){
+      let html='<div class="q-type">'+(q.tlab||'おぼえよう')+'</div>';
+      html+='<div class="teach-card"><img class="tc-iso" src="'+S1IMG+'" alt="イソピィ">'
+        +'<div class="tc-bub">'+q.text+'</div></div>';
+      if(q.hands){ for(const h of q.hands){ html+=(h.label?'<div class="tc-lab">'+h.label+'</div>':'')+handHTML(h.hand); } }
+      else if(q.hand) html+=handHTML(q.hand);
+      if(q.act) html+='<div class="ch1-actbox"><button class="btn gray" id="ch1-act" onclick="ch1Act()">'
+        +q.act.label+'</button><div id="ch1-act-res" class="tc-actres"></div></div>';
+      L.sel=null;
+      return html;
+    },
+    answer(q){ return {kind:'none'}; },
+    reveal(){},
+    feedback(){ return {ansText:'', expText:''}; },
+  },
+  pickone:{
+    cat:null, scoring:'binary',
+    qid(q){ return null; },
+    render(q){
+      let html='<div class="q-type">'+(q.tlab||'えらんでみよう')+'</div>';
+      html+='<div class="q-text">'+q.q+'</div>';
+      if(q.hand) html+=handHTML(q.hand);
+      html+='<div class="ch1-cands">'+q.cands.map((cd,i)=>
+        '<button class="tile '+(cd.length===2?cd[1]:'z')+'" id="ckb-'+i+'" onpointerdown="ch1Pick('+i+')">'
+        +tileFace(cd)+'</button>').join('')+'</div>';
+      L.sel=null;
+      return html;
+    },
+    answer(q){ return {kind:'choiceIndex', index:L.sel}; },
+    reveal(q,ans,res){
+      const el=document.getElementById('ckb-'+q.a);
+      if(el){ el.classList.remove('sel'); el.classList.add('correct'); }
+      if(!res.isCorrect){ const w=document.getElementById('ckb-'+ans.index);
+        if(w){ w.classList.remove('sel'); w.classList.add('wrong'); } }
+    },
+    feedback(q,res){ return {ansText:'正解： '+tileLabel(q.cands[q.a]), expText:q.exp||''}; },
+  },
+  pickmulti:{
+    cat:null, scoring:'idxset',
+    qid(q){ return null; },
+    render(q){
+      let html='<div class="q-type">'+(q.tlab||'ぜんぶ選ぼう')+'</div>';
+      html+='<div class="q-text">'+q.q+'</div>';
+      if(q.hand) html+=handHTML(q.hand);
+      html+='<div class="ch1-cands">'+q.cands.map((cd,i)=>
+        '<button class="tile '+(cd.length===2?cd[1]:'z')+'" id="ckb-'+i+'" onpointerdown="ch1Pick('+i+')">'
+        +tileFace(cd)+'</button>').join('')+'</div>';
+      html+='<p class="ch1-hint">あてはまる牌をぜんぶタップしてね</p>';
+      L.sel=new Set();
+      return html;
+    },
+    answer(q){ return {kind:'idxSet', set:L.sel}; },
+    reveal(q,ans,res){
+      for(const i of q.answers){
+        const el=document.getElementById('ckb-'+i); if(!el) continue;
+        if(ans.set.has(i)){ el.classList.remove('sel'); el.classList.add('correct'); }
+        else el.classList.add('miss');
+      }
+      for(const i of ans.set){
+        if(q.answers.includes(i)) continue;
+        const el=document.getElementById('ckb-'+i);
+        if(el){ el.classList.remove('sel'); el.classList.add('wrong'); }
+      }
+    },
+    feedback(q,res){
+      const d=res.details||{};
+      let diff='';
+      if(d.miss&&d.miss.length) diff+='<br>❌ えらび忘れ： '+d.miss.map(i=>tileLabel(q.cands[i])).join('・');
+      if(d.extra&&d.extra.length) diff+='<br>⚠️ ちがう牌を選んだ： '+d.extra.map(i=>tileLabel(q.cands[i])).join('・');
+      return {ansText:'正解： '+q.answers.map(i=>tileLabel(q.cands[i])).join('・')+diff, expText:q.exp||''};
+    },
+  },
 };
 
 /* ---- scorer: 副作用なしの純粋関数 (Question, UserAnswer) → ScoreResult ---- */
@@ -2753,6 +3169,16 @@ const SCORERS={
   binary:(q,ans)=>{
     const ok=ans.index===q.a;
     return {S:ok?1:0, isCorrect:ok, isPerfect:ok, details:null};
+  },
+  idxset:(q,ans)=>{
+    // 第1章pickmulti: インデックス集合の採点。待ち当てと同じ max(0,(当てた数-誤選択数)/正解数)
+    const want=new Set(q.answers);
+    let hit=0, wrongN=0;
+    for(const i of ans.set){ if(want.has(i)) hit++; else wrongN++; }
+    const S=Math.max(0,(hit-wrongN)/(want.size||1));
+    const miss=q.answers.filter(i=>!ans.set.has(i));
+    const extra=[...ans.set].filter(i=>!want.has(i));
+    return {S, isCorrect:S>=1, isPerfect:S>=1, details:{miss,extra}};
   },
   waits:(q,ans)=>{
     const S=qualityWaits(ans.set,q.waits);
@@ -2785,7 +3211,7 @@ function renderQ(){
     L.qs[L.idx]=L.rcat==='waits'?genWaitsAt(lv):genNanikiruAt(lv);
   }
   const q=L.qs[L.idx];
-  L.sel=null; L.checked=false;
+  L.sel=null; L.checked=false; L.actDone=false;
   // 進捗バー: 復習ありレッスンは「基本問題の消化率」(復習問題ではバーを進めない。
   // 基本10問終了後の復習回収フェーズは満タンのまま、下の復習チップで残数を示す)
   const frac=L.review?Math.min(1,L.baseAnswered/(L.baseN||1)):(L.idx/L.qs.length);
@@ -2821,6 +3247,39 @@ function selTile(i){
   L.sel=i;
   tiles.forEach((t,k)=>{ const el=document.getElementById('ht-'+k); if(el) el.classList.toggle('sel',k===i); });
   renderFoot();
+}
+/* 第1章: 牌タップ選択(pickone=単選 / pickmulti=トグル) */
+function ch1Pick(i){
+  if(!L||L.checked) return;
+  const q=L.qs[L.idx]; if(!q) return;
+  if(q.pickm){
+    if(L.sel.has(i)) L.sel.delete(i); else L.sel.add(i);
+    const el=document.getElementById('ckb-'+i); if(el) el.classList.toggle('sel',L.sel.has(i));
+  }else{
+    L.sel=i;
+    for(let k=0;k<q.cands.length;k++){ const el=document.getElementById('ckb-'+k); if(el) el.classList.toggle('sel',k===i); }
+  }
+  renderFoot();
+}
+/* 第1章Teach: 体験操作(牌をならべてみる等)。結果表示+牌ゆらしで「さわった」実感を返す */
+function ch1Act(){
+  if(!L) return;
+  const q=L.qs[L.idx]; if(!q||!q.ch1t||!q.act) return;
+  L.actDone=true;
+  const b=document.getElementById('ch1-act'); if(b) b.disabled=true;
+  const r=document.getElementById('ch1-act-res'); if(r) r.innerHTML=q.act.result;
+  document.querySelectorAll('#q-area .hand .tile').forEach(el=>el.classList.add('ch1-shake'));
+  renderFoot();
+}
+/* 第1章Teach: スコア外で次へ。applyOutcomeを通らないためEXP/正解率/コンボ/ハートは一切動かない。
+   進捗バーと復習の間隔管理のためにseq/baseAnsweredだけ進める */
+function teachNext(){
+  if(!L||L.checked) return;
+  const q=L.qs[L.idx]; if(!q||!q.ch1t) return;
+  if(q.act&&!L.actDone) return;
+  L.checked=true;                 // next()の未回答ガードを通すため(直後にnext→renderQでfalseへ戻る)
+  if(L.review){ L.seq++; L.baseAnswered++; }
+  next();
 }
 function toggleNum(n){
   if(L.checked) return;
@@ -2883,6 +3342,12 @@ function renderFoot(){
   const foot=document.getElementById('lesson-foot');
   foot.className='lesson-foot';
   const qNow=L.qs[L.idx];
+  if(qNow&&qNow.ch1t){
+    // 第1章Teach: こたえあわせなし。体験操作(q.act)がある場合は終えるまで進めない
+    const ok=!qNow.act||L.actDone;
+    foot.innerHTML='<button class="btn" id="answer-btn" '+(ok?'':'disabled')+' onclick="teachNext()">つづける</button>';
+    return;
+  }
   const patReady=!(qNow&&qNow.full)||L.patSel!=null;
   const ready=L.sel!==null&&(!(L.sel instanceof Set)||L.sel.size>0)&&patReady;
   foot.innerHTML='<button class="btn" id="answer-btn" '+(ready?'':'disabled')+' onclick="answerNow(this)">こたえあわせ</button>';
@@ -3137,8 +3602,10 @@ function finishLesson(){
   // L.correct=基本問題の初回正解数(復習正解は含まない)。復習で問題数が増えても
   // 最大EXPは従来どおり(10問なら40)。パーフェクトも基本問題の初回全正解のみ
   const baseN=L.baseN||L.qs.length;
+  // 第1章: Teach問はスコア外。全問正解ボーナスの分母はQuiz/Try問のみ(teachN=0なら従来どおり)
+  const quizN=Math.max(1,baseN-(L.teachN||0));
   const xp=10+L.correct*3;
-  const gems=5+(L.correct===baseN?10:0);
+  const gems=5+(L.correct===quizN?10:0);
   S.xp+=xp; S.gems+=gems;
   const cid=L.course.id;
   if(!L.course.training) S.crowns[cid]=Math.min(5,(S.crowns[cid]||0)+1);
@@ -3236,8 +3703,9 @@ function renderResult(ctx){
   const area=document.getElementById('q-area');
   // 正解率・PERFECTは基本問題の初回回答のみで判定(復習で取り返しても書き換えない=従来と比較可能)
   const baseN=L.baseN||L.qs.length;
-  const perfect=L.correct===baseN;
-  const accuracy=Math.round(L.correct/baseN*100);
+  const quizN=Math.max(1,baseN-(L.teachN||0));  // 第1章: Teach問はスコア外
+  const perfect=L.correct===quizN;
+  const accuracy=Math.round(L.correct/quizN*100);
   const rv=(L.review&&L.review.length)?{n:L.review.length,ok:L.review.filter(e=>e.resolved).length}:null;
   let ratingSummary='';
   if(L.rcat){
