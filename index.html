@@ -314,6 +314,7 @@ button.tile.off:active{transform:none;}
 @keyframes ch1shake{0%,100%{transform:none;} 20%{transform:translateX(-3px) rotate(-3deg);}
   45%{transform:translateX(3px) rotate(3deg);} 70%{transform:translateX(-2px);}}
 /* ===== C1: 4枚ミニ麻雀 ===== */
+.hand-gap{display:inline-block; width:14px; flex:none;}
 .mg-lab{margin:10px 2px 4px; font-size:11px; font-weight:800; color:var(--ink-soft);}
 .mg-wall{display:flex; align-items:center; gap:8px; margin:6px 0 2px; flex-wrap:wrap;}
 .mg-wall .mg-lab{margin:0;}
@@ -2568,6 +2569,21 @@ function ch1MiniWin5(tiles){
    手牌ですでに4枚つかっている牌は5枚目が存在しないため待ちに出さない */
 const CH1_ALL34=(()=>{const a=[];for(const su of ['m','p','s'])for(let n=1;n<=9;n++)a.push(n+su);
   for(const z of 'ESWNBGR')a.push(z);return a;})();
+/* 理牌表示(初心者向け): ソートし、つながらない牌の間にスキマを入れて横一列で見せる。
+   つながる=同じ牌 or 同スートで数字差1(組のなかみを教えないよう、それ以上はまとめない) */
+function ch1HandGrouped(str){
+  const tiles=sortTiles(parseHand(str));
+  let html='<div class="hand">';
+  tiles.forEach((t,i)=>{
+    if(i>0){
+      const p=tiles[i-1];
+      const linked=(t===p)||(t.length===2&&p.length===2&&t[1]===p[1]&&(+t[0]-+p[0])<=1);
+      if(!linked) html+='<span class="hand-gap"></span>';
+    }
+    html+=tileHTML(t);
+  });
+  return html+'</div>';
+}
 function ch1MiniWaits(hand4){
   if(!hand4||hand4.length!==4) return [];
   const cnt={}; hand4.forEach(t=>cnt[t]=(cnt[t]||0)+1);
@@ -2575,7 +2591,7 @@ function ch1MiniWaits(hand4){
 }
 /* ---- ミニ麻雀 実行状態(L.mg)。renderQごとに初期化されるため復習の再挑戦も新品から ---- */
 function ch1MiniInit(q){
-  L.mg={hand:q.mini.hand.slice(), wall:q.mini.wall.slice(), disc:[],
+  L.mg={hand:sortTiles(q.mini.hand), wall:q.mini.wall.slice(), disc:[],
         tsumo:null, phase:'draw', miss:0, won:false, windec:null,
         level:q.mini.level||2, target:parseHand(q.mini.target)};
 }
@@ -2674,7 +2690,8 @@ function ch1MiniDiscard(i){
   }
   mg.disc.push(five[i]);
   five.splice(i,1);
-  mg.hand=five; mg.tsumo=null; mg.phase='draw';
+  mg.hand=sortTiles(five);   // 理牌して4枚にもどす(ツモ牌も正しい位置へ)
+  mg.tsumo=null; mg.phase='draw';
   ch1MiniPaint();
 }
 
@@ -2782,18 +2799,18 @@ function ch1WaitPick(handStr,distractors,q,exp){
   const cands=shuffle(waits.concat(distractors));
   const a=cands.findIndex(cd=>waits.includes(cd));
   return {pick1:true,tlab:'なにが来たらアガリ？',q:q||'この手牌、なにが来たらアガリ？',
-    hand:handStr,cands,a,exp};
+    hand:handStr,cands,a,exp,grouped:true};
 }
 function ch1WaitMulti(handStr,cands,exp){
   const waits=ch1MiniWaits(parseHand(handStr));
   const c2=shuffle(cands.slice());
   const answers=c2.map((cd,i)=>({cd,i})).filter(x=>waits.includes(x.cd)).map(x=>x.i);
   return {pickm:true,tlab:'待ちさがし',q:'この手牌の待ちを、ぜんぶ選ぼう！',
-    hand:handStr,cands:c2,answers,exp};
+    hand:handStr,cands:c2,answers,exp,grouped:true};
 }
 function ch1TenpaiMcq(handStr,exp){
   const a=ch1MiniWaits(parseHand(handStr)).length?0:1;
-  return {q:'この手牌はテンパイ？',hand:handStr,choices:['テンパイしている','していない'],a,exp};
+  return {q:'この手牌はテンパイ？',hand:handStr,choices:['テンパイしている','していない'],a,exp,ghand:true};
 }
 
 /* ---- 11レッスンの中身(キーはTHEMESのdiff.ch1と一致) ---- */
@@ -3356,7 +3373,7 @@ const QFORMATS={
       if(q.ctx) html+='<div class="q-ctx">'+q.ctx+'</div>';
       if(q.situ) html+=tableHTML(legacySituToContext(q.situ),'T0');  // P3-B: situHTML→TableView（situHTMLはlegacyとして残置）
       else if(q.context) html+=tableHTML(q.context, q.context.reveal||'T0');  // v3ネイティブcontext問題（Compare variant等）
-      else if(q.hand) html+=handHTML(q.hand);
+      else if(q.hand) html+=(q.ghand?ch1HandGrouped(q.hand):handHTML(q.hand));  // ghand=理牌+組スキマ表示(第1章)
       html+='<div class="choices">'+q.choices.map((ch,i)=>
         '<button class="choice" id="ch-'+i+'" onpointerdown="selChoice('+i+')">'+ch+'</button>').join('')+'</div>';
       return html;
@@ -3423,7 +3440,8 @@ const QFORMATS={
     render(q){
       let html='<div class="q-type">'+(q.tlab||'えらんでみよう')+'</div>';
       html+='<div class="q-text">'+q.q+'</div>';
-      if(q.hand) html+=handHTML(q.hand);
+      if(q.hand) html+=(q.grouped?'<div class="tc-lab">手牌</div>'+ch1HandGrouped(q.hand):handHTML(q.hand));
+      if(q.grouped) html+='<div class="tc-lab">↓ この中からえらぼう</div>';
       html+='<div class="ch1-cands">'+q.cands.map((cd,i)=>
         '<button class="tile '+(cd.length===2?cd[1]:'z')+'" id="ckb-'+i+'" onpointerdown="ch1Pick('+i+')">'
         +tileFace(cd)+'</button>').join('')+'</div>';
@@ -3445,7 +3463,8 @@ const QFORMATS={
     render(q){
       let html='<div class="q-type">'+(q.tlab||'ぜんぶ選ぼう')+'</div>';
       html+='<div class="q-text">'+q.q+'</div>';
-      if(q.hand) html+=handHTML(q.hand);
+      if(q.hand) html+=(q.grouped?'<div class="tc-lab">手牌</div>'+ch1HandGrouped(q.hand):handHTML(q.hand));
+      if(q.grouped) html+='<div class="tc-lab">↓ この中からえらぼう</div>';
       html+='<div class="ch1-cands">'+q.cands.map((cd,i)=>
         '<button class="tile '+(cd.length===2?cd[1]:'z')+'" id="ckb-'+i+'" onpointerdown="ch1Pick('+i+')">'
         +tileFace(cd)+'</button>').join('')+'</div>';
