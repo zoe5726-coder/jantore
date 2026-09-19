@@ -352,12 +352,13 @@ button.tile.off:active{transform:none;}
 .mg-agari{padding:10px 14px; font-size:14px; width:auto; background:var(--gold,#f2b705);
   box-shadow:0 4px 0 #b98a04; color:#5b4300;}
 /* リーチ！slot(D2): 局開始から常設し、disabled→有効→リーチ中と状態だけが変わる(盤面固定原則) */
-.mg-riichi{padding:10px 10px; font-size:14px; width:auto; min-width:74px;
+.mg-riichi{padding:10px 0; font-size:14px; width:80px; min-width:80px;
   background:var(--verm); color:#fff; box-shadow:0 4px 0 #8f2c20;}
+/* 宣言中/リーチ中は鮮やかなまま固定slot・固定幅内で状態だけ変える(横ズレなし) */
 .mg-riichi.rc-on:disabled{background:var(--verm); color:#fff;
-  box-shadow:0 4px 0 #8f2c20; opacity:1;}   /* リーチ中表示は鮮やかなまま固定slot内で示す */
+  box-shadow:0 4px 0 #8f2c20; opacity:1;}
 .mg-wall.mg-r3 .btn{padding:10px 8px; font-size:13px;}
-.mg-wall.mg-r3 .mg-riichi{min-width:68px;}
+.mg-wall.mg-r3 .mg-riichi{width:72px; min-width:72px;}
 .mg-stack .mg-back{width:auto; flex:0 1 26px; min-width:8px;}  /* 山が多くても行内に収める */
 /* 数牌マッチング(A1-4): 左=牌/右=数字の2列。正解ペアはslot位置を保ったまま非表示
    (盤面固定原則)。選択表現は視認性原則どおり(牌=内側細枠/数字=枠色のみ・サイズ不変) */
@@ -2741,7 +2742,9 @@ function ch1MiniInit(q){
   L.mg={hand:sortTiles(q.mini.hand), wall:q.mini.wall.slice(), disc:[],
         tsumo:null, phase:'draw', miss:0, won:false, windec:null,
         level:q.mini.level||2, target:parseHand(q.mini.target),
-        riichiOn:!!q.mini.riichi, riichi:false};  // D2: リーチ対応ミニ(slotは局開始から常設)
+        riichiOn:!!q.mini.riichi, riichiSt:'none'};
+  // D2リーチ状態: 'none'(未リーチ)→'declared'(宣言中=打牌待ち)→'active'(成立)。
+  // 操作順は本物と同じ「リーチ宣言→テンパイになる牌を切る」(slotは局開始から常設)
 }
 function ch1MiniCounts(a){ const c={}; a.forEach(t=>c[t]=(c[t]||0)+1); return c; }
 function ch1MiniContains(big,small){  // bigのmultisetがsmallを包含するか
@@ -2766,32 +2769,38 @@ function ch1MiniGuide(){
   }
   if(mg.phase==='discard'){
     // アガリは自動確定しない: ユーザー自身に「アガリ！」を判断させる(手牌UI共通原則⑦)
+    if(mg.riichiSt==='declared')
+      return mg.level===1?'リーチ！ひかっている「テンパイになる牌」を切ろう'
+                         :'リーチ！テンパイになる牌を切ろう';
+    const winNowG=ch1MiniWin(mg.hand.concat([mg.tsumo]));
     if(mg.level===1){
-      return ch1MiniWin(mg.hand.concat([mg.tsumo]))
-        ?'そろったかも…！「アガリ！」をおしてみよう！'
-        :(mg.riichi?'まだアガリじゃない…ツモった牌をそのまま切ろう！'
-                   :'まだアガリじゃない…ひかっている「いらない牌」を切ろう！');
+      if(winNowG) return 'そろったかも…！「アガリ！」をおしてみよう！';
+      if(mg.riichiSt==='active') return 'まだアガリじゃない…ツモった牌をそのまま切ろう！';
+      if(mg.riichiOn&&ch1MiniRiichiCands(mg.hand.concat([mg.tsumo])).length)
+        return 'テンパイにできる！切るまえに「リーチ！」をおそう！';
+      return 'まだアガリじゃない…ひかっている「いらない牌」を切ろう！';
     }
-    if(mg.riichi) return 'リーチ中！アガリでなければ、ツモった牌をそのまま切ろう';
+    if(mg.riichiSt==='active') return 'リーチ中！アガリでなければ、ツモった牌をそのまま切ろう';
     return 'アガリになっているかな？なっていれば「アガリ！」、まだなら いらない牌を1枚タップ！';
   }
-  // リーチ対応ミニ: テンパイしたら、ツモの前に「リーチ！」(初心者用の基本手順)
-  if(mg.riichiOn&&!mg.riichi&&ch1MiniWaits(mg.hand).length)
-    return mg.level===1?'テンパイした！「リーチ！」をおしてみよう！':'テンパイ！「リーチ！」できるよ';
-  if(mg.riichi) return 'リーチ中！山からツモろう';
+  if(mg.riichiSt==='active') return 'リーチ中！山からツモろう';
   if(mg.disc.length===0&&mg.tsumo===null&&mg.level===1) return '「ツモる」をおして、山から1枚引いてみよう！';
   return '山からツモろう！';
 }
 function ch1MiniHTML(){
   /* 手牌UI共通原則(JANTORE_PLAN.md §手牌UI共通原則):
      ①手牌は枚数によらず常に横1列(縮小で収める・折返し/横スクロール禁止)
-     ②プレイ中に牌順を変えない ③ツモ牌は常に一番右 ④ツモ牌は金枠+間隔で区別
-     ⑤アガリ時も手牌の並びは維持 ⑥分解の説明は別領域(mg-decomp) ⑦アガリは宣言制 */
+     ②理牌: 初期手牌は理牌済み・ツモ牌は右端に分離(自動挿入しない)・打牌成立後に残りを理牌
+     ③ツモ牌は常に一番右 ④ツモ牌は金枠+間隔で区別
+     ⑤分解の説明は別領域(mg-decomp) ⑥アガリは宣言制 ⑦リーチは宣言→打牌の順 */
   const mg=L.mg; if(!mg) return '';
   let html='';
   const winNow=mg.tsumo!==null&&!mg.won?ch1MiniWin(mg.hand.concat([mg.tsumo])):null;
-  // リーチ可能=リーチ対応ミニで、未リーチ・ツモ番(phase draw)・手牌13枚がテンパイのとき
-  const canRiichi=mg.riichiOn&&!mg.riichi&&!mg.won&&mg.phase==='draw'&&ch1MiniWaits(mg.hand).length>0;
+  // リーチ可能=未リーチ・14枚(ツモ後)・「切ればテンパイになる牌」が存在(操作順: 宣言→打牌)
+  const canRiichi=mg.riichiOn&&mg.riichiSt==='none'&&!mg.won&&mg.phase==='discard'&&!winNow
+    &&ch1MiniRiichiCands(mg.hand.concat([mg.tsumo])).length>0;
+  const riichiCandSet=(mg.riichiSt==='declared')
+    ?new Set(ch1MiniRiichiCands(mg.hand.concat([mg.tsumo]))):null;
   // 山: 裏向き牌+操作ボタン(盤面固定原則: slotは局開始から常設、状態だけが変わる。
   // リーチslotはリーチ対応ミニのみ=リーチ未習のC1〜D1の見た目は変えない)
   html+='<div class="mg-wall'+(mg.riichiOn?' mg-r3':'')+'"><span class="mg-lab">山</span><span class="mg-stack">'
@@ -2800,9 +2809,9 @@ function ch1MiniHTML(){
     +'<span class="mg-btns">'
     +'<button class="btn mg-draw'+(mg.phase==='draw'&&mg.level===1&&!canRiichi?' mg-pulse':'')+'" id="mg-draw" '
     +(mg.phase==='draw'&&mg.wall.length&&!mg.won?'':'disabled')+' onclick="ch1MiniDraw()">ツモる</button>'
-    +(mg.riichiOn?'<button class="btn mg-riichi'+(mg.riichi?' rc-on':'')+(canRiichi&&mg.level===1?' mg-pulse':'')
+    +(mg.riichiOn?'<button class="btn mg-riichi'+(mg.riichiSt!=='none'?' rc-on':'')+(canRiichi&&mg.level===1?' mg-pulse':'')
       +'" id="mg-riichi" '+(canRiichi?'':'disabled')+' onclick="ch1MiniRiichi()">'
-      +(mg.riichi?'リーチ中':'リーチ！')+'</button>':'')
+      +(mg.riichiSt==='active'?'リーチ中':(mg.riichiSt==='declared'?'宣言中':'リーチ！'))+'</button>':'')
     +'<button class="btn mg-agari'+(mg.level===1&&winNow?' mg-pulse':'')+'" id="mg-agari" '
     +(mg.phase==='discard'&&!mg.won?'':'disabled')+' onclick="ch1MiniAgari()">アガリ！</button>'
     +'</span></div>';
@@ -2819,7 +2828,9 @@ function ch1MiniHTML(){
     let cls='tile '+(t.length===2?t[1]:'z');
     if(isTsumo) cls+=' mg-tsumo';
     if(!mg.won&&mg.phase==='discard'&&mg.level===1&&!winNow
-      &&(mg.riichi?isTsumo:ch1MiniOk(i))) cls+=' mg-hint';
+      &&(mg.riichiSt==='active'?isTsumo
+        :(mg.riichiSt==='declared'?riichiCandSet.has(i)
+        :(mg.riichiOn&&canRiichi?false:ch1MiniOk(i))))) cls+=' mg-hint';
     const tap=(mg.phase==='discard'&&!mg.won)?' onpointerdown="ch1MiniDiscard('+i+')"':'';
     return '<button class="tw'+(isTsumo?' tw-tsumo':'')+'" id="mgt-'+i+'"'+tap+'>'
       +'<div class="'+cls+'">'+tileFace(t)+'</div></button>';
@@ -2853,30 +2864,32 @@ function ch1MiniDraw(){
   if(!L||!L.mg||L.checked) return;
   const mg=L.mg;
   if(mg.phase!=='draw'||mg.won||!mg.wall.length) return;
-  if(mg.riichiOn&&!mg.riichi&&ch1MiniWaits(mg.hand).length){
-    // テンパイ: 今回の練習ではさきにリーチ宣言(操作手順のガイド・ミスにはしない)
-    const g=document.getElementById('mg-guide');
-    if(g) g.innerHTML='テンパイ！さきに「リーチ！」をしてからツモろう';
-    const b=document.getElementById('mg-riichi');
-    if(b){ b.classList.add('ch1-shake');
-      setTimeout(()=>{const b2=document.getElementById('mg-riichi'); if(b2) b2.classList.remove('ch1-shake');},500); }
-    return;
-  }
   const t=mg.wall.shift();
   mg.tsumo=t;
   // 自動アガリはしない(手牌UI共通原則⑦): アガリ形でもユーザー自身が「アガリ！」を押して判定する
   mg.phase='discard';
   ch1MiniPaint();
 }
-/* リーチ宣言(D2): 鳴かずに作った手がテンパイのとき、ユーザー自身が宣言する。
-   宣言後は「ツモった牌をそのまま切る」だけ(初心者用の基本ルールに限定) */
+/* リーチ可能打牌(決定論・ch1MiniWaits再利用): 14枚のうち「その1枚を切ると残り13枚が
+   テンパイになる」打牌候補のインデックス集合 */
+function ch1MiniRiichiCands(five){
+  const out=[];
+  for(let i=0;i<five.length;i++){
+    const rest=five.slice(); rest.splice(i,1);
+    if(ch1MiniWaits(rest).length) out.push(i);
+  }
+  return out;
+}
+/* リーチ宣言(D2): 操作順は本物と同じ「宣言→打牌」。
+   14枚(ツモ後)でリーチ可能打牌があるとき「リーチ！」を押す→宣言中(まだ成立ではない)→
+   テンパイになる牌を自分で切った時点でリーチ成立。以後は基本ツモ切り(初心者用の基本ルール) */
 function ch1MiniRiichi(){
   if(!L||!L.mg||L.checked) return;
   const mg=L.mg;
-  if(!mg.riichiOn||mg.riichi||mg.won||mg.phase!=='draw') return;
-  if(!ch1MiniWaits(mg.hand).length) return;   // 非テンパイでは宣言不可(ボタンもdisabled)
-  mg.riichi=true;
-  L.riichiDone=true;                          // テスト/検証用フラグ
+  if(!mg.riichiOn||mg.riichiSt!=='none'||mg.won||mg.phase!=='discard') return;
+  const five=mg.hand.concat([mg.tsumo]);
+  if(!ch1MiniRiichiCands(five).length) return;   // リーチ可能打牌なし=宣言不可(ボタンもdisabled)
+  mg.riichiSt='declared';
   ch1MiniPaint();
 }
 /* アガリ宣言: ユーザーが「アガリ！」を押したときだけ判定する */
@@ -2886,10 +2899,10 @@ function ch1MiniAgari(){
   if(mg.phase!=='discard'||mg.won||mg.tsumo===null) return;
   const five=mg.hand.concat([mg.tsumo]);
   const win=ch1MiniWin(five);
-  if(win&&mg.riichiOn&&!mg.riichi){
-    // 役なし(未リーチ)ガード: 通常はツモ前のリーチ手順で防がれるが、念のため案内(ミスにしない)
+  if(win&&mg.riichiOn&&mg.riichiSt!=='active'){
+    // 役なし(未リーチ)ガード: 通常は宣言→打牌の手順で防がれるが、念のため案内(ミスにしない)
     const g=document.getElementById('mg-guide');
-    if(g) g.innerHTML='アガるには役がいるよ！テンパイのときに「リーチ！」してからアガろう';
+    if(g) g.innerHTML='アガるには役がいるよ！「リーチ！」を宣言してからアガろう';
     return;
   }
   if(!win){
@@ -2923,13 +2936,31 @@ function ch1MiniDiscard(i){
       setTimeout(()=>{const b2=document.getElementById('mgt-'+i); if(b2&&b2.firstElementChild) b2.firstElementChild.classList.remove('ch1-shake');},500); }
     return;
   }
-  if(mg.riichi&&i!==five.length-1){
-    // リーチ後は基本ツモ切り(初心者用の簡略化): 手牌の別牌は切らせず軽く案内(ミスにしない)
+  const shakeT=(k)=>{ const el2=(document.getElementById('mgt-'+k)||{}).firstElementChild;
+    if(el2){ el2.classList.add('ch1-shake');
+      setTimeout(()=>{const b2=document.getElementById('mgt-'+k); if(b2&&b2.firstElementChild) b2.firstElementChild.classList.remove('ch1-shake');},500); } };
+  if(mg.riichiSt==='active'&&i!==five.length-1){
+    // リーチ成立後は基本ツモ切り(初心者用の簡略化): 手牌の別牌は切らせず軽く案内(ミスにしない)
     const g=document.getElementById('mg-guide');
     if(g) g.innerHTML='リーチしたあとは、基本的にツモった牌をそのまま切るよ';
-    const el2=(document.getElementById('mgt-'+i)||{}).firstElementChild;
-    if(el2){ el2.classList.add('ch1-shake');
-      setTimeout(()=>{const b2=document.getElementById('mgt-'+i); if(b2&&b2.firstElementChild) b2.firstElementChild.classList.remove('ch1-shake');},500); }
+    shakeT(i);
+    return;
+  }
+  if(mg.riichiSt==='declared'&&!ch1MiniRiichiCands(five).includes(i)){
+    // リーチ宣言中: テンパイにならない牌は宣言打牌として成立させない(軽い案内・再判断)
+    const g=document.getElementById('mg-guide');
+    if(g) g.innerHTML='その牌だとテンパイにならないよ。もう一度えらぼう！';
+    shakeT(i);
+    return;
+  }
+  if(mg.riichiOn&&mg.riichiSt==='none'&&ch1MiniRiichiCands(five).includes(i)){
+    // テンパイになる牌は「宣言→打牌」の順で: 切るまえにリーチ宣言をうながす(ミスにしない)
+    const g=document.getElementById('mg-guide');
+    if(g) g.innerHTML='その牌を切るなら、切るまえに「リーチ！」を宣言しよう';
+    const b=document.getElementById('mg-riichi');
+    if(b){ b.classList.add('ch1-shake');
+      setTimeout(()=>{const b2=document.getElementById('mg-riichi'); if(b2) b2.classList.remove('ch1-shake');},500); }
+    shakeT(i);
     return;
   }
   if(!ch1MiniOk(i)){
@@ -2944,8 +2975,9 @@ function ch1MiniDiscard(i){
   }
   mg.disc.push(five[i]);
   five.splice(i,1);
-  mg.hand=five;              // 牌順は変えない(理牌しない)。ツモ牌はそのまま右はしに定着
+  mg.hand=sortTiles(five);   // 打牌成立後は理牌(残したツモ牌もここで手牌の適切な位置へ入る)
   mg.tsumo=null; mg.phase='draw';
+  if(mg.riichiSt==='declared') mg.riichiSt='active';   // 宣言打牌の成立=リーチ成立
   ch1MiniPaint();
 }
 
@@ -3766,13 +3798,13 @@ const CH1_LESSONS={
   /* D2-2 リーチ — 最初のひとつの役(初心者用の基本ルールに限定・詳細条件や戦略は扱わない) */
   d2_2(){
     return [
-      ch1Teach('役のなかで、まずおぼえるのはひとつだけ。<span class="term-chip">リーチ</span>だよ！今まで練習してきたように<b>鳴かずに自分の手だけで作って、テンパイしたとき</b>に宣言できる、代表的な役なんだ。',
+      ch1Teach('役のなかで、まずおぼえるのはひとつだけ。<span class="term-chip">リーチ</span>だよ！今まで練習してきたように<b>鳴かずに自分の手だけで作って、テンパイできる形になったら</b>、<b>牌を切るまえに「リーチ！」と宣言する</b>、代表的な役なんだ。',
         {tlab:'リーチ'}),
-      ch1Teach('リーチのあとは、<b>基本的にツモった牌をそのまま切って</b>、待ち牌が来るのを待つよ。待ち牌をツモったら…もちろん自分で「アガリ！」だ！',
-        {tlab:'リーチのあと'}),
+      ch1Teach('リーチを宣言したら、<b>テンパイになる牌を1枚切ろう</b>。それでリーチ成立！そのあとは<b>基本的にツモった牌をそのまま切って</b>待ち、待ち牌をツモったら…もちろん自分で「アガリ！」だ！',
+        {tlab:'リーチのながれ'}),
       ch1Mini(['2m','3m','4m','5m','6m','7m','8p','8p','3s','4s','5s','6s','E'],['7s','N','8s'],'234m567m88p345s678s',
         {guided:true,riichi:true,
-         exp:'はじめてのリーチ→ツモ！🎉 テンパイしたら「リーチ！」、あとはツモ切りで待つ。これがリーチの基本だよ。'}),
+         exp:'はじめてのリーチ→ツモ！🎉 「リーチ！」と宣言してからテンパイになる牌を切る。あとはツモ切りで待つ。これがリーチの基本だよ。'}),
       d2RiichiMcq('234m567m88p345s67s','あと1枚(5ソーか8ソー)でアガリ＝テンパイ！だからリーチできるよ。'),
       d2RiichiMcq('123m456p789s1s5sWN','バラバラの牌がのこっていて、あと1枚ではアガれない…テンパイじゃないから、まだリーチできないよ。'),
       {q:'リーチのあと、ツモった牌がアガリ牌じゃなかったら？',
@@ -3780,7 +3812,7 @@ const CH1_LESSONS={
         exp:'リーチのあとは、基本的にツモった牌をそのまま切って待つよ（ツモ切り）。'},
       ch1Mini(['1m','2m','3m','4p','5p','6p','7p','8p','9p','9s','9s','2s','W'],['3s','E','1s'],'123m456p789p123s99s',
         {riichi:true,
-         exp:'じぶんの力でリーチ→アガリ！🎉 テンパイ→リーチ→ツモ切り→待ち牌が来たら「アガリ！」。この流れが本物の麻雀の基本だよ。'}),
+         exp:'じぶんの力でリーチ→アガリ！🎉 リーチを宣言→テンパイになる牌を切る→ツモ切り→待ち牌が来たら「アガリ！」。この流れが本物の麻雀の基本だよ。'}),
     ];
   },
   /* D2-3 ほかの人がいる麻雀(名称と大まかな意味の「実戦への地図」。対戦エンジンは作らない) */
@@ -3826,7 +3858,7 @@ const CH1_LESSONS={
       ch1TenpaiMcq('234m567p345s88sWW','西か8ソーが来ればアガリ。あと1枚＝テンパイ！'),
     ]);
     return [
-      ch1Teach('いよいよ<b>第1章チャレンジ</b>！ここまで覚えたことをぜんぶ使って、<b>自分の力で1局アガりきろう</b>。ツモって、切って、テンパイしたらリーチ。待ち牌が来たら…「アガリ！」だ！',
+      ch1Teach('いよいよ<b>第1章チャレンジ</b>！ここまで覚えたことをぜんぶ使って、<b>自分の力で1局アガりきろう</b>。ツモって、切って、テンパイできる形になったら<b>切るまえに「リーチ！」</b>。待ち牌が来たら…「アガリ！」だ！',
         {tlab:'第1章チャレンジ'}),
     ].concat(quiz).concat([
       ch1Mini(['3m','4m','5m','6m','7m','8m','2p','3p','4p','5p','5p','7s','W'],['8s','N','6s'],'345m678m234p678s55p',
