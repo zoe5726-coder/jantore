@@ -321,7 +321,14 @@ button.tile.off:active{transform:none;}
 /* ===== C1: 4枚ミニ麻雀 ===== */
 .hand-gap{display:inline-block; width:14px; flex:none;}
 .mg-lab{margin:10px 2px 4px; font-size:11px; font-weight:800; color:var(--ink-soft);}
-.mg-wall{display:flex; align-items:center; gap:8px; margin:6px 0 2px; flex-wrap:wrap;}
+/* 盤面固定原則: ミニ麻雀中のイソピィガイド領域は1局中高さ固定。
+   コメント量(1〜3行想定)が変わっても吹き出し・イソピィ・盤面は動かない。
+   102px=全ガイド文の実測最大高(320/390/430px)+余白。想定超過分はスクロール(縮小しない) */
+.mg-guide-card .tc-bub{height:102px; overflow-y:auto;}
+/* 盤面固定原則: 山+操作ボタン領域は1局中つねに同じ高さ・同じ構成(折返し禁止)。
+   ツモる/アガリ！は最初からslotとして常設し、enabled/disabledだけが変わる */
+.mg-wall{display:flex; align-items:center; gap:8px; margin:6px 0 2px; flex-wrap:nowrap; height:44px;}
+.mg-stack{flex:0 1 auto; min-width:0; overflow:hidden;}
 .mg-wall .mg-lab{margin:0;}
 .mg-stack{display:flex; gap:3px; align-items:center;}
 .mg-back{width:26px; height:36px; border-radius:5px; background:var(--jade-deep);
@@ -330,7 +337,11 @@ button.tile.off:active{transform:none;}
 .mg-pulse{animation:mgPulse 1.1s ease-in-out infinite;}
 @keyframes mgPulse{0%,100%{transform:scale(1); box-shadow:0 4px 0 var(--jade-deep);}
   50%{transform:scale(1.05); box-shadow:0 4px 0 var(--jade-deep),0 0 0 6px rgba(31,164,107,.18);}}
+/* 盤面固定原則: 牌サイズは「その局の最大枚数(初期手牌+1)」基準で最初から固定。
+   現在の枚数でflex再分配しない(ツモ前後で既存牌の位置・サイズを1pxも動かさない) */
 .mg-hand{display:flex; gap:2px; align-items:center; flex-wrap:nowrap; margin:2px 0;}
+.mg-hand .tw{flex:0 0 calc((100% - var(--mg-gapsum,8px)) / var(--mgn,14));}
+.mg-resv{visibility:hidden; pointer-events:none;}  /* ツモ牌の空き予約(見た目なし・領域のみ) */
 /* タップ領域ラッパー(tw): 牌が縮小しても縦paddingでタップしやすさを確保(横は重ねない) */
 .tw{background:none; border:0; padding:7px 0; margin:0; flex:1 1 0; min-width:0;
   max-width:calc(var(--tile-w) + 2px); -webkit-tap-highlight-color:transparent; cursor:pointer;}
@@ -2697,8 +2708,9 @@ function ch1MiniGuide(){
   if(mg.won){
     const w=mg.windec;
     const sets=w.mentsuSets||[w.mentsuIdx];
-    const names=sets.map(g=>g.map(k=>mg.hand.concat([mg.tsumo])[k]).map(tileLabel).join('・')).join(' と ');
-    return '<b>アガリ！🎉</b> '+names+'のメンツ＋'+tileLabel(w.head[0])+'のアタマ！';
+    // 盤面固定原則: プレイ中の吹き出しは1〜3行。長い分解説明は下の「こう分かれていたよ！」と
+    // 解説カードへ分離し、吹き出しには短いお祝いだけを出す
+    return '<b>アガリ！🎉</b> '+sets.length+'メンツ＋1アタマ、そろったね！';
   }
   if(mg.phase==='discard'){
     // アガリは自動確定しない: ユーザー自身に「アガリ！」を判断させる(手牌UI共通原則⑦)
@@ -2734,7 +2746,11 @@ function ch1MiniHTML(){
   const five=mg.tsumo!==null;
   const tiles=mg.hand.concat(five?[mg.tsumo]:[]);
   html+='<div class="mg-lab">手牌（'+(five?mg.hand.length+'枚＋ツモ牌':tiles.length+'枚')+'）</div>';
-  html+='<div class="mg-hand'+(mg.won?' mg-won':'')+'" id="mg-hand">'+tiles.map((t,i)=>{
+  // 盤面固定原則: slot数=手牌+ツモ1枚(常時)。ツモ前は右端に不可視の予約slotを置き、
+  // ツモしても既存牌のサイズ・位置が変わらないようにする(gap8px込みで事前予約)
+  const slots=mg.hand.length+1;
+  html+='<div class="mg-hand'+(mg.won?' mg-won':'')+'" id="mg-hand" style="--mgn:'+slots
+    +';--mg-gapsum:'+((slots-1)*2+8)+'px">'+tiles.map((t,i)=>{
     const isTsumo=five&&i===tiles.length-1;
     let cls='tile '+(t.length===2?t[1]:'z');
     if(isTsumo) cls+=' mg-tsumo';
@@ -2742,7 +2758,9 @@ function ch1MiniHTML(){
     const tap=(mg.phase==='discard'&&!mg.won)?' onpointerdown="ch1MiniDiscard('+i+')"':'';
     return '<button class="tw'+(isTsumo?' tw-tsumo':'')+'" id="mgt-'+i+'"'+tap+'>'
       +'<div class="'+cls+'">'+tileFace(t)+'</div></button>';
-  }).join('')+'</div>';
+  }).join('')
+  +(five?'':'<div class="tw tw-tsumo mg-resv" aria-hidden="true"></div>')
+  +'</div>';
   if(mg.won){
     html+='<div class="mg-banner">アガリ！</div>';
     // 解説用の分解表示: プレイ中の手牌とは別領域(手牌の並びは変えない)
@@ -3821,7 +3839,7 @@ const QFORMATS={
       let html='<div class="q-type">'+(q.mini.hand.length===13?'13枚麻雀・本物とおなじ！'
         :(q.mini.hand.length===10?'10枚ミニ麻雀':(q.mini.hand.length===7?'7枚ミニ麻雀':'4枚ミニ麻雀'))
         +(q.mini.level===1?'':'・じぶんの力で'))+'</div>';
-      html+='<div class="teach-card"><img class="tc-iso" src="'+S1IMG+'" alt="イソピィ">'
+      html+='<div class="teach-card mg-guide-card"><img class="tc-iso" src="'+S1IMG+'" alt="イソピィ">'
         +'<div class="tc-bub" id="mg-guide">'+ch1MiniGuide()+'</div></div>';
       html+='<div id="mg-area">'+ch1MiniHTML()+'</div>';
       L.sel=null;
