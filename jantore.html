@@ -372,7 +372,11 @@ button.tile.off:active{transform:none;}
   -webkit-tap-highlight-color:transparent;}
 .mt-num.sel{border-color:var(--jade); background:var(--jade-soft); color:var(--jade-deep);}
 .mt-num.ok{border-color:var(--jade); background:color-mix(in srgb, var(--jade) 18%, #fff);}
-.mt-done{visibility:hidden; pointer-events:none;}   /* 正解ペア: 位置は残して消す */
+.mt-t .tile,.mt-num{transition:opacity .18s;}
+/* 正解済みペア: Duolingo式に「その場に薄く残す」。位置・サイズは不変・操作不可。
+   完全に消さない(visibility:hidden/display:none禁止)。牌はうっすら読める濃さ */
+.mt-done{opacity:.25; pointer-events:none;}
+.mt-num.mt-done{border-color:var(--line); background:var(--card); box-shadow:0 3px 0 var(--line);}
 .mt-prog{text-align:center; font-size:12.5px; font-weight:800; color:var(--ink-soft);
   height:18px; margin:0;}
 .mt-guide-card{margin-bottom:6px;}
@@ -2958,11 +2962,11 @@ function ch1MatchInit(q){
   let sets;
   if(kind==='mix'){
     // 1〜9を1回ずつ使い、スートを混在させる(=セット内の数字は必ず一意)。
-    // 1は必ず「1索」(イソピィ牌も通常の索子の1として認識させる)。各セットに3スートが登場
+    // 各数字のスートはランダム(「1=必ず1索」等の規則性は作らない。1索は索子ステップで必ず出題済み)。
+    // 各セットに3スートが登場するまで再生成
     let tiles, ok=false, guard=0;
     while(!ok&&guard++<200){
       tiles=shuffle([1,2,3,4,5,6,7,8,9]).map(n=>({n,su:shuffle(['m','p','s'])[0]}));
-      tiles.find(x=>x.n===1).su='s';
       const s1=tiles.slice(0,5), s2=tiles.slice(5);
       ok=['m','p','s'].every(su=>s1.some(x=>x.su===su))&&['m','p','s'].every(su=>s2.some(x=>x.su===su));
     }
@@ -3038,10 +3042,17 @@ function ch1MtResolve(){
     if(tEl&&tEl.firstElementChild){ tEl.firstElementChild.classList.remove('sel'); tEl.firstElementChild.classList.add('correct'); }
     if(nEl){ nEl.classList.remove('sel'); nEl.classList.add('ok'); }
     setTimeout(()=>{
-      if(tEl) tEl.classList.add('mt-done');
-      if(nEl) nEl.classList.add('mt-done');
-      mt.lock=false;
-      if(mt.gotT.every(x=>x)) ch1MtNextSet();
+      // 一度正解状態を見せてから「正解済み=薄い」へ移行(位置・サイズは不変・以後操作不可)
+      if(tEl){ tEl.firstElementChild.classList.remove('correct');
+        tEl.classList.add('mt-done'); tEl.disabled=true; tEl.setAttribute('aria-disabled','true'); }
+      if(nEl){ nEl.classList.remove('ok');
+        nEl.classList.add('mt-done'); nEl.disabled=true; nEl.setAttribute('aria-disabled','true'); }
+      if(mt.gotT.every(x=>x)){
+        // セット完了: 全ペアが薄くなった状態を短く見せてから次へ(テンポは維持)
+        setTimeout(()=>ch1MtNextSet(),500);
+      }else{
+        mt.lock=false;
+      }
     },220);
   }else{
     // 不正解: ペアは消さない・答えは教えない・もう一度(採点対象としてmiss記録)
@@ -3058,6 +3069,7 @@ function ch1MtResolve(){
 }
 function ch1MtNextSet(){
   const mt=L.mt;
+  mt.lock=false;
   if(mt.si<mt.sets.length-1){
     mt.si++;
     mt.gotT=mt.sets[mt.si].map(()=>false);
