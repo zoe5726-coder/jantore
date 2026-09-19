@@ -351,7 +351,24 @@ button.tile.off:active{transform:none;}
 .tw .tile.mg-tsumo{margin-left:0;}   /* 分離はtwラッパー側のmarginで行う */
 .mg-agari{padding:10px 14px; font-size:14px; width:auto; background:var(--gold,#f2b705);
   box-shadow:0 4px 0 #b98a04; color:#5b4300;}
-.mg-btns{display:flex; gap:6px; margin-left:auto;}
+/* リーチ！slot(D2): 局開始から常設し、disabled→有効→リーチ中と状態だけが変わる(盤面固定原則) */
+.mg-riichi{padding:10px 10px; font-size:14px; width:auto; min-width:74px;
+  background:var(--verm); color:#fff; box-shadow:0 4px 0 #8f2c20;}
+.mg-riichi.rc-on:disabled{background:var(--verm); color:#fff;
+  box-shadow:0 4px 0 #8f2c20; opacity:1;}   /* リーチ中表示は鮮やかなまま固定slot内で示す */
+.mg-wall.mg-r3 .btn{padding:10px 8px; font-size:13px;}
+.mg-wall.mg-r3 .mg-riichi{min-width:68px;}
+.mg-stack .mg-back{width:auto; flex:0 1 26px; min-width:8px;}  /* 山が多くても行内に収める */
+/* D2-3: 4人の卓配置ミニ図(対戦エンジンではなく「左の人」等の位置理解のための静的図) */
+.d2-table{display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin:10px 0 2px;
+  text-align:center; font-size:12px; font-weight:800;}
+.d2-seat{background:var(--jade-soft,#e3f6ec); border:2px solid var(--line);
+  border-radius:10px; padding:7px 2px; color:var(--ink);}
+.d2-seat.me{background:var(--gold,#f2b705); color:#5b4300; border-color:#b98a04;}
+.d2-seat.hl{border-color:var(--verm); color:var(--verm);
+  background:color-mix(in srgb, var(--verm) 10%, #fff);}
+.mg-btns{display:flex; gap:6px; margin-left:auto; flex:0 0 auto;}  /* ボタンは縮めない(縮むのは山の裏牌側) */
+.mg-wall .btn{white-space:nowrap;}
 .mg-decomp{display:flex; gap:2px; align-items:center; flex-wrap:nowrap;}
 .mg-decomp .hgrp{display:flex; gap:1px; flex:0 1 auto; min-width:0;}
 .mg-decomp .tile{flex:1 1 0; min-width:0; max-width:clamp(18px, 5.4vw, 28px);}
@@ -1502,6 +1519,7 @@ const COURSES=[
 {id:'ch1b',title:'組を作ろう',icon:'🧱',section:0,type:'ch1',desc:'メンツ・トイツ・アタマを覚えよう。',questions:[]},
 {id:'ch1c',title:'ミニ麻雀',icon:'🀄',section:0,type:'ch1',desc:'ツモって、切って、アガリをつくろう。',questions:[]},
 {id:'ch1d',title:'本物の13枚へ',icon:'🏆',section:0,type:'ch1',desc:'本物の麻雀とおなじ13枚に挑戦！',questions:[]},
+{id:'ch1e',title:'実戦への扉',icon:'🚪',section:0,type:'ch1',desc:'役・リーチ・実戦のことばを覚えて、1局アガりきろう！',questions:[]},
 {id:'rules',title:'基本ルール',icon:'📖',section:1,desc:'麻雀のきほんのき。和了の形からフリテンまで。',questions:[
  {q:'麻雀の和了（あがり）の基本形はどれ？',choices:['4面子＋1雀頭','5面子','7ペア＋1枚','13枚バラバラ'],a:0,exp:'3枚1組の「面子」を4つと、2枚1組の「雀頭」を1つ揃えた計14枚が基本の和了形です。（例外役：七対子・国士無双）'},
  {q:'対局開始時、子の手牌は何枚？',choices:['12枚','13枚','14枚','16枚'],a:1,exp:'全員13枚でスタートし、ツモって14枚になったら1枚捨てます。'},
@@ -1631,6 +1649,16 @@ const THEMES=[
     {diff:{ch1:'d1_2'}},                       // 13枚ミニ麻雀(LEVEL3中心)
     {diff:{ch1:'d1_3'}},                       // 13枚のテンパイと待ち
     {diff:{ch1:'d1_4'}},                       // ★まとめ: 13枚マスター
+   ]},
+  ]},
+ {id:'th_ch1e', course:'ch1e', title:'実戦への扉', sub:'役・リーチ・実戦のことば',
+  requires:'th_ch1d',                          // D1(13枚麻雀)を全クリアで解放
+  subThemes:[
+   {id:'st_d2', title:'実戦への扉', lessons:[
+    {diff:{ch1:'d2_1'}},                       // アガリには役がいる
+    {diff:{ch1:'d2_2'}},                       // リーチ — 最初のひとつの役
+    {diff:{ch1:'d2_3'}},                       // ほかの人がいる麻雀
+    {diff:{ch1:'d2_4'}},                       // ★第1章チャレンジ: 麻雀を打てる！
    ]},
   ]},
  {id:'th_rules', course:'rules', title:'麻雀のきほん', sub:'ルール・アガリの形を知る',
@@ -1767,7 +1795,7 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    開発UI・未検証Compare）を通常操作から隠す。コード・データ・機能は
    一切削除しておらず、このフラグをfalseにすれば全て復帰する。 */
 let PROTOTYPE_MODE=true;
-const PROTO_VISIBLE_COURSES=['ch1a','ch1b','ch1c','ch1d','rules','yaku','score','waits','ukeire1','nanikiru','riichi'];
+const PROTO_VISIBLE_COURSES=['ch1a','ch1b','ch1c','ch1d','ch1e','rules','yaku','score','waits','ukeire1','nanikiru','riichi'];
 function protoCourseVisible(id){ return !PROTOTYPE_MODE||PROTO_VISIBLE_COURSES.includes(id); }
 function staminaFree(){ return PROTOTYPE_MODE||S.owned.stamina; }   // プロトタイプはスタミナ消費なし
 function devUIVisible(){ return !PROTOTYPE_MODE||S.dev||location.hash==='#dev'; }
@@ -2690,7 +2718,8 @@ function ch1MiniWaits(hand){
 function ch1MiniInit(q){
   L.mg={hand:sortTiles(q.mini.hand), wall:q.mini.wall.slice(), disc:[],
         tsumo:null, phase:'draw', miss:0, won:false, windec:null,
-        level:q.mini.level||2, target:parseHand(q.mini.target)};
+        level:q.mini.level||2, target:parseHand(q.mini.target),
+        riichiOn:!!q.mini.riichi, riichi:false};  // D2: リーチ対応ミニ(slotは局開始から常設)
 }
 function ch1MiniCounts(a){ const c={}; a.forEach(t=>c[t]=(c[t]||0)+1); return c; }
 function ch1MiniContains(big,small){  // bigのmultisetがsmallを包含するか
@@ -2718,10 +2747,16 @@ function ch1MiniGuide(){
     if(mg.level===1){
       return ch1MiniWin(mg.hand.concat([mg.tsumo]))
         ?'そろったかも…！「アガリ！」をおしてみよう！'
-        :'まだアガリじゃない…ひかっている「いらない牌」を切ろう！';
+        :(mg.riichi?'まだアガリじゃない…ツモった牌をそのまま切ろう！'
+                   :'まだアガリじゃない…ひかっている「いらない牌」を切ろう！');
     }
+    if(mg.riichi) return 'リーチ中！アガリでなければ、ツモった牌をそのまま切ろう';
     return 'アガリになっているかな？なっていれば「アガリ！」、まだなら いらない牌を1枚タップ！';
   }
+  // リーチ対応ミニ: テンパイしたら、ツモの前に「リーチ！」(初心者用の基本手順)
+  if(mg.riichiOn&&!mg.riichi&&ch1MiniWaits(mg.hand).length)
+    return mg.level===1?'テンパイした！「リーチ！」をおしてみよう！':'テンパイ！「リーチ！」できるよ';
+  if(mg.riichi) return 'リーチ中！山からツモろう';
   if(mg.disc.length===0&&mg.tsumo===null&&mg.level===1) return '「ツモる」をおして、山から1枚引いてみよう！';
   return '山からツモろう！';
 }
@@ -2733,13 +2768,19 @@ function ch1MiniHTML(){
   const mg=L.mg; if(!mg) return '';
   let html='';
   const winNow=mg.tsumo!==null&&!mg.won?ch1MiniWin(mg.hand.concat([mg.tsumo])):null;
-  // 山: 裏向き牌+ツモるボタン+アガリ！ボタン(宣言制)
-  html+='<div class="mg-wall"><span class="mg-lab">山</span><span class="mg-stack">'
+  // リーチ可能=リーチ対応ミニで、未リーチ・ツモ番(phase draw)・手牌13枚がテンパイのとき
+  const canRiichi=mg.riichiOn&&!mg.riichi&&!mg.won&&mg.phase==='draw'&&ch1MiniWaits(mg.hand).length>0;
+  // 山: 裏向き牌+操作ボタン(盤面固定原則: slotは局開始から常設、状態だけが変わる。
+  // リーチslotはリーチ対応ミニのみ=リーチ未習のC1〜D1の見た目は変えない)
+  html+='<div class="mg-wall'+(mg.riichiOn?' mg-r3':'')+'"><span class="mg-lab">山</span><span class="mg-stack">'
     +Array(mg.wall.length).fill('<span class="tile mg-back"></span>').join('')
     +(mg.wall.length===0?'<span class="mg-empty">なし</span>':'')+'</span>'
     +'<span class="mg-btns">'
-    +'<button class="btn mg-draw'+(mg.phase==='draw'&&mg.level===1?' mg-pulse':'')+'" id="mg-draw" '
+    +'<button class="btn mg-draw'+(mg.phase==='draw'&&mg.level===1&&!canRiichi?' mg-pulse':'')+'" id="mg-draw" '
     +(mg.phase==='draw'&&mg.wall.length&&!mg.won?'':'disabled')+' onclick="ch1MiniDraw()">ツモる</button>'
+    +(mg.riichiOn?'<button class="btn mg-riichi'+(mg.riichi?' rc-on':'')+(canRiichi&&mg.level===1?' mg-pulse':'')
+      +'" id="mg-riichi" '+(canRiichi?'':'disabled')+' onclick="ch1MiniRiichi()">'
+      +(mg.riichi?'リーチ中':'リーチ！')+'</button>':'')
     +'<button class="btn mg-agari'+(mg.level===1&&winNow?' mg-pulse':'')+'" id="mg-agari" '
     +(mg.phase==='discard'&&!mg.won?'':'disabled')+' onclick="ch1MiniAgari()">アガリ！</button>'
     +'</span></div>';
@@ -2755,7 +2796,8 @@ function ch1MiniHTML(){
     const isTsumo=five&&i===tiles.length-1;
     let cls='tile '+(t.length===2?t[1]:'z');
     if(isTsumo) cls+=' mg-tsumo';
-    if(!mg.won&&mg.phase==='discard'&&mg.level===1&&!winNow&&ch1MiniOk(i)) cls+=' mg-hint';
+    if(!mg.won&&mg.phase==='discard'&&mg.level===1&&!winNow
+      &&(mg.riichi?isTsumo:ch1MiniOk(i))) cls+=' mg-hint';
     const tap=(mg.phase==='discard'&&!mg.won)?' onpointerdown="ch1MiniDiscard('+i+')"':'';
     return '<button class="tw'+(isTsumo?' tw-tsumo':'')+'" id="mgt-'+i+'"'+tap+'>'
       +'<div class="'+cls+'">'+tileFace(t)+'</div></button>';
@@ -2789,10 +2831,30 @@ function ch1MiniDraw(){
   if(!L||!L.mg||L.checked) return;
   const mg=L.mg;
   if(mg.phase!=='draw'||mg.won||!mg.wall.length) return;
+  if(mg.riichiOn&&!mg.riichi&&ch1MiniWaits(mg.hand).length){
+    // テンパイ: 今回の練習ではさきにリーチ宣言(操作手順のガイド・ミスにはしない)
+    const g=document.getElementById('mg-guide');
+    if(g) g.innerHTML='テンパイ！さきに「リーチ！」をしてからツモろう';
+    const b=document.getElementById('mg-riichi');
+    if(b){ b.classList.add('ch1-shake');
+      setTimeout(()=>{const b2=document.getElementById('mg-riichi'); if(b2) b2.classList.remove('ch1-shake');},500); }
+    return;
+  }
   const t=mg.wall.shift();
   mg.tsumo=t;
   // 自動アガリはしない(手牌UI共通原則⑦): アガリ形でもユーザー自身が「アガリ！」を押して判定する
   mg.phase='discard';
+  ch1MiniPaint();
+}
+/* リーチ宣言(D2): 鳴かずに作った手がテンパイのとき、ユーザー自身が宣言する。
+   宣言後は「ツモった牌をそのまま切る」だけ(初心者用の基本ルールに限定) */
+function ch1MiniRiichi(){
+  if(!L||!L.mg||L.checked) return;
+  const mg=L.mg;
+  if(!mg.riichiOn||mg.riichi||mg.won||mg.phase!=='draw') return;
+  if(!ch1MiniWaits(mg.hand).length) return;   // 非テンパイでは宣言不可(ボタンもdisabled)
+  mg.riichi=true;
+  L.riichiDone=true;                          // テスト/検証用フラグ
   ch1MiniPaint();
 }
 /* アガリ宣言: ユーザーが「アガリ！」を押したときだけ判定する */
@@ -2802,6 +2864,12 @@ function ch1MiniAgari(){
   if(mg.phase!=='discard'||mg.won||mg.tsumo===null) return;
   const five=mg.hand.concat([mg.tsumo]);
   const win=ch1MiniWin(five);
+  if(win&&mg.riichiOn&&!mg.riichi){
+    // 役なし(未リーチ)ガード: 通常はツモ前のリーチ手順で防がれるが、念のため案内(ミスにしない)
+    const g=document.getElementById('mg-guide');
+    if(g) g.innerHTML='アガるには役がいるよ！テンパイのときに「リーチ！」してからアガろう';
+    return;
+  }
   if(!win){
     // 誤アガリ: 責めずにもう一度見させる(採点ミニではミスとして記録・操作は続行)
     if(!q.ch1t) mg.miss++;
@@ -2830,6 +2898,15 @@ function ch1MiniDiscard(i){
     if(g) g.innerHTML='アガれる形になっているよ！もう一度見てみよう！';
     const el=(document.getElementById('mgt-'+i)||{}).firstElementChild;
     if(el){ el.classList.add('ch1-shake');
+      setTimeout(()=>{const b2=document.getElementById('mgt-'+i); if(b2&&b2.firstElementChild) b2.firstElementChild.classList.remove('ch1-shake');},500); }
+    return;
+  }
+  if(mg.riichi&&i!==five.length-1){
+    // リーチ後は基本ツモ切り(初心者用の簡略化): 手牌の別牌は切らせず軽く案内(ミスにしない)
+    const g=document.getElementById('mg-guide');
+    if(g) g.innerHTML='リーチしたあとは、基本的にツモった牌をそのまま切るよ';
+    const el2=(document.getElementById('mgt-'+i)||{}).firstElementChild;
+    if(el2){ el2.classList.add('ch1-shake');
       setTimeout(()=>{const b2=document.getElementById('mgt-'+i); if(b2&&b2.firstElementChild) b2.firstElementChild.classList.remove('ch1-shake');},500); }
     return;
   }
@@ -2931,6 +3008,7 @@ function ch1HonorOrNumMcq(tile,exp){
 function ch1Mini(hand,wall,target,opt){
   opt=opt||{};
   const q={mini:{hand,wall,target,level:opt.level||2}};
+  if(opt.riichi) q.mini.riichi=true;   // D2: リーチあり(テンパイ→宣言→ツモ切り→アガリ宣言)
   if(opt.guided){ q.ch1t=true; q.act=1; q.mini.level=1; }   // 誘導=LEVEL1・スコア外
   if(opt.exp) q.exp=opt.exp;
   return q;
@@ -2962,6 +3040,12 @@ function ch1WaitMulti(handStr,cands,exp){
   const answers=c2.map((cd,i)=>({cd,i})).filter(x=>waits.includes(x.cd)).map(x=>x.i);
   return {pickm:true,tlab:'待ちさがし',q:'この手牌の待ちを、ぜんぶ選ぼう！',
     hand:handStr,cands:c2,answers,exp,grouped:true};
+}
+/* D2-2: リーチできる？(正解=ch1MiniWaitsでテンパイ判定・鳴きなし前提を問題文に明記) */
+function d2RiichiMcq(handStr,exp){
+  const a=ch1MiniWaits(parseHand(handStr)).length?0:1;
+  return {q:'この13枚（鳴かずに自分の手だけで作っている）。「リーチ！」できる？',hand:handStr,
+    choices:['リーチできる（テンパイ！）','まだできない（テンパイじゃない）'],a,exp,ghand:true};
 }
 function ch1TenpaiMcq(handStr,exp){
   const a=ch1MiniWaits(parseHand(handStr)).length?0:1;
@@ -3499,6 +3583,97 @@ const CH1_LESSONS={
         {exp:'西を切って、發のコーツ完成！9ピンのアタマで4メンツ＋1アタマ！'}),
       ch1Mini(['2m','3m','4m','6m','7m','8m','4p','5p','6p','9s','9s','5s','5s'],['E','N','5s'],'234m678m456p555s99s',
         {exp:'13枚でもアガれた！🎉 4枚からはじめた練習が、本物とおなじ13枚につながったね。でも、本物の麻雀でアガるには、もうひとつ大事なことがあるんだ。それは、つぎのおたのしみ！'}),
+    ]);
+  },
+  /* ===== D2「実戦への扉」(第1章ラスト4Lesson) =====
+     正式導入語: 役(D2-1)/リーチ(D2-2)/ロン・鳴き・ポン・チー・カン(D2-3)。
+     カンツ・ターツ・シャンテン・メンゼン・フリテン・翻数・点数などは第1章では扱わない */
+  /* D2-1 アガリには役がいる(存在理解のみ。役一覧・翻数へ広げない) */
+  d2_1(){
+    return [
+      ch1Teach('ここまでで<b>4メンツ＋1アタマ</b>を作れるようになったね！…じつは、本物の麻雀では<b>形がそろっただけではアガれないことがある</b>んだ。',
+        {tlab:'実戦への扉'}),
+      ch1Teach('アガるためには、形にくわえて<span class="term-chip">役</span>という条件がいるよ。役は<b>アガリのチケット</b>みたいなもの。どんな役があるかは、これからすこしずつ覚えていけばOK！',
+        {tlab:'役',act:{label:'役ってなに？',result:'役＝アガるための条件。「4メンツ＋1アタマ」の形＋役。この2つがそろって、はじめてアガれるんだ！'}}),
+      {q:'本物の麻雀でアガるために、「4メンツ＋1アタマ」の形のほかに必要なものは？',
+        choices:['役','サイコロの目','牌のならべかた自慢','あいさつ'],a:0,
+        exp:'形＋役。この2つがそろってアガリ！役はこれからすこしずつ覚えよう。'},
+      {q:'「4メンツ＋1アタマ」ができた！これだけで、本物の麻雀ではかならずアガれる？',
+        choices:['かならずアガれる','役がないとアガれないことがある'],a:1,
+        exp:'形がそろっても、役がないとアガれないことがあるよ。だから、さいしょのひとつの役をつぎのレッスンで覚えよう！'},
+    ];
+  },
+  /* D2-2 リーチ — 最初のひとつの役(初心者用の基本ルールに限定・詳細条件や戦略は扱わない) */
+  d2_2(){
+    return [
+      ch1Teach('役のなかで、まずおぼえるのはひとつだけ。<span class="term-chip">リーチ</span>だよ！今まで練習してきたように<b>鳴かずに自分の手だけで作って、テンパイしたとき</b>に宣言できる、代表的な役なんだ。',
+        {tlab:'リーチ'}),
+      ch1Teach('リーチのあとは、<b>基本的にツモった牌をそのまま切って</b>、待ち牌が来るのを待つよ。待ち牌をツモったら…もちろん自分で「アガリ！」だ！',
+        {tlab:'リーチのあと'}),
+      ch1Mini(['2m','3m','4m','5m','6m','7m','8p','8p','3s','4s','5s','6s','E'],['7s','N','8s'],'234m567m88p345s678s',
+        {guided:true,riichi:true,
+         exp:'はじめてのリーチ→ツモ！🎉 テンパイしたら「リーチ！」、あとはツモ切りで待つ。これがリーチの基本だよ。'}),
+      d2RiichiMcq('234m567m88p345s67s','あと1枚(5ソーか8ソー)でアガリ＝テンパイ！だからリーチできるよ。'),
+      d2RiichiMcq('123m456p789s1s5sWN','バラバラの牌がのこっていて、あと1枚ではアガれない…テンパイじゃないから、まだリーチできないよ。'),
+      {q:'リーチのあと、ツモった牌がアガリ牌じゃなかったら？',
+        choices:['ツモった牌をそのまま切る','手牌を組みかえて、べつの牌を切る'],a:0,
+        exp:'リーチのあとは、基本的にツモった牌をそのまま切って待つよ（ツモ切り）。'},
+      ch1Mini(['1m','2m','3m','4p','5p','6p','7p','8p','9p','9s','9s','2s','W'],['3s','E','1s'],'123m456p789p123s99s',
+        {riichi:true,
+         exp:'じぶんの力でリーチ→アガリ！🎉 テンパイ→リーチ→ツモ切り→待ち牌が来たら「アガリ！」。この流れが本物の麻雀の基本だよ。'}),
+    ];
+  },
+  /* D2-3 ほかの人がいる麻雀(名称と大まかな意味の「実戦への地図」。対戦エンジンは作らない) */
+  d2_3(){
+    const zu=(hl)=>'<div class="d2-table"><span></span><span class="d2-seat">向かいの人</span><span></span>'
+      +'<span class="d2-seat'+(hl?' hl':'')+'">左の人</span><span></span><span class="d2-seat">右の人</span>'
+      +'<span></span><span class="d2-seat me">自分</span><span></span></div>';
+    return [
+      ch1Teach('本物の麻雀は<b>4人</b>で打つよ。自分から見て「左の人」「向かいの人」「右の人」がいるんだ。'+zu(false),
+        {tlab:'4人の麻雀'}),
+      ch1Teach('アガリ牌を<b>自分で山から引いて</b>アガるのが、おなじみの<b>ツモ</b>。それにたいして、<b>ほかの人が捨てた牌</b>でアガることを<span class="term-chip">ロン</span>というよ。',
+        {tlab:'ツモとロン'}),
+      {q:'自分で山から引いた牌でアガった。これは？',choices:['ツモ','ロン'],a:0,
+        exp:'自分で引いてアガる＝ツモ。ずっと練習してきたやつだね！'},
+      {q:'右の人が捨てた牌でアガった。これは？',choices:['ツモ','ロン'],a:1,
+        exp:'ほかの人の捨て牌でアガる＝ロン！'},
+      ch1Teach('ほかの人が捨てた牌をもらって、自分の組を作ることを<span class="term-chip">鳴き</span>というよ。鳴きには<span class="term-chip">ポン</span>・<span class="term-chip">チー</span>・<span class="term-chip">カン</span>があるんだ。',
+        {tlab:'鳴き'}),
+      ch1Teach('<b>ポン</b>＝捨て牌で<b>おなじ牌3枚</b>の組(コーツ)を作る。だれの捨て牌でもOK！<br><b>チー</b>＝捨て牌で<b>ならんだ3枚</b>(シュンツ)を作る。<b>チーだけは「左の人」の捨て牌しか使えない</b>よ！<br><b>カン</b>＝<b>おなじ牌4枚</b>を使う特別な組の作り方。くわしくはまたこんど！'+zu(true),
+        {tlab:'ポン・チー・カン'}),
+      {q:'向かいの人が捨てた「發」をもらって、發3枚の組を作った。これは？',
+        choices:['ポン','チー'],a:0,
+        exp:'おなじ牌3枚ならポン！ポンはだれの捨て牌でもOKだよ。'},
+      {q:'「チー」ができるのは、だれが捨てた牌？',
+        choices:['左の人','向かいの人','右の人','だれでもOK'],a:0,
+        exp:'チーだけは「左の人」の捨て牌だけ！ポンとカンはだれの捨て牌でもOKだよ。'},
+      {q:'右の人が捨てた3ピンで、手の2ピン・4ピンとあわせてシュンツを作りたい。チーできる？',
+        choices:['できる','できない（チーは左の人からだけ）'],a:1,
+        exp:'ざんねん、チーは「左の人」の捨て牌だけ。右の人や向かいの人からはチーできないよ。'},
+      {q:'「カン」で使うのは、おなじ牌なん枚？',choices:['3枚','4枚'],a:1,
+        exp:'おなじ牌4枚を使う特別な組の作り方がカン。くわしいルールは、またこんど！'},
+    ];
+  },
+  /* D2-4 ★第1章チャレンジ: 麻雀を打てる！(主役は1局の通し体験。復習Quizは軽く) */
+  d2_4(){
+    const quiz=shuffle([
+      {q:'基本のアガリ形はどれ？',choices:['4メンツ＋1アタマ','5メンツ','ぜんぶバラバラ'],a:0,
+        exp:'3枚の組(メンツ)×4＋アタマ2枚。第1章でずっと作ってきた形だね！'},
+      ch1RunOrKotsuMcq('WWW','西が3枚。字牌もおなじ3枚ならコーツ＝りっぱなメンツ！'),
+      ch1MentsuMcq('ESW','東・南・西はぜんぶちがう字牌。字牌はならべてもシュンツにならないよ。'),
+      {q:'本物の麻雀でアガるために、形のほかに必要なのは？',choices:['役','なにもいらない'],a:0,
+        exp:'形＋役！第1章では代表的な役「リーチ」を覚えたね。'},
+      ch1TenpaiMcq('234m567p345s88sWW','西か8ソーが来ればアガリ。あと1枚＝テンパイ！'),
+    ]);
+    return [
+      ch1Teach('いよいよ<b>第1章チャレンジ</b>！ここまで覚えたことをぜんぶ使って、<b>自分の力で1局アガりきろう</b>。ツモって、切って、テンパイしたらリーチ。待ち牌が来たら…「アガリ！」だ！',
+        {tlab:'第1章チャレンジ'}),
+    ].concat(quiz).concat([
+      ch1Mini(['3m','4m','5m','6m','7m','8m','2p','3p','4p','5p','5p','7s','W'],['8s','N','6s'],'345m678m234p678s55p',
+        {level:3,riichi:true,
+         exp:'第1章チャレンジ、クリア！🎉 ツモって、切って、テンパイして、リーチして、自分の力でアガれた！'}),
+      ch1Teach('🎉 <b>第1章「麻雀を打てる」クリア！</b> 麻雀の基本的な動かし方を覚えたね。13枚の手牌から、ツモって、切って、テンパイして、リーチして、アガれた！<br>つぎは第2章<b>「アガリが見える」</b>。もっとアガリが見えるようになろう！',
+        {tlab:'第1章クリア'}),
     ]);
   },
 };
