@@ -359,6 +359,24 @@ button.tile.off:active{transform:none;}
 .mg-wall.mg-r3 .btn{padding:10px 8px; font-size:13px;}
 .mg-wall.mg-r3 .mg-riichi{min-width:68px;}
 .mg-stack .mg-back{width:auto; flex:0 1 26px; min-width:8px;}  /* 山が多くても行内に収める */
+/* 数牌マッチング(A1-4): 左=牌/右=数字の2列。正解ペアはslot位置を保ったまま非表示
+   (盤面固定原則)。選択表現は視認性原則どおり(牌=内側細枠/数字=枠色のみ・サイズ不変) */
+.mt-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px 14px; max-width:330px;
+  margin:12px auto 4px; align-items:center;}
+.mt-t{background:none; border:0; padding:4px 0; margin:0; cursor:pointer; justify-self:center;
+  -webkit-tap-highlight-color:transparent;}
+.mt-t .tile{width:clamp(46px,13.5vw,56px); box-sizing:border-box;}
+.mt-num{width:100%; max-width:112px; justify-self:center; padding:13px 0; font-size:21px;
+  font-weight:900; border-radius:12px; border:2px solid var(--line); background:var(--card);
+  color:var(--ink); box-shadow:0 3px 0 var(--line); cursor:pointer;
+  -webkit-tap-highlight-color:transparent;}
+.mt-num.sel{border-color:var(--jade); background:var(--jade-soft); color:var(--jade-deep);}
+.mt-num.ok{border-color:var(--jade); background:color-mix(in srgb, var(--jade) 18%, #fff);}
+.mt-done{visibility:hidden; pointer-events:none;}   /* 正解ペア: 位置は残して消す */
+.mt-prog{text-align:center; font-size:12.5px; font-weight:800; color:var(--ink-soft);
+  height:18px; margin:0;}
+.mt-guide-card{margin-bottom:6px;}
+.mt-guide-card .tc-bub{height:56px; overflow-y:auto;}   /* コメント量で盤面を動かさない */
 /* D2-3: 4人の卓配置ミニ図(対戦エンジンではなく「左の人」等の位置理解のための静的図) */
 .d2-table{display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin:10px 0 2px;
   text-align:center; font-size:12px; font-weight:800;}
@@ -2927,6 +2945,134 @@ function ch1MiniDiscard(i){
   ch1MiniPaint();
 }
 
+/* ==== 数牌マッチング(A1-4まとめ・共通再利用可能な小さなマッチングUI) ====
+   目的: 萬子/筒子/索子の1〜9(計27種)を「見た瞬間に数字が分かる」か網羅確認する。
+   形式: 左=牌 / 右=数字 の2列ペア当て(どちらから先にタップしてもよい)。
+   網羅: 各ステップで1〜9を5+4の2セットに分けて全数字を必ず出題(未出題管理)。
+   MIX: 1〜9を1回ずつ(セット内で数字重複なし=1対1対応)・3スート混在・1索を必ず含む。
+   UI: 正解ペアはslot位置を残したまま非表示(盤面固定原則)・誤答は消さず再回答可。 */
+function ch1Match(kind,opt){ return Object.assign({mt:{kind}},opt||{}); }
+const CH1MT_NAME={m:'萬子',p:'筒子',s:'索子',mix:'ミックス'};
+function ch1MatchInit(q){
+  const kind=q.mt.kind;
+  let sets;
+  if(kind==='mix'){
+    // 1〜9を1回ずつ使い、スートを混在させる(=セット内の数字は必ず一意)。
+    // 1は必ず「1索」(イソピィ牌も通常の索子の1として認識させる)。各セットに3スートが登場
+    let tiles, ok=false, guard=0;
+    while(!ok&&guard++<200){
+      tiles=shuffle([1,2,3,4,5,6,7,8,9]).map(n=>({n,su:shuffle(['m','p','s'])[0]}));
+      tiles.find(x=>x.n===1).su='s';
+      const s1=tiles.slice(0,5), s2=tiles.slice(5);
+      ok=['m','p','s'].every(su=>s1.some(x=>x.su===su))&&['m','p','s'].every(su=>s2.some(x=>x.su===su));
+    }
+    sets=[tiles.slice(0,5),tiles.slice(5)].map(g=>g.map(x=>({t:x.n+x.su,n:x.n})));
+  }else{
+    const nums=shuffle([1,2,3,4,5,6,7,8,9]);   // 1〜9全部を必ず出題(未出題残り=後半セット)
+    sets=[nums.slice(0,5),nums.slice(5)].map(g=>g.map(n=>({t:n+kind,n})));
+  }
+  // 数字側は牌側と別順(位置では答えられない)。偶然同順になったら1つ回転
+  const nums=sets.map(set=>{
+    let a=shuffle(set.map(x=>x.n));
+    if(a.length>1&&a.every((n,i)=>n===set[i].n)) a=a.slice(1).concat([a[0]]);
+    return a;
+  });
+  L.mt={kind, sets, nums, si:0, selT:null, selN:null, gotT:sets[0].map(()=>false),
+        gotN:sets[0].map(()=>false), miss:0, finished:false, lock:false};
+}
+function ch1MtGuideMsg(kind,phase){
+  if(phase==='mid') return 'そのちょうし！のこりもペアにしよう！';
+  return {m:'牌と、おなじ数字をタップしてペアにしよう！',p:'つぎは筒子！おなじ数字をペアにしよう！',
+    s:'つぎは索子！おなじ数字をペアにしよう！',mix:'さいごは、ぜんぶまぜてみよう！'}[kind];
+}
+function ch1MatchSetHTML(){
+  const mt=L.mt, set=mt.sets[mt.si], nums=mt.nums[mt.si];
+  let html='<div class="mt-grid" id="mt-grid">';
+  for(let i=0;i<set.length;i++){
+    const cd=set[i].t;
+    html+='<button class="tw mt-t'+(mt.gotT[i]?' mt-done':'')+'" id="mtt-'+i+'" onpointerdown="ch1MtPickT('+i+')">'
+      +'<div class="tile '+cd[1]+'">'+tileFace(cd)+'</div></button>';
+    html+='<button class="mt-num'+(mt.gotN[i]?' mt-done':'')+'" id="mtn-'+i+'" onpointerdown="ch1MtPickN('+i+')">'
+      +nums[i]+'</button>';
+  }
+  html+='</div>';
+  return html;
+}
+function ch1MtProg(){
+  const mt=L.mt;
+  return CH1MT_NAME[mt.kind]+'　'+mt.sets.map((s2,i)=>i<mt.si?'●':(i===mt.si?'◎':'○')).join('');
+}
+function ch1MatchHTML(q){
+  const mt=L.mt;
+  let html='<div class="q-type">数牌マッチング・'+CH1MT_NAME[mt.kind]+'</div>';
+  html+='<div class="teach-card mt-guide-card"><img class="tc-iso" src="'+S1IMG+'" alt="イソピィ">'
+    +'<div class="tc-bub" id="mt-guide">'+ch1MtGuideMsg(mt.kind,'start')+'</div></div>';
+  html+='<div class="mt-prog" id="mt-prog">'+ch1MtProg()+'</div>';
+  html+='<div id="mt-area">'+ch1MatchSetHTML()+'</div>';
+  L.sel=null;
+  return html;
+}
+function ch1MtTile(i){ const b=document.getElementById('mtt-'+i); return b?b.firstElementChild:null; }
+function ch1MtPickT(i){
+  const mt=L.mt; if(!L||L.checked||!mt||mt.lock||mt.finished||mt.gotT[i]) return;
+  mt.selT=(mt.selT===i?null:i);
+  mt.sets[mt.si].forEach((x,k)=>{ const t=ch1MtTile(k); if(t) t.classList.toggle('sel',mt.selT===k); });
+  ch1MtResolve();
+}
+function ch1MtPickN(j){
+  const mt=L.mt; if(!L||L.checked||!mt||mt.lock||mt.finished||mt.gotN[j]) return;
+  mt.selN=(mt.selN===j?null:j);
+  mt.nums[mt.si].forEach((x,k)=>{ const e=document.getElementById('mtn-'+k); if(e) e.classList.toggle('sel',mt.selN===k); });
+  ch1MtResolve();
+}
+function ch1MtResolve(){
+  const mt=L.mt;
+  if(mt.selT===null||mt.selN===null) return;
+  const ti=mt.selT, nj=mt.selN;
+  const tile=mt.sets[mt.si][ti], num=mt.nums[mt.si][nj];
+  const tEl=document.getElementById('mtt-'+ti), nEl=document.getElementById('mtn-'+nj);
+  mt.selT=null; mt.selN=null; mt.lock=true;
+  if(tile.n===num){
+    // 正解: 軽いフィードバック→slot位置を保ったまま非表示(残りは動かさない)
+    mt.gotT[ti]=true; mt.gotN[nj]=true;
+    if(tEl&&tEl.firstElementChild){ tEl.firstElementChild.classList.remove('sel'); tEl.firstElementChild.classList.add('correct'); }
+    if(nEl){ nEl.classList.remove('sel'); nEl.classList.add('ok'); }
+    setTimeout(()=>{
+      if(tEl) tEl.classList.add('mt-done');
+      if(nEl) nEl.classList.add('mt-done');
+      mt.lock=false;
+      if(mt.gotT.every(x=>x)) ch1MtNextSet();
+    },220);
+  }else{
+    // 不正解: ペアは消さない・答えは教えない・もう一度(採点対象としてmiss記録)
+    mt.miss++;
+    if(tEl&&tEl.firstElementChild){ tEl.firstElementChild.classList.remove('sel'); tEl.firstElementChild.classList.add('ch1-shake'); }
+    if(nEl){ nEl.classList.remove('sel'); nEl.classList.add('ch1-shake'); }
+    setTimeout(()=>{
+      const t2=document.getElementById('mtt-'+ti), n2=document.getElementById('mtn-'+nj);
+      if(t2&&t2.firstElementChild) t2.firstElementChild.classList.remove('ch1-shake');
+      if(n2) n2.classList.remove('ch1-shake');
+      mt.lock=false;
+    },420);
+  }
+}
+function ch1MtNextSet(){
+  const mt=L.mt;
+  if(mt.si<mt.sets.length-1){
+    mt.si++;
+    mt.gotT=mt.sets[mt.si].map(()=>false);
+    mt.gotN=mt.sets[mt.si].map(()=>false);
+    const a=document.getElementById('mt-area'); if(a) a.innerHTML=ch1MatchSetHTML();
+    const p2=document.getElementById('mt-prog'); if(p2) p2.innerHTML=ch1MtProg();
+    const g=document.getElementById('mt-guide'); if(g) g.innerHTML=ch1MtGuideMsg(mt.kind,'mid');
+  }else{
+    mt.finished=true;                 // 全数字を自分で正しくマッチさせた
+    L.actDone=true;
+    const p2=document.getElementById('mt-prog'); if(p2) p2.innerHTML=ch1MtProg().replace(/◎/,'●');
+    check();
+  }
+}
+
 /* ---- 問題ビルダー(正解インデックスは必ずバリデータ/コード比較で算出) ---- */
 function ch1Teach(text,opt){ return Object.assign({ch1t:true,text},opt||{}); }
 function ch1SamePick(target,distractors,opt){
@@ -3158,7 +3304,7 @@ const CH1_LESSONS={
     return [
       ch1Teach('数字がない牌もあるよ。これが<span class="term-chip">字牌（ジハイ）</span>！東・南・西・北と、白・發・中の7しゅるいだよ。',
         {tlab:'字牌',hands:[{label:'東・南・西・北',hand:'ESWN'},{label:'白・發・中',hand:'BGR'}]}),
-      ch1Teach('数字がかいてあるマンズ・ピンズ・ソーズは、まとめて<span class="term-chip">数牌（カズハイ）</span>とよぶよ。',
+      ch1Teach('数字がかいてある マンズ・ピンズ・ソーズは、まとめて<span class="term-chip">数牌（すうぱい）</span>とよぶよ。',
         {tlab:'数牌',hands:[{label:'これはぜんぶ数牌',hand:'3m5p7s'}]}),
       ch1HonorMulti(['E','5m','R','2p','N','8s'],true,'字牌をぜんぶ選ぼう！',
         {exp:'数字がなくて漢字（か白いだけ）の牌が字牌だよ。'}),
@@ -3192,7 +3338,9 @@ const CH1_LESSONS={
     qs.push(ch1SuitMcq(pick(NUM),'絵で見わけよう。漢数字=マンズ・まる=ピンズ・棒=ソーズ！'));
     qs.push(ch1SuitMcq(pick(NUM),'まよったら絵をよく見てね。'));
     qs.push(ch1HonorOrNumMcq(pick(HON.concat(NUM)),'数字があれば数牌、なければ字牌だよ。'));
-    return shuffle(qs);
+    // 総まとめ: 数牌27種マッチング(萬子1〜9→筒子1〜9→索子1〜9→MIX)。
+    // 「数牌を見た瞬間に数字が分かる」の網羅確認(全27種を最低1回、自分でマッチさせる)
+    return shuffle(qs).concat([ch1Match('m'),ch1Match('p'),ch1Match('s'),ch1Match('mix')]);
   },
   /* B1-1 ならんだ3枚=シュンツ(体験→名前の順) */
   b1_1(){
@@ -3749,6 +3897,7 @@ function quitLesson(){
    ============================================================ */
 function qFormatKey(q){
   if(q.mini) return 'mini';       // 第1章C: 4枚ミニ麻雀(体験ゲーム。ch1t併用=誘導・スコア外)
+  if(q.mt) return 'match';        // A1-4: 数牌マッチング(Duolingo型ペア当て。将来他教材でも再利用可)
   if(q.ch1t) return 'teach';      // 第1章: 教えるページ(スコア外・check()非経由)
   if(q.pick1) return 'pickone';   // 第1章: 牌を1枚えらぶ
   if(q.pickm) return 'pickmulti'; // 第1章: 牌を複数えらぶ
@@ -4032,6 +4181,25 @@ const QFORMATS={
         expText:q.exp||'ツモる→アガリかたしかめる→ちがえば1枚切る。麻雀はこのくりかえしだよ！'};
     },
   },
+  match:{
+    /* 数牌マッチング(A1-4まとめ): 全ペアを自分で正しくマッチさせると自動でcheck()。
+       誤答は消えず再回答できる(missとして記録・miss0でせいかい)。27種の網羅はレッスン側
+       (m/p/s各1〜9+MIX)で保証 */
+    cat:null, scoring:'match',
+    qid(q){ return null; },
+    render(q){ ch1MatchInit(q); return ch1MatchHTML(q); },
+    answer(q){ const mt=L.mt; return {kind:'match', done:!!(mt&&mt.finished), miss:mt?mt.miss:0}; },
+    reveal(q,ans,res){},
+    feedback(q,res){
+      const d=res.details||{};
+      const okText={m:'萬子はバッチリ！',p:'筒子もバッチリ！',s:'索子もバッチリ！',
+        mix:'ぜんぶまぜてもカンペキ！数牌はもうおまかせだね！'}[q.mt.kind];
+      if(!res.isCorrect&&d.miss>0)
+        return {ansText:'ぜんぶペアにできた！でも、まちがえたのが'+d.miss+'回…',
+          expText:'まちがえた牌は、絵と数字をもういちどよく見てみよう！'};
+      return {ansText:okText, expText:''};
+    },
+  },
   teach:{
     cat:null, scoring:'binary',   // scoringは形式上のみ(check()を通らないため未使用)
     qid(q){ return null; },
@@ -4120,6 +4288,11 @@ const SCORERS={
   binary:(q,ans)=>{
     const ok=ans.index===q.a;
     return {S:ok?1:0, isCorrect:ok, isPerfect:ok, details:null};
+  },
+  match:(q,ans)=>{
+    // 数牌マッチング: 全ペア完了+誤マッチ0回でせいかい(ミニ麻雀と同じ思想)
+    const ok=!!ans.done&&ans.miss===0;
+    return {S:ok?1:0, isCorrect:ok, isPerfect:ok, details:{miss:ans.miss}};
   },
   mini:(q,ans)=>{
     // 4枚ミニ麻雀: アガリ到達+誤discard(組の牌を切ろうとした)0回でせいかい。
@@ -4342,6 +4515,10 @@ function renderFoot(){
   const foot=document.getElementById('lesson-foot');
   foot.className='lesson-foot';
   const qNow=L.qs[L.idx];
+  if(qNow&&qNow.mt&&!L.checked){
+    foot.innerHTML='<button class="btn" id="answer-btn" disabled>ぜんぶペアにしよう！</button>';
+    return;
+  }
   if(qNow&&qNow.mini&&!L.checked){
     // ミニ麻雀: こたえあわせボタンなし。誘導(ch1t)はアガリ後つづける、採点対象はアガリで自動check()
     if(qNow.ch1t){
