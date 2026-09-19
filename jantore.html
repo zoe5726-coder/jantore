@@ -305,8 +305,10 @@ button.tile.off:active{transform:none;}
 .tc-lab{margin:10px 4px 0; font-size:12px; font-weight:800; color:var(--ink-soft);}
 .term-chip{display:inline-block; padding:1px 8px; border-radius:999px; background:var(--jade-soft,#e3f6ec);
   color:var(--jade-deep); font-weight:900;}
-.ch1-cands{display:flex; flex-wrap:wrap; justify-content:center; gap:8px; margin:14px 0 6px;}
-.ch1-cands .tile{cursor:pointer;}
+.ch1-cands{display:flex; flex-wrap:nowrap; justify-content:center; gap:2px; margin:14px 0 6px;
+  touch-action:none; user-select:none; -webkit-user-select:none;}  /* なぞり選択(共通UI)のため */
+.ch1-cands .tile{cursor:pointer; width:100%;}
+.ch1-cands .hand-gap{flex:0 1 auto; width:clamp(4px,1.8vw,10px);}
 .ch1-hint{text-align:center; color:var(--ink-soft); font-size:11px; font-weight:700; margin:2px 0 0;}
 .ch1-actbox{text-align:center; margin-top:12px;}
 .tc-actres{margin-top:10px; font-size:clamp(13px,3.8vw,15px); font-weight:800; line-height:1.6; min-height:1em;}
@@ -321,29 +323,34 @@ button.tile.off:active{transform:none;}
 .mg-stack{display:flex; gap:3px; align-items:center;}
 .mg-back{width:26px; height:36px; border-radius:5px; background:var(--jade-deep);
   border:2px solid rgba(255,255,255,.5); box-shadow:0 2px 0 rgba(0,0,0,.18); display:inline-block;}
-.mg-draw{padding:10px 18px; font-size:14px; width:auto; margin-left:auto;}
+.mg-draw{padding:10px 14px; font-size:14px; width:auto;}
 .mg-pulse{animation:mgPulse 1.1s ease-in-out infinite;}
 @keyframes mgPulse{0%,100%{transform:scale(1); box-shadow:0 4px 0 var(--jade-deep);}
   50%{transform:scale(1.05); box-shadow:0 4px 0 var(--jade-deep),0 0 0 6px rgba(31,164,107,.18);}}
-.mg-hand{display:flex; gap:6px; align-items:center; flex-wrap:nowrap; margin:2px 0;}
-.mg-hand.mg-h8{gap:3px;}
-.mg-hand.mg-h8 .tile{flex:1 1 0; min-width:0; max-width:clamp(30px, 9.4vw, 42px);}
-.mg-hand.mg-h8 .mg-tsumo{margin-left:8px;}
-.mg-hand.mg-h8 + .mg-banner{margin-top:6px;}
+.mg-hand{display:flex; gap:2px; align-items:center; flex-wrap:nowrap; margin:2px 0;}
+/* タップ領域ラッパー(tw): 牌が縮小しても縦paddingでタップしやすさを確保(横は重ねない) */
+.tw{background:none; border:0; padding:7px 0; margin:0; flex:1 1 0; min-width:0;
+  max-width:calc(var(--tile-w) + 2px); -webkit-tap-highlight-color:transparent; cursor:pointer;}
+.tw .tile{width:100%; box-sizing:border-box;}
+.tw.tw-tsumo{margin-left:8px;}
+.tw .tile.mg-tsumo{margin-left:0;}   /* 分離はtwラッパー側のmarginで行う */
+.mg-agari{padding:10px 14px; font-size:14px; width:auto; background:var(--gold,#f2b705);
+  box-shadow:0 4px 0 #b98a04; color:#5b4300;}
+.mg-btns{display:flex; gap:6px; margin-left:auto;}
+.mg-decomp{display:flex; gap:2px; align-items:center; flex-wrap:nowrap;}
+.mg-decomp .hgrp{display:flex; gap:1px; flex:0 1 auto; min-width:0;}
+.mg-decomp .tile{flex:1 1 0; min-width:0; max-width:clamp(18px, 5.4vw, 28px);}
+.mg-decomp .hand-gap{flex:0 1 auto; width:clamp(4px,1.8vw,10px);}
 .mg-br{flex-basis:100%; height:0;}
 .mg-hand.mg-2r{flex-wrap:wrap; row-gap:9px; gap:4px; justify-content:flex-start;}
 .mg-hand.mg-2r .tile{flex:0 0 auto; width:clamp(34px, 10.2vw, 44px);}
 .mg-hand.mg-2r .mg-tsumo{margin-left:10px;}
-.ch1-cands.cands-11{flex-wrap:wrap; row-gap:8px; gap:4px;}
-.ch1-cands.cands-11 .tile{flex:0 0 auto; width:clamp(32px, 9.6vw, 40px); min-width:0;}
-.hand.hand-wrap{flex-wrap:wrap; row-gap:6px;}
-.hand.hand-wrap .tile{flex:0 0 auto; width:clamp(28px, 8.6vw, 38px);}
-.hand .hgrp{display:flex; gap:2px; flex:0 0 auto;}
-.ch1-cands.cands-14{flex-wrap:wrap; row-gap:8px; gap:4px;}
-.ch1-cands.cands-14 .tile{flex:0 0 auto; width:clamp(30px, 9vw, 38px); min-width:0;}
-.ch1-cands.cands-8{gap:4px; flex-wrap:nowrap;}
-.ch1-cands.cands-8 .tile{flex:1 1 0; min-width:0; max-width:clamp(30px, 9.4vw, 42px);}
-.ch1-cands.cands-8 .hand-gap{width:8px;}
+/* cands-11: 1列固定(共通原則) */
+.hand .hgrp{display:flex; gap:1px; flex:0 1 auto; min-width:0;}
+.hand .hgrp .tile{flex:1 1 0; min-width:0; max-width:var(--tile-w);}
+.hand .hand-gap{flex:0 1 auto; width:clamp(4px,1.8vw,14px);}
+/* cands-14: 1列固定(共通原則) */
+/* cands-8/11/14: 1列固定(共通原則)。幅はtwラッパーのflexで自動縮小 */
 .mg-hand .tile{cursor:pointer;}
 .mg-tsumo{margin-left:14px; outline:3px solid var(--gold,#f2b705); outline-offset:2px;}
 .mg-hint{animation:mgHint 1s ease-in-out infinite;}
@@ -2655,7 +2662,7 @@ function ch1HandGrouped(str){
     }
     groups[groups.length-1].push(t);
   });
-  return '<div class="hand'+(tiles.length>=8?' hand-wrap':'')+'">'
+  return '<div class="hand">'
     +groups.map(g=>'<span class="hgrp">'+g.map(t=>tileHTML(t)).join('')+'</span>').join('<span class="hand-gap"></span>')
     +'</div>';
 }
@@ -2691,60 +2698,62 @@ function ch1MiniGuide(){
     return '<b>アガリ！🎉</b> '+names+'のメンツ＋'+tileLabel(w.head[0])+'のアタマ！';
   }
   if(mg.phase==='discard'){
-    return mg.level===1?'まだアガリじゃない…ひかっている「いらない牌」を切ろう！'
-      :'まだアガリじゃない…いらない牌を1枚タップして切ろう！';
+    // アガリは自動確定しない: ユーザー自身に「アガリ！」を判断させる(手牌UI共通原則⑦)
+    if(mg.level===1){
+      return ch1MiniWin(mg.hand.concat([mg.tsumo]))
+        ?'そろったかも…！「アガリ！」をおしてみよう！'
+        :'まだアガリじゃない…ひかっている「いらない牌」を切ろう！';
+    }
+    return 'アガリになっているかな？なっていれば「アガリ！」、まだなら いらない牌を1枚タップ！';
   }
   if(mg.disc.length===0&&mg.tsumo===null&&mg.level===1) return '「ツモる」をおして、山から1枚引いてみよう！';
   return '山からツモろう！';
 }
 function ch1MiniHTML(){
+  /* 手牌UI共通原則(JANTORE_PLAN.md §手牌UI共通原則):
+     ①手牌は枚数によらず常に横1列(縮小で収める・折返し/横スクロール禁止)
+     ②プレイ中に牌順を変えない ③ツモ牌は常に一番右 ④ツモ牌は金枠+間隔で区別
+     ⑤アガリ時も手牌の並びは維持 ⑥分解の説明は別領域(mg-decomp) ⑦アガリは宣言制 */
   const mg=L.mg; if(!mg) return '';
   let html='';
-  // 山: 裏向き牌+ツモるボタン
+  const winNow=mg.tsumo!==null&&!mg.won?ch1MiniWin(mg.hand.concat([mg.tsumo])):null;
+  // 山: 裏向き牌+ツモるボタン+アガリ！ボタン(宣言制)
   html+='<div class="mg-wall"><span class="mg-lab">山</span><span class="mg-stack">'
     +Array(mg.wall.length).fill('<span class="tile mg-back"></span>').join('')
     +(mg.wall.length===0?'<span class="mg-empty">なし</span>':'')+'</span>'
+    +'<span class="mg-btns">'
     +'<button class="btn mg-draw'+(mg.phase==='draw'&&mg.level===1?' mg-pulse':'')+'" id="mg-draw" '
-    +(mg.phase==='draw'&&mg.wall.length?'':'disabled')+' onclick="ch1MiniDraw()">ツモる</button></div>';
-  // 手牌(+ツモ牌は右にわけて表示)
+    +(mg.phase==='draw'&&mg.wall.length&&!mg.won?'':'disabled')+' onclick="ch1MiniDraw()">ツモる</button>'
+    +'<button class="btn mg-agari'+(mg.level===1&&winNow?' mg-pulse':'')+'" id="mg-agari" '
+    +(mg.phase==='discard'&&!mg.won?'':'disabled')+' onclick="ch1MiniAgari()">アガリ！</button>'
+    +'</span></div>';
+  // 手牌: 常に横1列・牌順固定・ツモ牌は右はし(タップ領域は透明ラッパーで拡大)
   const five=mg.tsumo!==null;
   const tiles=mg.hand.concat(five?[mg.tsumo]:[]);
-  html+='<div class="mg-lab">手牌（'+tiles.length+'枚'+(five?' — ツモった牌は右はし':'')+'）</div>';
-  const big=tiles.length>6?' mg-h8':'';                          // 7〜8枚: 320pxに収まるサイズへ
-  const twoRow=tiles.length>=9;                                // 10〜11枚: 2段表示(牌を小さくしすぎない)
-  const rowCls=twoRow?' mg-2r':big;
+  html+='<div class="mg-lab">手牌（'+(five?mg.hand.length+'枚＋ツモ牌':tiles.length+'枚')+'）</div>';
+  html+='<div class="mg-hand'+(mg.won?' mg-won':'')+'" id="mg-hand">'+tiles.map((t,i)=>{
+    const isTsumo=five&&i===tiles.length-1;
+    let cls='tile '+(t.length===2?t[1]:'z');
+    if(isTsumo) cls+=' mg-tsumo';
+    if(!mg.won&&mg.phase==='discard'&&mg.level===1&&!winNow&&ch1MiniOk(i)) cls+=' mg-hint';
+    const tap=(mg.phase==='discard'&&!mg.won)?' onpointerdown="ch1MiniDiscard('+i+')"':'';
+    return '<button class="tw'+(isTsumo?' tw-tsumo':'')+'" id="mgt-'+i+'"'+tap+'>'
+      +'<div class="'+cls+'">'+tileFace(t)+'</div></button>';
+  }).join('')+'</div>';
   if(mg.won){
-    // アガリ時: メンツ｜メンツ｜(メンツ)｜アタマ の順に並べ替え、グループ間にスキマ。
-    // 11枚は「メンツ2組｜改行｜メンツ+アタマ」の2段で見せる
+    html+='<div class="mg-banner">アガリ！</div>';
+    // 解説用の分解表示: プレイ中の手牌とは別領域(手牌の並びは変えない)
     const w=mg.windec;
     const sets=w.mentsuSets||[w.mentsuIdx].concat(w.mentsu2Idx?[w.mentsu2Idx]:[]);
-    const order=[];
-    sets.forEach((g,si)=>{
-      if(si>0) order.push(si===2&&twoRow?{br:1}:{gap:1});
-      g.forEach(k=>order.push({k,cls:'correct'}));
-    });
-    // 11枚: [m1|m2]改行[m3|アタマ] / 14枚: [m1|m2]改行[m3|m4]改行[アタマ]
-    order.push(twoRow&&sets.length>=4?{br:1}:{gap:1});
-    w.headIdx.forEach(k=>order.push({k,cls:'miss'}));
-    html+='<div class="mg-hand'+rowCls+'" id="mg-hand">'+order.map(o=>{
-      if(o.br) return '<span class="mg-br"></span>';
-      if(o.gap) return '<span class="hand-gap"></span>';
-      const t=tiles[o.k];
-      return '<button class="tile '+(t.length===2?t[1]:'z')+' '+o.cls+'">'+tileFace(t)+'</button>';
-    }).join('')+'</div>';
-  }else{
-    const brAt=twoRow?Math.ceil(tiles.length/2):-1;            // 10枚=5+5 / 11枚=6+5(ツモ牌は下段右はし)
-    html+='<div class="mg-hand'+rowCls+'" id="mg-hand">'+tiles.map((t,i)=>{
-      const isTsumo=five&&i===tiles.length-1;
-      let cls='tile '+(t.length===2?t[1]:'z');
-      if(isTsumo) cls+=' mg-tsumo';
-      if(mg.phase==='discard'&&mg.level===1&&ch1MiniOk(i)) cls+=' mg-hint';
-      const tap=(mg.phase==='discard'&&!mg.won)?' onpointerdown="ch1MiniDiscard('+i+')"':'';
-      return (i===brAt?'<span class="mg-br"></span>':'')
-        +'<button class="'+cls+'" id="mgt-'+i+'"'+tap+'>'+tileFace(t)+'</button>';
-    }).join('')+'</div>';
+    html+='<div class="mg-lab">こう分かれていたよ！</div><div class="mg-decomp" id="mg-decomp">'
+      +sets.map(g=>'<span class="hgrp">'+g.map(k=>{const t=tiles[k];
+        return '<span class="tile '+(t.length===2?t[1]:'z')+' correct">'+tileFace(t)+'</span>';}).join('')+'</span>')
+        .join('<span class="hand-gap"></span>')
+      +'<span class="hand-gap"></span><span class="hgrp">'
+      +w.headIdx.map(k=>{const t=tiles[k];
+        return '<span class="tile '+(t.length===2?t[1]:'z')+' miss">'+tileFace(t)+'</span>';}).join('')
+      +'</span></div>';
   }
-  if(mg.won) html+='<div class="mg-banner">アガリ！</div>';
   // 捨て牌
   html+='<div class="mg-lab">捨て牌</div><div class="mg-disc">'
     +(mg.disc.length?mg.disc.map(t=>tileHTML(t)).join(''):'<span class="mg-empty">まだなし</span>')+'</div>';
@@ -2760,38 +2769,61 @@ function ch1MiniDraw(){
   if(mg.phase!=='draw'||mg.won||!mg.wall.length) return;
   const t=mg.wall.shift();
   mg.tsumo=t;
-  const five=mg.hand.concat([t]);
-  // ツモ→まずアガリ判定(アガリなら切らずにそのままアガリ)。5枚=C1/8枚=C2/11枚=C3
-  const win=ch1MiniWin(five);
-  if(win){
-    mg.won=true; mg.phase='won'; mg.windec=win;
-    L.actDone=true;                      // 誘導(teach系)の「つづける」解放フラグを共用
-    ch1MiniPaint();
-    const q=L.qs[L.idx];
-    if(q.ch1t){ renderFoot(); }          // 誘導ミニ: スコア外・つづけるで進む
-    else{ check(); }                     // 採点ミニ: アガリ到達で自動判定(ミス0=せいかい)
-    return;
-  }
+  // 自動アガリはしない(手牌UI共通原則⑦): アガリ形でもユーザー自身が「アガリ！」を押して判定する
   mg.phase='discard';
   ch1MiniPaint();
+}
+/* アガリ宣言: ユーザーが「アガリ！」を押したときだけ判定する */
+function ch1MiniAgari(){
+  if(!L||!L.mg||L.checked) return;
+  const mg=L.mg, q=L.qs[L.idx];
+  if(mg.phase!=='discard'||mg.won||mg.tsumo===null) return;
+  const five=mg.hand.concat([mg.tsumo]);
+  const win=ch1MiniWin(five);
+  if(!win){
+    // 誤アガリ: 責めずにもう一度見させる(採点ミニではミスとして記録・操作は続行)
+    if(!q.ch1t) mg.miss++;
+    const g=document.getElementById('mg-guide');
+    if(g) g.innerHTML='まだアガリじゃないみたい。もう一度よく見てみよう！';
+    const b=document.getElementById('mg-agari');
+    if(b){ b.classList.add('ch1-shake');
+      setTimeout(()=>{const b2=document.getElementById('mg-agari'); if(b2) b2.classList.remove('ch1-shake');},500); }
+    return;
+  }
+  mg.won=true; mg.phase='won'; mg.windec=win;   // 手牌の並びは変えず、分解は別領域で解説表示
+  L.actDone=true;                                // 誘導(teach系)の「つづける」解放フラグを共用
+  ch1MiniPaint();
+  if(q.ch1t){ renderFoot(); }                    // 誘導ミニ: スコア外・つづけるで進む
+  else{ check(); }                               // 採点ミニ: 正しい宣言で判定(ミス0=せいかい)
 }
 function ch1MiniDiscard(i){
   if(!L||!L.mg||L.checked) return;
   const mg=L.mg;
   if(mg.phase!=='discard'||mg.won) return;
   const five=mg.hand.concat([mg.tsumo]);
+  if(i<0||i>=five.length) return;
+  if(ch1MiniWin(five)){
+    // アガリ見逃し: 学習UIなので切らせず気づきを促す(ミスにはしない・その場で再判断)
+    const g=document.getElementById('mg-guide');
+    if(g) g.innerHTML='アガれる形になっているよ！もう一度見てみよう！';
+    const el=(document.getElementById('mgt-'+i)||{}).firstElementChild;
+    if(el){ el.classList.add('ch1-shake');
+      setTimeout(()=>{const b2=document.getElementById('mgt-'+i); if(b2&&b2.firstElementChild) b2.firstElementChild.classList.remove('ch1-shake');},500); }
+    return;
+  }
   if(!ch1MiniOk(i)){
     // 組でつかう牌: 切らせない(教材山で必ずアガれる保証)。誘導以外はミスとして記録
     if(!L.qs[L.idx].ch1t) mg.miss++;
-    const el=document.getElementById('mgt-'+i); if(el) el.classList.add('ch1-shake');
+    const el=(document.getElementById('mgt-'+i)||{}).firstElementChild;
+    if(el) el.classList.add('ch1-shake');
     const g=document.getElementById('mg-guide');
     if(g) g.innerHTML='その牌は組でつかえるよ！ペアや、ならんでいる牌はのこそう。';
-    setTimeout(()=>{ const e2=document.getElementById('mgt-'+i); if(e2) e2.classList.remove('ch1-shake'); },500);
+    setTimeout(()=>{ const e2=document.getElementById('mgt-'+i); if(e2&&e2.firstElementChild) e2.firstElementChild.classList.remove('ch1-shake'); },500);
     return;
   }
   mg.disc.push(five[i]);
   five.splice(i,1);
-  mg.hand=sortTiles(five);   // 理牌して4枚にもどす(ツモ牌も正しい位置へ)
+  mg.hand=five;              // 牌順は変えない(理牌しない)。ツモ牌はそのまま右はしに定着
   mg.tsumo=null; mg.phase='draw';
   ch1MiniPaint();
 }
@@ -3830,18 +3862,18 @@ const QFORMATS={
       html+='<div class="q-text">'+q.q+'</div>';
       if(q.hand) html+=(q.grouped?'<div class="tc-lab">手牌</div>'+ch1HandGrouped(q.hand):handHTML(q.hand));
       if(q.grouped) html+='<div class="tc-lab">↓ この中からえらぼう</div>';
-      html+='<div class="ch1-cands'+(q.cands.length>11?' cands-14':(q.cands.length>8?' cands-11':(q.cands.length>6?' cands-8':'')))+'">'+q.cands.map((cd,i)=>
-        '<button class="tile '+(cd.length===2?cd[1]:'z')+'" id="ckb-'+i+'" onpointerdown="ch1Pick('+i+')">'
-        +tileFace(cd)+'</button>'
+      html+='<div class="ch1-cands">'+q.cands.map((cd,i)=>
+        '<button class="tw" id="ckb-'+i+'" onpointerdown="ch1Pick('+i+')">'
+        +'<div class="tile '+(cd.length===2?cd[1]:'z')+'">'+tileFace(cd)+'</div></button>'
         +(q.cgaps&&q.cgaps.includes(i)?'<span class="hand-gap"></span>':'')).join('')+'</div>';
       L.sel=null;
       return html;
     },
     answer(q){ return {kind:'choiceIndex', index:L.sel}; },
     reveal(q,ans,res){
-      const el=document.getElementById('ckb-'+q.a);
+      const el=ch1CkTile(q.a);
       if(el){ el.classList.remove('sel'); el.classList.add('correct'); }
-      if(!res.isCorrect){ const w=document.getElementById('ckb-'+ans.index);
+      if(!res.isCorrect){ const w=ch1CkTile(ans.index);
         if(w){ w.classList.remove('sel'); w.classList.add('wrong'); } }
     },
     feedback(q,res){ return {ansText:'正解： '+tileLabel(q.cands[q.a]), expText:q.exp||''}; },
@@ -3854,24 +3886,25 @@ const QFORMATS={
       html+='<div class="q-text">'+q.q+'</div>';
       if(q.hand) html+=(q.grouped?'<div class="tc-lab">手牌</div>'+ch1HandGrouped(q.hand):handHTML(q.hand));
       if(q.grouped) html+='<div class="tc-lab">↓ この中からえらぼう</div>';
-      html+='<div class="ch1-cands'+(q.cands.length>11?' cands-14':(q.cands.length>8?' cands-11':(q.cands.length>6?' cands-8':'')))+'">'+q.cands.map((cd,i)=>
-        '<button class="tile '+(cd.length===2?cd[1]:'z')+'" id="ckb-'+i+'" onpointerdown="ch1Pick('+i+')">'
-        +tileFace(cd)+'</button>'
+      // 複数選択(共通UI): タップ選択に加え「押したままなぞる」連続選択を標準対応
+      html+='<div class="ch1-cands" onpointerdown="ch1CandDown(event)">'+q.cands.map((cd,i)=>
+        '<button class="tw" id="ckb-'+i+'">'
+        +'<div class="tile '+(cd.length===2?cd[1]:'z')+'">'+tileFace(cd)+'</div></button>'
         +(q.cgaps&&q.cgaps.includes(i)?'<span class="hand-gap"></span>':'')).join('')+'</div>';
-      html+='<p class="ch1-hint">あてはまる牌をぜんぶタップしてね</p>';
+      html+='<p class="ch1-hint">タップ、または おしたまま横になぞって まとめて選択できるよ</p>';
       L.sel=new Set();
       return html;
     },
     answer(q){ return {kind:'idxSet', set:L.sel}; },
     reveal(q,ans,res){
       for(const i of q.answers){
-        const el=document.getElementById('ckb-'+i); if(!el) continue;
+        const el=ch1CkTile(i); if(!el) continue;
         if(ans.set.has(i)){ el.classList.remove('sel'); el.classList.add('correct'); }
         else el.classList.add('miss');
       }
       for(const i of ans.set){
         if(q.answers.includes(i)) continue;
-        const el=document.getElementById('ckb-'+i);
+        const el=ch1CkTile(i);
         if(el){ el.classList.remove('sel'); el.classList.add('wrong'); }
       }
     },
@@ -3975,18 +4008,61 @@ function selTile(i){
   tiles.forEach((t,k)=>{ const el=document.getElementById('ht-'+k); if(el) el.classList.toggle('sel',k===i); });
   renderFoot();
 }
-/* 第1章: 牌タップ選択(pickone=単選 / pickmulti=トグル) */
+/* 第1章: 牌タップ選択(pickone=単選 / pickmulti=トグル)。
+   候補牌はタップ領域拡大のためbutton.tw>div.tile構造(選択/開示クラスは内側tileへ) */
+function ch1CkTile(i){ const b=document.getElementById('ckb-'+i); return b?b.firstElementChild:null; }
 function ch1Pick(i){
   if(!L||L.checked) return;
   const q=L.qs[L.idx]; if(!q) return;
   if(q.pickm){
     if(L.sel.has(i)) L.sel.delete(i); else L.sel.add(i);
-    const el=document.getElementById('ckb-'+i); if(el) el.classList.toggle('sel',L.sel.has(i));
+    const el=ch1CkTile(i); if(el) el.classList.toggle('sel',L.sel.has(i));
   }else{
     L.sel=i;
-    for(let k=0;k<q.cands.length;k++){ const el=document.getElementById('ckb-'+k); if(el) el.classList.toggle('sel',k===i); }
+    for(let k=0;k<q.cands.length;k++){ const el=ch1CkTile(k); if(el) el.classList.toggle('sel',k===i); }
   }
   renderFoot();
+}
+/* なぞり選択(アプリ共通UI仕様): 複数牌選択問題では、押したまま牌の上を滑らせると
+   通過した牌をその場で「追加選択」できる(1gesture中は訪問済み管理で往復しても解除しない)。
+   動かずに離した場合は従来のタップ(トグル選択/解除)。入力方法のみでScorerは不変。
+   pointerdown+pointermove(elementFromPoint)方式=touch/mouse/pen共通・click二重発火なし */
+function ch1SelAdd(i){
+  if(!L||L.checked||!(L.sel instanceof Set)) return;
+  if(!L.sel.has(i)){ L.sel.add(i); const t=ch1CkTile(i); if(t) t.classList.add('sel'); renderFoot(); }
+}
+function ch1CandDown(ev){
+  if(!L||L.checked) return;
+  const q=L.qs[L.idx]; if(!q||!q.pickm) return;
+  const startBtn=ev.target.closest?ev.target.closest('button.tw'):null;
+  if(!startBtn||!startBtn.id||startBtn.id.indexOf('ckb-')!==0) return;
+  ev.preventDefault();
+  const idxOf=b=>parseInt(b.id.slice(4),10);
+  const visited=[idxOf(startBtn)];        // 訪問済み: 往復しても反転させない
+  let drag=false;
+  const hit=e=>{
+    const el=document.elementFromPoint(e.clientX,e.clientY);
+    const b=el&&el.closest?el.closest('button.tw'):null;
+    return (b&&b.id&&b.id.indexOf('ckb-')===0)?b:null;
+  };
+  const move=e=>{
+    if(!L||L.checked) return;
+    const b=hit(e); if(!b) return;        // 牌の隙間を通ってもgestureは継続
+    const i=idxOf(b);
+    if(visited.includes(i)) return;
+    if(!drag){ drag=true; ch1SelAdd(visited[0]); }  // ドラッグ確定: 1枚目も追加選択に切替
+    visited.push(i);
+    ch1SelAdd(i);                          // 通過した瞬間にリアルタイムで選択
+  };
+  const up=()=>{
+    document.removeEventListener('pointermove',move);
+    document.removeEventListener('pointerup',up);
+    document.removeEventListener('pointercancel',up);
+    if(!drag) ch1Pick(visited[0]);        // 動かなかった=通常タップ(トグル)
+  };
+  document.addEventListener('pointermove',move);
+  document.addEventListener('pointerup',up);
+  document.addEventListener('pointercancel',up);
 }
 /* 第1章Teach: 体験操作(牌をならべてみる等)。結果表示+牌ゆらしで「さわった」実感を返す */
 function ch1Act(){
