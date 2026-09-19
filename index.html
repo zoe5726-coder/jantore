@@ -171,22 +171,25 @@ button{font-family:inherit; cursor:pointer; touch-action:manipulation;} /* タ�
 .tile svg{width:100%; height:100%; display:block;}
 .hand .tile{flex:1 1 0; min-width:0; max-width:var(--tile-w);}
 button.tile{transition:transform .08s;}
-/* 選択中: 太枠+緑地+浮き+影+✓バッジ(色だけに依存しない複合表現)。開示時のcorrect/miss/wrongとは別表現 */
-button.tile.sel{transform:translateY(-6px); outline:4px solid var(--jade); outline-offset:1px;
+.tw .tile{transition:transform .08s;}
+/* 選択中: 太枠+緑地+浮き+影+✓バッジ(色だけに依存しない複合表現)。開示時のcorrect/miss/wrongとは別表現。
+   状態クラス(sel/correct/wrong/miss)は「牌そのもの」に付ける正式仕様:
+   旧構造=button.tile / 新構造(button.tw>div.tile)=内側.tile。CSSは両構造を対象にする */
+button.tile.sel,.tw .tile.sel{transform:translateY(-6px); outline:4px solid var(--jade); outline-offset:1px;
   background:color-mix(in srgb, var(--jade) 20%, var(--tile-face));
   box-shadow:0 8px 14px rgba(14,122,76,.35), 0 3px 0 var(--tile-shadow), inset 0 1px 0 #fff;}
-button.tile.sel::after{content:'✓'; position:absolute; top:1px; right:1px; width:16px; height:16px;
+button.tile.sel::after,.tw .tile.sel::after{content:'✓'; position:absolute; top:1px; right:1px; width:16px; height:16px;
   background:var(--jade); color:#fff; font-size:11px; font-weight:800; border-radius:50%;
   display:flex; align-items:center; justify-content:center; z-index:2; line-height:1;}
-/* 開示: 選んで正解=緑(浮きなし)/見逃し=金点線/誤選択=赤+✕ */
-button.tile.correct{outline:4px solid var(--jade); outline-offset:1px;
+/* 開示: 選んで正解=緑(浮きなし)/見逃し=金点線/誤選択=赤+✕ (mg-decompの分解表示も同表現) */
+button.tile.correct,.tw .tile.correct,.mg-decomp .tile.correct{outline:4px solid var(--jade); outline-offset:1px;
   background:color-mix(in srgb, var(--jade) 14%, var(--tile-face));}
-button.tile.wrong{outline:4px solid var(--verm); outline-offset:1px;
+button.tile.wrong,.tw .tile.wrong{outline:4px solid var(--verm); outline-offset:1px;
   background:color-mix(in srgb, var(--verm) 14%, var(--tile-face));}
-button.tile.wrong::after{content:'✕'; position:absolute; top:1px; right:1px; width:16px; height:16px;
+button.tile.wrong::after,.tw .tile.wrong::after{content:'✕'; position:absolute; top:1px; right:1px; width:16px; height:16px;
   background:var(--verm); color:#fff; font-size:11px; font-weight:800; border-radius:50%;
   display:flex; align-items:center; justify-content:center; z-index:2; line-height:1;}
-button.tile.miss{outline:3px dashed var(--gold-deep); outline-offset:1px;
+button.tile.miss,.tw .tile.miss,.mg-decomp .tile.miss{outline:3px dashed var(--gold-deep); outline-offset:1px;
   background:color-mix(in srgb, var(--gold) 15%, var(--tile-face));}
 /* 選択不可(4枚使用済み): 薄グレー地+減彩。タップしても反応しない */
 button.tile.off{opacity:.5; filter:grayscale(.65);
