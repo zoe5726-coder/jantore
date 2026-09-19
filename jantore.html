@@ -172,24 +172,25 @@ button{font-family:inherit; cursor:pointer; touch-action:manipulation;} /* タ�
 .hand .tile{flex:1 1 0; min-width:0; max-width:var(--tile-w);}
 button.tile{transition:transform .08s;}
 .tw .tile{transition:transform .08s;}
-/* 選択中: 太枠+緑地+浮き+影+✓バッジ(色だけに依存しない複合表現)。開示時のcorrect/miss/wrongとは別表現。
+/* 選択/開示の視認性原則(手牌UI共通原則§8):
+   エフェクトは牌の表示領域の内側で完結させ、牌の数字・模様を隠さない。
+   - 細い内側枠(box-shadow inset 2px=レイアウト不変・隣牌へはみ出さない)+ごく薄い地色のみ
+   - ✓/✕バッジは廃止(小さい牌で絵柄にかぶるため。正誤の詳細は解説カードが伝える)
+   - transform移動/拡大なし: 選択前後で牌のx/y/width/heightを変えない
    状態クラス(sel/correct/wrong/miss)は「牌そのもの」に付ける正式仕様:
    旧構造=button.tile / 新構造(button.tw>div.tile)=内側.tile。CSSは両構造を対象にする */
-button.tile.sel,.tw .tile.sel{transform:translateY(-6px); outline:4px solid var(--jade); outline-offset:1px;
-  background:color-mix(in srgb, var(--jade) 20%, var(--tile-face));
-  box-shadow:0 8px 14px rgba(14,122,76,.35), 0 3px 0 var(--tile-shadow), inset 0 1px 0 #fff;}
-button.tile.sel::after,.tw .tile.sel::after{content:'✓'; position:absolute; top:1px; right:1px; width:16px; height:16px;
-  background:var(--jade); color:#fff; font-size:11px; font-weight:800; border-radius:50%;
-  display:flex; align-items:center; justify-content:center; z-index:2; line-height:1;}
-/* 開示: 選んで正解=緑(浮きなし)/見逃し=金点線/誤選択=赤+✕ (mg-decompの分解表示も同表現) */
-button.tile.correct,.tw .tile.correct,.mg-decomp .tile.correct{outline:4px solid var(--jade); outline-offset:1px;
-  background:color-mix(in srgb, var(--jade) 14%, var(--tile-face));}
-button.tile.wrong,.tw .tile.wrong{outline:4px solid var(--verm); outline-offset:1px;
-  background:color-mix(in srgb, var(--verm) 14%, var(--tile-face));}
-button.tile.wrong::after,.tw .tile.wrong::after{content:'✕'; position:absolute; top:1px; right:1px; width:16px; height:16px;
-  background:var(--verm); color:#fff; font-size:11px; font-weight:800; border-radius:50%;
-  display:flex; align-items:center; justify-content:center; z-index:2; line-height:1;}
-button.tile.miss,.tw .tile.miss,.mg-decomp .tile.miss{outline:3px dashed var(--gold-deep); outline-offset:1px;
+button.tile.sel,.tw .tile.sel{
+  box-shadow:inset 0 0 0 2px var(--jade), 0 3px 0 var(--tile-shadow), inset 0 1px 0 #fff;
+  background:color-mix(in srgb, var(--jade) 10%, var(--tile-face));}
+/* 開示: 選んで正解=緑の内枠/見逃し=金点線(内側)/誤選択=赤の内枠。いずれも牌は読めるまま */
+button.tile.correct,.tw .tile.correct,.mg-decomp .tile.correct{
+  box-shadow:inset 0 0 0 2px var(--jade), 0 3px 0 var(--tile-shadow), inset 0 1px 0 #fff;
+  background:color-mix(in srgb, var(--jade) 20%, var(--tile-face));}
+button.tile.wrong,.tw .tile.wrong{
+  box-shadow:inset 0 0 0 2px var(--verm), 0 3px 0 var(--tile-shadow), inset 0 1px 0 #fff;
+  background:color-mix(in srgb, var(--verm) 12%, var(--tile-face));}
+button.tile.miss,.tw .tile.miss,.mg-decomp .tile.miss{
+  outline:2px dashed var(--gold-deep); outline-offset:-3px;   /* 点線も内側に描く */
   background:color-mix(in srgb, var(--gold) 15%, var(--tile-face));}
 /* 選択不可(4枚使用済み): 薄グレー地+減彩。タップしても反応しない */
 button.tile.off{opacity:.5; filter:grayscale(.65);
