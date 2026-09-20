@@ -318,6 +318,17 @@ button.tile.off:active{transform:none;}
 .wf-msg{min-height:36px; display:flex; align-items:center; justify-content:center; text-align:center;
   color:var(--ink-soft); font-size:12px; font-weight:800; margin:6px 0 0; padding:0 8px;}
 .wf-msg.retry{color:var(--verm,#d0454c);}
+/* 第3章: 状況チップ(場風/自風/鳴き/ロン・ツモ)と役えらびボタン(yfind) */
+.ch3-ctx{display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin:2px 0 10px;}
+.ch3-chip{font-size:11px; font-weight:800; padding:3px 10px; border-radius:999px;
+  background:var(--jade-soft); color:var(--ink); border:1px solid rgba(0,0,0,.10);}
+.ch3-chip.warn{background:rgba(216,67,59,.10); color:var(--verm-deep);}
+.ch3-chip.riichi{background:rgba(232,169,60,.16); color:var(--gold-deep);}
+.yf-cands{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:10px 0 2px;}
+.yfb{font-size:13px; font-weight:800; padding:9px 14px; border-radius:12px;
+  border:2px solid rgba(0,0,0,.14); background:var(--card,#fff); color:var(--ink); cursor:pointer;}
+.yfb.sel{border-color:var(--jade-deep); background:rgba(31,164,107,.10);}
+.yfb.correct{border-color:var(--jade-deep); background:rgba(31,164,107,.22);}
 .ch1-actbox{text-align:center; margin-top:12px;}
 .tc-actres{margin-top:10px; font-size:clamp(13px,3.8vw,15px); font-weight:800; line-height:1.6; min-height:1em;}
 .ch1-shake{animation:ch1shake .5s var(--m-ease,ease);}
@@ -1552,7 +1563,17 @@ const COURSES=[
 {id:'ch2b',title:'待ちの形を知ろう',icon:'🧩',section:1,type:'ch1',desc:'ならんだ2枚には、待ちのひみつがあるんだ。',questions:[]},
 {id:'ch2c',title:'いろいろな待ち',icon:'🎯',section:1,type:'ch1',desc:'トイツの待ちと、1枚だけの待ちを覚えよう。',questions:[]},
 {id:'ch2d',title:'実戦の待ち',icon:'👀',section:1,type:'ch1',desc:'13枚から待ち牌をぜんぶ見つけて、アガリが見える！',questions:[]},
-{id:'rules',title:'基本ルール',icon:'📖',section:2,desc:'麻雀のきほんのき。和了の形からフリテンまで。',questions:[
+/* 第3章「役がわかる」。descに役名を先出ししない(名称初出はレッスン内)。ch3xは任意Road(次章の前提にしない) */
+{id:'ch3a',title:'はじめての役',icon:'🎫',section:2,type:'ch1',desc:'知っている「リーチ」を、役として正式に覚えよう。',questions:[]},
+{id:'ch3b',title:'役牌',icon:'🀄',section:2,type:'ch1',desc:'3枚そろえるだけで役になる牌があるんだ。',questions:[]},
+{id:'ch3c',title:'ピンフ',icon:'🧘',section:2,type:'ch1',desc:'条件を1つずつ積み上げて、きれいな形の役へ。',questions:[]},
+{id:'ch3d',title:'タンヤオと一色',icon:'🎨',section:2,type:'ch1',desc:'見た目でわかる役をおぼえよう。',questions:[]},
+{id:'ch3e',title:'形の役',icon:'🧱',section:2,type:'ch1',desc:'コーツだらけ、トイツだらけ、おなじシュンツ2組。',questions:[]},
+{id:'ch3f',title:'ならびの役',icon:'🌈',section:2,type:'ch1',desc:'ならびかたに注目する役たち。',questions:[]},
+{id:'ch3g',title:'役満',icon:'👑',section:2,type:'ch1',desc:'めったに出ない、とても特別な役。',questions:[]},
+{id:'ch3h',title:'役を見つけよう',icon:'🔦',section:2,type:'ch1',desc:'手牌と状況から、ついている役をぜんぶ見つける！',questions:[]},
+{id:'ch3x',title:'もっと役を覚える',icon:'📚',section:2,type:'ch1',desc:'よゆうがあったら。めずらしい役と、もっと役満。(やらなくても先へ進めるよ)',questions:[]},
+{id:'rules',title:'基本ルール',icon:'📖',section:3,desc:'麻雀のきほんのき。和了の形からフリテンまで。',questions:[
  {q:'麻雀の和了（あがり）の基本形はどれ？',choices:['4面子＋1雀頭','5面子','7ペア＋1枚','13枚バラバラ'],a:0,exp:'3枚1組の「面子」を4つと、2枚1組の「雀頭」を1つ揃えた計14枚が基本の和了形です。（例外役：七対子・国士無双）'},
  {q:'対局開始時、子の手牌は何枚？',choices:['12枚','13枚','14枚','16枚'],a:1,exp:'全員13枚でスタートし、ツモって14枚になったら1枚捨てます。'},
  {q:'ドラ表示牌が五萬のとき、ドラは？',hand:'5m',choices:['四萬','五萬','六萬','九萬'],a:2,exp:'ドラは表示牌の「次の牌」。五萬の次なので六萬がドラです。'},
@@ -1560,7 +1581,7 @@ const COURSES=[
  {q:'フリテンの説明で正しいのは？',choices:['自分の捨て牌に待ち牌があるとロンできない','フリテンだとツモ和了もできない','相手の捨て牌に待ち牌があるとロンできない','リーチ中だけ発生する'],a:0,exp:'待ち牌のどれか1種でも自分の河にあるとロン不可。ただしツモ和了はできます。'},
  {q:'流局したとき、ノーテンの人はどうなる？',choices:['何も起きない','テンパイ者に罰符を支払う','点数が没収される','次局親になれない'],a:1,exp:'ノーテン罰符は場に合計3,000点。例：テンパイ1人なら3人が1,000点ずつ支払います。'},
 ]},
-{id:'yaku',title:'役',icon:'🎴',section:2,desc:'和了に必要な「役」を覚えよう。',questions:[
+{id:'yaku',title:'役',icon:'🎴',section:3,desc:'和了に必要な「役」を覚えよう。',questions:[
  {q:'リーチを宣言できる条件は？',choices:['門前（鳴いていない）でテンパイしている','2翻以上ある','親のときだけ','ドラを持っている'],a:0,exp:'鳴いていない（門前）テンパイで、1,000点を供託できれば宣言できます。'},
  {q:'タンヤオの条件は？',choices:['2〜8の数牌だけで作る','字牌だけで作る','同じ色だけで作る','1・9を必ず使う'],a:0,exp:'1・9・字牌を使わず、2〜8の数牌のみ。鳴いてもOK（喰いタン）が一般的なルールです。'},
  {q:'ピンフの条件に「含まれない」のはどれ？',choices:['すべて順子で作る','雀頭が役牌でない','リャンメン待ち','刻子をひとつ含む'],a:3,exp:'ピンフは「順子×4＋役牌でない雀頭＋リャンメン待ち」。刻子（同じ牌3枚）が入るとピンフになりません。'},
@@ -1568,7 +1589,7 @@ const COURSES=[
  {q:'東場で南家が「東」を3枚集めた。役になる？',hand:'EEE',choices:['ならない','なる（1翻）','なる（2翻）','ロン和了のときだけなる'],a:1,exp:'東場の「東」は場風牌なので、どの家が刻子にしても1翻。自風（南家なら南）と重なる「ダブ東」なら2翻です。'},
  {q:'ドラを2枚持っていれば役なしでも和了できる？',choices:['できる','できない','ツモならできる','親ならできる'],a:1,exp:'ドラは役ではなく「おまけの翻」。リーチやタンヤオなど、最低1つは役が必要です。'},
 ]},
-{id:'score',title:'点数計算',icon:'🧮',section:2,desc:'符と翻から点数を出せるようになろう。',questions:[
+{id:'score',title:'点数計算',icon:'🧮',section:3,desc:'符と翻から点数を出せるようになろう。',questions:[
  {q:'子の30符4翻、ロンの点数は？',choices:['5,200点','6,400点','7,700点','8,000点'],a:2,exp:'基本点=30×2^(2+4)=1,920。子のロンは×4で7,680→切り上げて7,700点。'},
  {q:'親の満貫ツモ。支払いは？',choices:['2,600オール','3,000オール','4,000オール','6,000オール'],a:2,exp:'親の満貫は12,000点。ツモなら子3人が4,000点ずつ＝4,000オールです。'},
  {q:'子の40符2翻、ロンの点数は？',choices:['2,000点','2,600点','3,200点','3,900点'],a:1,exp:'基本点=40×2^4=640。×4=2,560→切り上げて2,600点。'},
@@ -1576,42 +1597,42 @@ const COURSES=[
  {q:'満貫になるのは何翻から？',choices:['3翻','4翻','5翻','6翻'],a:2,exp:'5翻から満貫（子8,000/親12,000）。※4翻30符は7,700点。「切り上げ満貫」ルールを採用する場合もあります。'},
  {q:'親の30符3翻、ロンの点数は？',choices:['3,900点','4,800点','5,800点','7,700点'],a:2,exp:'基本点=30×2^5=960。親のロンは×6=5,760→切り上げて5,800点。子なら3,900点です。'},
 ]},
-{id:'waits',title:'待ち当て',icon:'🔍',section:3,desc:'「完成まであと1枚」の最後の1枚＝待ちを当てよう。',type:'waits'},
-{id:'ukeire1',title:'受け入れ当て',icon:'🧩',section:3,desc:'1シャンテンの手牌から、テンパイする牌を全部当てよう。',type:'ukeire1'},
-{id:'nanikiru',title:'1択何切る',icon:'🀄',section:3,desc:'シャンテンを保って受け入れ最大の1枚を。',type:'discard',questions:[
+{id:'waits',title:'待ち当て',icon:'🔍',section:4,desc:'「完成まであと1枚」の最後の1枚＝待ちを当てよう。',type:'waits'},
+{id:'ukeire1',title:'受け入れ当て',icon:'🧩',section:4,desc:'1シャンテンの手牌から、テンパイする牌を全部当てよう。',type:'ukeire1'},
+{id:'nanikiru',title:'1択何切る',icon:'🀄',section:4,desc:'シャンテンを保って受け入れ最大の1枚を。',type:'discard',questions:[
  {id:'nk1',lv:3,fs:'nk:sh0:mg4',hand:'234556m456p678s88s',a:'5m',exp:'打5萬で23456萬の形が残り、1・4・7萬の三面張（受け11枚）。打2萬（4・7萬の7枚）より圧倒的に広いテンパイです。'},
  {id:'nk2',lv:4,fs:'nk:sh0:mg4',hand:'2224567m345p6788s',a:'8s',exp:'打8索で222萬を暗刻として活かし、4567萬＋雀頭88索…ではなく222萬＋456萬(or 567萬)の形で3・4・7萬待ち（受け10枚）。手の中の暗刻はくっつけて使うと強い！'},
  {id:'nk3',lv:5,fs:'nk:sh0:mg5',hand:'46677888m678p666s',a:'4m',exp:'打4萬で667788萬＋888…の複合形が残り、なんと5・6・7・8萬の4種待ち（受け9枚）。浮いた4萬を切るだけですが、残る形の強さを見抜けるかがポイント。'},
  {id:'nk4',lv:5,fs:'nk:sh0:mg5',hand:'12367m234777p678s',a:'7p',exp:'打7筒！777筒の暗刻を崩す勇気。77筒を雀頭にして67萬のリャンメン（5・8萬、受け8枚）が残ります。67萬を切ると7萬・6萬の単騎系しか残りません。'},
 ]},
-{id:'riichi',title:'リーチ判断',icon:'📣',section:3,desc:'局面を見て、曲げるかダマか。鳳凰卓の実測データで検証済み。',questions:SR_RIICHI_QUESTIONS},
-{id:'naki',title:'鳴き判断',icon:'🙋',section:4,desc:'ポン・チーの損得を見極めよう。',questions:[
+{id:'riichi',title:'リーチ判断',icon:'📣',section:4,desc:'局面を見て、曲げるかダマか。鳳凰卓の実測データで検証済み。',questions:SR_RIICHI_QUESTIONS},
+{id:'naki',title:'鳴き判断',icon:'🙋',section:5,desc:'ポン・チーの損得を見極めよう。',questions:[
  {q:'ポンする？',situ:{kyoku:'東1局',turn:5,seat:'子',dora:'8p',claim:'G',hand:'567m234p6p88p45sGG'},choices:['ポン','スルー'],a:0,exp:'發ポンで役が確定し、ドラ2（8筒×2）で3,900〜満貫級。打点・速度ともに十分なので積極的に鳴く。'},
  {q:'ピンフ・タンヤオ・リーチを狙える門前の好形1シャンテン。チーすると役が消える。どうする？',choices:['鳴かずに門前で進める','チーして速度を上げる','ポンできる牌を探す','手を崩して守備に回る'],a:0,exp:'鳴いて役がなくなる（＝和了できない）なら鳴きは論外。門前ならリーチ・ピンフ・ツモで打点も伸びます。'},
  {q:'オーラス、トップ目。1,000点でも和了れば逃げ切れる。役があるなら？',choices:['積極的に鳴いて最速で和了る','門前で高打点を狙う','鳴かずにベタオリする','ハイテイまで待つ'],a:0,exp:'順位が確定するなら打点は不要。役が残る鳴きはどんどん入れて、最速の和了を目指しましょう。'},
  {q:'鳴きのデメリットとして正しいのは？',choices:['打点と守備力が下がり、リーチできなくなる','ツモの回数が減る','ドラが使えなくなる','フリテンになる'],a:0,exp:'鳴くと門前役（リーチ・ツモ・ピンフ等）が消えて打点が下がり、手牌が減って降りにくくなります。この対価に見合うかが鳴き判断の軸です。'},
 ]},
-{id:'oshihiki',title:'押し引き',icon:'⚖️',section:4,desc:'押すか、引くか。勝敗を分ける判断。',questions:[
+{id:'oshihiki',title:'押し引き',icon:'⚖️',section:5,desc:'押すか、引くか。勝敗を分ける判断。',questions:[
  {q:'押し引き判断の基本となる比較は？',choices:['自分の手の価値 vs 放銃の危険','自分の点数 vs 相手の点数','ツモの良さ vs 運','捨て牌の枚数 vs 巡目'],a:0,exp:'「和了率×打点」で手の価値を測り、放銃率×失点と比べるのが押し引きの根本です。'},
  {q:'どうする？',situ:{kyoku:'東2局',turn:7,seat:'子',dora:'5p',note:'対面がリーチ中',hand:'24m46p77p234s678sW'},choices:['押す','オリる'],a:1,exp:'愚形×愚形の1シャンテンで打点も安い。この価値の手でリーチに立ち向かう理由がない。まず安全な西から降りよう。'},
  {q:'どうする？',situ:{kyoku:'東4局',turn:9,seat:'子',dora:'8p',note:'上家がリーチ中',hand:'567m234p88p45678s'},choices:['押す','オリる'],a:0,exp:'3/6/9索の三面張テンパイでドラ2（8筒×2）。良形×満貫級のテンパイは押す価値が十分。追いかけリーチで勝負。'},
  {q:'どうする？',situ:{kyoku:'南1局',turn:10,seat:'子',dora:'6p',note:'下家がリーチ中',hand:'24m68m355p24s678sW'},choices:['押す','オリる'],a:1,exp:'まだ2シャンテン。ここからアガリまで到達する確率は低く、無スジを何枚も通すことになる。即ベタオリが正解。'},
  {q:'リーチに対して無スジの牌を押してよいのは、主にどんなとき？',choices:['自分に押す価値のあるテンパイがあるとき','いつでも押してよい','安牌がないときだけ','親のときだけ'],a:0,exp:'無スジは放銃率が高い牌。見合うリターン（良形・高打点のテンパイ）があるときだけ勝負します。'},
 ]},
-{id:'gyakuten',title:'逆転条件',icon:'🔄',section:4,desc:'オーラスの点差計算をマスター。',questions:[
+{id:'gyakuten',title:'逆転条件',icon:'🔄',section:5,desc:'オーラスの点差計算をマスター。',questions:[
  {q:'オーラス2着目、トップと7,900点差。トップから直撃してまくれる最低打点は？',choices:['3,900点','5,200点','7,700点','8,000点'],a:1,exp:'直撃は「自分+X・相手-X」で差が2倍縮みます。5,200×2=10,400>7,900でOK。3,900×2=7,800では100点足りません！'},
  {q:'6,000点差の2着目。トップは子。満貫ツモ（2,000/4,000）で逆転できる？',choices:['できる','できない','親のときだけできる','同点になる'],a:0,exp:'自分が+8,000、トップの子は-2,000。差は10,000縮むので6,000点差は逆転です。ツモは全員から取れるのが強い！'},
  {q:'供託のリーチ棒は誰のもの？',choices:['和了した人','リーチした人に戻る','トップの人','山分けする'],a:0,exp:'供託されたリーチ棒1,000点は次に和了した人のもの。僅差のオーラスでは供託込みで逆転ラインを計算しましょう。'},
  {q:'同点で終局した場合、順位はどう決まる？',choices:['起家に近い方が上位','ジャンケンで決める','和了回数が多い方','同着になる'],a:0,exp:'一般的なルールでは同点の場合、起家（最初の親）に近い席順の方が上位になります。'},
 ]},
-{id:'anzen',title:'安全度',icon:'🛡️',section:5,desc:'現物・スジ・壁。牌の危険度を読む。',questions:[
+{id:'anzen',title:'安全度',icon:'🛡️',section:6,desc:'現物・スジ・壁。牌の危険度を読む。',questions:[
  {q:'リーチに対して最も安全な牌はどれ？',tchoices:[{t:'2m',lab:'現物'},{t:'4p',lab:'スジ'},{t:'W',lab:'2枚切れ'},{t:'5s',lab:'無スジ'}],a:0,exp:'リーチ者自身が捨てた牌（現物）はフリテンのルールにより絶対にロンされません。安全度は 現物 ＞ スジ・2枚切れ字牌 ＞ 無スジ の順。'},
  {q:'1筒がリーチ者の現物。「スジの4筒」が比較的安全な理由は？',choices:['2-3筒のリャンメン待ちならフリテンになるから','4筒は使いにくい牌だから','1筒と4筒は同じ牌扱いだから','カンチャン待ちが存在しないから'],a:0,exp:'4筒がリャンメンで当たるのは「2-3筒」持ちのときだけ。その待ちは1筒（現物）でフリテンなので、リャンメンには当たりません。ただしシャンポン・カンチャン・単騎には当たり得ます。'},
  {q:'7筒が場に4枚見えている。安全度が大きく上がる牌は？',tchoices:[{t:'6p'},{t:'8p'},{t:'9p'},{t:'5p'}],a:2,exp:'9筒がリャンメンで当たるには相手が「7-8筒」を持つ必要がありますが、7筒は4枚全部見えているので不可能（ノーチャンス）。残るはシャンポン・単騎などのみです。'},
  {q:'場に2枚切れの字牌が比較的安全な理由は？',choices:['シャンポン待ちがなくなり、残りは単騎だけだから','字牌は点数が安いから','鳴かれないから','ドラにならないから'],a:0,exp:'残り2枚が見えていればトイツで待たれる（シャンポン）ことがなく、当たるのはラス1枚の単騎待ちのみ。かなり安全です。'},
  {q:'安全度が高い順に並んでいるのはどれ？',choices:['現物 ＞ スジ・2枚切れ字牌 ＞ 無スジ2・8 ＞ 無スジ4〜6','無スジ4〜6 ＞ スジ ＞ 現物','スジ ＞ 現物 ＞ 字牌','どれも同じ'],a:0,exp:'現物が絶対安全。次にスジや枚数の切れた字牌、無スジでも端に近いほど当たる形が少なく、真ん中の4〜6が最も危険です。'},
 ]},
-{id:'betaori',title:'ベタオリ手順',icon:'🏃',section:5,desc:'降りると決めたら完璧に降りる。',questions:[
+{id:'betaori',title:'ベタオリ手順',icon:'🏃',section:6,desc:'降りると決めたら完璧に降りる。',questions:[
  {q:'ベタオリを決めたら、最初に切る牌は？',choices:['現物','手の中の危険牌','字牌','ドラ'],a:0,exp:'降りると決めたら和了は諦め、最も安全な現物から切るのが大原則。手の価値は一切考えなくてOKです。'},
  {q:'現物が1枚しかない。正しい考え方は？',choices:['残り巡目分の安全牌が足りるか数えて計画する','現物を最後まで温存する','諦めて手なりで進める','即座に現物を切って後は運に任せる'],a:0,exp:'流局まで何巡あるかを数え、現物・スジ・切れた字牌で最後まで凌げるかを先に計画します。足りないなら安全度の高い順に配分。'},
  {q:'現物が尽きた。次に切るべきは？',choices:['2枚切れの字牌やスジなど安全度の高い順','ドラの近く','真ん中の無スジ','ツモった牌をそのまま'],a:0,exp:'現物の次は「当たる形が少ない牌」。2枚切れ字牌、スジ、壁（ノーチャンス）の牌の順に安全度で選びます。'},
@@ -1739,6 +1760,133 @@ const THEMES=[
     {diff:{ch1:'wd1_4'}},                      // ★D1-4 第2章チャレンジ「アガリが見える！」
    ]},
   ]},
+ /* ===== 第3章「役がわかる」v1.0 (本編50Lesson+任意Road7Lesson) =====
+    役の学習順(確定): リーチ→ツモ→役牌→ピンフ→タンヤオ→ホンイツ・チンイツ→
+    トイトイ・七対子・イーペーコー→チャンタ・純チャン→三色・イッツー・三暗刻→役満4種→総仕上げ。
+    役牌はピンフより必ず先(ピンフのアタマ条件で役牌知識を再利用するため)。
+    th_ch3x「もっと役を覚える」は任意Road: 第3章クリアで解放されるが、次章の前提には絶対にしない */
+ {id:'th_ch3a', course:'ch3a', title:'はじめての役', sub:'リーチとツモを役として知る',
+  requires:'th_ch2d',
+  subThemes:[
+   {id:'st_ch3a1', title:'リーチとツモ', lessons:[
+    {diff:{ch1:'ya1_1'}},                      // A1-1 役ってなんだっけ？
+    {diff:{ch1:'ya1_2'}},                      // A1-2 リーチ
+    {diff:{ch1:'ya1_3'}},                      // A1-3 ツモ
+    {diff:{ch1:'ya1_4'}},                      // A1-4 リーチ？ツモ？
+    {diff:{ch1:'ya1_5'}},                      // ★A1-5 最初の役マスター
+   ]},
+  ]},
+ {id:'th_ch3b', course:'ch3b', title:'役牌', sub:'3枚そろえるだけで役になる牌',
+  requires:'th_ch3a',
+  subThemes:[
+   {id:'st_ch3b1', title:'役牌', lessons:[
+    {diff:{ch1:'yb1_1'}},                      // B1-1 白・發・中
+    {diff:{ch1:'yb1_2'}},                      // B1-2 自分の風
+    {diff:{ch1:'yb1_3'}},                      // B1-3 場の風
+    {diff:{ch1:'yb1_4'}},                      // B1-4 役牌
+    {diff:{ch1:'yb1_5'}},                      // B1-5 これは役牌になる？
+    {diff:{ch1:'yb1_6'}},                      // ★B1-6 役牌マスター
+   ]},
+  ]},
+ {id:'th_ch3c', course:'ch3c', title:'ピンフ', sub:'条件を1つずつ積み上げる',
+  requires:'th_ch3b',
+  subThemes:[
+   {id:'st_ch3c1', title:'ピンフ', lessons:[
+    {diff:{ch1:'yc1_1'}},                      // C1-1 シュンツでそろえよう
+    {diff:{ch1:'yc1_2'}},                      // C1-2 アタマにも条件がある
+    {diff:{ch1:'yc1_3'}},                      // C1-3 待ちにも条件がある
+    {diff:{ch1:'yc1_4'}},                      // C1-4 ピンフ
+    {diff:{ch1:'yc1_5'}},                      // C1-5 ピンフを見つけよう
+    {diff:{ch1:'yc1_6'}},                      // ★C1-6 ピンフマスター
+   ]},
+  ]},
+ {id:'th_ch3d', course:'ch3d', title:'タンヤオと一色', sub:'見た目でわかる役',
+  requires:'th_ch3c',
+  subThemes:[
+   {id:'st_ch3d1', title:'タンヤオ', lessons:[
+    {diff:{ch1:'yd1_1'}},                      // D1-1 1・9・字牌をさがそう
+    {diff:{ch1:'yd1_2'}},                      // D1-2 タンヤオ
+    {diff:{ch1:'yd1_3'}},                      // ★D1-3 タンヤオマスター
+   ]},
+   {id:'st_ch3e1', title:'ホンイツ・チンイツ', lessons:[
+    {diff:{ch1:'ye1_1'}},                      // E1-1 1種類に集めよう
+    {diff:{ch1:'ye1_2'}},                      // E1-2 ホンイツ
+    {diff:{ch1:'ye1_3'}},                      // E1-3 字牌もなくしたら？(チンイツ)
+    {diff:{ch1:'ye1_4'}},                      // E1-4 ホンイツ？チンイツ？
+    {diff:{ch1:'ye1_5'}},                      // ★E1-5 一色マスター
+   ]},
+  ]},
+ {id:'th_ch3e', course:'ch3e', title:'形の役', sub:'コーツ・トイツ・おなじシュンツ',
+  requires:'th_ch3d',
+  subThemes:[
+   {id:'st_ch3f1', title:'トイトイ', lessons:[
+    {diff:{ch1:'yf1_1'}},                      // F1-1 コーツをあつめよう
+    {diff:{ch1:'yf1_2'}},                      // ★F1-2 トイトイ
+   ]},
+   {id:'st_ch3f2', title:'七対子', lessons:[
+    {diff:{ch1:'yf2_1'}},                      // F2-1 トイツが7組！？
+    {diff:{ch1:'yf2_2'}},                      // ★F2-2 七対子
+   ]},
+   {id:'st_ch3f3', title:'イーペーコー', lessons:[
+    {diff:{ch1:'yf3_1'}},                      // F3-1 おなじシュンツが2組
+    {diff:{ch1:'yf3_2'}},                      // ★F3-2 イーペーコー・形の役まとめ
+   ]},
+  ]},
+ {id:'th_ch3f', course:'ch3f', title:'ならびの役', sub:'ならびかたに注目',
+  requires:'th_ch3e',
+  subThemes:[
+   {id:'st_ch3g1', title:'チャンタ・純チャン', lessons:[
+    {diff:{ch1:'yg1_1'}},                      // G1-1 はしっこがぜんぶに入った形
+    {diff:{ch1:'yg1_2'}},                      // G1-2 チャンタ
+    {diff:{ch1:'yg1_3'}},                      // ★G1-3 純チャン(比較まとめ)
+   ]},
+   {id:'st_ch3h1', title:'三色・イッツー・三暗刻', lessons:[
+    {diff:{ch1:'yh1_1'}},                      // H1-1 三色
+    {diff:{ch1:'yh1_2'}},                      // H1-2 イッツー
+    {diff:{ch1:'yh1_3'}},                      // H1-3 暗刻と三暗刻
+    {diff:{ch1:'yh1_4'}},                      // ★H1-4 ならびの役まとめ
+   ]},
+  ]},
+ {id:'th_ch3g', course:'ch3g', title:'役満', sub:'とても特別な役',
+  requires:'th_ch3f',
+  subThemes:[
+   {id:'st_ch3i1', title:'役満', lessons:[
+    {diff:{ch1:'yi1_1'}},                      // I1-1 役満ってなに？
+    {diff:{ch1:'yi1_2'}},                      // I1-2 大三元
+    {diff:{ch1:'yi1_3'}},                      // I1-3 四暗刻
+    {diff:{ch1:'yi1_4'}},                      // I1-4 国士無双
+    {diff:{ch1:'yi1_5'}},                      // I1-5 小四喜
+    {diff:{ch1:'yi1_6'}},                      // ★I1-6 役満チャレンジ
+   ]},
+  ]},
+ {id:'th_ch3h', course:'ch3h', title:'役を見つけよう', sub:'第3章の総仕上げ',
+  requires:'th_ch3g',
+  subThemes:[
+   {id:'st_ch3j1', title:'役を見つけよう', lessons:[
+    {diff:{ch1:'yj1_1'}},                      // J1-1 この手の役は？
+    {diff:{ch1:'yj1_2'}},                      // J1-2 役は1つとは限らない
+    {diff:{ch1:'yj1_3'}},                      // J1-3 役を全部見つけよう
+    {diff:{ch1:'yj1_4'}},                      // J1-4 アガれる？アガれない？
+    {diff:{ch1:'yj1_5'}},                      // J1-5 実戦で役を見つけよう
+    {diff:{ch1:'yj1_6'}},                      // ★J1-6 第3章チャレンジ「役がわかる！」
+   ]},
+  ]},
+ /* 任意Road(第3章クリアで解放。ここを受講しなくても次章へ進める=どの将来テーマもth_ch3xをrequiresにしない) */
+ {id:'th_ch3x', course:'ch3x', title:'もっと役を覚える', sub:'任意：めずらしい役ともっと役満',
+  requires:'th_ch3h',
+  subThemes:[
+   {id:'st_ch3x1', title:'めずらしい役', lessons:[
+    {diff:{ch1:'yx1_1'}},                      // X1-1 ダブルリーチ
+    {diff:{ch1:'yx1_2'}},                      // X1-2 海底摸月・河底撈魚
+    {diff:{ch1:'yx1_3'}},                      // X1-3 小三元・混老頭
+    {diff:{ch1:'yx1_4'}},                      // ★X1-4 二盃口
+   ]},
+   {id:'st_ch3x2', title:'もっと役満', lessons:[
+    {diff:{ch1:'yx2_1'}},                      // X2-1 字一色・緑一色
+    {diff:{ch1:'yx2_2'}},                      // X2-2 清老頭
+    {diff:{ch1:'yx2_3'}},                      // ★X2-3 九蓮宝燈・天和
+   ]},
+  ]},
  {id:'th_rules', course:'rules', title:'麻雀のきほん', sub:'ルール・アガリの形を知る',
   qn:6,  // 静的プールが6問のため全問1周(重複出題はしない)。プール拡充後にqnを外せば既定10問
   subThemes:[
@@ -1801,6 +1949,7 @@ const THEMES=[
 const SECTIONS=[
  {name:'麻雀を打てる',desc:'第1章：麻雀のきほん構造を体で覚える'},
  {name:'アガリが見える',desc:'第2章：待ち牌を見つける目を育てる'},
+ {name:'役がわかる',desc:'第3章：アガリ形から役を見つけられるようになる'},
  {name:'入門',desc:'ルール・役・点数のきほん'},
  {name:'初級',desc:'手作りの技術を磨く'},
  {name:'中級',desc:'判断力で差をつける'},
@@ -1874,7 +2023,7 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    開発UI・未検証Compare）を通常操作から隠す。コード・データ・機能は
    一切削除しておらず、このフラグをfalseにすれば全て復帰する。 */
 let PROTOTYPE_MODE=true;
-const PROTO_VISIBLE_COURSES=['ch1a','ch1b','ch1c','ch1d','ch1e','ch2a','ch2b','ch2c','ch2d','rules','yaku','score','waits','ukeire1','nanikiru','riichi'];
+const PROTO_VISIBLE_COURSES=['ch1a','ch1b','ch1c','ch1d','ch1e','ch2a','ch2b','ch2c','ch2d','ch3a','ch3b','ch3c','ch3d','ch3e','ch3f','ch3g','ch3h','ch3x','rules','yaku','score','waits','ukeire1','nanikiru','riichi'];
 function protoCourseVisible(id){ return !PROTOTYPE_MODE||PROTO_VISIBLE_COURSES.includes(id); }
 function staminaFree(){ return PROTOTYPE_MODE||S.owned.stamina; }   // プロトタイプはスタミナ消費なし
 function devUIVisible(){ return !PROTOTYPE_MODE||S.dev||location.hash==='#dev'; }
@@ -4088,8 +4237,454 @@ function ch2IsShapeMcq(handStr,shape,exp){
     choices:[CH2_SHAPE_LABEL[shape]+'になっている','なっていない'],a:ok?0:1,exp,ghand:true};
 }
 const CH2_SHAPES5=['リャンメン','カンチャン','ペンチャン','シャンポン','単騎'];
+
+/* ============================================================
+   第3章「役がわかる」— 役判定エンジン(決定論・純粋関数。AI判定禁止)
+   ・正解は必ずここで算出する(教材の手書きanswer禁止)
+   ・ctx={menzen(既定true), win:'tsumo'|'ron'|null, rw:場風, sw:自風,
+         riichi, winTile(アガリ牌), dblRiichi/haitei/houtei/tenhou(任意Road用フラグ)}
+   ・役満が1つでもあれば通常役はつけない(役満優先)
+   ・排他: チンイツ⇔ホンイツ / 純チャン⇔チャンタ / 二盃口⇔イーペーコー・七対子
+   ============================================================ */
+function ch3IsTerm(t){ return t.length===2&&(t[0]==='1'||t[0]==='9'); }
+function ch3IsHonor(t){ return t.length===1; }
+function ch3IsTermHon(t){ return ch3IsTerm(t)||ch3IsHonor(t); }
+function ch3Cnt(tiles){ const c={}; tiles.forEach(t=>c[t]=(c[t]||0)+1); return c; }
+/* 14枚の「アタマ+4メンツ」全分解を列挙(牌構成で重複除去・各段で同型枝を刈る) */
+function ch3Decomps(tiles){
+  if(!tiles||tiles.length!==14) return [];
+  const out=[], seen=new Set(), headTried=new Set();
+  for(let i=0;i<14;i++)for(let j=i+1;j<14;j++){
+    if(tiles[i]!==tiles[j]) continue;
+    if(headTried.has(tiles[i])) continue;
+    headTried.add(tiles[i]);
+    const restIdx=[]; for(let k=0;k<14;k++) if(k!==i&&k!==j) restIdx.push(k);
+    (function rec(idxs,acc){
+      if(!idxs.length){
+        const sig=tiles[i]+'|'+acc.map(g=>g.map(k=>tiles[k]).sort().join('')).sort().join('|');
+        if(!seen.has(sig)){ seen.add(sig); out.push({head:[i,j],headTile:tiles[i],sets:acc.slice()}); }
+        return;
+      }
+      const a=idxs[0], tried=new Set();
+      for(let x=1;x<idxs.length;x++)for(let y=x+1;y<idxs.length;y++){
+        const g=[a,idxs[x],idxs[y]], key=g.map(k=>tiles[k]).sort().join('');
+        if(tried.has(key)) continue;
+        if(!ch1IsMentsu(g.map(k=>tiles[k]))) continue;
+        tried.add(key);
+        acc.push(g); rec(idxs.filter(k=>!g.includes(k)),acc); acc.pop();
+      }
+    })(restIdx,[]);
+  }
+  return out;
+}
+/* 特殊形: 七対子(トイツ7組・同じトイツ2組は不可)・国士無双(1・9・字13種+どれか1枚) */
+function ch3IsChiitoi(tiles){
+  if(!tiles||tiles.length!==14) return false;
+  const c=ch3Cnt(tiles), ks=Object.keys(c);
+  return ks.length===7&&ks.every(t=>c[t]===2);
+}
+const CH3_KOKUSHI_TILES=['1m','9m','1p','9p','1s','9s','E','S','W','N','B','G','R'];
+function ch3IsKokushi(tiles){
+  if(!tiles||tiles.length!==14) return false;
+  if(!tiles.every(ch3IsTermHon)) return false;
+  const c=ch3Cnt(tiles);
+  return CH3_KOKUSHI_TILES.every(t=>(c[t]||0)>=1);
+}
+/* アガリ形判定(第3章から特殊形込み)。第1章/第2章の基本形判定ch1MiniWin/ch1MiniWaitsは一切変更しない */
+function ch3WinAll(tiles){ return !!ch1MiniWin(tiles)||ch3IsChiitoi(tiles)||ch3IsKokushi(tiles); }
+/* 13枚の待ち(特殊形込み・任意/将来用) */
+function ch3WaitsAll(hand){
+  if(!hand||hand.length!==13) return [];
+  const cnt=ch3Cnt(hand);
+  return CH1_ALL34.filter(cd=>(cnt[cd]||0)<4&&ch3WinAll(hand.concat([cd])));
+}
+/* ---- 個別役(純粋関数) ---- */
+function ch3IsYakuhaiTile(t,ctx){
+  if(t==='B'||t==='G'||t==='R') return true;
+  return !!ctx&&(t===ctx.rw||t===ctx.sw);
+}
+function ch3HasYakuhai(tiles,ctx){
+  // 役牌=字牌のみ。字牌が3枚あればどの分解でも必ずコーツ(字牌はシュンツ不可)
+  const c=ch3Cnt(tiles);
+  return Object.keys(c).some(t=>ch3IsHonor(t)&&c[t]>=3&&ch3IsYakuhaiTile(t,ctx));
+}
+function ch3HasTanyao(tiles){ return tiles.every(t=>!ch3IsTermHon(t)); }
+function ch3SuitInfo(tiles){
+  const suits=new Set(); let honors=false;
+  tiles.forEach(t=>{ if(t.length===2) suits.add(t[1]); else honors=true; });
+  return {nSuits:suits.size,honors};
+}
+function ch3HasPinfu(tiles,ctx){
+  // ピンフ(厳密): 鳴いていない+4メンツ全シュンツ+アタマが役牌でない+リャンメン待ち
+  if(!ctx||ctx.menzen===false||!ctx.winTile) return false;
+  for(const d of ch3Decomps(tiles)){
+    const sets=d.sets.map(g=>g.map(k=>tiles[k]));
+    if(!sets.every(gt=>ch1IsRun(gt))) continue;
+    if(ch3IsYakuhaiTile(d.headTile,ctx)) continue;
+    for(const gt of sets){
+      if(!gt.includes(ctx.winTile)) continue;
+      const rest=gt.slice(); rest.splice(rest.indexOf(ctx.winTile),1);
+      const ns=rest.map(t=>+t[0]).sort((a,b)=>a-b);
+      if(ns[1]-ns[0]!==1) continue;                       // カンチャンはピンフにならない
+      if(ns[0]-1>=1&&ns[1]+1<=9) return true;             // 12+3・89+7(ペンチャン)はここで除外される
+    }
+  }
+  return false;
+}
+function ch3HasToitoi(tiles){
+  return ch3Decomps(tiles).some(d=>d.sets.every(g=>ch1IsTriplet(g.map(k=>tiles[k]))));
+}
+function ch3RunPairsMax(tiles){
+  // 同一シュンツのペア数の最大(1=イーペーコー・2=二盃口)
+  let best=0;
+  for(const d of ch3Decomps(tiles)){
+    const runs=d.sets.map(g=>g.map(k=>tiles[k])).filter(gt=>ch1IsRun(gt)).map(gt=>gt.slice().sort().join(''));
+    const c={}; runs.forEach(r=>c[r]=(c[r]||0)+1);
+    const pairs=Object.values(c).reduce((a,n)=>a+Math.floor(n/2),0);
+    best=Math.max(best,pairs);
+  }
+  return best;
+}
+function ch3HasIipeiko(tiles,ctx){ return (!ctx||ctx.menzen!==false)&&ch3RunPairsMax(tiles)>=1; }
+function ch3HasRyanpeikou(tiles,ctx){ return (!ctx||ctx.menzen!==false)&&ch3RunPairsMax(tiles)>=2; }
+function ch3ChantaKind(tiles){
+  // 'junchan'(1・9のみ・字牌なし)/'chanta'(1・9・字)/null。シュンツを1つも含まない形は混老頭系なので対象外
+  let best=null;
+  for(const d of ch3Decomps(tiles)){
+    const sets=d.sets.map(g=>g.map(k=>tiles[k]));
+    if(!ch3IsTermHon(d.headTile)) continue;
+    if(!sets.every(gt=>gt.some(ch3IsTermHon))) continue;
+    if(!sets.some(gt=>ch1IsRun(gt))) continue;
+    if(!tiles.some(ch3IsHonor)) return 'junchan';
+    best='chanta';
+  }
+  return best;
+}
+function ch3HasSanshoku(tiles){
+  for(const d of ch3Decomps(tiles)){
+    const runs=d.sets.map(g=>g.map(k=>tiles[k])).filter(gt=>ch1IsRun(gt));
+    const byLo={};
+    runs.forEach(gt=>{ const ns=gt.map(t=>+t[0]).sort((a,b)=>a-b); (byLo[ns[0]]=byLo[ns[0]]||new Set()).add(gt[0][1]); });
+    if(Object.values(byLo).some(su=>su.size===3)) return true;
+  }
+  return false;
+}
+function ch3HasIttsu(tiles){
+  for(const d of ch3Decomps(tiles)){
+    const runs=d.sets.map(g=>g.map(k=>tiles[k])).filter(gt=>ch1IsRun(gt));
+    const bySu={};
+    runs.forEach(gt=>{ const ns=gt.map(t=>+t[0]).sort((a,b)=>a-b); (bySu[gt[0][1]]=bySu[gt[0][1]]||new Set()).add(ns[0]); });
+    if(Object.values(bySu).some(los=>los.has(1)&&los.has(4)&&los.has(7))) return true;
+  }
+  return false;
+}
+function ch3AnkouMax(tiles,ctx){
+  // 暗刻の最大数。ロンで完成したコーツは暗刻にならない(ロン牌をシュンツかアタマに割り当てられれば全コーツ暗刻)
+  let best=0;
+  for(const d of ch3Decomps(tiles)){
+    const trips=d.sets.filter(g=>ch1IsTriplet(g.map(k=>tiles[k])));
+    let n=trips.length;
+    if(ctx&&ctx.win==='ron'&&ctx.winTile){
+      const w=ctx.winTile;
+      const inRun=d.sets.some(g=>{const gt=g.map(k=>tiles[k]);return !ch1IsTriplet(gt)&&gt.includes(w);});
+      const inHead=tiles[d.head[0]]===w;
+      if(!inRun&&!inHead&&trips.some(g=>tiles[g[0]]===w)) n-=1;
+    }
+    best=Math.max(best,n);
+  }
+  return best;
+}
+function ch3HasSanankou(tiles,ctx){ return ch3AnkouMax(tiles,ctx)>=3; }
+function ch3HasSuuankou(tiles,ctx){ return (!ctx||ctx.menzen!==false)&&ch3AnkouMax(tiles,ctx)>=4; }
+function ch3HasDaisangen(tiles){ const c=ch3Cnt(tiles); return (c.B||0)>=3&&(c.G||0)>=3&&(c.R||0)>=3; }
+function ch3HasShousangen(tiles){
+  const c=ch3Cnt(tiles), n3=['B','G','R'].filter(t=>(c[t]||0)>=3).length,
+    n2=['B','G','R'].filter(t=>(c[t]||0)===2).length;
+  return n3===2&&n2===1;
+}
+function ch3HasShousuushii(tiles){
+  const c=ch3Cnt(tiles), winds=['E','S','W','N'];
+  const n3=winds.filter(t=>(c[t]||0)>=3).length, n2=winds.filter(t=>(c[t]||0)===2).length;
+  return n3===3&&n2===1;                                   // 4つ全部コーツは大四喜(本教材では扱わない)
+}
+function ch3HasHonroutou(tiles){
+  return tiles.every(ch3IsTermHon)&&tiles.some(ch3IsHonor)&&tiles.some(ch3IsTerm)
+    &&!ch3IsKokushi(tiles)&&(!!ch1MiniWin(tiles)||ch3IsChiitoi(tiles));
+}
+function ch3HasTsuuiisou(tiles){ return tiles.every(ch3IsHonor)&&(!!ch1MiniWin(tiles)||ch3IsChiitoi(tiles)); }
+const CH3_GREEN=['2s','3s','4s','6s','8s','G'];
+function ch3HasRyuuiisou(tiles){ return tiles.every(t=>CH3_GREEN.includes(t))&&!!ch1MiniWin(tiles); }
+function ch3HasChinroutou(tiles){ return tiles.every(ch3IsTerm)&&!!ch1MiniWin(tiles); }
+function ch3IsChuuren(tiles,ctx){
+  if(ctx&&ctx.menzen===false) return false;
+  const si=ch3SuitInfo(tiles);
+  if(si.honors||si.nSuits!==1) return false;
+  const c={}; tiles.forEach(t=>c[+t[0]]=(c[+t[0]]||0)+1);
+  const base=[0,3,1,1,1,1,1,1,1,3];
+  let extra=0;
+  for(let n=1;n<=9;n++){ const d=(c[n]||0)-base[n]; if(d<0) return false; extra+=d; }
+  return extra===1&&!!ch1MiniWin(tiles);
+}
+const CH3_YAKU_LABEL={riichi:'リーチ',tsumo:'ツモ',yakuhai:'役牌',pinfu:'ピンフ',tanyao:'タンヤオ',
+  honitsu:'ホンイツ',chinitsu:'チンイツ',toitoi:'トイトイ',chiitoi:'七対子',iipeiko:'イーペーコー',
+  chanta:'チャンタ',junchan:'純チャン',sanshoku:'三色',ittsu:'イッツー',sanankou:'三暗刻',
+  daisangen:'大三元',suuankou:'四暗刻',kokushi:'国士無双',shousuushii:'小四喜',
+  dblriichi:'ダブルリーチ',haitei:'海底摸月(ハイテイ)',houtei:'河底撈魚(ホウテイ)',
+  shousangen:'小三元',honroutou:'混老頭',ryanpeikou:'二盃口',
+  tsuuiisou:'字一色',ryuuiisou:'緑一色',chinroutou:'清老頭',chuuren:'九蓮宝燈',tenhou:'天和'};
+/* 役の一覧(決定論)。教材の正解は必ずこの関数から作る */
+function ch3YakuList(tiles,ctx){
+  ctx=ctx||{};
+  const std=!!ch1MiniWin(tiles), chii=ch3IsChiitoi(tiles), kok=ch3IsKokushi(tiles);
+  if(!std&&!chii&&!kok) return [];
+  const menzen=ctx.menzen!==false;
+  const ym=[];
+  if(std&&ch3HasDaisangen(tiles)) ym.push('daisangen');
+  if(std&&ch3HasSuuankou(tiles,ctx)) ym.push('suuankou');
+  if(kok) ym.push('kokushi');
+  if(std&&ch3HasShousuushii(tiles)) ym.push('shousuushii');
+  if((std||chii)&&ch3HasTsuuiisou(tiles)) ym.push('tsuuiisou');
+  if(std&&ch3HasRyuuiisou(tiles)) ym.push('ryuuiisou');
+  if(std&&ch3HasChinroutou(tiles)) ym.push('chinroutou');
+  if(std&&menzen&&ch3IsChuuren(tiles,ctx)) ym.push('chuuren');
+  if(ctx.tenhou) ym.push('tenhou');
+  if(ym.length) return ym;                                 // 役満があれば通常役はつけない
+  const out=[];
+  if(ctx.dblRiichi&&menzen) out.push('dblriichi');
+  else if(ctx.riichi&&menzen) out.push('riichi');
+  if(ctx.win==='tsumo'&&menzen) out.push('tsumo');
+  if(ctx.haitei&&ctx.win==='tsumo') out.push('haitei');
+  if(ctx.houtei&&ctx.win==='ron') out.push('houtei');
+  if(std&&ch3HasYakuhai(tiles,ctx)) out.push('yakuhai');
+  if(std&&ch3HasPinfu(tiles,ctx)) out.push('pinfu');
+  if(ch3HasTanyao(tiles)) out.push('tanyao');
+  const si=ch3SuitInfo(tiles);
+  if(si.nSuits===1&&si.honors) out.push('honitsu');
+  if(si.nSuits===1&&!si.honors&&si.nSuits===1&&tiles.every(t=>t.length===2)) out.push('chinitsu');
+  if(std&&ch3HasToitoi(tiles)) out.push('toitoi');
+  const rp=std&&ch3HasRyanpeikou(tiles,ctx);
+  if(chii&&!rp) out.push('chiitoi');                       // 二盃口に取れる形は二盃口を優先(七対子と複合しない)
+  if(rp) out.push('ryanpeikou');
+  else if(std&&ch3HasIipeiko(tiles,ctx)) out.push('iipeiko');
+  const ck=std?ch3ChantaKind(tiles):null;
+  if(ck==='junchan') out.push('junchan'); else if(ck==='chanta') out.push('chanta');
+  if(std&&ch3HasSanshoku(tiles)) out.push('sanshoku');
+  if(std&&ch3HasIttsu(tiles)) out.push('ittsu');
+  if(std&&ch3HasSanankou(tiles,ctx)) out.push('sanankou');
+  if(std&&ch3HasShousangen(tiles)) out.push('shousangen');
+  if((std||chii)&&ch3HasHonroutou(tiles)) out.push('honroutou');
+  return out;
+}
+/* ---- 第3章 状況表示(場風/自風/鳴き/リーチ/アガリ方)。用語は導入済みのものだけ使う ---- */
+const CH3_WIND_JP={E:'東',S:'南',W:'西',N:'北'};
+function ch3CtxHTML(c){
+  if(!c) return '';
+  const chips=[];
+  if(c.rw) chips.push('<span class="ch3-chip">'+CH3_WIND_JP[c.rw]+'場</span>');
+  if(c.sw) chips.push('<span class="ch3-chip">あなた：'+CH3_WIND_JP[c.sw]+'家</span>');
+  if(c.menzen===true) chips.push('<span class="ch3-chip">鳴きなし</span>');
+  if(c.menzen===false) chips.push('<span class="ch3-chip warn">鳴きあり</span>');
+  if(c.dblRiichi) chips.push('<span class="ch3-chip riichi">1巡目でリーチ宣言</span>');
+  else if(c.riichi) chips.push('<span class="ch3-chip riichi">リーチ中</span>');
+  if(c.win==='tsumo') chips.push('<span class="ch3-chip">ツモでアガった</span>');
+  if(c.win==='ron') chips.push('<span class="ch3-chip">ロンでアガった</span>');
+  if(c.winTile) chips.push('<span class="ch3-chip">アガリ牌：'+tileLabel(c.winTile)+'</span>');
+  if(c.note) chips.push('<span class="ch3-chip">'+c.note+'</span>');
+  return chips.length?'<div class="ch3-ctx">'+chips.join('')+'</div>':'';
+}
+/* ---- 第3章 ビルダー(正解は必ずch3YakuList/ch3IsYakuhaiTile等で算出) ---- */
+function ch3Ctx(o){ return Object.assign({menzen:true},o||{}); }
+function ch3ListOf(handStr,ctx3){ return ch3YakuList(sortTiles(parseHand(handStr)),ctx3); }
+function ch3HasMcq(key,handStr,ctx3,exp,opt){
+  const has=ch3ListOf(handStr,ctx3).includes(key);
+  return Object.assign({q:'この手に「<b>'+CH3_YAKU_LABEL[key]+'</b>」はつく？',hand:handStr,ctx3,
+    choices:['つく','つかない'],a:has?0:1,exp,ghand:true},opt||{});
+}
+function ch3AgariMcq(handStr,ctx3,exp,opt){
+  // 役あり/なし: 形が完成していても役がなければアガれない(第1章D2-1の実戦定着)
+  const n=ch3ListOf(handStr,ctx3).length;
+  return Object.assign({q:'この手・この状況で、<b>アガれる？</b>',hand:handStr,ctx3,
+    choices:['アガれる（役がある）','アガれない（役がない）'],a:n>0?0:1,exp,ghand:true},opt||{});
+}
+function ch3WhichMcq(handStr,ctx3,choiceKeys,exp,opt){
+  const list=ch3ListOf(handStr,ctx3);
+  const hits=choiceKeys.filter(k=>list.includes(k));
+  const a=hits.length===1?choiceKeys.indexOf(hits[0]):-1;   // 交差1つでない出題はテストで検出
+  return Object.assign({q:'この手についている<b>役</b>はどれ？',hand:handStr,ctx3,
+    choices:choiceKeys.map(k=>CH3_YAKU_LABEL[k]),a,exp,ghand:true},opt||{});
+}
+function ch3YakuFind(handStr,ctx3,candKeys,exp,opt){
+  const list=ch3ListOf(handStr,ctx3);
+  const answers=candKeys.map((k,i)=>list.includes(k)?i:-1).filter(i=>i>=0);
+  return Object.assign({yf:true,tlab:'役さがし',
+    q:'この手についている<b>役</b>を<b>ぜんぶ</b>えらんで、「これで決定」！',
+    hand:handStr,ctx3,cands:candKeys.map(k=>CH3_YAKU_LABEL[k]),candKeys,answers,exp,ghand:true,
+    _bad:list.some(k=>!candKeys.includes(k))||answers.length===0},opt||{});
+}
+function ch3BlockPick(handStr,q,exp,opt){
+  // タンヤオのじゃま牌(1・9・字牌)タップ: 正解は決定論(ch3IsTermHon)
+  const tiles=sortTiles(parseHand(handStr));
+  const answers=tiles.map((t,i)=>ch3IsTermHon(t)?i:-1).filter(i=>i>=0);
+  return Object.assign({pickm:true,tlab:'じゃまな牌さがし',q,cands:tiles,answers,exp},opt||{});
+}
+function ch3TripMcq(tile,ctx3,exp,opt){
+  const ok=ch3IsYakuhaiTile(tile,ctx3);
+  return Object.assign({q:'この3枚をそろえたら、<b>役</b>になる？',hand:tile+tile+tile,ctx3,
+    choices:['役になる','ならない'],a:ok?0:1,exp,ghand:true},opt||{});
+}
+/* ---- 第3章 構造判定ヘルパー(すべて決定論) ---- */
+function ch3T(handStr){ return sortTiles(parseHand(handStr)); }
+function ch3AllRuns(handStr){
+  const t=ch3T(handStr);
+  return ch3Decomps(t).some(d=>d.sets.every(g=>ch1IsRun(g.map(k=>t[k]))));
+}
+function ch3AllTrips(handStr){ return ch3HasToitoi(ch3T(handStr)); }
+function ch3StructMcq(q,handStr,ok,choices,exp,opt){
+  // ○×型(正解okは必ず決定論ヘルパーで算出して渡す)
+  return Object.assign({q,hand:handStr,choices,a:ok?0:1,exp,ghand:true},opt||{});
+}
+function ch3CompareMcq(q,hands,okA,okB,exp,opt){
+  // 2つの手の比較(正解=条件を満たす方。両方/どちらも満たさない出題はa=-1でテスト検出)
+  const a=okA&&!okB?0:(!okA&&okB?1:-1);
+  return Object.assign({q,hands2:hands,choices:[hands[0].label+'の手',hands[1].label+'の手'],a,exp},opt||{});
+}
+function ch3WinAllMcq(handStr,exp,opt){
+  const ok=ch3WinAll(ch3T(handStr));
+  return Object.assign({q:'この14枚は、<b>アガリの形</b>になっている？',hand:handStr,
+    choices:['アガリの形になっている','なっていない'],a:ok?0:1,exp,ghand:true},opt||{});
+}
+function ch3YakuhaiPickM(cands,ctx3,q,exp,opt){
+  // 役牌になる牌をぜんぶタップ(正解=ch3IsYakuhaiTile)
+  const c2=shuffle(cands.slice());
+  const answers=c2.map((cd,i)=>({cd,i})).filter(x=>ch3IsYakuhaiTile(x.cd,ctx3)).map(x=>x.i);
+  return Object.assign({pickm:true,tlab:'役牌さがし',q,ctx3,cands:c2,answers,exp},opt||{});
+}
+function ch3NotYakuhaiPick(cands,ctx3,q,exp,opt){
+  // 役牌にならない牌を1枚えらぶ(正解がちょうど1枚になる出題だけで使う)
+  const c2=shuffle(cands.slice());
+  const hits=c2.map((cd,i)=>({cd,i})).filter(x=>!ch3IsYakuhaiTile(x.cd,ctx3)).map(x=>x.i);
+  return Object.assign({pick1:true,tlab:'役牌さがし',q,ctx3,cands:c2,a:hits.length===1?hits[0]:-1,exp},opt||{});
+}
+function ch3RiichiOkMcq(hand13,ctx3,exp,opt){
+  // リーチを宣言できる？(条件=鳴いていない+テンパイ。決定論: ch1MiniWaits再利用)
+  const ok=(ctx3.menzen!==false)&&ch1MiniWaits(ch3T(hand13)).length>0;
+  return Object.assign({q:'この手・この状況で、<b>リーチを宣言できる？</b>',hand:hand13,ctx3,
+    choices:['できる','できない'],a:ok?0:1,exp,ghand:true},opt||{});
+}
+function ch3PinfuFails(handStr,ctx3){
+  // ピンフ不成立の理由を決定論で分析: naki/kotsu(シュンツでないメンツ)/head(役牌アタマ)/wait(リャンメンでない)
+  const tiles=ch3T(handStr), fails=[];
+  if(ctx3.menzen===false) fails.push('naki');
+  const all=ch3Decomps(tiles).filter(d=>d.sets.every(g=>ch1IsRun(g.map(k=>tiles[k]))));
+  if(!all.length){ fails.push('kotsu'); return fails; }
+  const headOK=all.filter(d=>!ch3IsYakuhaiTile(d.headTile,ctx3));
+  if(!headOK.length) fails.push('head');
+  const pool=headOK.length?headOK:all;
+  let waitOK=false;
+  for(const d of pool){
+    for(const g of d.sets){
+      const gt=g.map(k=>tiles[k]);
+      if(!ctx3.winTile||!gt.includes(ctx3.winTile)) continue;
+      const rest=gt.slice(); rest.splice(rest.indexOf(ctx3.winTile),1);
+      const ns=rest.map(t=>+t[0]).sort((a,b)=>a-b);
+      if(ns[1]-ns[0]===1&&ns[0]-1>=1&&ns[1]+1<=9) waitOK=true;
+    }
+  }
+  if(!waitOK) fails.push('wait');
+  return fails;
+}
+const CH3_PINFU_WHY={naki:'鳴いているから',kotsu:'コーツが入っているから',
+  head:'アタマが役牌だから',wait:'待ちがリャンメンではないから'};
+function ch3PinfuWhyMcq(handStr,ctx3,exp,opt){
+  // ピンフがつかない理由(理由がちょうど1つの牌姿だけで使う。それ以外はa=-1でテスト検出)
+  const fails=ch3PinfuFails(handStr,ctx3);
+  const keys=['naki','kotsu','head','wait'];
+  const a=fails.length===1?keys.indexOf(fails[0]):-1;
+  return Object.assign({q:'この手に<b>ピンフ</b>がつかない理由は？',hand:handStr,ctx3,
+    choices:keys.map(k=>CH3_PINFU_WHY[k]),a,exp,ghand:true},opt||{});
+}
+function ch3OffSuitPick(handStr,q,exp,opt){
+  // 一色あつめのじゃま牌(いちばん多いスート以外の数牌)をタップ(決定論)
+  const tiles=sortTiles(parseHand(handStr));
+  const cnt={}; tiles.forEach(t=>{ if(t.length===2) cnt[t[1]]=(cnt[t[1]]||0)+1; });
+  const main=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0];
+  const answers=tiles.map((t,i)=>(t.length===2&&t[1]!==main)?i:-1).filter(i=>i>=0);
+  return Object.assign({pickm:true,tlab:'じゃまな牌さがし',q,cands:tiles,answers,exp},opt||{});
+}
+/* ---- 第3章 制御されたランダム生成(完全ランダム禁止・必ず検証してから返す) ---- */
+function ch3Pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+function ch3GenYakuhaiQ(){
+  const rw=ch3Pick(['E','S']), sw=ch3Pick(['E','S','W','N']);
+  const tile=ch3Pick(['B','G','R','E','S','W','N']);
+  const ctx3=ch3Ctx({rw,sw});
+  const drag=(tile==='B'||tile==='G'||tile==='R');
+  const exp=drag?'白・發・中の三元牌は、いつでも役牌だよ！'
+    :(tile===rw&&tile===sw?CH3_WIND_JP[tile]+'は場の風でもあなたの風でもある。りっぱな役牌！'
+      :tile===rw?CH3_WIND_JP[tile]+'は場の風とおなじ。役牌だよ！'
+      :tile===sw?CH3_WIND_JP[tile]+'はあなたの風とおなじ。役牌だよ！'
+      :CH3_WIND_JP[tile]+'は、場の風でもあなたの風でもない…この状況では役牌にならないんだ。');
+  return ch3TripMcq(tile,ctx3,exp);
+}
+function ch3GenTanyaoHand(ok){
+  for(let tr=0;tr<80;tr++){
+    const hand=[], su=()=>ch3Pick(['m','p','s']);
+    for(let i=0;i<4;i++){
+      if(Math.random()<0.7){ const s=su(),lo=2+Math.floor(Math.random()*5); hand.push(lo+s,(lo+1)+s,(lo+2)+s); }
+      else { const s=su(),n=2+Math.floor(Math.random()*7); hand.push(n+s,n+s,n+s); }
+    }
+    const ps=su(), pn=2+Math.floor(Math.random()*7); hand.push(pn+ps,pn+ps);
+    if(!ok){
+      hand.splice(0,3);
+      const kind=ch3Pick(['t123','t789','hon']);
+      if(kind==='t123'){ const s=su(); hand.unshift('1'+s,'2'+s,'3'+s); }
+      else if(kind==='t789'){ const s=su(); hand.unshift('7'+s,'8'+s,'9'+s); }
+      else { const h=ch3Pick(CH2_HONORS); hand.unshift(h,h,h); }
+    }
+    if(Object.values(ch3Cnt(hand)).some(n=>n>4)) continue;
+    const t=sortTiles(hand);
+    if(!ch1MiniWin(t)) continue;
+    if(ch3HasTanyao(t)!==ok) continue;
+    return t;
+  }
+  return sortTiles(parseHand(ok?'234m567p345s678s55p':'123m567p345s678s55p'));
+}
+function ch3GenTanyaoMcq(){
+  const ok=Math.random()<0.5;
+  const hand=ch3GenTanyaoHand(ok);
+  return ch3HasMcq('tanyao',hand.join(''),ch3Ctx(),
+    ok?'1・9・字牌が1枚もない。2〜8だけ、タンヤオだ！':'1・9・字牌がまじっている…タンヤオにはならないよ。');
+}
+function ch3GenIroHand(kind){ // 'honitsu'|'chinitsu'|'mix'(一色でない)
+  for(let tr=0;tr<80;tr++){
+    const s=ch3Pick(['m','p','s']), hand=[];
+    const blocks=shuffle([[1,'r'],[2,'r'],[4,'r'],[5,'r'],[7,'r'],[2,'t'],[5,'t'],[8,'t']]).slice(0,kind==='chinitsu'?4:3);
+    if(blocks.filter(b=>b[1]==='r').length<2) continue;   // コーツだらけ(四暗刻/トイトイ化)を避け、一色の教材に集中させる
+    blocks.forEach(b=>{ if(b[1]==='r') hand.push(b[0]+s,(b[0]+1)+s,(b[0]+2)+s); else hand.push(b[0]+s,b[0]+s,b[0]+s); });
+    if(kind==='honitsu'){
+      const h=ch3Pick(CH2_HONORS); hand.push(h,h,h);
+      const h2=ch3Pick(CH2_HONORS.filter(x=>x!==h)); hand.push(h2,h2);
+    }else if(kind==='chinitsu'){
+      const pn=ch3Pick([1,2,3,4,5,6,7,8,9]); hand.push(pn+s,pn+s);
+    }else{
+      const s2=ch3Pick(['m','p','s'].filter(x=>x!==s)), lo=ch3Pick([2,3,4,5,6]);
+      hand.push(lo+s2,(lo+1)+s2,(lo+2)+s2);
+      const h=ch3Pick(CH2_HONORS); hand.push(h,h);
+    }
+    if(hand.length!==14) continue;
+    if(Object.values(ch3Cnt(hand)).some(n=>n>4)) continue;
+    const t=sortTiles(hand);
+    if(!ch1MiniWin(t)) continue;
+    const si=ch3SuitInfo(t);
+    if(kind==='honitsu'&&!(si.nSuits===1&&si.honors)) continue;
+    if(kind==='chinitsu'&&!(si.nSuits===1&&!si.honors)) continue;
+    if(kind==='mix'&&si.nSuits===1) continue;
+    return t;
+  }
+  return sortTiles(parseHand(kind==='honitsu'?'123m456m789m11mEEE'
+    :(kind==='chinitsu'?'123m345m567m789m55m':'123m456p789sEE234m')));
+}
 function buildCh1(key){
-  const f=CH1_LESSONS[key]||CH2_LESSONS[key];
+  const f=CH1_LESSONS[key]||CH2_LESSONS[key]||CH3_LESSONS[key];
   return f?f():[];
 }
 /* ---- 第2章 19レッスンの中身(キーはTHEMESのdiff.ch1と一致) ---- */
@@ -4414,6 +5009,1011 @@ const CH2_LESSONS={
     ];
   },
 };
+/* ---- 第3章 19+…50レッスンの中身(キーはTHEMESのdiff.ch1と一致) ---- */
+const CH3_LESSONS={
+  /* ===== A リーチとツモ(既習の存在を「役として」正式化) ===== */
+  /* A1-1 役ってなんだっけ？(第1章D2-1の復習→実戦定着の入口) */
+  ya1_1(){
+    return [
+      ch1Teach('第3章へようこそ！第1章でおぼえたこと…<b>アガリの形ができていても、役がないとアガれない</b>んだったね。',
+        {tlab:'おさらい1行'}),
+      ch1Teach('第3章では、<b>手牌を見て「役があるか」を自分で見つけられる</b>ようになるよ。まずは知っている役から！',
+        {tlab:'第3章の目標'}),
+      {q:'アガリに必要なのは？',choices:['アガリの形 ＋ 役','アガリの形だけ'],a:0,
+       exp:'形だけではダメ。役が1つは必要なんだ。'},
+      ch3AgariMcq('2m3m4m4p5p6p7s8s9s3s5s4s9p9p',ch3Ctx({win:'ron',winTile:'4s'}),
+        '4メンツ＋1アタマはできている…でも役がひとつもない！これではアガれないんだったね。'),
+      ch3AgariMcq('2m3m4m4p5p6p7s8s9s3s5s4s9p9p',ch3Ctx({riichi:true,win:'ron',winTile:'4s'}),
+        'おなじ手でも、<b>リーチ</b>をかけていれば役がある！アガれるよ。'),
+      {q:'「役」はなんのためにある？',choices:['アガるための条件（役がないとアガれない）','牌をならべかえるための決まり'],a:0,
+       exp:'役はアガリの条件。第3章でどんどん見つけられるようになろう！'},
+    ];
+  },
+  /* A1-2 リーチ(既習の操作を役として整理。供託・1000点等はまだ広げない) */
+  ya1_2(){
+    return [
+      ch1Teach('第1章でつかった<span class="term-chip">リーチ</span>。じつはこれが、いちばん覚えやすい<b>役</b>なんだ！',
+        {tlab:'リーチは役'}),
+      ch1Teach('リーチの条件はシンプル。<b>①鳴いていない ②テンパイしている</b>。この2つがそろったら、切るまえに「リーチ！」と宣言できるんだったね。',
+        {tlab:'リーチの条件'}),
+      ch3RiichiOkMcq('2m3m4m4p5p6p7s8s9s3s4s9p9p',ch3Ctx({}),
+        '鳴いていなくて、テンパイ！リーチを宣言できるよ。'),
+      ch3RiichiOkMcq('2m3m4m4p5p6p7s8s9s3s4s9p9p',ch3Ctx({menzen:false}),
+        'テンパイしていても、<b>鳴いた手ではリーチできない</b>んだったね。'),
+      ch3RiichiOkMcq('2m5m8m1p4p7p2s5s8sESWN',ch3Ctx({}),
+        '鳴いていなくても、テンパイしていなければリーチはできないよ。'),
+      ch3HasMcq('riichi','2m3m4m4p5p6p7s8s9s3s5s4s9p9p',ch3Ctx({riichi:true,win:'ron',winTile:'4s'}),
+        'リーチしてアガったから、役「リーチ」が1つ！'),
+      {q:'リーチを宣言できるのは、どんなとき？',choices:['鳴いていない手でテンパイしたとき','どんな手でもテンパイしたとき'],a:0,
+       exp:'「鳴いていない」＋「テンパイ」。この2つがリーチの条件！'},
+    ];
+  },
+  /* A1-3 ツモ(操作の「ツモ」と役の「ツモ」を混同させない=最重要) */
+  ya1_3(){
+    return [
+      ch1Teach('山から引くことも「ツモ」、じぶんで引いてアガることも「ツモ」…だけど、役の<span class="term-chip">ツモ</span>はもうひとつ条件があるんだ。',
+        {tlab:'役のツモ'}),
+      ch1Teach('役のツモがつくのは、<b>鳴いていない手</b>を<b>じぶんのツモでアガった</b>とき。ツモアガリなら、いつでもつくわけじゃないよ！',
+        {tlab:'条件に注意！'}),
+      ch3HasMcq('tsumo','2m3m4m4p5p6p7s8s9s3s5s4s9p9p',ch3Ctx({win:'tsumo',winTile:'4s'}),
+        '鳴いていない手をツモでアガった。役「ツモ」がつく！'),
+      ch3HasMcq('tsumo','2m3m4m4p5p6p7s8s9s3s5s4s9p9p',ch3Ctx({menzen:false,win:'tsumo',winTile:'4s'}),
+        'ツモでアガっても、<b>鳴いていたら</b>役のツモはつかないんだ。ここがまちがえやすいポイント！'),
+      ch3HasMcq('tsumo','2m3m4m4p5p6p7s8s9s3s5s4s9p9p',ch3Ctx({win:'ron',winTile:'4s'}),
+        'ロンでアガったときは、役のツモはつかないよ。'),
+      {q:'ツモでアガれば、いつでも役の「ツモ」がつく？',
+       choices:['つかないことがある（鳴いていたらつかない）','いつでもつく'],a:0,
+       exp:'役のツモ＝「鳴いていない」＋「ツモアガリ」。両方そろって1役だよ。'},
+    ];
+  },
+  /* A1-4 リーチ？ツモ？(複数役の入口) */
+  ya1_4(){
+    return [
+      ch1Teach('リーチとツモ、りょうほうの条件がそろったら…<b>役が2つ</b>つくんだ！役は1つとはかぎらないよ。',
+        {tlab:'役は重なる！'}),
+      ch3YakuFind('2m3m4m4p5p6p7s8s9s3s5s4s9p9p',ch3Ctx({riichi:true,win:'ron',winTile:'4s'}),
+        ['riichi','tsumo'],'ロンだから、ついたのはリーチだけ。'),
+      ch3YakuFind('2m3m4m4p5p6p7s8s9s3s5s4s9p9p',ch3Ctx({win:'tsumo',winTile:'4s'}),
+        ['riichi','tsumo'],'リーチはしていないけど、鳴いていない手のツモアガリ。役はツモ！'),
+      ch3YakuFind('2m3m4m4p5p6p7s8s9s3s5s4s9p9p',ch3Ctx({riichi:true,win:'tsumo',winTile:'4s'}),
+        ['riichi','tsumo'],'リーチ＋ツモで役が2つ！役はかさなるんだ。'),
+      {q:'リーチしてツモでアガった（鳴きなし）。役はいくつ？',choices:['2つ（リーチとツモ）','1つ（リーチだけ）'],a:0,
+       exp:'リーチとツモは、それぞれ1役。あわせて2役だよ！'},
+    ];
+  },
+  /* ★A1-5 最初の役マスター */
+  ya1_5(){
+    const quiz=shuffle([
+      ch3RiichiOkMcq('2m3m4m4p5p6p7s8s9s3s4s9p9p',ch3Ctx({menzen:false}),
+        '鳴いた手ではリーチできない！'),
+      ch3HasMcq('tsumo','2m3m4m4p5p6p7s8s9s3s5s4s9p9p',ch3Ctx({menzen:false,win:'tsumo',winTile:'4s'}),
+        '鳴いていたら、役のツモはつかない。'),
+      ch3YakuFind('2m3m4m4p5p6p7s8s9s3s5s4s9p9p',ch3Ctx({riichi:true,win:'tsumo',winTile:'4s'}),
+        ['riichi','tsumo'],'リーチ＋ツモ、2役！'),
+      ch3AgariMcq('2m3m4m4p5p6p7s8s9s3s5s4s9p9p',ch3Ctx({win:'ron',winTile:'4s'}),
+        '役がひとつもない…アガれない！'),
+      {q:'役の「ツモ」の条件は？',choices:['鳴いていない手をツモでアガる','ツモでアガればなんでもOK'],a:0,
+       exp:'「鳴いていない」がだいじな条件だったね。'},
+    ]);
+    return [
+      ch1Teach('まとめだよ！<b>リーチ</b>と<b>ツモ</b>、2つの役をマスターしよう！',{tlab:'まとめ'}),
+    ].concat(quiz).concat([
+      ch1Teach('🎉 <b>最初の2つの役、マスター！</b>つぎは、<b>3枚そろえるだけで役になる牌</b>のはなしだよ。',
+        {tlab:'つぎへ！'}),
+    ]);
+  },
+  /* ===== B 役牌(ピンフより必ず先に正式学習) ===== */
+  /* B1-1 白・發・中(三元牌) */
+  yb1_1(){
+    return [
+      ch1Teach('この3枚を見て！<b>白だけで3枚</b>。じつはこれ、<b>そろえるだけで役になる</b>んだ！',
+        {tlab:'白3枚のひみつ',hands:[{label:'白のコーツ',hand:'BBB'}],
+         act:{label:'たしかめる',result:'白・發・中は、コーツにするだけで<b>1役</b>！べつの役はいらないよ。'}}),
+      ch1Teach('白・發・中の3種類を<span class="term-chip">三元牌（さんげんぱい）</span>とよぶよ。どれも、3枚そろえるだけで役になるんだ。',
+        {tlab:'三元牌',hands:[{label:'三元牌',hand:'BGR'}]}),
+      ch3TripMcq('B',ch3Ctx({}),'白はいつでも役になる三元牌！'),
+      ch3TripMcq('G',ch3Ctx({}),'發も三元牌。3枚で1役だよ！'),
+      ch3TripMcq('R',ch3Ctx({}),'中も三元牌。白・發・中、ぜんぶ役になる！'),
+      ch3AgariMcq('2m3m4m4p5p6pBBB6s7s8s9s9s',ch3Ctx({win:'ron',winTile:'4p'}),
+        '白のコーツがあるだけで役がある！だからこの手はアガれるんだ。'),
+      {q:'三元牌はどれ？',choices:['白・發・中','東・南・西・北'],a:0,
+       exp:'白・發・中の3種類が三元牌。東南西北は「風の牌」、つぎのレッスンで！'},
+    ];
+  },
+  /* B1-2 自分の風(自風) */
+  yb1_2(){
+    return [
+      ch1Teach('麻雀では、すわる席に<b>東家・南家・西家・北家</b>という名前がついているよ。じぶんの席とおなじ風の牌を<span class="term-chip">自風（じかぜ）</span>とよぶんだ。',
+        {tlab:'自風'}),
+      ch1Teach('自風の牌は、<b>3枚そろえるだけで役になる</b>！たとえば、あなたが<b>南家</b>なら「南」が自風だよ。',
+        {tlab:'自風は役になる',hands:[{label:'南家なら役！',hand:'SSS'}]}),
+      ch3TripMcq('S',ch3Ctx({sw:'S'}),'あなたは南家。南は自風だから、3枚で役になる！'),
+      ch3TripMcq('N',ch3Ctx({sw:'S'}),'あなたは南家。北は自風じゃないから、これだけでは役にならないんだ。'),
+      ch3TripMcq('N',ch3Ctx({sw:'N'}),'こんどはあなたが北家！北が自風だから、役になるよ。'),
+      ch3TripMcq('W',ch3Ctx({sw:'W'}),'西家なら西が自風。3枚で1役！'),
+      {q:'「自風」とは？',choices:['じぶんの席とおなじ風の牌','いちばん多くもっている風の牌'],a:0,
+       exp:'東家なら東、南家なら南。じぶんの席の風が自風だよ。'},
+    ];
+  },
+  /* B1-3 場の風(場風) */
+  yb1_3(){
+    return [
+      ch1Teach('麻雀の対局には<b>東場（とんば）・南場（なんば）</b>という「場」があるよ。場とおなじ風の牌が<span class="term-chip">場風（ばかぜ）</span>だ。',
+        {tlab:'場風'}),
+      ch1Teach('場風の牌も、<b>3枚そろえるだけで役になる</b>！<b>東場</b>なら「東」が場風だよ。',
+        {tlab:'場風も役になる',hands:[{label:'東場なら役！',hand:'EEE'}]}),
+      ch3TripMcq('E',ch3Ctx({rw:'E',sw:'S'}),'東場だから、東は場風。3枚で役になる！'),
+      ch3TripMcq('S',ch3Ctx({rw:'E',sw:'S'}),'南は場風じゃないけど…あなたは南家！<b>自風</b>だから役になるんだ。'),
+      ch3TripMcq('W',ch3Ctx({rw:'E',sw:'S'}),'西は場風でも自風でもない…この状況では役にならないよ。'),
+      ch3TripMcq('E',ch3Ctx({rw:'S',sw:'W'}),'南場では、東は場風じゃない。あなたは西家だから自風でもない…役にならないんだ。'),
+      {q:'東場で場風になるのは？',choices:['東','南'],a:0,
+       exp:'東場なら東、南場なら南。場とおなじ風が場風だよ。'},
+    ];
+  },
+  /* B1-4 役牌(命名・整理) */
+  yb1_4(){
+    return [
+      ch1Teach('<b>三元牌</b>・<b>自風</b>・<b>場風</b>。3枚そろえるだけで役になるこれらの牌を、まとめて<span class="term-chip">役牌（やくはい）</span>とよぶよ！',
+        {tlab:'役牌',hands:[{label:'役牌のなかまたち',hand:'BGR'}]}),
+      ch1Teach('役牌のいいところ…<b>鳴いても役がのこる</b>こと！ポンして3枚そろえてもOKなんだ。',
+        {tlab:'鳴いてもOK'}),
+      ch3HasMcq('yakuhai','2m3m4m4p5p6pRRR6s7s8s9s9s',ch3Ctx({rw:'E',sw:'S'}),
+        '中は三元牌。りっぱな役牌だ！'),
+      ch3HasMcq('yakuhai','2m3m4m4p5p6pRRR6s7s8s9s9s',ch3Ctx({menzen:false,rw:'E',sw:'S'}),
+        '<b>鳴いていても役牌はつく</b>！ポンでそろえてもOKだよ。'),
+      ch3HasMcq('yakuhai','2m3m4m4p5p6pNNN6s7s8s9s9s',ch3Ctx({rw:'E',sw:'S'}),
+        '北は、東場・南家では三元牌でも自風でも場風でもない…役牌にならないんだ。'),
+      {q:'役牌になるのは？',choices:['三元牌・自風・場風','数牌の1と9'],a:0,
+       exp:'白發中＋じぶんの風＋場の風。これが役牌！'},
+    ];
+  },
+  /* B1-5 これは役牌になる？(状況を変えて判定・制御ランダム生成) */
+  yb1_5(){
+    return [
+      ch1Teach('ここからは実戦練習！<b>場</b>と<b>じぶんの席</b>をよく見て、役牌かどうか判断しよう。',
+        {tlab:'状況を見る'}),
+      ch3GenYakuhaiQ(),ch3GenYakuhaiQ(),ch3GenYakuhaiQ(),
+      ch3GenYakuhaiQ(),ch3GenYakuhaiQ(),ch3GenYakuhaiQ(),
+    ];
+  },
+  /* ★B1-6 役牌マスター(同じ牌でも状況で変わる体験) */
+  yb1_6(){
+    const quiz=shuffle([
+      ch3TripMcq('E',ch3Ctx({rw:'E',sw:'E'}),'東場の東家！東は場風でも自風でもある。もちろん役牌だよ。'),
+      ch3TripMcq('S',ch3Ctx({rw:'E',sw:'W'}),'東場・西家では、南はどちらでもない…役にならないんだ。'),
+      ch3GenYakuhaiQ(),ch3GenYakuhaiQ(),
+      ch3YakuhaiPickM(['E','S','W','N','B','G','R'],ch3Ctx({rw:'E',sw:'S'}),
+        '東場・南家。この中で<b>役牌になる牌</b>をぜんぶタップ！',
+        '三元牌(白發中)＋場風の東＋自風の南。西と北はちがうよ。'),
+      ch3HasMcq('yakuhai','2m3m4m4p5p6pWWW6s7s8s9s9s',ch3Ctx({rw:'S',sw:'W'}),
+        '南場の西家。西は自風だから役牌！'),
+    ]);
+    return [
+      ch1Teach('<b>おなじ東東東でも、状況しだいで役になったりならなかったり</b>する。ここが役牌のおもしろいところ！',
+        {tlab:'状況しだい'}),
+    ].concat(quiz).concat([
+      ch1Teach('🎉 <b>役牌マスター！</b>この「役牌の見きわめ」は、つぎの役でもすぐ役に立つよ。おたのしみに！',
+        {tlab:'つぎへ！'}),
+    ]);
+  },
+  /* ===== C ピンフ(条件を1つずつ積み上げる。命名はC1-4) ===== */
+  /* C1-1 シュンツでそろえよう(まだ名前は出さない) */
+  yc1_1(){
+    return [
+      ch1Teach('これから、麻雀でいちばん人気の“きれいな形”の役を覚えていくよ。まずは1つめの条件…<b>4つのメンツがぜんぶシュンツ</b>！',
+        {tlab:'きれいな形①',hands:[{label:'ぜんぶシュンツ',hand:'123m456p789s234s55p',g:true}]}),
+      ch3CompareMcq('4つのメンツが<b>ぜんぶシュンツ</b>なのはどっち？',
+        [{label:'A',hand:'1m2m3m4p5p6p7s8s9s2s3s4s5p5p'},{label:'B',hand:'1m2m3m4p5p6p7s7s7s2s3s4s5p5p'}],
+        ch3AllRuns('1m2m3m4p5p6p7s8s9s2s3s4s5p5p'),ch3AllRuns('1m2m3m4p5p6p7s7s7s2s3s4s5p5p'),
+        'Bは777sのコーツ入り。“きれいな形”の役は、シュンツだけでそろえるんだ。'),
+      ch3StructMcq('この手のメンツは、<b>ぜんぶシュンツ</b>になっている？','2m3m4m5p6p7p6s7s8s2p3p4p9s9s',
+        ch3AllRuns('2m3m4m5p6p7p6s7s8s2p3p4p9s9s'),['ぜんぶシュンツ','コーツが入っている'],
+        '4メンツともシュンツ。1つめの条件クリア！'),
+      ch3StructMcq('この手のメンツは、<b>ぜんぶシュンツ</b>になっている？','2m3m4mEEE6s7s8s2p3p4p9s9s',
+        ch3AllRuns('2m3m4mEEE6s7s8s2p3p4p9s9s'),['ぜんぶシュンツ','コーツが入っている'],
+        '東のコーツが入っている…これでは条件を満たさないよ。'),
+      {q:'“きれいな形”の役の1つめの条件は？',choices:['4つのメンツがぜんぶシュンツ','コーツを1つ入れる'],a:0,
+       exp:'ぜんぶシュンツ！コーツが1つでも入るとダメなんだ。'},
+    ];
+  },
+  /* C1-2 アタマにも条件がある(直前に学んだ役牌を再利用) */
+  yc1_2(){
+    return [
+      ch1Teach('“きれいな形”の役、2つめの条件は<b>アタマ</b>。<b>役牌をアタマにしてはいけない</b>んだ。まえのテーマで覚えた役牌の見きわめが、ここで役に立つ！',
+        {tlab:'きれいな形②'}),
+      ch1Teach('たとえば<b>東場・南家</b>なら…東(場風)・南(自風)・白發中(三元牌)はアタマNG。<b>西や北、数牌ならOK</b>だよ。',
+        {tlab:'アタマの条件'}),
+      ch3NotYakuhaiPick(['E','S','B','W'],ch3Ctx({rw:'E',sw:'S'}),
+        '東場・南家。“きれいな形”の役で<b>アタマにできる</b>(役牌でない)のはどれ？',
+        '西は場風でも自風でも三元牌でもない。アタマにしてOK！'),
+      ch3YakuhaiPickM(['E','S','W','N','G'],ch3Ctx({rw:'E',sw:'S'}),
+        '東場・南家。<b>アタマにできない牌(役牌)</b>をぜんぶタップ！',
+        '東(場風)・南(自風)・發(三元牌)はアタマNG。西と北はOK！'),
+      ch3NotYakuhaiPick(['S','W','R','N'],ch3Ctx({rw:'S',sw:'W'}),
+        '南場・西家。<b>アタマにできる</b>のはどれ？',
+        '南は場風、西は自風、中は三元牌。のこった北だけがアタマOK！'),
+      {q:'“きれいな形”の役では、アタマにできないのは？',choices:['役牌','数牌'],a:0,
+       exp:'役牌アタマはNG。数牌や、役牌でない風の牌ならOKだよ。'},
+    ];
+  },
+  /* C1-3 待ちにも条件がある(第2章の待ちの形を再利用) */
+  yc1_3(){
+    return [
+      ch1Teach('さいごの条件は<b>待ちの形</b>！第2章で覚えた5つの形、おぼえてる？“きれいな形”の役は<b>リャンメン待ち</b>でアガったときだけつくんだ。',
+        {tlab:'きれいな形③'}),
+      ch1Teach('カンチャン・ペンチャン・シャンポン・単騎で待ってアガっても、この役はつかない。<b>両側で待つリャンメン</b>だけ！',
+        {tlab:'リャンメンだけ',hands:[{label:'リャンメン待ちならOK',hand:'6s7sWW',g:true}]}),
+      {q:'“きれいな形”の役の、待ちの条件は？',choices:['リャンメン待ちでアガる','どの待ちでもよい'],a:0,
+       exp:'第2章の待ちの形が、役の条件につながった！リャンメンだけだよ。'},
+      ch2ShapeMcq('4m5m9p9p',CH2_SHAPES5,'45の両側で待つリャンメン。この待ちなら条件クリア！'),
+      ch2ShapeMcq('4m6m9p9p',CH2_SHAPES5,'真ん中待ちのカンチャン。この待ちだと、“きれいな形”の役はつかないんだ。'),
+      {q:'単騎待ちでアガったら、“きれいな形”の役は？',choices:['つかない','つく'],a:0,
+       exp:'リャンメン以外の待ちでは、この役はつかないよ。'},
+    ];
+  },
+  /* C1-4 ピンフ(命名・条件統合。「符」の話はしない) */
+  yc1_4(){
+    return [
+      ch1Teach('お待たせ！この“きれいな形”の役の名前は<span class="term-chip">ピンフ</span>！条件をまとめよう。<b>①鳴いていない ②4メンツぜんぶシュンツ ③アタマが役牌でない ④リャンメン待ちでアガる</b>。',
+        {tlab:'ピンフ'}),
+      ch3HasMcq('pinfu','2m3m4m4p5p6p7s8s9s2p2p3s4s5s',ch3Ctx({win:'ron',winTile:'5s',rw:'E',sw:'S'}),
+        '条件ぜんぶクリア！ピンフだ！'),
+      ch3HasMcq('pinfu','2m3m4m4p5p6p7s7s7s3s4s5s2p2p',ch3Ctx({win:'ron',winTile:'5s',rw:'E',sw:'S'}),
+        '777sのコーツが入っている…ピンフにならないよ。'),
+      ch3HasMcq('pinfu','2m3m4m4p5p6p7s8s9s3s4s5sWW',ch3Ctx({win:'ron',winTile:'5s',rw:'E',sw:'W'}),
+        'あなたは西家。西のアタマは<b>役牌アタマ</b>だからNG！'),
+      ch3HasMcq('pinfu','2m3m4m4p5p6p7s8s9s3s4s5sWW',ch3Ctx({win:'ron',winTile:'5s',rw:'E',sw:'S'}),
+        'こんどは南家。西は役牌じゃないからアタマOK。ピンフ成立！'),
+      ch3HasMcq('pinfu','2m3m4m4p5p6p7s8s9s2p2p3s5s4s',ch3Ctx({win:'ron',winTile:'4s',rw:'E',sw:'S'}),
+        '3s5sのあいだの4sでアガリ…カンチャン待ちだからピンフはつかない！'),
+      {q:'ピンフの条件に<b>ないもの</b>は？',choices:['コーツを1つ入れる','リャンメン待ちでアガる'],a:0,
+       exp:'コーツはむしろNG！ぜんぶシュンツがピンフの条件だよ。'},
+    ];
+  },
+  /* C1-5 ピンフを見つけよう(理由の分析) */
+  yc1_5(){
+    return [
+      ch1Teach('ピンフがつかないときは、<b>どの条件がダメだったのか</b>を見つけられると強い！',
+        {tlab:'理由をさがせ'}),
+      ch3PinfuWhyMcq('2m3m4m4p5p6p7s7s7s3s4s5s2p2p',ch3Ctx({win:'ron',winTile:'5s',rw:'E',sw:'S'}),
+        '777sのコーツが入っているから！'),
+      ch3PinfuWhyMcq('2m3m4m4p5p6p7s8s9s3s4s5sGG',ch3Ctx({win:'ron',winTile:'5s',rw:'E',sw:'S'}),
+        '發は三元牌。役牌アタマだからピンフにならない！'),
+      ch3PinfuWhyMcq('2m3m4m4p5p6p7s8s9s2p2p3s5s4s',ch3Ctx({win:'ron',winTile:'4s',rw:'E',sw:'S'}),
+        'カンチャン待ちだから！リャンメンで待とう。'),
+      ch3PinfuWhyMcq('2m3m4m4p5p6p7s8s9s2p2p3s4s5s',ch3Ctx({menzen:false,win:'ron',winTile:'5s',rw:'E',sw:'S'}),
+        '形はカンペキでも、鳴いていたらピンフはつかない！'),
+      ch3HasMcq('pinfu','2m3m4m5p6p7p3s4s5s6s7s8s9p9p',ch3Ctx({win:'ron',winTile:'5s',rw:'E',sw:'S'}),
+        'ぜんぶシュンツ・9pのアタマもOK。34sの両側(2sか5s)で待つリャンメンでアガったから、ピンフ成立！'),
+      {q:'ピンフの条件はいくつある？',choices:['4つ（鳴かない・全シュンツ・アタマ・リャンメン）','1つだけ'],a:0,
+       exp:'4つの条件がぜんぶそろって、はじめてピンフ！'},
+    ];
+  },
+  /* ★C1-6 ピンフマスター */
+  yc1_6(){
+    const quiz=shuffle([
+      ch3HasMcq('pinfu','3m4m5m6p7p8p2s3s4s6s7s8s4p4p',ch3Ctx({win:'ron',winTile:'8p',rw:'E',sw:'S'}),
+        'ぜんぶシュンツ・4pアタマ・67p+8pのリャンメン。ピンフ！'),
+      ch3HasMcq('pinfu','3m4m5m6p7p8p2s3s4s6s7s8s4p4p',ch3Ctx({menzen:false,win:'ron',winTile:'8p',rw:'E',sw:'S'}),
+        '鳴いていたらピンフはつかない！'),
+      ch3PinfuWhyMcq('3m4m5m6p7p8p2s2s2s6s7s8s4p4p',ch3Ctx({win:'ron',winTile:'8s',rw:'E',sw:'S'}),
+        '222sのコーツが入っているから！'),
+      ch3HasMcq('pinfu','2m3m4m4p5p6p7s8s9s3s4s5sEE',ch3Ctx({win:'ron',winTile:'5s',rw:'E',sw:'S'}),
+        '東は場風=役牌。役牌アタマだからNG！'),
+      ch3HasMcq('pinfu','2m3m4m4p5p6p7s8s9s3s4s5sNN',ch3Ctx({win:'ron',winTile:'5s',rw:'E',sw:'S'}),
+        '北は東場・南家では役牌じゃない。アタマOKでピンフ成立！'),
+      {q:'ピンフとリーチは、いっしょにつく？',choices:['つく（条件を満たせば2役）','つかない'],a:0,
+       exp:'リーチ＋ピンフはよくある組み合わせ。役はかさなるんだったね！'},
+    ]);
+    return [
+      ch1Teach('ピンフの<b>まとめ</b>だよ！4つの条件、ぜんぶ言えるかな？',{tlab:'まとめ'}),
+    ].concat(quiz).concat([
+      ch1Teach('🎉 <b>ピンフマスター！</b>いちばん条件が多い役をクリアしたね。つぎは<b>見た目でわかる役</b>だよ！',
+        {tlab:'つぎへ！'}),
+    ]);
+  },
+  /* ===== D タンヤオ(視覚的理解を重視・命名はD1-2) ===== */
+  /* D1-1 1・9・字牌をさがそう(まだ名前は出さない) */
+  yd1_1(){
+    return [
+      ch1Teach('つぎの役は、<b>見た目</b>でわかるよ。ポイントは<b>1・9・字牌</b>。この手にまじっている“じゃまもの”をさがしてみよう！',
+        {tlab:'じゃまものさがし'}),
+      ch3BlockPick('1m2m3m4p5p6p7s8s9sEE5m5m',
+        'この手のなかの<b>1・9・字牌</b>を、ぜんぶタップ！',
+        '1マン・9ソー・東東。これらがいると、つぎに覚える役にならないんだ。'),
+      ch3BlockPick('9m9m2p3p4p5s6s7sRR3m4m5m',
+        'この手のなかの<b>1・9・字牌</b>を、ぜんぶタップ！',
+        '9マン2枚と中2枚。字牌は中も“じゃまもの”だよ。'),
+      ch3CompareMcq('<b>2〜8の数牌だけ</b>でできているのはどっち？',
+        [{label:'A',hand:'2m3m4m4p5p6p6s7s8s3p3p5m6m7m'},{label:'B',hand:'1m2m3m4p5p6p6s7s8s3p3p5m6m7m'}],
+        ch3HasTanyao(ch3T('2m3m4m4p5p6p6s7s8s3p3p5m6m7m')),
+        ch3HasTanyao(ch3T('1m2m3m4p5p6p6s7s8s3p3p5m6m7m')),
+        'Bには1マンが1枚だけまじっている。見のがさないで！'),
+      ch3StructMcq('この手は<b>2〜8の数牌だけ</b>でできている？','2p3p4p5m6m7m4s5s6s6p7p8p5s5s',
+        ch3HasTanyao(ch3T('2p3p4p5m6m7m4s5s6s6p7p8p5s5s')),['2〜8だけ！','1・9・字がまじっている'],
+        'ぜんぶ2〜8！この形が、つぎのレッスンの主役だよ。'),
+    ];
+  },
+  /* D1-2 タンヤオ(命名。鳴きタンヤオあり=アリアリルールで統一) */
+  yd1_2(){
+    return [
+      ch1Teach('<b>1・9・字牌を1枚もつかわず、2〜8の数牌だけ</b>で作った手。この役の名前は<span class="term-chip">タンヤオ</span>！',
+        {tlab:'タンヤオ',hands:[{label:'ぜんぶ2〜8！',hand:'234m456p678s333p55m',g:true}]}),
+      ch1Teach('タンヤオは<b>鳴いてもつく</b>よ（このアプリのルール）。ポンやチーをしても、2〜8だけなら安心だ！',
+        {tlab:'鳴いてもOK'}),
+      ch3HasMcq('tanyao','2m3m4m4p5p6p6s7s8s3p3p5m6m7m',ch3Ctx({}),
+        '1・9・字牌がゼロ。タンヤオ！'),
+      ch3HasMcq('tanyao','1m2m3m4p5p6p6s7s8s3p3p5m6m7m',ch3Ctx({}),
+        '1マンがまじっている…タンヤオにならない！'),
+      ch3HasMcq('tanyao','2m3m4m4p5p6p6s7s8s3p3p5m6m7m',ch3Ctx({menzen:false}),
+        '鳴いていてもタンヤオはつく！つかいやすい役だよ。'),
+      ch3GenTanyaoMcq(),
+      {q:'タンヤオの条件は？',choices:['2〜8の数牌だけで手を作る','おなじ種類の数牌だけで作る'],a:0,
+       exp:'1・9・字牌が1枚でもあるとダメ。ぜんぶ2〜8だよ！'},
+    ];
+  },
+  /* ★D1-3 タンヤオマスター(制御ランダム生成で反復) */
+  yd1_3(){
+    const quiz=[
+      ch3GenTanyaoMcq(),ch3GenTanyaoMcq(),ch3GenTanyaoMcq(),ch3GenTanyaoMcq(),
+      ch3BlockPick('1p1p4m5m6m2s3s4s7p8p9pWW6s',
+        'タンヤオのじゃまになる牌(1・9・字牌)をぜんぶタップ！',
+        '11pのアタマ・9ピン入りのメンツ・西2枚。ぜんぶ2〜8にできたらタンヤオだ！'),
+    ];
+    return [
+      ch1Teach('タンヤオ<b>まとめ</b>！1・9・字牌を見のがさないでね。',{tlab:'まとめ'}),
+    ].concat(quiz).concat([
+      ch1Teach('🎉 <b>タンヤオマスター！</b>つぎは「1種類あつめ」の役だよ。',{tlab:'つぎへ！'}),
+    ]);
+  },
+  /* ===== E ホンイツ・チンイツ(必ずセットで教える。命名はE1-2/E1-3) ===== */
+  /* E1-1 1種類に集めよう(まだ名前は出さない) */
+  ye1_1(){
+    return [
+      ch1Teach('この手を見て！数牌が<b>マンズだけ</b>＋字牌。1種類にギュッとあつめた手は、それだけで役になるんだ！',
+        {tlab:'1種類あつめ',hands:[{label:'マンズ＋字牌だけ',hand:'123m456m789m11mEEE',g:true}]}),
+      ch3OffSuitPick('1m2m3m4m5m6m2p3p4pEEE1m1m',
+        'マンズあつめのじゃまになっている<b>べつの種類の数牌</b>をタップ！',
+        '234pの3枚。これがマンズにかわれば、1種類あつめの完成だ！'),
+      ch3CompareMcq('<b>数牌1種類だけ(＋字牌)</b>にあつまっているのはどっち？',
+        [{label:'A',hand:'2p3p4p5p6p7p2p2pSSSWWW'},{label:'B',hand:'2p3p4p5p6p7p2m2mSSSWWW'}],
+        (()=>{const si=ch3SuitInfo(ch3T('2p3p4p5p6p7p2p2pSSSWWW'));return si.nSuits===1;})(),
+        (()=>{const si=ch3SuitInfo(ch3T('2p3p4p5p6p7p2m2mSSSWWW'));return si.nSuits===1;})(),
+        'Bはアタマだけマンズ。1種類あつめは、数牌ぜんぶが1種類だよ。'),
+      ch3StructMcq('この手の数牌は、<b>1種類だけ</b>になっている？','1s2s3s4s5s6s7s8s9s2s2sGGG',
+        ch3SuitInfo(ch3T('1s2s3s4s5s6s7s8s9s2s2sGGG')).nSuits===1,
+        ['1種類だけ！','2種類まじっている'],
+        'ソーズだけ＋發。みごとな1種類あつめ！'),
+      {q:'「1種類あつめ」の手とは？',choices:['数牌を1種類だけにした手','字牌をつかわない手'],a:0,
+       exp:'マンズならマンズだけ。字牌はまじっていてもいいんだ。くわしくはつぎのレッスンで！'},
+    ];
+  },
+  /* E1-2 ホンイツ(命名) */
+  ye1_2(){
+    return [
+      ch1Teach('<b>数牌1種類＋字牌</b>でそろえた役の名前は<span class="term-chip">ホンイツ</span>！',
+        {tlab:'ホンイツ',hands:[{label:'ホンイツ(ピンズ＋字牌)',hand:'234p567p22pSSSWWW',g:true}]}),
+      ch1Teach('ホンイツも<b>鳴いてもつく</b>役だよ。あつめる楽しさバツグンだ！',
+        {tlab:'鳴いてもOK'}),
+      ch3HasMcq('honitsu','1m2m3m4m5m6m7m8m9m1m1mEEE',ch3Ctx({}),
+        'マンズ＋東だけ。ホンイツ！'),
+      ch3HasMcq('honitsu','1m2m3m4m5m6m7m8m9m1m1m2p3p4p',ch3Ctx({}),
+        'ピンズがまじっている…2種類だとホンイツにならないよ。'),
+      ch3HasMcq('honitsu','2p3p4p5p6p7p2p2pSSSWWW',ch3Ctx({menzen:false}),
+        '鳴いていてもホンイツはつく！'),
+      {q:'ホンイツの条件は？',choices:['数牌1種類＋字牌でそろえる','字牌だけでそろえる'],a:0,
+       exp:'数牌は1種類だけ。字牌はまぜてOK！'},
+    ];
+  },
+  /* E1-3 字牌もなくしたら？(チンイツ命名) */
+  ye1_3(){
+    return [
+      ch1Teach('ホンイツから、<b>字牌もぜんぶなくしたら</b>…？1種類の数牌<b>だけ</b>！さらにレベルアップだ！',
+        {tlab:'字牌もなくす！',hands:[{label:'ホンイツ(字牌あり)',hand:'123m456m789m11mEEE',g:true},
+          {label:'字牌もなくした！',hand:'123m234m567m789m55m',g:true}]}),
+      ch1Teach('<b>1種類の数牌だけ</b>でそろえた役は<span class="term-chip">チンイツ</span>！ホンイツのパワーアップ版だよ。もちろん鳴いてもOK。',
+        {tlab:'チンイツ'}),
+      ch3HasMcq('chinitsu','1m2m3m2m3m4m5m6m7m7m8m9m5m5m',ch3Ctx({}),
+        'マンズだけ！チンイツだ！'),
+      ch3HasMcq('chinitsu','1m2m3m4m5m6m7m8m9m1m1mEEE',ch3Ctx({}),
+        '東がまじっている。これはチンイツじゃなくて…そう、ホンイツ！'),
+      ch3HasMcq('chinitsu','2s3s4s4s5s6s6s7s8s9s9s9s2s2s',ch3Ctx({menzen:false}),
+        'ソーズだけ＋鳴きあり。チンイツは鳴いてもつくよ！'),
+      {q:'チンイツの条件は？',choices:['1種類の数牌だけ(字牌なし)','1種類の数牌＋字牌'],a:0,
+       exp:'字牌が1枚でもあればホンイツ、ゼロならチンイツだよ。'},
+    ];
+  },
+  /* E1-4 ホンイツ？チンイツ？(比較判定) */
+  ye1_4(){
+    const mk=kind=>{
+      const hand=ch3GenIroHand(kind).join('');
+      return ch3WhichMcq(hand,ch3Ctx({}),['honitsu','chinitsu'],
+        kind==='honitsu'?'字牌がまじっている→ホンイツ！':'字牌ゼロで1種類だけ→チンイツ！');
+    };
+    return [
+      ch1Teach('見わけかたはかんたん。<b>字牌があればホンイツ、なければチンイツ</b>！',
+        {tlab:'見わけかた'},),
+      mk('honitsu'),mk('chinitsu'),mk('honitsu'),mk('chinitsu'),
+      ch3HasMcq('honitsu','1m2m3m4m5m6m7m8m9m1m1m2p3p4p',ch3Ctx({}),
+        '2種類まじりは、ホンイツでもチンイツでもないよ。'),
+      {q:'字牌が1枚もない1種類あつめは？',choices:['チンイツ','ホンイツ'],a:0,
+       exp:'字牌ゼロならチンイツ。あればホンイツ！'},
+    ];
+  },
+  /* ★E1-5 一色マスター */
+  ye1_5(){
+    const mk=kind=>{
+      const hand=ch3GenIroHand(kind).join('');
+      return ch3WhichMcq(hand,ch3Ctx({}),['honitsu','chinitsu'],
+        kind==='honitsu'?'字牌あり→ホンイツ！':'字牌なし→チンイツ！');
+    };
+    const quiz=shuffle([
+      mk('honitsu'),mk('chinitsu'),mk('honitsu'),
+      ch3HasMcq('chinitsu','2p3p4p5p6p7p2p2pSSSWWW',ch3Ctx({}),
+        '南と西がまじっている。チンイツではなくホンイツだよ。'),
+      ch3OffSuitPick('2s3s4s5s6s7s2m3m4m9s9s2s2s6m',
+        'ソーズあつめのじゃまになっている牌をぜんぶタップ！',
+        'マンズの4枚がじゃまもの。ぜんぶソーズにかわればチンイツだ！'),
+      {q:'ホンイツとチンイツ、どちらも<b>鳴いてもつく</b>？',choices:['つく','つかない'],a:0,
+       exp:'どちらも鳴いてOK。あつめる系の役はつかいやすいんだ！'},
+    ]);
+    return [
+      ch1Teach('一色の役、<b>まとめ</b>だよ！',{tlab:'まとめ'}),
+    ].concat(quiz).concat([
+      ch1Teach('🎉 <b>一色マスター！</b>つぎは「形」に注目する役たち。<b>特別なアガリ形</b>も、いよいよ登場するよ…！',
+        {tlab:'つぎへ！'}),
+    ]);
+  },
+  /* ===== F トイトイ・七対子・イーペーコー ===== */
+  /* F1-1 コーツをあつめよう(まだ名前は出さない) */
+  yf1_1(){
+    return [
+      ch1Teach('ピンフはシュンツだけの役だったね。こんどは<b>反対</b>！<b>メンツをぜんぶコーツ</b>にしてみよう。',
+        {tlab:'コーツだらけ',hands:[{label:'4メンツぜんぶコーツ！',hand:'222m555p777sEEE99p',g:true}]}),
+      ch3StructMcq('この手のメンツは、<b>ぜんぶコーツ</b>になっている？','2m2m2m5p5p5p7s7s7sEEE9p9p',
+        ch3AllTrips('2m2m2m5p5p5p7s7s7sEEE9p9p'),['ぜんぶコーツ！','シュンツが入っている'],
+        '4メンツすべてコーツ。この形が役になるんだ！'),
+      ch3StructMcq('この手のメンツは、<b>ぜんぶコーツ</b>になっている？','2m2m2m5p5p5p6s7s8sEEE9p9p',
+        ch3AllTrips('2m2m2m5p5p5p6s7s8sEEE9p9p'),['ぜんぶコーツ！','シュンツが入っている'],
+        '678sのシュンツが1つまじっている…おしい！'),
+      ch3CompareMcq('メンツが<b>ぜんぶコーツ</b>なのはどっち？',
+        [{label:'A',hand:'3m3m3m6p6p6p8s8s8sNNN5p5p'},{label:'B',hand:'3m3m3m6p6p6p7s8s9sNNN5p5p'}],
+        ch3AllTrips('3m3m3m6p6p6p8s8s8sNNN5p5p'),ch3AllTrips('3m3m3m6p6p6p7s8s9sNNN5p5p'),
+        'Bは789sがシュンツ。Aはコーツ4つだ！'),
+      {q:'この形の役のポイントは？',choices:['メンツを4つともコーツにする','シュンツを4つそろえる'],a:0,
+       exp:'コーツをあつめる役。名前はつぎのレッスンで！'},
+    ];
+  },
+  /* ★F1-2 トイトイ(命名+使う) */
+  yf1_2(){
+    return [
+      ch1Teach('メンツをぜんぶコーツでそろえる役の名前は<span class="term-chip">トイトイ</span>！<b>鳴いてもつく</b>から、ポンをかさねて作れるよ。',
+        {tlab:'トイトイ',hands:[{label:'トイトイ',hand:'222m555p777sEEE99p',g:true}]}),
+      ch3HasMcq('toitoi','2m2m2m5p5p5p7s7s7sEEE9p9p',ch3Ctx({menzen:false}),
+        'コーツ4つ！ポンしてそろえてもトイトイはつくよ。'),
+      ch3HasMcq('toitoi','2m2m2m5p5p5p6s7s8sEEE9p9p',ch3Ctx({menzen:false}),
+        'シュンツが1つある…トイトイにならない！'),
+      ch3HasMcq('toitoi','3m3m3m6p6p6p8s8s8sNNN5p5p',ch3Ctx({menzen:false,rw:'E',sw:'S'}),
+        'コーツ4つでトイトイ！(北は役牌じゃないけど、トイトイがあるからアガれるね)'),
+      {q:'トイトイは鳴いてもつく？',choices:['つく（ポンでそろえてOK）','つかない'],a:0,
+       exp:'ポンはコーツを作る鳴き。トイトイと相性バツグンだ！'},
+      ch1Teach('🎉 トイトイ、マスター！つぎは<b>ずっと予告していた「特別なアガリ形」</b>がついに登場するよ…！',
+        {tlab:'つぎへ！'}),
+    ];
+  },
+  /* F2-1 トイツが7組！？(特別なアガリ形の回収・体験) */
+  yf2_1(){
+    return [
+      ch1Teach('第1章からずっと言っていた<b>「特別なアガリ形」</b>…それがこれだ！<b>トイツを7組</b>あつめた形！',
+        {tlab:'ついに登場！',hands:[{label:'トイツが7組！',hand:'1m1m3m3m5p5p7p7p9s9s1s1sEE',g:true}]}),
+      ch1Teach('4メンツ＋1アタマじゃないのに、<b>これもアガリの形</b>としてみとめられているんだ。びっくりだね！',
+        {tlab:'特別なアガリ形'}),
+      ch3WinAllMcq('1m1m3m3m5p5p7p7p9s9s1s1sEE',
+        'トイツ7組！特別なアガリ形として、これでアガれるんだ。'),
+      ch3WinAllMcq('1m1m3m3m5p5p7p7p9s9s1s2sEE',
+        'トイツが6組しかない(1sと2sはバラバラ)…これはまだアガリじゃないよ。'),
+      {q:'トイツ7組の形は…',choices:['4メンツ＋1アタマでなくてもアガリになる','アガリにはならない'],a:0,
+       exp:'特別ルールでみとめられた、もうひとつのアガリの形なんだ！'},
+    ];
+  },
+  /* ★F2-2 七対子(命名) */
+  yf2_2(){
+    return [
+      ch1Teach('トイツ7組のこの役の名前は<span class="term-chip">七対子（チートイツ）</span>！形そのものが役になっているよ。',
+        {tlab:'七対子'}),
+      ch1Teach('注意が2つ。<b>①おなじ牌4枚を「2組」には数えられない ②ポンやチーをしたら作れない</b>(トイツがくずれるからね)。',
+        {tlab:'七対子の注意'}),
+      ch3HasMcq('chiitoi','1m1m3m3m5p5p7p7p9s9s1s1sEE',ch3Ctx({}),
+        '7組そろった！七対子！'),
+      ch3WinAllMcq('1m1m1m1m5p5p7p7p9s9s1s1sEE',
+        '1マン4枚を「2組」には数えられないルール。これはアガリにならないんだ。'),
+      ch3HasMcq('chiitoi','2m2m4m4m6p6p8p8p3s3s5s5s7s7s',ch3Ctx({}),
+        'ぜんぶ2〜8のトイツ7組。七対子＋タンヤオ、役はかさなる！'),
+      {q:'七対子は、鳴いて作れる？',choices:['作れない','ポンなら作れる'],a:0,
+       exp:'ポンするとコーツになってトイツがくずれる。七対子は鳴かずに作る役だよ。'},
+    ];
+  },
+  /* F3-1 おなじシュンツが2組(まだ名前は出さない) */
+  yf3_1(){
+    return [
+      ch1Teach('この手、よく見ると…<b>234mのシュンツが2組</b>！おなじならびがダブっているね。じつはこれも役になるんだ。',
+        {tlab:'おなじならび2組',hands:[{label:'234mが2組！',hand:'234m234m567p789sEE',g:true}]}),
+      ch3StructMcq('この手に、<b>まったくおなじシュンツが2組</b>ある？','2m2m3m3m4m4m5p6p7p7s8s9sEE',
+        ch3RunPairsMax(ch3T('2m2m3m3m4m4m5p6p7p7s8s9sEE'))>=1,
+        ['ある(おなじならびが2組)','ない'],
+        '234mと234m。ぴったりおなじシュンツが2組だ！'),
+      ch3StructMcq('この手に、<b>まったくおなじシュンツが2組</b>ある？','2m3m4m3m4m5m5p6p7p7s8s9sEE',
+        ch3RunPairsMax(ch3T('2m3m4m3m4m5m5p6p7p7s8s9sEE'))>=1,
+        ['ある(おなじならびが2組)','ない'],
+        '234mと345m。にているけど、ぴったりおなじじゃないんだ。'),
+      ch3CompareMcq('<b>おなじシュンツ2組</b>があるのはどっち？',
+        [{label:'A',hand:'5s5s6s6s7s7s2m3m4m5p6p7p8p8p'},{label:'B',hand:'4s5s6s5s6s7s2m3m4m5p6p7p8p8p'}],
+        ch3RunPairsMax(ch3T('5s5s6s6s7s7s2m3m4m5p6p7p8p8p'))>=1,
+        ch3RunPairsMax(ch3T('4s5s6s5s6s7s2m3m4m5p6p7p8p8p'))>=1,
+        'Aは567s×2組。Bは456sと567sでビミョーにちがう！'),
+      {q:'この役のポイントは？',choices:['まったくおなじシュンツを2組そろえる','シュンツを2組そろえる'],a:0,
+       exp:'「まったくおなじ」がだいじ！名前はつぎのレッスンで。'},
+    ];
+  },
+  /* ★F3-2 イーペーコー(命名)+形の役まとめ */
+  yf3_2(){
+    return [
+      ch1Teach('おなじシュンツ2組の役は<span class="term-chip">イーペーコー</span>！ただし<b>鳴いたらつかない</b>役だから気をつけて。',
+        {tlab:'イーペーコー'}),
+      ch3HasMcq('iipeiko','2m2m3m3m4m4m5p6p7p7s8s9sEE',ch3Ctx({}),
+        '234m×2組。イーペーコー！'),
+      ch3HasMcq('iipeiko','2m2m3m3m4m4m5p6p7p7s8s9sEE',ch3Ctx({menzen:false}),
+        'おなじ形でも、鳴いていたらイーペーコーはつかない！'),
+      ch3WhichMcq('2m2m2m5p5p5p7s7s7sEEE9p9p',ch3Ctx({menzen:false}),['toitoi','chiitoi','iipeiko'],
+        'コーツ4つ。トイトイだ！'),
+      ch3WhichMcq('1m1m3m3m5p5p7p7p9s9s1s1sEE',ch3Ctx({}),['toitoi','chiitoi','iipeiko'],
+        'トイツ7組。七対子！'),
+      ch3WhichMcq('5s5s6s6s7s7s2m3m4m5p6p7p8p8p',ch3Ctx({}),['toitoi','chiitoi','iipeiko'],
+        '567s×2組。イーペーコー！'),
+      ch1Teach('🎉 <b>形の役3つ(トイトイ・七対子・イーペーコー)、マスター！</b>つぎは「ならびかた」に注目する役だよ。',
+        {tlab:'つぎへ！'}),
+    ];
+  },
+  /* ===== G チャンタ・純チャン(セットで教える。命名はG1-2/G1-3) ===== */
+  /* G1-1 はしっこがぜんぶに入った形(体験) */
+  yg1_1(){
+    return [
+      ch1Teach('この手、よ〜く見て。<b>どのメンツにもアタマにも、1・9・字牌が入っている</b>んだ！はしっこだらけの形だね。',
+        {tlab:'はしっこだらけ',hands:[{label:'ぜんぶに1・9・字が！',hand:'123m789p111sEEE99m',g:true}]}),
+      ch3StructMcq('この手は、<b>ぜんぶのメンツとアタマに1・9・字牌が入っている？</b>','1m2m3m7p8p9p1s1s1sEEE9m9m',
+        ch3ChantaKind(ch3T('1m2m3m7p8p9p1s1s1sEEE9m9m'))!==null,
+        ['入っている','入っていないブロックがある'],
+        '123m(1)・789p(9)・111s(1)・東東東(字)・99m(9)。ぜんぶクリア！'),
+      ch3StructMcq('この手は、<b>ぜんぶのメンツとアタマに1・9・字牌が入っている？</b>','2m3m4m7p8p9p1s1s1sEEE9m9m',
+        ch3ChantaKind(ch3T('2m3m4m7p8p9p1s1s1sEEE9m9m'))!==null,
+        ['入っている','入っていないブロックがある'],
+        '234mには1も9も字もない…このメンツが条件をくずしているんだ。'),
+      ch3CompareMcq('<b>ぜんぶのブロックに1・9・字牌が入っている</b>のはどっち？',
+        [{label:'A',hand:'1p2p3p7s8s9s9m9m9mNNN1m1m'},{label:'B',hand:'1p2p3p6s7s8s9m9m9mNNN1m1m'}],
+        ch3ChantaKind(ch3T('1p2p3p7s8s9s9m9m9mNNN1m1m'))!==null,
+        ch3ChantaKind(ch3T('1p2p3p6s7s8s9m9m9mNNN1m1m'))!==null,
+        'Bの678sは、はしっこにとどいていない。Aはぜんぶとどいている！'),
+      {q:'この形のポイントは？',choices:['メンツもアタマも、ぜんぶ1・9・字牌にふれている','1・9・字牌を1枚もつかわない'],a:0,
+       exp:'タンヤオと正反対！はしっこをあつめる役なんだ。名前はつぎのレッスンで。'},
+    ];
+  },
+  /* G1-2 チャンタ(命名) */
+  yg1_2(){
+    return [
+      ch1Teach('ぜんぶのメンツとアタマに1・9・字牌が入った役は<span class="term-chip">チャンタ</span>！鳴いても役はのこるよ。',
+        {tlab:'チャンタ',hands:[{label:'チャンタ',hand:'123m789p111sEEE99m',g:true}]}),
+      ch3HasMcq('chanta','1m2m3m7p8p9p1s1s1sEEE9m9m',ch3Ctx({}),
+        'ぜんぶのブロックに1・9・字。チャンタだ！'),
+      ch3HasMcq('chanta','2m3m4m7p8p9p1s1s1sEEE9m9m',ch3Ctx({}),
+        '234mが2〜8だけのメンツ…チャンタにならない！'),
+      ch3HasMcq('chanta','1p2p3p7s8s9s9m9m9mNNN1m1m',ch3Ctx({menzen:false}),
+        '鳴いていてもチャンタはつくよ！'),
+      {q:'チャンタの条件は？',choices:['ぜんぶのメンツとアタマに1・9・字牌が入る','1・9・字牌をつかわない'],a:0,
+       exp:'シュンツなら123か789、コーツなら1・9・字牌。アタマも忘れずに！'},
+    ];
+  },
+  /* ★G1-3 純チャン(命名+比較まとめ) */
+  yg1_3(){
+    return [
+      ch1Teach('チャンタから<b>字牌もなくして、1・9だけ</b>にすると…<span class="term-chip">純チャン</span>！ホンイツ→チンイツとおなじパワーアップの関係だよ。',
+        {tlab:'純チャン',hands:[{label:'チャンタ(字牌あり)',hand:'123m789p111sEEE99m',g:true},
+          {label:'純チャン(1・9だけ)',hand:'123m789m123p999s11s',g:true}]}),
+      ch3HasMcq('junchan','1m2m3m7m8m9m1p2p3p9s9s9s1s1s',ch3Ctx({}),
+        '字牌ゼロで、ぜんぶ1・9がらみ。純チャンだ！'),
+      ch3HasMcq('junchan','1m2m3m7p8p9p1s1s1sEEE9m9m',ch3Ctx({}),
+        '東が入っている。これは純チャンではなく…チャンタ！'),
+      ch3WhichMcq('1m2m3m7p8p9p1s1s1sEEE9m9m',ch3Ctx({}),['chanta','junchan'],
+        '字牌あり→チャンタ！'),
+      ch3WhichMcq('1m2m3m7m8m9m1p2p3p9s9s9s1s1s',ch3Ctx({}),['chanta','junchan'],
+        '字牌なし・1・9だけ→純チャン！'),
+      {q:'チャンタと純チャンのちがいは？',choices:['字牌をつかうかどうか','アタマがあるかどうか'],a:0,
+       exp:'字牌ありならチャンタ、1・9だけなら純チャン。見わけかたは一色の役とそっくりだね！'},
+      ch1Teach('🎉 <b>チャンタ・純チャン、マスター！</b>つぎは「ならび」の役、まだまだいくよ！',
+        {tlab:'つぎへ！'}),
+    ];
+  },
+  /* ===== H 三色・イッツー・三暗刻 ===== */
+  /* H1-1 三色(体験→命名を同一レッスン内で) */
+  yh1_1(){
+    return [
+      ch1Teach('この手を見て！<b>234が、マンズ・ピンズ・ソーズの3種類ぜんぶ</b>にある！おなじならびが3きょうだいだ。',
+        {tlab:'3種類でおなじならび',hands:[{label:'234×3種類！',hand:'234m234p234s555p77s',g:true}]}),
+      ch1Teach('おなじ数字のならびを3種類の数牌でそろえた役は<span class="term-chip">三色（サンショク）</span>！',
+        {tlab:'三色'}),
+      ch3HasMcq('sanshoku','2m3m4m2p3p4p2s3s4s5p5p5p7s7s',ch3Ctx({}),
+        '234が3種類ぜんぶに！三色だ！'),
+      ch3HasMcq('sanshoku','2m3m4m2p3p4p3s4s5s5p5p5p7s7s',ch3Ctx({}),
+        'ソーズだけ345…ぴったりおなじならびじゃないと三色にならないよ。'),
+      ch3HasMcq('sanshoku','5m6m7m5p6p7p5s6s7s111mEE',ch3Ctx({}),
+        '567×3種類。りっぱな三色！'),
+      {q:'三色の条件は？',choices:['おなじ数字のならびを3種類の数牌で作る','おなじ種類でならびを3つ作る'],a:0,
+       exp:'234m・234p・234sのように、3種類おそろいのならび！'},
+    ];
+  },
+  /* H1-2 イッツー(体験→命名+三色との比較) */
+  yh1_2(){
+    return [
+      ch1Teach('こんどは<b>1種類</b>の数牌で、<b>123・456・789</b>。1から9まで一気にならべた！',
+        {tlab:'1から9まで！',hands:[{label:'123+456+789！',hand:'123m456m789m555p77s',g:true}]}),
+      ch1Teach('1種類の数牌で123・456・789をそろえた役は<span class="term-chip">イッツー</span>！',
+        {tlab:'イッツー'}),
+      ch3HasMcq('ittsu','1m2m3m4m5m6m7m8m9m5p5p5p7s7s',ch3Ctx({}),
+        '1から9まで、マンズでかけぬけた！イッツー！'),
+      ch3HasMcq('ittsu','1m2m3m4m5m6m7p8p9p5p5p5p7s7s',ch3Ctx({}),
+        '789だけピンズ…イッツーは<b>おなじ種類</b>で123・456・789だよ。'),
+      ch3WhichMcq('2m3m4m2p3p4p2s3s4s5p5p5p7s7s',ch3Ctx({}),['sanshoku','ittsu'],
+        '3種類でおなじならび→三色！'),
+      ch3WhichMcq('1s2s3s4s5s6s7s8s9s222pEE',ch3Ctx({}),['sanshoku','ittsu'],
+        '1種類で123〜789→イッツー！'),
+      {q:'三色とイッツーのちがいは？',choices:['三色=3種類でおなじならび／イッツー=1種類で123〜789','ぜんぶおなじ'],a:0,
+       exp:'「3種類でそろえる」か「1種類でかけぬける」か。くらべておぼえよう！'},
+    ];
+  },
+  /* H1-3 暗刻と三暗刻(「暗刻」正式導入・成立条件を正確に) */
+  yh1_3(){
+    return [
+      ch1Teach('新しいことば。<b>じぶんの力(ツモ)でそろえたコーツ</b>を<span class="term-chip">暗刻（アンコ）</span>とよぶよ。<b>ポンで作ったコーツ</b>や<b>ロンで完成したコーツ</b>は暗刻じゃないんだ。',
+        {tlab:'暗刻'}),
+      ch1Teach('暗刻を<b>3つ</b>あつめると役になる。<span class="term-chip">三暗刻</span>だ！「コーツ3つ」ではなく「<b>暗刻</b>3つ」なのがポイント。',
+        {tlab:'三暗刻',hands:[{label:'暗刻3つ＋シュンツ＋アタマ',hand:'222m555p777s234s99p',g:true}]}),
+      ch3HasMcq('sanankou','2m2m2m5p5p5p7s7s7s2s3s4s9p9p',ch3Ctx({win:'tsumo',winTile:'2m'}),
+        'ツモアガリなら、3つのコーツはぜんぶ暗刻。三暗刻！'),
+      ch3HasMcq('sanankou','2m2m2m5p5p5p7s7s7s2s3s4s9p9p',ch3Ctx({win:'ron',winTile:'2m'}),
+        '2mのコーツは<b>ロンで完成</b>したから暗刻じゃない…暗刻2つでは三暗刻にならないんだ。'),
+      ch3HasMcq('sanankou','2m2m2m5p5p5p7s7s7s2s3s4s9p9p',ch3Ctx({win:'ron',winTile:'3s'}),
+        'ロン牌の3sはシュンツの一部。コーツ3つはじぶんでそろえた暗刻だから、三暗刻成立！'),
+      {q:'「暗刻」とは？',choices:['じぶんの力でそろえたコーツ','コーツならなんでも暗刻'],a:0,
+       exp:'ポンやロンで完成したコーツは暗刻じゃない。ここが三暗刻のカギ！'},
+    ];
+  },
+  /* ★H1-4 ならびの役まとめ */
+  yh1_4(){
+    const quiz=shuffle([
+      ch3WhichMcq('2m3m4m2p3p4p2s3s4s5p5p5p7s7s',ch3Ctx({}),['sanshoku','ittsu','sanankou'],
+        '234×3種類。三色！'),
+      ch3WhichMcq('1m2m3m4m5m6m7m8m9m5p5p5p7s7s',ch3Ctx({}),['sanshoku','ittsu','sanankou'],
+        'マンズで1〜9。イッツー！'),
+      ch3WhichMcq('2m2m2m5p5p5p7s7s7s2s3s4s9p9p',ch3Ctx({win:'tsumo',winTile:'4s'}),['sanshoku','ittsu','sanankou'],
+        'ツモで暗刻3つ。三暗刻！'),
+      ch3WhichMcq('1m2m3m7p8p9p1s1s1sEEE9m9m',ch3Ctx({}),['chanta','junchan','sanshoku'],
+        'ぜんぶに1・9・字＋字牌あり。チャンタ！'),
+      ch3HasMcq('sanankou','3m3m3m6p6p6p8s8s8s4s5s6sWW',ch3Ctx({win:'ron',winTile:'3m'}),
+        '3mはロンで完成…暗刻2つだから三暗刻はつかない！'),
+      {q:'三暗刻で数えるのは？',choices:['暗刻(じぶんでそろえたコーツ)','コーツならぜんぶ'],a:0,
+       exp:'ロンで完成したコーツは数えない。「暗」がだいじ！'},
+    ]);
+    return [
+      ch1Teach('ならびの役、<b>まとめ</b>だよ！三色・イッツー・三暗刻、見わけられるかな？',{tlab:'まとめ'}),
+    ].concat(quiz).concat([
+      ch1Teach('🎉 <b>ならびの役マスター！</b>つぎはいよいよ…<b>めったに出ない、とても特別な役</b>の登場だ！',
+        {tlab:'つぎへ！'}),
+    ]);
+  },
+  /* ===== I 役満(代表4種。点数計算へは進まない) ===== */
+  /* I1-1 役満ってなに？ */
+  yi1_1(){
+    return [
+      ch1Teach('麻雀には、めったに出ない<b>とても特別な役</b>がある。それが<span class="term-chip">役満（ヤクマン）</span>！そろえるのはむずかしいけど、できたら最高にうれしい役だよ。',
+        {tlab:'役満'}),
+      ch1Teach('役満ができたときは、<b>ほかの役をかぞえなくていい</b>。役満だけで、じゅうぶんすごいからね！これから代表的な役満を4つ見ていこう。',
+        {tlab:'役満のルール'}),
+      {q:'役満とは？',choices:['めったに出ない、とても特別な役','いちばんかんたんな役'],a:0,
+       exp:'むずかしいぶん、できたときのよろこびは最高！'},
+      {q:'役満ができたとき、ほかの役は？',choices:['かぞえない（役満だけでじゅうぶん）','ぜんぶかぞえる'],a:0,
+       exp:'役満はそれだけで完成形。ほかの役はかぞえないんだ。'},
+    ];
+  },
+  /* I1-2 大三元(役牌の三元牌知識を再利用) */
+  yi1_2(){
+    return [
+      ch1Teach('役牌でおぼえた<b>三元牌(白・發・中)</b>。この3種類を<b>ぜんぶコーツ</b>にしたら…役満<span class="term-chip">大三元</span>！',
+        {tlab:'大三元',hands:[{label:'白・發・中ぜんぶコーツ！',hand:'BBBGGGRRR123mEE',g:true}]}),
+      ch3HasMcq('daisangen','BBBGGGRRR1m2m3mEE',ch3Ctx({}),
+        '白發中がぜんぶコーツ。役満・大三元だ！'),
+      ch3HasMcq('daisangen','BBBGGGRR1m2m3m4p5p6p',ch3Ctx({}),
+        '中が2枚だけ…3種類ぜんぶコーツにしないと大三元にならない。(白と發の役牌はついているよ！)'),
+      {q:'大三元の条件は？',choices:['白・發・中をぜんぶコーツにする','白・發・中を1枚ずつあつめる'],a:0,
+       exp:'三元牌3種類×3枚ずつ。役牌の知識がそのまま役満につながった！'},
+    ];
+  },
+  /* I1-3 四暗刻(三暗刻から自然につなげる) */
+  yi1_3(){
+    return [
+      ch1Teach('三暗刻の上には…<b>暗刻を4つ</b>あつめる役満<span class="term-chip">四暗刻</span>がある！',
+        {tlab:'四暗刻',hands:[{label:'暗刻4つ！',hand:'222m555p777s999sEE',g:true}]}),
+      ch3HasMcq('suuankou','2m2m2m5p5p5p7s7s7s9s9s9sEE',ch3Ctx({win:'tsumo',winTile:'2m'}),
+        'ツモアガリで暗刻4つ。役満・四暗刻！'),
+      ch3HasMcq('suuankou','2m2m2m5p5p5p7s7s7s9s9s9sEE',ch3Ctx({win:'ron',winTile:'2m'}),
+        '2mのコーツがロンで完成…暗刻3つになってしまうから四暗刻にならないんだ。(三暗刻とトイトイはつくよ)'),
+      ch3HasMcq('suuankou','2m2m2m5p5p5p7s7s7s9s9s9sEE',ch3Ctx({win:'ron',winTile:'E'}),
+        'アタマの東でロン！コーツ4つはぜんぶじぶんでそろえた暗刻のまま。四暗刻成立！'),
+      {q:'四暗刻とトイトイのちがいは？',choices:['四暗刻は「暗刻」4つ・トイトイは「コーツ」4つ','おなじ役'],a:0,
+       exp:'ポンやロンで完成したコーツでもトイトイはOK。四暗刻は暗刻だけ！'},
+    ];
+  },
+  /* I1-4 国士無双(特殊なアガリ形その2) */
+  yi1_4(){
+    return [
+      ch1Teach('七対子につづく、<b>特別なアガリ形その2</b>！1・9・字牌を<b>ぜんしゅるい1枚ずつ</b>＋どれか1枚。役満<span class="term-chip">国士無双</span>だ！',
+        {tlab:'国士無双',hands:[{label:'13種類ぜんぶ＋1マン',hand:'19m19p19sESWNBGR1m',g:true}]}),
+      ch3WinAllMcq('1m9m1p9p1s9sESWNBGR1m',
+        '4メンツ＋1アタマでも七対子でもないのに、これもアガリ！国士無双のとくべつな形だよ。'),
+      ch3HasMcq('kokushi','1m9m1p9p1s9sESWNBGR9s',ch3Ctx({}),
+        '13種類＋9ソーがもう1枚。国士無双！'),
+      ch3WinAllMcq('1m9m1p9p1s9sESWNBG1m1m',
+        '中がない…13種類ぜんぶそろわないと、この形はアガリにならないんだ。'),
+      {q:'国士無双につかう牌は？',choices:['1・9・字牌ぜんぶ(13種類)','2〜8の数牌ぜんぶ'],a:0,
+       exp:'はしっこと字牌のオールスター！1枚ずつあつめて、どれか1枚をかさねよう。'},
+    ];
+  },
+  /* I1-5 小四喜(風の役満) */
+  yi1_5(){
+    return [
+      ch1Teach('こんどは<b>東・南・西・北</b>の役満！<b>3種類をコーツ</b>＋<b>のこり1種類をアタマ</b>にしたら…<span class="term-chip">小四喜（ショウスーシー）</span>！',
+        {tlab:'小四喜',hands:[{label:'風3コーツ＋風のアタマ',hand:'EEESSSWWWNN234m',g:true}]}),
+      ch3HasMcq('shousuushii','EEESSSWWWNN2m3m4m',ch3Ctx({}),
+        '東南西のコーツ＋北のアタマ。役満・小四喜！'),
+      ch3HasMcq('shousuushii','EEESSS2m3m4m5p6p7pWW',ch3Ctx({}),
+        '風のコーツが2つだけ…3コーツ＋風のアタマがそろって小四喜だよ。'),
+      {q:'小四喜の条件は？',choices:['風3種類のコーツ＋のこり1種類の風のアタマ','風を1種類だけあつめる'],a:0,
+       exp:'東南西北をほぼ独りじめ！これも役満だ。'},
+    ];
+  },
+  /* ★I1-6 役満チャレンジ */
+  yi1_6(){
+    const quiz=shuffle([
+      ch3WhichMcq('BBBGGGRRR1m2m3mEE',ch3Ctx({}),['daisangen','suuankou','kokushi','shousuushii'],
+        '白發中ぜんぶコーツ。大三元！'),
+      ch3WhichMcq('2m2m2m5p5p5p7s7s7s9s9s9sEE',ch3Ctx({win:'tsumo',winTile:'2m'}),
+        ['daisangen','suuankou','kokushi','shousuushii'],'ツモで暗刻4つ。四暗刻！'),
+      ch3WhichMcq('1m9m1p9p1s9sESWNBGR1m',ch3Ctx({}),['daisangen','suuankou','kokushi','shousuushii'],
+        '13種類＋1枚。国士無双！'),
+      ch3WhichMcq('EEESSSWWWNN2m3m4m',ch3Ctx({}),['daisangen','suuankou','kokushi','shousuushii'],
+        '風3コーツ＋風アタマ。小四喜！'),
+      {q:'役満ができたら、ほかの役は？',choices:['かぞえない','ぜんぶかぞえる'],a:0,
+       exp:'役満はそれだけで最高の完成形！'},
+    ]);
+    return [
+      ch1Teach('役満<b>チャレンジ</b>！4つの役満、ぜんぶ見わけられるかな？',{tlab:'役満チャレンジ'}),
+    ].concat(quiz).concat([
+      ch1Teach('🎉 <b>代表的な役満4つ、マスター！</b>さあ、いよいよ第3章の総仕上げ。<b>役を見つける力</b>をためすときだ！',
+        {tlab:'つぎへ！'}),
+    ]);
+  },
+  /* ===== J 役を見つけよう(総仕上げ) ===== */
+  /* J1-1 この手の役は？(まず1役から) */
+  yj1_1(){
+    return [
+      ch1Teach('ここからは総仕上げ！<b>手牌と状況</b>を見て、ついている役を見つけよう。まずは1役から。',
+        {tlab:'役をさがせ'}),
+      ch3WhichMcq('2m3m4m4p5p6pRRR6s7s8s9s9s',ch3Ctx({rw:'E',sw:'S',win:'ron',winTile:'4p'}),
+        ['yakuhai','tanyao','pinfu'],'中のコーツ！三元牌の役牌だ。'),
+      ch3WhichMcq('2m3m4m4p5p6p3s3s3s3p3p5m6m7m',ch3Ctx({win:'ron',winTile:'4p'}),
+        ['yakuhai','tanyao','pinfu'],'ぜんぶ2〜8！タンヤオだ。(コーツ入りだからピンフじゃないよ)'),
+      ch3WhichMcq('2m3m4m4p5p6p7s8s9s3s5s4s9p9p',ch3Ctx({riichi:true,win:'ron',winTile:'4s'}),
+        ['riichi','tanyao','yakuhai'],'カンチャン・9pあり…でもリーチがある！'),
+      ch3WhichMcq('2m3m4m4p5p6p7s8s9s2p2p3s4s5s',ch3Ctx({win:'ron',winTile:'5s',rw:'E',sw:'S'}),
+        ['pinfu','tanyao','yakuhai'],'全シュンツ・2pアタマ・リャンメン。ピンフ！'),
+      {q:'役をさがすとき、手牌のほかに見るものは？',choices:['状況（場・自分の風・鳴き・アガリ方）','捨て牌の数'],a:0,
+       exp:'おなじ手でも状況で役はかわる。チップをよく見よう！'},
+    ];
+  },
+  /* J1-2 役は1つとは限らない(複数役へ) */
+  yj1_2(){
+    return [
+      ch1Teach('役は<b>かさなる</b>！リーチ＋ツモ、ピンフ＋タンヤオ…。ぜんぶ見つけて、はじめて正解だよ。',
+        {tlab:'役はかさなる'}),
+      ch3YakuFind('2m3m4m4p5p6p5m6m7m6s7s5s3p3p',ch3Ctx({win:'ron',winTile:'5s'}),
+        ['riichi','tsumo','pinfu','tanyao'],'全シュンツ＋33pアタマ＋67sのリャンメン、そしてぜんぶ2〜8。ピンフ＋タンヤオの2役！'),
+      ch3YakuFind('2m3m4m4p5p6p7s8s9s3s5s4s9p9p',ch3Ctx({riichi:true,win:'tsumo',winTile:'4s'}),
+        ['riichi','tsumo','pinfu','tanyao'],'リーチ＋ツモ。形の役はないけど2役！'),
+      ch3YakuFind('2m3m4m4p5p6p5m6m7m6s7s5s3p3p',ch3Ctx({riichi:true,win:'ron',winTile:'5s'}),
+        ['riichi','tsumo','pinfu','tanyao'],'リーチ＋ピンフ＋タンヤオで3役！どんどんかさなる！'),
+      {q:'役が2つ以上あるとき、こたえるのは？',choices:['ついている役ぜんぶ','いちばん覚えた役1つ'],a:0,
+       exp:'「ぜんぶ見つける」のが役さがしのゴールだよ。'},
+    ];
+  },
+  /* J1-3 役を全部見つけよう(yfind反復) */
+  yj1_3(){
+    return [
+      ch1Teach('役さがし、どんどんいくよ！<b>ぜんぶ</b>えらんでから「これで決定」！',{tlab:'役さがし'}),
+      ch3YakuFind('1p1p1pRRR2p3p4p5p6p7p9p9p',ch3Ctx({win:'ron',winTile:'4p'}),
+        ['yakuhai','tanyao','honitsu','chinitsu'],'中の役牌＋ピンズと字牌だけのホンイツ。2役！'),
+      ch3YakuFind('2m2m2m5p5p5p7s7s7s8s8s8s3m3m',ch3Ctx({menzen:false,win:'ron',winTile:'2m'}),
+        ['tanyao','toitoi','sanankou','chiitoi'],'2〜8のコーツ4つ。タンヤオ＋トイトイ＋三暗刻(暗刻3つ)の3役！'),
+      ch3YakuFind('2m3m4m4p5p6p3s3s3s3p3p5m6m7m',ch3Ctx({riichi:true,win:'tsumo',winTile:'4p'}),
+        ['riichi','tsumo','pinfu','tanyao'],'リーチ＋ツモ＋タンヤオ。333sがあるからピンフはつかないよ！'),
+      ch3YakuFind('2m2m4m4m6p6p8p8p3s3s5s5s7s7s',ch3Ctx({}),
+        ['tanyao','chiitoi','toitoi','iipeiko'],'トイツ7組＋ぜんぶ2〜8。七対子＋タンヤオ！'),
+      ch3YakuFind('2m3m4m4p5p6pEEE6s7s8s9s9s',ch3Ctx({rw:'E',sw:'S',win:'ron',winTile:'4p'}),
+        ['yakuhai','tanyao','honitsu','pinfu'],'東場の東コーツ。役牌1つだけだよ。'),
+    ];
+  },
+  /* J1-4 アガれる？アガれない？(役なしの定着) */
+  yj1_4(){
+    return [
+      ch1Teach('だいじな確認。<b>アガリの形ができていても、役がなければアガれない</b>！状況もあわせて判断しよう。',
+        {tlab:'役なしに注意'}),
+      ch3AgariMcq('2m3m4m4p5p6p7s8s9s3s5s4s9p9p',ch3Ctx({win:'ron',winTile:'4s',rw:'E',sw:'S'}),
+        '形は完成…でもリーチも役もない。<b>役なしではアガれない</b>！'),
+      ch3AgariMcq('2m3m4m4p5p6p7s8s9s3s5s4s9p9p',ch3Ctx({riichi:true,win:'ron',winTile:'4s',rw:'E',sw:'S'}),
+        'リーチがあるからアガれる！まよったらリーチ、が役なし防止のコツだよ。'),
+      ch3AgariMcq('2m3m4m4p5p6p7s7s7s3s4s5s2p2p',ch3Ctx({menzen:false,win:'ron',winTile:'5s'}),
+        '鳴いていても、ぜんぶ2〜8ならタンヤオがある。アガれる！'),
+      ch3AgariMcq('2m3m4m4p5p6p7s8s9s3s5s4s9p9p',ch3Ctx({menzen:false,win:'ron',winTile:'4s',rw:'E',sw:'S'}),
+        '鳴いた手で、タンヤオも役牌もない…アガれない！鳴くときは役をのこす意識がだいじなんだ。'),
+      ch3AgariMcq('2m3m4m4p5p6pWWW6s7s8s9s9s',ch3Ctx({menzen:false,win:'ron',winTile:'4p',rw:'E',sw:'W'}),
+        '西家の西コーツ＝役牌！鳴いていてもアガれる。'),
+      {q:'鳴くときに気をつけることは？',choices:['アガったときに役がのこるか','牌の見た目'],a:0,
+       exp:'役なしでは(ほとんどの場合)アガれない。鳴くまえに役をかんがえよう！'},
+    ];
+  },
+  /* J1-5 実戦で役を見つけよう(状況フル) */
+  yj1_5(){
+    return [
+      ch1Teach('総仕上げ実戦編！<b>場・自分の風・鳴き・アガリ方</b>、ぜんぶ見て役をさがそう。',
+        {tlab:'実戦の役さがし'}),
+      ch3YakuFind('2m3m4m4p5p6pSSS6s7s8s9s9s',ch3Ctx({rw:'E',sw:'S',win:'ron',winTile:'4p'}),
+        ['yakuhai','tanyao','pinfu'],'あなたは南家。南は自風の役牌！'),
+      ch3YakuFind('2m3m4m4p5p6p5m6m7m6s7s5s3p3p',ch3Ctx({menzen:false,win:'ron',winTile:'5s'}),
+        ['riichi','tsumo','pinfu','tanyao'],'鳴いたからピンフは消えた…でもタンヤオはのこる！'),
+      ch3YakuFind('2m3m4m4p5p6p5m6m7m6s7s5s3p3p',ch3Ctx({riichi:true,win:'tsumo',winTile:'5s'}),
+        ['riichi','tsumo','pinfu','tanyao'],'リーチ＋ツモ＋ピンフ＋タンヤオ、4役そろいぶみ！'),
+      ch3YakuFind('1s2s3s4s5s6s7s8s9s2s2sGGG',ch3Ctx({rw:'E',sw:'S',win:'ron',winTile:'9s'}),
+        ['yakuhai','honitsu','chinitsu','ittsu'],'發の役牌＋ソーズあつめのホンイツ＋1〜9のイッツーで3役！'),
+      {q:'おなじ手牌でも役がかわるのは、なぜ？',choices:['状況(風・鳴き・アガリ方)がちがうから','牌のならべかたがちがうから'],a:0,
+       exp:'風・鳴き・ロンかツモか。状況こそ役のカギ！'},
+    ];
+  },
+  /* ★J1-6 第3章チャレンジ「役がわかる！」(第1章+第2章+第3章をつなげる) */
+  yj1_6(){
+    return [
+      ch1Teach('いよいよ<b>第3章チャレンジ</b>！<b>待ち牌を見つけて→リーチして→ツモって→ついた役をぜんぶ見つける</b>。今まで覚えたことの総決算だ！',
+        {tlab:'第3章チャレンジ'}),
+      ch2WaitFind('2m3m4m4p5p6p5m6m7m6s7s3p3p',['4s','6s','9s','3p'],
+        {q:'チャレンジ①！この13枚の<b>待ち牌</b>をぜんぶ見つけよう！',
+         exp:'67sのリャンメン。5ソーと8ソーが待ち牌だ！'}),
+      ch1Mini(['2m','3m','4m','4p','5p','6p','5m','6m','7m','6s','7s','3p','3p'],['1p','5s'],'234m456p567m567s33p',
+        {level:3,riichi:true,
+         exp:'チャレンジ②クリア！リーチして、待ち牌の5ソーをツモった！さいごは役の確認だ！'}),
+      ch3YakuFind('2m3m4m4p5p6p5m6m7m6s7s5s3p3p',ch3Ctx({riichi:true,win:'tsumo',winTile:'5s'}),
+        ['riichi','tsumo','yakuhai','pinfu','tanyao','honitsu'],
+        'リーチ＋ツモ＋ピンフ＋タンヤオの4役！自分の力でアガって、役もぜんぶ見つけられたね！'),
+      ch3AgariMcq('2m3m4m4p5p6p7s8s9s3s5s4s9p9p',ch3Ctx({win:'ron',winTile:'4s',rw:'E',sw:'S'}),
+        'さいごのひっかけ！形ができていても役がなければアガれない。もうだまされないね！'),
+      ch1Teach('🎉 <b>第3章「役がわかる」クリア！</b>アガリ形と状況から、<b>代表的な役が見えるようになった</b>！<br>つぎの章では、覚えた役をつかって、もっと上手にアガれるようになっていこう！',
+        {tlab:'第3章クリア'}),
+      ch1Teach('ロードに<b>「もっと役を覚える」</b>もあらわれたよ。<b>やらなくても先へ進める</b>けど、めずらしい役やもっと役満に出会いたくなったら、のぞいてみてね！',
+        {tlab:'よりみち案内'}),
+    ];
+  },
+  /* ===== X 任意Road「もっと役を覚える」(第3章クリアで解放。次章の前提にしない) ===== */
+  /* X1-1 ダブルリーチ */
+  yx1_1(){
+    return [
+      ch1Teach('ここからは<b>よりみちロード</b>！まずは、リーチのパワーアップ版。<b>さいしょの捨て牌でいきなりリーチ</b>すると…<span class="term-chip">ダブルリーチ</span>！',
+        {tlab:'ダブルリーチ'}),
+      ch3WhichMcq('2m3m4m4p5p6p7s8s9s3s5s4s9p9p',ch3Ctx({dblRiichi:true,win:'ron',winTile:'4s'}),
+        ['dblriichi','riichi'],'1巡目の宣言だからダブルリーチ！'),
+      ch3WhichMcq('2m3m4m4p5p6p7s8s9s3s5s4s9p9p',ch3Ctx({riichi:true,win:'ron',winTile:'4s'}),
+        ['dblriichi','riichi'],'2巡目以降なら、ふつうのリーチだよ。'),
+      {q:'ダブルリーチの条件は？',choices:['1巡目(さいしょの捨て牌)でリーチ宣言','2回リーチする'],a:0,
+       exp:'配牌からいきなりテンパイしていたときのごほうびだ！'},
+    ];
+  },
+  /* X1-2 海底摸月・河底撈魚 */
+  yx1_2(){
+    return [
+      ch1Teach('山の<b>さいごの1枚をツモってアガる</b>と<span class="term-chip">海底摸月（ハイテイ）</span>。<b>さいごの捨て牌でロン</b>すると<span class="term-chip">河底撈魚（ホウテイ）</span>！どちらも「さいごの一瞬」のドラマチックな役だよ。',
+        {tlab:'さいごの一瞬'}),
+      ch3HasMcq('haitei','2m3m4m4p5p6p7s8s9s3s5s4s9p9p',
+        ch3Ctx({haitei:true,win:'tsumo',winTile:'4s',note:'山の残り0枚・さいごのツモ'}),
+        '山のラスト1枚でツモ！ハイテイだ。'),
+      ch3HasMcq('houtei','2m3m4m4p5p6p7s8s9s3s5s4s9p9p',
+        ch3Ctx({houtei:true,win:'ron',winTile:'4s',note:'この局さいごの捨て牌'}),
+        'さいごの捨て牌でロン！ホウテイだ。'),
+      {q:'ハイテイとホウテイのちがいは？',choices:['ハイテイ=さいごのツモ／ホウテイ=さいごの捨て牌でロン','おなじ役のべつの名前'],a:0,
+       exp:'ツモならハイテイ、ロンならホウテイ。セットでおぼえよう！'},
+    ];
+  },
+  /* X1-3 小三元・混老頭 */
+  yx1_3(){
+    return [
+      ch1Teach('大三元の一歩手前、<b>三元牌2種類をコーツ＋のこり1種類をアタマ</b>にすると<span class="term-chip">小三元</span>！役満ではないけど、役牌2つもいっしょについて強いんだ。',
+        {tlab:'小三元',hands:[{label:'小三元',hand:'BBBGGGRR123m456p',g:true}]}),
+      ch1Teach('そしてもうひとつ。<b>1・9・字牌“だけ”</b>で作ると<span class="term-chip">混老頭（ホンロウトウ）</span>！チャンタのシュンツもなくした、はしっこオールスターだ。',
+        {tlab:'混老頭',hands:[{label:'混老頭(トイトイ形)',hand:'111m999p111sEEENN',g:true}]}),
+      ch3HasMcq('shousangen','BBBGGGRR1m2m3m4p5p6p',ch3Ctx({}),
+        '白發コーツ＋中アタマ。小三元！(白と發の役牌2つもついているよ)'),
+      ch3HasMcq('honroutou','1m1m1m9p9p9p1s1s1sEEENN',ch3Ctx({win:'ron',winTile:'1m'}),
+        'ぜんぶ1・9・字！混老頭＋トイトイもつく！'),
+      ch3WhichMcq('BBBGGGRR1m2m3m4p5p6p',ch3Ctx({}),['shousangen','honroutou'],
+        '123mや456pは中張入り。これは小三元のほうだ！'),
+    ];
+  },
+  /* ★X1-4 二盃口 */
+  yx1_4(){
+    return [
+      ch1Teach('イーペーコーを<b>2セット</b>そろえると<span class="term-chip">二盃口（リャンペーコー）</span>！鳴いたらつかない、うつくしい役だよ。',
+        {tlab:'二盃口',hands:[{label:'おなじシュンツ2組×2！',hand:'223344m556677pEE',g:true}]}),
+      ch1Teach('見た目はトイツ7組にも見えるけど…二盃口に取れるときは<b>二盃口として数える</b>(七対子とはかさならない)ルールなんだ。',
+        {tlab:'七対子との関係'}),
+      ch3HasMcq('ryanpeikou','2m2m3m3m4m4m5p5p6p6p7p7pEE',ch3Ctx({}),
+        '234m×2＋567p×2。二盃口！'),
+      ch3WhichMcq('2m2m3m3m4m4m5p5p6p6p7p7pEE',ch3Ctx({}),['ryanpeikou','chiitoi'],
+        'トイツ7組に見えても、これは二盃口として数えるよ！'),
+      ch3HasMcq('ryanpeikou','2m2m3m3m4m4m5p5p6p6p7p7pEE',ch3Ctx({menzen:false}),
+        '鳴いたら二盃口はつかない！イーペーコーとおなじだね。'),
+      ch1Teach('🎉 めずらしい役、コンプリート！おとなりの<b>「もっと役満」</b>ものぞいてみる？',{tlab:'おつかれさま！'}),
+    ];
+  },
+  /* X2-1 字一色・緑一色 */
+  yx2_1(){
+    return [
+      ch1Teach('ここからは<b>もっと役満</b>！まず、<b>字牌だけ</b>で作る役満<span class="term-chip">字一色（ツーイーソー）</span>！',
+        {tlab:'字一色',hands:[{label:'字牌だけ！',hand:'EEESSSWWWBBBGG',g:true}]}),
+      ch1Teach('そして<b>緑色の牌だけ</b>(2・3・4・6・8ソーと發)で作る役満<span class="term-chip">緑一色（リューイーソー）</span>！見た目がぜんぶ緑！',
+        {tlab:'緑一色',hands:[{label:'ぜんぶ緑！',hand:'222s333s444s666sGG',g:true}]}),
+      ch3HasMcq('tsuuiisou','EEESSSWWWBBBGG',ch3Ctx({win:'ron',winTile:'E'}),
+        '数牌ゼロ、字牌オンリー。役満・字一色！'),
+      ch3HasMcq('ryuuiisou','2s2s2s3s3s3s4s4s4s6s6s6sGG',ch3Ctx({win:'ron',winTile:'2s'}),
+        '緑の牌だけ。役満・緑一色！'),
+      ch3WhichMcq('EEESSSWWWBBBGG',ch3Ctx({win:'ron',winTile:'E'}),['tsuuiisou','ryuuiisou'],
+        '字牌だけだから字一色！'),
+    ];
+  },
+  /* X2-2 清老頭 */
+  yx2_2(){
+    return [
+      ch1Teach('混老頭から<b>字牌もなくして、1と9だけ</b>にすると…役満<span class="term-chip">清老頭（チンロウトウ）</span>！純チャンの最終進化形だ！',
+        {tlab:'清老頭',hands:[{label:'1と9だけ！',hand:'111m999m111p999p11s',g:true}]}),
+      ch3HasMcq('chinroutou','1m1m1m9m9m9m1p1p1p9p9p9p1s1s',ch3Ctx({win:'ron',winTile:'1m'}),
+        '1と9のコーツだけ。役満・清老頭！'),
+      ch3WhichMcq('1m2m3m7m8m9m1p2p3p9s9s9s1s1s',ch3Ctx({}),['chinroutou','junchan'],
+        'シュンツ(123など)が入っていたら清老頭じゃなくて純チャン。清老頭は1・9のコーツだけ！'),
+      {q:'清老頭につかえる牌は？',choices:['1と9の数牌だけ','1・9・字牌'],a:0,
+       exp:'字牌もダメ、1と9オンリー。超むずかしいけど超かっこいい！'},
+    ];
+  },
+  /* ★X2-3 九蓮宝燈・天和 */
+  yx2_3(){
+    return [
+      ch1Teach('伝説の役満その1。1種類の数牌で<b>1112345678999＋どれか1枚</b>…<span class="term-chip">九蓮宝燈（チューレンポートー）</span>！',
+        {tlab:'九蓮宝燈',hands:[{label:'1112345678999+5',hand:'111m2345678m999m5m',g:true}]}),
+      ch1Teach('伝説の役満その2。親が<b>配られた13枚＋さいしょのツモでいきなりアガリ</b>…<span class="term-chip">天和（テンホー）</span>！一生に一度、出会えるかどうかの役だよ。',
+        {tlab:'天和'}),
+      ch3HasMcq('chuuren','1m1m1m2m3m4m5m6m7m8m9m9m9m5m',ch3Ctx({}),
+        '1112345678999＋5。役満・九蓮宝燈！'),
+      ch3HasMcq('tenhou','2m3m4m4p5p6p7s8s9s3s5s4s9p9p',
+        ch3Ctx({tenhou:true,win:'tsumo',winTile:'4s',note:'親・配牌+第1ツモでアガリ'}),
+        'いきなりアガっていた…！役満・天和！'),
+      {q:'天和の条件は？',choices:['親が配牌＋さいしょのツモでアガる','さいごのツモでアガる'],a:0,
+       exp:'はじまった瞬間にアガリ。まさに奇跡の役満！'},
+      ch1Teach('🎉 <b>「もっと役を覚える」コンプリート！</b>ここまで来たきみは、もう役はかせだ！(嶺上開花・槍槓などカンにかかわる役は、カンをくわしく学ぶときに登場するよ)',
+        {tlab:'役はかせ！'}),
+    ];
+  },
+};
 function ch1ThemeUnlocked(t){
   // requires付きテーマ(D1〜)は前提テーマを全クリアするまでロック(既存テーマは常に解放)
   if(!t||!t.requires) return true;
@@ -4483,6 +6083,7 @@ function quitLesson(){
 function qFormatKey(q){
   if(q.mini) return 'mini';       // 第1章C: 4枚ミニ麻雀(体験ゲーム。ch1t併用=誘導・スコア外)
   if(q.mt) return 'match';        // A1-4: 数牌マッチング(Duolingo型ペア当て。将来他教材でも再利用可)
+  if(q.yf) return 'yfind';        // 第3章: 役さがし(役名を全選択→「これで決定」。誤答は正解非開示で再挑戦)
   if(q.wf) return 'wfind';        // 第2章: 待ち牌さがし(全選択→「これで決定」。誤答は正解非開示で再挑戦)
   if(q.ch1t) return 'teach';      // 第1章: 教えるページ(スコア外・check()非経由)
   if(q.pick1) return 'pickone';   // 第1章: 牌を1枚えらぶ
@@ -4720,8 +6321,10 @@ const QFORMATS={
       html+='<div class="q-type">'+L.course.title+'</div>';
       html+='<div class="q-text">'+q.q+'</div>';
       if(q.ctx) html+='<div class="q-ctx">'+q.ctx+'</div>';
+      if(q.ctx3) html+=ch3CtxHTML(q.ctx3);       // 第3章: 場風/自風/鳴き/ロン・ツモ等の状況チップ
       if(q.situ) html+=tableHTML(legacySituToContext(q.situ),'T0');  // P3-B: situHTML→TableView（situHTMLはlegacyとして残置）
       else if(q.context) html+=tableHTML(q.context, q.context.reveal||'T0');  // v3ネイティブcontext問題（Compare variant等）
+      else if(q.hands2){ for(const h of q.hands2) html+='<div class="tc-lab">'+h.label+'</div>'+ch1HandGrouped(h.hand); }  // 第3章: 2つの手の比較
       else if(q.hand) html+=(q.ghand?ch1HandGrouped(q.hand):handHTML(q.hand));  // ghand=理牌+組スキマ表示(第1章)
       html+='<div class="choices">'+q.choices.map((ch,i)=>
         '<button class="choice" id="ch-'+i+'" onpointerdown="selChoice('+i+')">'+ch+'</button>').join('')+'</div>';
@@ -4899,6 +6502,38 @@ const QFORMATS={
         return {ansText:'待ち牌をぜんぶ見つけた！でも、決定までに'+d.miss+'回まちがえたね',
           expText:'まよったら、できているメンツとアタマをのぞいて、のこりの形をよく見てみよう！'};
       return {ansText:'お見事！待ち牌をぜんぶ見つけた！', expText:q.exp||''};
+    },
+  },
+  yfind:{
+    /* 第3章 役さがし: 手牌+状況を見て、ついている役の名前をぜんぶ選んで「これで決定」。
+       正解セットは必ずch3YakuListから作る。誤答時は正解非開示で再挑戦(wfindと同思想) */
+    cat:null, scoring:'wfind',
+    qid(q){ return null; },
+    render(q){
+      L.wf={miss:0,done:false};
+      let html='<div class="q-type">'+(q.tlab||'役さがし')+'</div>';
+      html+='<div class="q-text">'+q.q+'</div>';
+      html+=ch3CtxHTML(q.ctx3);
+      if(q.hand) html+=(q.ghand?ch1HandGrouped(q.hand):handHTML(q.hand));
+      html+='<div class="yf-cands">'+q.cands.map((nm,i)=>
+        '<button class="yfb" id="ykb-'+i+'" onpointerdown="ch3YPick('+i+')">'+nm+'</button>').join('')+'</div>';
+      html+='<div class="wf-msg" id="wf-msg">'+(q.hint?'💡 '+q.hint:'')+'</div>';
+      L.sel=new Set();
+      return html;
+    },
+    answer(q){ return {kind:'wf', done:!!(L.wf&&L.wf.done), miss:L.wf?L.wf.miss:0}; },
+    reveal(q,ans,res){
+      q.cands.forEach((nm,i)=>{ const b=document.getElementById('ykb-'+i); if(!b) return;
+        b.disabled=true;
+        if(q.answers.includes(i)){ b.classList.remove('sel'); b.classList.add('correct'); } });
+    },
+    feedback(q,res){
+      const d=res.details||{};
+      const names=q.answers.map(i=>q.cands[i]).join('・')||'（なし）';
+      if(!res.isCorrect&&d.miss>0)
+        return {ansText:'役をぜんぶ見つけた！（'+names+'）でも、決定までに'+d.miss+'回まちがえたね',
+          expText:q.exp||'役の条件を1つずつたしかめると、見落としがへるよ！'};
+      return {ansText:'お見事！この手の役は '+names+'！', expText:q.exp||''};
     },
   },
 };
@@ -5144,10 +6779,11 @@ function renderFoot(){
     foot.innerHTML='<button class="btn" id="answer-btn" disabled>ぜんぶペアにしよう！</button>';
     return;
   }
-  if(qNow&&qNow.wf&&!L.checked){
-    // 第2章 待ち牌さがし: こたえあわせではなく「これで決定」。不正解でも正解を開示せず再挑戦させる
+  if(qNow&&(qNow.wf||qNow.yf)&&!L.checked){
+    // 第2章 待ち牌さがし/第3章 役さがし: こたえあわせではなく「これで決定」。不正解でも正解を開示せず再挑戦させる
     const readyW=(L.sel instanceof Set)&&L.sel.size>0;
-    foot.innerHTML='<button class="btn" id="answer-btn" '+(readyW?'':'disabled')+' onclick="ch2WfSubmit(this)">これで決定</button>';
+    const fnW=qNow.yf?'ch3YfSubmit(this)':'ch2WfSubmit(this)';
+    foot.innerHTML='<button class="btn" id="answer-btn" '+(readyW?'':'disabled')+' onclick="'+fnW+'">これで決定</button>';
     return;
   }
   if(qNow&&qNow.mini&&!L.checked){
@@ -5200,6 +6836,35 @@ function ch2WfSubmit(btn){
     g.innerHTML=(L.wf&&L.wf.miss>=2)
       ?'うーん、まだぴったりじゃない…。<b>えらびすぎ</b>や<b>えらび忘れ</b>がないか見なおして、もういちど！'
       :'まだ待ち牌とぴったりじゃないみたい。えらびなおして、もういちど「これで決定」！'; }
+  renderFoot();
+}
+/* 第3章 役さがし(yf): 役名ボタンのトグル選択と「これで決定」。wfと同じ教育思想
+   (全選択→判定・一部一致では正解にしない・誤答時は正解を一切開示せず再挑戦・missとして記録) */
+function ch3YPick(i){
+  if(!L||L.checked) return;
+  const q=L.qs[L.idx]; if(!q||!q.yf) return;
+  if(L.sel.has(i)) L.sel.delete(i); else L.sel.add(i);
+  const b=document.getElementById('ykb-'+i); if(b) b.classList.toggle('sel',L.sel.has(i));
+  renderFoot();
+}
+function ch3YfSubmit(btn){
+  if(!L||L.checked) return;
+  const q=L.qs[L.idx]; if(!q||!q.yf) return;
+  const want=new Set(q.answers);
+  const sel=(L.sel instanceof Set)?L.sel:new Set();
+  const ok=sel.size===want.size&&[...sel].every(i=>want.has(i));
+  if(ok){
+    if(L.wf) L.wf.done=true;
+    if(btn){ btn.disabled=true; btn.classList.add('pressing'); btn.textContent='判定中…'; }
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{ if(L&&!L.checked) check(); }));
+    return;
+  }
+  if(L.wf) L.wf.miss++;
+  const g=document.getElementById('wf-msg');
+  if(g){ g.classList.add('retry');
+    g.innerHTML=(L.wf&&L.wf.miss>=2)
+      ?'うーん、まだぴったりじゃない…。役の<b>条件を1つずつ</b>たしかめて、もういちど！'
+      :'まだ役とぴったりじゃないみたい。えらびなおして、もういちど「これで決定」！'; }
   renderFoot();
 }
 
