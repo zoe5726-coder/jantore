@@ -314,6 +314,10 @@ button.tile.off:active{transform:none;}
 .ch1-cands .tile{cursor:pointer; width:100%;}
 .ch1-cands .hand-gap{flex:0 1 auto; width:clamp(4px,1.8vw,10px);}
 .ch1-hint{text-align:center; color:var(--ink-soft); font-size:11px; font-weight:700; margin:2px 0 0;}
+/* 第2章 待ち牌さがし(wf): ヒント/再挑戦メッセージの固定領域(盤面固定原則: 誤答でレイアウトを動かさない) */
+.wf-msg{min-height:36px; display:flex; align-items:center; justify-content:center; text-align:center;
+  color:var(--ink-soft); font-size:12px; font-weight:800; margin:6px 0 0; padding:0 8px;}
+.wf-msg.retry{color:var(--verm,#d0454c);}
 .ch1-actbox{text-align:center; margin-top:12px;}
 .tc-actres{margin-top:10px; font-size:clamp(13px,3.8vw,15px); font-weight:800; line-height:1.6; min-height:1em;}
 .ch1-shake{animation:ch1shake .5s var(--m-ease,ease);}
@@ -1543,7 +1547,12 @@ const COURSES=[
 {id:'ch1c',title:'ミニ麻雀',icon:'🀄',section:0,type:'ch1',desc:'ツモって、切って、アガリをつくろう。',questions:[]},
 {id:'ch1d',title:'本物の13枚へ',icon:'🏆',section:0,type:'ch1',desc:'本物の麻雀とおなじ13枚に挑戦！',questions:[]},
 {id:'ch1e',title:'実戦への扉',icon:'🚪',section:0,type:'ch1',desc:'役・リーチ・実戦のことばを覚えて、1局アガりきろう！',questions:[]},
-{id:'rules',title:'基本ルール',icon:'📖',section:1,desc:'麻雀のきほんのき。和了の形からフリテンまで。',questions:[
+/* 第2章「アガリが見える」(待ち牌と待ちの形)。descに待ちの形の名称は書かない(名称初出はレッスン内) */
+{id:'ch2a',title:'待ちを見つけよう',icon:'🔎',section:1,type:'ch1',desc:'アガリになる牌＝待ち牌をさがそう。',questions:[]},
+{id:'ch2b',title:'待ちの形を知ろう',icon:'🧩',section:1,type:'ch1',desc:'ならんだ2枚には、待ちのひみつがあるんだ。',questions:[]},
+{id:'ch2c',title:'いろいろな待ち',icon:'🎯',section:1,type:'ch1',desc:'トイツの待ちと、1枚だけの待ちを覚えよう。',questions:[]},
+{id:'ch2d',title:'実戦の待ち',icon:'👀',section:1,type:'ch1',desc:'13枚から待ち牌をぜんぶ見つけて、アガリが見える！',questions:[]},
+{id:'rules',title:'基本ルール',icon:'📖',section:2,desc:'麻雀のきほんのき。和了の形からフリテンまで。',questions:[
  {q:'麻雀の和了（あがり）の基本形はどれ？',choices:['4面子＋1雀頭','5面子','7ペア＋1枚','13枚バラバラ'],a:0,exp:'3枚1組の「面子」を4つと、2枚1組の「雀頭」を1つ揃えた計14枚が基本の和了形です。（例外役：七対子・国士無双）'},
  {q:'対局開始時、子の手牌は何枚？',choices:['12枚','13枚','14枚','16枚'],a:1,exp:'全員13枚でスタートし、ツモって14枚になったら1枚捨てます。'},
  {q:'ドラ表示牌が五萬のとき、ドラは？',hand:'5m',choices:['四萬','五萬','六萬','九萬'],a:2,exp:'ドラは表示牌の「次の牌」。五萬の次なので六萬がドラです。'},
@@ -1551,7 +1560,7 @@ const COURSES=[
  {q:'フリテンの説明で正しいのは？',choices:['自分の捨て牌に待ち牌があるとロンできない','フリテンだとツモ和了もできない','相手の捨て牌に待ち牌があるとロンできない','リーチ中だけ発生する'],a:0,exp:'待ち牌のどれか1種でも自分の河にあるとロン不可。ただしツモ和了はできます。'},
  {q:'流局したとき、ノーテンの人はどうなる？',choices:['何も起きない','テンパイ者に罰符を支払う','点数が没収される','次局親になれない'],a:1,exp:'ノーテン罰符は場に合計3,000点。例：テンパイ1人なら3人が1,000点ずつ支払います。'},
 ]},
-{id:'yaku',title:'役',icon:'🎴',section:1,desc:'和了に必要な「役」を覚えよう。',questions:[
+{id:'yaku',title:'役',icon:'🎴',section:2,desc:'和了に必要な「役」を覚えよう。',questions:[
  {q:'リーチを宣言できる条件は？',choices:['門前（鳴いていない）でテンパイしている','2翻以上ある','親のときだけ','ドラを持っている'],a:0,exp:'鳴いていない（門前）テンパイで、1,000点を供託できれば宣言できます。'},
  {q:'タンヤオの条件は？',choices:['2〜8の数牌だけで作る','字牌だけで作る','同じ色だけで作る','1・9を必ず使う'],a:0,exp:'1・9・字牌を使わず、2〜8の数牌のみ。鳴いてもOK（喰いタン）が一般的なルールです。'},
  {q:'ピンフの条件に「含まれない」のはどれ？',choices:['すべて順子で作る','雀頭が役牌でない','リャンメン待ち','刻子をひとつ含む'],a:3,exp:'ピンフは「順子×4＋役牌でない雀頭＋リャンメン待ち」。刻子（同じ牌3枚）が入るとピンフになりません。'},
@@ -1559,7 +1568,7 @@ const COURSES=[
  {q:'東場で南家が「東」を3枚集めた。役になる？',hand:'EEE',choices:['ならない','なる（1翻）','なる（2翻）','ロン和了のときだけなる'],a:1,exp:'東場の「東」は場風牌なので、どの家が刻子にしても1翻。自風（南家なら南）と重なる「ダブ東」なら2翻です。'},
  {q:'ドラを2枚持っていれば役なしでも和了できる？',choices:['できる','できない','ツモならできる','親ならできる'],a:1,exp:'ドラは役ではなく「おまけの翻」。リーチやタンヤオなど、最低1つは役が必要です。'},
 ]},
-{id:'score',title:'点数計算',icon:'🧮',section:1,desc:'符と翻から点数を出せるようになろう。',questions:[
+{id:'score',title:'点数計算',icon:'🧮',section:2,desc:'符と翻から点数を出せるようになろう。',questions:[
  {q:'子の30符4翻、ロンの点数は？',choices:['5,200点','6,400点','7,700点','8,000点'],a:2,exp:'基本点=30×2^(2+4)=1,920。子のロンは×4で7,680→切り上げて7,700点。'},
  {q:'親の満貫ツモ。支払いは？',choices:['2,600オール','3,000オール','4,000オール','6,000オール'],a:2,exp:'親の満貫は12,000点。ツモなら子3人が4,000点ずつ＝4,000オールです。'},
  {q:'子の40符2翻、ロンの点数は？',choices:['2,000点','2,600点','3,200点','3,900点'],a:1,exp:'基本点=40×2^4=640。×4=2,560→切り上げて2,600点。'},
@@ -1567,42 +1576,42 @@ const COURSES=[
  {q:'満貫になるのは何翻から？',choices:['3翻','4翻','5翻','6翻'],a:2,exp:'5翻から満貫（子8,000/親12,000）。※4翻30符は7,700点。「切り上げ満貫」ルールを採用する場合もあります。'},
  {q:'親の30符3翻、ロンの点数は？',choices:['3,900点','4,800点','5,800点','7,700点'],a:2,exp:'基本点=30×2^5=960。親のロンは×6=5,760→切り上げて5,800点。子なら3,900点です。'},
 ]},
-{id:'waits',title:'待ち当て',icon:'🔍',section:2,desc:'「完成まであと1枚」の最後の1枚＝待ちを当てよう。',type:'waits'},
-{id:'ukeire1',title:'受け入れ当て',icon:'🧩',section:2,desc:'1シャンテンの手牌から、テンパイする牌を全部当てよう。',type:'ukeire1'},
-{id:'nanikiru',title:'1択何切る',icon:'🀄',section:2,desc:'シャンテンを保って受け入れ最大の1枚を。',type:'discard',questions:[
+{id:'waits',title:'待ち当て',icon:'🔍',section:3,desc:'「完成まであと1枚」の最後の1枚＝待ちを当てよう。',type:'waits'},
+{id:'ukeire1',title:'受け入れ当て',icon:'🧩',section:3,desc:'1シャンテンの手牌から、テンパイする牌を全部当てよう。',type:'ukeire1'},
+{id:'nanikiru',title:'1択何切る',icon:'🀄',section:3,desc:'シャンテンを保って受け入れ最大の1枚を。',type:'discard',questions:[
  {id:'nk1',lv:3,fs:'nk:sh0:mg4',hand:'234556m456p678s88s',a:'5m',exp:'打5萬で23456萬の形が残り、1・4・7萬の三面張（受け11枚）。打2萬（4・7萬の7枚）より圧倒的に広いテンパイです。'},
  {id:'nk2',lv:4,fs:'nk:sh0:mg4',hand:'2224567m345p6788s',a:'8s',exp:'打8索で222萬を暗刻として活かし、4567萬＋雀頭88索…ではなく222萬＋456萬(or 567萬)の形で3・4・7萬待ち（受け10枚）。手の中の暗刻はくっつけて使うと強い！'},
  {id:'nk3',lv:5,fs:'nk:sh0:mg5',hand:'46677888m678p666s',a:'4m',exp:'打4萬で667788萬＋888…の複合形が残り、なんと5・6・7・8萬の4種待ち（受け9枚）。浮いた4萬を切るだけですが、残る形の強さを見抜けるかがポイント。'},
  {id:'nk4',lv:5,fs:'nk:sh0:mg5',hand:'12367m234777p678s',a:'7p',exp:'打7筒！777筒の暗刻を崩す勇気。77筒を雀頭にして67萬のリャンメン（5・8萬、受け8枚）が残ります。67萬を切ると7萬・6萬の単騎系しか残りません。'},
 ]},
-{id:'riichi',title:'リーチ判断',icon:'📣',section:2,desc:'局面を見て、曲げるかダマか。鳳凰卓の実測データで検証済み。',questions:SR_RIICHI_QUESTIONS},
-{id:'naki',title:'鳴き判断',icon:'🙋',section:3,desc:'ポン・チーの損得を見極めよう。',questions:[
+{id:'riichi',title:'リーチ判断',icon:'📣',section:3,desc:'局面を見て、曲げるかダマか。鳳凰卓の実測データで検証済み。',questions:SR_RIICHI_QUESTIONS},
+{id:'naki',title:'鳴き判断',icon:'🙋',section:4,desc:'ポン・チーの損得を見極めよう。',questions:[
  {q:'ポンする？',situ:{kyoku:'東1局',turn:5,seat:'子',dora:'8p',claim:'G',hand:'567m234p6p88p45sGG'},choices:['ポン','スルー'],a:0,exp:'發ポンで役が確定し、ドラ2（8筒×2）で3,900〜満貫級。打点・速度ともに十分なので積極的に鳴く。'},
  {q:'ピンフ・タンヤオ・リーチを狙える門前の好形1シャンテン。チーすると役が消える。どうする？',choices:['鳴かずに門前で進める','チーして速度を上げる','ポンできる牌を探す','手を崩して守備に回る'],a:0,exp:'鳴いて役がなくなる（＝和了できない）なら鳴きは論外。門前ならリーチ・ピンフ・ツモで打点も伸びます。'},
  {q:'オーラス、トップ目。1,000点でも和了れば逃げ切れる。役があるなら？',choices:['積極的に鳴いて最速で和了る','門前で高打点を狙う','鳴かずにベタオリする','ハイテイまで待つ'],a:0,exp:'順位が確定するなら打点は不要。役が残る鳴きはどんどん入れて、最速の和了を目指しましょう。'},
  {q:'鳴きのデメリットとして正しいのは？',choices:['打点と守備力が下がり、リーチできなくなる','ツモの回数が減る','ドラが使えなくなる','フリテンになる'],a:0,exp:'鳴くと門前役（リーチ・ツモ・ピンフ等）が消えて打点が下がり、手牌が減って降りにくくなります。この対価に見合うかが鳴き判断の軸です。'},
 ]},
-{id:'oshihiki',title:'押し引き',icon:'⚖️',section:3,desc:'押すか、引くか。勝敗を分ける判断。',questions:[
+{id:'oshihiki',title:'押し引き',icon:'⚖️',section:4,desc:'押すか、引くか。勝敗を分ける判断。',questions:[
  {q:'押し引き判断の基本となる比較は？',choices:['自分の手の価値 vs 放銃の危険','自分の点数 vs 相手の点数','ツモの良さ vs 運','捨て牌の枚数 vs 巡目'],a:0,exp:'「和了率×打点」で手の価値を測り、放銃率×失点と比べるのが押し引きの根本です。'},
  {q:'どうする？',situ:{kyoku:'東2局',turn:7,seat:'子',dora:'5p',note:'対面がリーチ中',hand:'24m46p77p234s678sW'},choices:['押す','オリる'],a:1,exp:'愚形×愚形の1シャンテンで打点も安い。この価値の手でリーチに立ち向かう理由がない。まず安全な西から降りよう。'},
  {q:'どうする？',situ:{kyoku:'東4局',turn:9,seat:'子',dora:'8p',note:'上家がリーチ中',hand:'567m234p88p45678s'},choices:['押す','オリる'],a:0,exp:'3/6/9索の三面張テンパイでドラ2（8筒×2）。良形×満貫級のテンパイは押す価値が十分。追いかけリーチで勝負。'},
  {q:'どうする？',situ:{kyoku:'南1局',turn:10,seat:'子',dora:'6p',note:'下家がリーチ中',hand:'24m68m355p24s678sW'},choices:['押す','オリる'],a:1,exp:'まだ2シャンテン。ここからアガリまで到達する確率は低く、無スジを何枚も通すことになる。即ベタオリが正解。'},
  {q:'リーチに対して無スジの牌を押してよいのは、主にどんなとき？',choices:['自分に押す価値のあるテンパイがあるとき','いつでも押してよい','安牌がないときだけ','親のときだけ'],a:0,exp:'無スジは放銃率が高い牌。見合うリターン（良形・高打点のテンパイ）があるときだけ勝負します。'},
 ]},
-{id:'gyakuten',title:'逆転条件',icon:'🔄',section:3,desc:'オーラスの点差計算をマスター。',questions:[
+{id:'gyakuten',title:'逆転条件',icon:'🔄',section:4,desc:'オーラスの点差計算をマスター。',questions:[
  {q:'オーラス2着目、トップと7,900点差。トップから直撃してまくれる最低打点は？',choices:['3,900点','5,200点','7,700点','8,000点'],a:1,exp:'直撃は「自分+X・相手-X」で差が2倍縮みます。5,200×2=10,400>7,900でOK。3,900×2=7,800では100点足りません！'},
  {q:'6,000点差の2着目。トップは子。満貫ツモ（2,000/4,000）で逆転できる？',choices:['できる','できない','親のときだけできる','同点になる'],a:0,exp:'自分が+8,000、トップの子は-2,000。差は10,000縮むので6,000点差は逆転です。ツモは全員から取れるのが強い！'},
  {q:'供託のリーチ棒は誰のもの？',choices:['和了した人','リーチした人に戻る','トップの人','山分けする'],a:0,exp:'供託されたリーチ棒1,000点は次に和了した人のもの。僅差のオーラスでは供託込みで逆転ラインを計算しましょう。'},
  {q:'同点で終局した場合、順位はどう決まる？',choices:['起家に近い方が上位','ジャンケンで決める','和了回数が多い方','同着になる'],a:0,exp:'一般的なルールでは同点の場合、起家（最初の親）に近い席順の方が上位になります。'},
 ]},
-{id:'anzen',title:'安全度',icon:'🛡️',section:4,desc:'現物・スジ・壁。牌の危険度を読む。',questions:[
+{id:'anzen',title:'安全度',icon:'🛡️',section:5,desc:'現物・スジ・壁。牌の危険度を読む。',questions:[
  {q:'リーチに対して最も安全な牌はどれ？',tchoices:[{t:'2m',lab:'現物'},{t:'4p',lab:'スジ'},{t:'W',lab:'2枚切れ'},{t:'5s',lab:'無スジ'}],a:0,exp:'リーチ者自身が捨てた牌（現物）はフリテンのルールにより絶対にロンされません。安全度は 現物 ＞ スジ・2枚切れ字牌 ＞ 無スジ の順。'},
  {q:'1筒がリーチ者の現物。「スジの4筒」が比較的安全な理由は？',choices:['2-3筒のリャンメン待ちならフリテンになるから','4筒は使いにくい牌だから','1筒と4筒は同じ牌扱いだから','カンチャン待ちが存在しないから'],a:0,exp:'4筒がリャンメンで当たるのは「2-3筒」持ちのときだけ。その待ちは1筒（現物）でフリテンなので、リャンメンには当たりません。ただしシャンポン・カンチャン・単騎には当たり得ます。'},
  {q:'7筒が場に4枚見えている。安全度が大きく上がる牌は？',tchoices:[{t:'6p'},{t:'8p'},{t:'9p'},{t:'5p'}],a:2,exp:'9筒がリャンメンで当たるには相手が「7-8筒」を持つ必要がありますが、7筒は4枚全部見えているので不可能（ノーチャンス）。残るはシャンポン・単騎などのみです。'},
  {q:'場に2枚切れの字牌が比較的安全な理由は？',choices:['シャンポン待ちがなくなり、残りは単騎だけだから','字牌は点数が安いから','鳴かれないから','ドラにならないから'],a:0,exp:'残り2枚が見えていればトイツで待たれる（シャンポン）ことがなく、当たるのはラス1枚の単騎待ちのみ。かなり安全です。'},
  {q:'安全度が高い順に並んでいるのはどれ？',choices:['現物 ＞ スジ・2枚切れ字牌 ＞ 無スジ2・8 ＞ 無スジ4〜6','無スジ4〜6 ＞ スジ ＞ 現物','スジ ＞ 現物 ＞ 字牌','どれも同じ'],a:0,exp:'現物が絶対安全。次にスジや枚数の切れた字牌、無スジでも端に近いほど当たる形が少なく、真ん中の4〜6が最も危険です。'},
 ]},
-{id:'betaori',title:'ベタオリ手順',icon:'🏃',section:4,desc:'降りると決めたら完璧に降りる。',questions:[
+{id:'betaori',title:'ベタオリ手順',icon:'🏃',section:5,desc:'降りると決めたら完璧に降りる。',questions:[
  {q:'ベタオリを決めたら、最初に切る牌は？',choices:['現物','手の中の危険牌','字牌','ドラ'],a:0,exp:'降りると決めたら和了は諦め、最も安全な現物から切るのが大原則。手の価値は一切考えなくてOKです。'},
  {q:'現物が1枚しかない。正しい考え方は？',choices:['残り巡目分の安全牌が足りるか数えて計画する','現物を最後まで温存する','諦めて手なりで進める','即座に現物を切って後は運に任せる'],a:0,exp:'流局まで何巡あるかを数え、現物・スジ・切れた字牌で最後まで凌げるかを先に計画します。足りないなら安全度の高い順に配分。'},
  {q:'現物が尽きた。次に切るべきは？',choices:['2枚切れの字牌やスジなど安全度の高い順','ドラの近く','真ん中の無スジ','ツモった牌をそのまま'],a:0,exp:'現物の次は「当たる形が少ない牌」。2枚切れ字牌、スジ、壁（ノーチャンス）の牌の順に安全度で選びます。'},
@@ -1684,6 +1693,52 @@ const THEMES=[
     {diff:{ch1:'d2_4'}},                       // ★第1章チャレンジ: 麻雀を打てる！
    ]},
   ]},
+ /* ===== 第2章「アガリが見える」v1.0 (19Lesson・待ち牌と待ちの形) ===== */
+ {id:'th_ch2a', course:'ch2a', title:'待ちを見つけよう', sub:'アガリになる牌をさがす',
+  requires:'th_ch1e',                          // 第1章(実戦への扉)を全クリアで解放
+  subThemes:[
+   {id:'st_ch2a1', title:'待ち牌さがし', lessons:[
+    {diff:{ch1:'wa1_1'}},                      // A1-1 あと1枚はどれ？
+    {diff:{ch1:'wa1_2'}},                      // A1-2 待ちは1枚とは限らない
+    {diff:{ch1:'wa1_3'}},                      // A1-3 待ちを全部えらぼう
+    {diff:{ch1:'wa1_4'}},                      // ★まとめ: 待ちはかせ
+   ]},
+  ]},
+ {id:'th_ch2b', course:'ch2b', title:'待ちの形を知ろう', sub:'ならび2枚のひみつ',
+  requires:'th_ch2a',
+  subThemes:[
+   {id:'st_ch2b1', title:'ならび2枚の待ち', lessons:[
+    {diff:{ch1:'wb1_1'}},                      // B1-1 両側でアガれる
+    {diff:{ch1:'wb1_2'}},                      // B1-2 リャンメン
+    {diff:{ch1:'wb1_3'}},                      // B1-3 真ん中を待つ
+    {diff:{ch1:'wb1_4'}},                      // B1-4 カンチャン
+    {diff:{ch1:'wb1_5'}},                      // B1-5 端っこを待つ
+    {diff:{ch1:'wb1_6'}},                      // ★B1-6 ペンチャン(ならび2枚3形まとめ)
+   ]},
+  ]},
+ {id:'th_ch2c', course:'ch2c', title:'いろいろな待ち', sub:'トイツと1枚の待ち',
+  requires:'th_ch2b',
+  subThemes:[
+   {id:'st_ch2c1', title:'トイツ2組の待ち', lessons:[
+    {diff:{ch1:'wc1_1'}},                      // C1-1 2組のトイツ
+    {diff:{ch1:'wc1_2'}},                      // C1-2 シャンポン
+   ]},
+   {id:'st_ch2c2', title:'アタマを待つ', lessons:[
+    {diff:{ch1:'wc2_1'}},                      // C2-1 アタマがない！
+    {diff:{ch1:'wc2_2'}},                      // C2-2 単騎
+    {diff:{ch1:'wc2_3'}},                      // ★C2-3 5つの待ち総まとめ
+   ]},
+  ]},
+ {id:'th_ch2d', course:'ch2d', title:'実戦の待ち', sub:'13枚から待ちをさがす',
+  requires:'th_ch2c',
+  subThemes:[
+   {id:'st_ch2d1', title:'13枚の待ち', lessons:[
+    {diff:{ch1:'wd1_1'}},                      // D1-1 13枚から待ちを探す
+    {diff:{ch1:'wd1_2'}},                      // D1-2 待ちを全部当てよう
+    {diff:{ch1:'wd1_3'}},                      // D1-3 待ちの形はどれ？
+    {diff:{ch1:'wd1_4'}},                      // ★D1-4 第2章チャレンジ「アガリが見える！」
+   ]},
+  ]},
  {id:'th_rules', course:'rules', title:'麻雀のきほん', sub:'ルール・アガリの形を知る',
   qn:6,  // 静的プールが6問のため全問1周(重複出題はしない)。プール拡充後にqnを外せば既定10問
   subThemes:[
@@ -1745,6 +1800,7 @@ const THEMES=[
 ];
 const SECTIONS=[
  {name:'麻雀を打てる',desc:'第1章：麻雀のきほん構造を体で覚える'},
+ {name:'アガリが見える',desc:'第2章：待ち牌を見つける目を育てる'},
  {name:'入門',desc:'ルール・役・点数のきほん'},
  {name:'初級',desc:'手作りの技術を磨く'},
  {name:'中級',desc:'判断力で差をつける'},
@@ -1818,7 +1874,7 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    開発UI・未検証Compare）を通常操作から隠す。コード・データ・機能は
    一切削除しておらず、このフラグをfalseにすれば全て復帰する。 */
 let PROTOTYPE_MODE=true;
-const PROTO_VISIBLE_COURSES=['ch1a','ch1b','ch1c','ch1d','ch1e','rules','yaku','score','waits','ukeire1','nanikiru','riichi'];
+const PROTO_VISIBLE_COURSES=['ch1a','ch1b','ch1c','ch1d','ch1e','ch2a','ch2b','ch2c','ch2d','rules','yaku','score','waits','ukeire1','nanikiru','riichi'];
 function protoCourseVisible(id){ return !PROTOTYPE_MODE||PROTO_VISIBLE_COURSES.includes(id); }
 function staminaFree(){ return PROTOTYPE_MODE||S.owned.stamina; }   // プロトタイプはスタミナ消費なし
 function devUIVisible(){ return !PROTOTYPE_MODE||S.dev||location.hash==='#dev'; }
@@ -3872,10 +3928,492 @@ const CH1_LESSONS={
     ]);
   },
 };
+/* ============================================================
+   第2章「アガリが見える」v1.0 — 19レッスン(待ち牌と待ちの形)
+   設計原則(指示・カリキュラム):
+   ・体験→意味→名前→使う(名称初出: リャンメン=B1-2/カンチャン=B1-4/ペンチャン=B1-6/
+     シャンポン=C1-2/単騎=C2-2。先出し禁止)
+   ・「待ち牌」=アガリになる牌そのもの/「待ちの形」=リャンメン等の形、で使い分け統一
+   ・正解は必ずch1MiniWaits(決定論)で算出。生成は制御されたランダム+検証(正解保証)
+   ・待ちの優劣・受け入れ枚数・新しい役・多面待ちの名称・漢字主表記(両面等)は扱わない
+   ・「5種類だけが全て」とは断言しない(「まずは基本の5つ」)
+   ============================================================ */
+/* ---- 待ちの形の決定論判定(教材用の単純形のみ。判定できない形はnull=テストで検出) ---- */
+const CH2_SHAPE_LABEL={ryanmen:'リャンメン',kanchan:'カンチャン',penchan:'ペンチャン',shanpon:'シャンポン',tanki:'単騎'};
+function ch2ShapeOf(hand){
+  const waits=ch1MiniWaits(hand);
+  const cnt={}; hand.forEach(t=>cnt[t]=(cnt[t]||0)+1);
+  if(waits.length===2&&waits.every(w=>cnt[w]===2)) return 'shanpon';   // 待ち=手の中のトイツ2組
+  if(waits.length===1){
+    const w=waits[0];
+    if(cnt[w]===1) return 'tanki';                                     // 手の1枚とおなじ牌でアタマ
+    if(w.length===2){
+      const n=+w[0],su=w[1];
+      const has=x=>x>=1&&x<=9&&(cnt[x+su]||0)>0;
+      if(has(n-1)&&has(n+1)) return 'kanchan';                         // 真ん中を待つ
+      if((n===3&&has(1)&&has(2))||(n===7&&has(8)&&has(9))) return 'penchan'; // 12→3・89→7
+    }
+    return null;
+  }
+  if(waits.length===2){
+    const ns=waits.filter(w=>w.length===2).sort((a,b)=>(+a[0])-(+b[0]));
+    if(ns.length===2&&ns[0][1]===ns[1][1]&&(+ns[1][0])-(+ns[0][0])===3){
+      const lo=+ns[0][0],su=ns[0][1];
+      if((cnt[(lo+1)+su]||0)>0&&(cnt[(lo+2)+su]||0)>0) return 'ryanmen'; // 両側で待つ
+    }
+  }
+  return null;
+}
+/* ---- 制御されたランダム生成(完全ランダム禁止): 部品を組み合わせ、必ず検証してから返す ---- */
+const CH2_RYANMEN_BASES=[[2,3],[3,4],[4,5],[5,6],[6,7],[7,8]];       // 待ち=両側[lo-1,lo+2]
+const CH2_KANCHAN_BASES=[[1,3],[2,4],[3,5],[4,6],[5,7],[6,8],[7,9]]; // 待ち=真ん中
+const CH2_PENCHAN_BASES=[[1,2],[8,9]];                               // 待ち=12→3・89→7のみ
+const CH2_HONORS=['E','S','W','N','B','G','R'];
+function ch2GenTry(shape,size){
+  // size=手牌枚数(4/7/13)。待ちの部分は1スート、メンツ・アタマは別スート/字牌にして干渉を避ける
+  const sus=shuffle(['m','p','s']);
+  const su=sus[0];
+  const hand=[]; let waits=[], base=[];
+  const mOpts=[];                                        // メンツ部品(別スートのシュンツ+字牌コーツ)
+  for(const s2 of [sus[1],sus[2]]) for(const lo of [1,4,7]) mOpts.push({run:[s2,lo]});
+  for(const h of CH2_HONORS) mOpts.push({tri:h});
+  shuffle(mOpts);
+  let mi=0;
+  const addMentsu=k=>{ for(let i=0;i<k;i++){ const o=mOpts[mi++];
+    if(o.run) hand.push(o.run[1]+o.run[0],(o.run[1]+1)+o.run[0],(o.run[1]+2)+o.run[0]);
+    else hand.push(o.tri,o.tri,o.tri); } };
+  const headOpts=shuffle(CH2_HONORS.concat([1,2,3,4,5,6,7,8,9].map(n=>n+sus[1])));
+  const pickHead=()=>{ for(const h of headOpts){ const c=hand.filter(t=>t===h).length;
+    if(c===0){ hand.push(h,h); return h; } } return null; };
+  if(shape==='ryanmen'||shape==='kanchan'||shape==='penchan'){
+    const bases=shape==='ryanmen'?CH2_RYANMEN_BASES:(shape==='kanchan'?CH2_KANCHAN_BASES:CH2_PENCHAN_BASES);
+    const b=bases[Math.floor(Math.random()*bases.length)];
+    base=[b[0]+su,b[1]+su]; hand.push(base[0],base[1]);
+    if(shape==='ryanmen') waits=[(b[0]-1)+su,(b[0]+2)+su];
+    else if(shape==='kanchan') waits=[(b[0]+1)+su];
+    else waits=[(b[0]===1?3:7)+su];
+    addMentsu((size-4)/3);
+    if(!pickHead()) return null;
+  }else if(shape==='shanpon'){
+    const pOpts=shuffle(CH2_HONORS.concat([1,3,5,7,9].map(n=>n+su),[2,4,6,8].map(n=>n+sus[1])));
+    base=[pOpts[0],pOpts[1]]; hand.push(base[0],base[0],base[1],base[1]);
+    waits=base.slice();
+    addMentsu((size-4)/3);
+  }else if(shape==='tanki'){
+    const tOpts=shuffle(CH2_HONORS.concat([1,2,3,4,5,6,7,8,9].map(n=>n+su)));
+    base=[tOpts[0]]; hand.push(base[0]);
+    waits=base.slice();
+    addMentsu((size-1)/3);
+  }else return null;
+  if(hand.length!==size) return null;
+  const cnt={}; for(const t of hand){ cnt[t]=(cnt[t]||0)+1; if(cnt[t]>4) return null; }
+  return {hand:sortTiles(hand),waits,base};
+}
+const CH2_FALLBACK={
+  ryanmen4:'5m6mEE', ryanmen7:'6p7p123sWW', ryanmen13:'2m3m456p789sGGGWW',
+  kanchan4:'4s6sWW', kanchan7:'3m5m789pNN', kanchan13:'2m4m567p123sBBBSS',
+  penchan4:'1p2pSS', penchan7:'8m9m234sEE', penchan13:'1s2s456m789pNNNWW',
+  shanpon7:'123m5p5p7s7s', shanpon13:'123m456p789sEEWW',
+  tanki4:'123mE', tanki7:'123m456pE', tanki13:'123m456p789sBBBE',
+};
+function ch2Gen(shape,size){
+  for(let tr=0;tr<60;tr++){
+    const g=ch2GenTry(shape,size);
+    if(!g) continue;
+    const ws=ch1MiniWaits(g.hand);
+    if(ws.length!==g.waits.length||!g.waits.every(w=>ws.includes(w))) continue; // 干渉で待ちが変わる牌姿は捨てる
+    if(ch2ShapeOf(g.hand)!==shape) continue;                                    // 形の判定も一致するものだけ
+    return Object.assign(g,{shape});
+  }
+  const hand=sortTiles(parseHand(CH2_FALLBACK[shape+size]));                    // 既知良品フォールバック
+  return {hand,waits:ch1MiniWaits(hand),base:[],shape};
+}
+/* ---- 誤答候補(待ちではない牌): 待ちの近く・手の中の牌・別スート同数字から決定論で選ぶ ---- */
+function ch2Distractors(hand,waits,n){
+  const cnt={}; hand.forEach(t=>cnt[t]=(cnt[t]||0)+1);
+  const pool=[];
+  const push=cd=>{ if(!cd||waits.includes(cd)||(cnt[cd]||0)>=4||pool.includes(cd)) return; pool.push(cd); };
+  for(const w of waits) if(w.length===2){ const n0=+w[0],su=w[1];
+    if(n0>1) push((n0-1)+su); if(n0<9) push((n0+1)+su); }
+  for(const t of hand) push(t);
+  for(const w of waits) if(w.length===2) for(const su of ['m','p','s']) if(su!==w[1]) push(w[0]+su);
+  // 字牌中心の手牌でも候補が細らないよう、字牌と数牌の予備プールから補充する
+  for(const h of shuffle(CH2_HONORS.slice())) push(h);
+  for(const cd of shuffle(['2m','5m','8m','3p','6p','9p','1s','4s','7s'])) push(cd);
+  return shuffle(pool).slice(0,n);
+}
+/* ---- 第2章ビルダー(正解は必ずch1MiniWaits/ch2ShapeOfで算出) ---- */
+function ch2WaitFind(handStr,extras,opt){
+  // 待ち牌さがし(wf): 全選択→「これで決定」。正解セット=ch1MiniWaits
+  opt=opt||{};
+  const hand=parseHand(handStr);
+  const waits=ch1MiniWaits(hand);
+  const c2=shuffle(waits.concat(extras.filter(cd=>!waits.includes(cd))));
+  const answers=c2.map((cd,i)=>({cd,i})).filter(x=>waits.includes(x.cd)).map(x=>x.i);
+  return Object.assign({wf:true,tlab:'待ち牌さがし',
+    q:'この手牌の<b>待ち牌</b>を<b>ぜんぶ</b>えらんで、「これで決定」！',
+    hand:handStr,cands:c2,answers,grouped:true},opt);
+}
+function ch2WfGen(shape,size,opt){
+  const g=ch2Gen(shape,size);
+  return ch2WaitFind(g.hand.join(''),ch2Distractors(g.hand,g.waits,Math.max(3,6-g.waits.length)),opt);
+}
+function ch2WaitPick(handStr,distractors,exp,opt){
+  // 待ちが1種の形: 1枚えらび(第1章ch1WaitPick再利用・文言のみ第2章用)
+  const b=ch1WaitPick(handStr,distractors,'この手牌の<b>待ち牌</b>はどれ？',exp);
+  b.tlab='待ち牌さがし';
+  return Object.assign(b,opt||{});
+}
+function ch2WaitCountMcq(handStr,exp){
+  // 待ち牌の種類数(1種類/2種類の教材形のみで出題。それ以外はa=-1でテスト検出)
+  const nw=ch1MiniWaits(parseHand(handStr)).length;
+  return {q:'この手牌の<b>待ち牌</b>は、何種類ある？',hand:handStr,
+    choices:['1種類','2種類'],a:(nw===1?0:(nw===2?1:-1)),exp,ghand:true};
+}
+function ch2ShapeMcq(handStr,choices,exp,opt){
+  // 待ちの形あて: 正解はch2ShapeOfで決定(判定不能ならa=-1でテスト検出)
+  const shape=ch2ShapeOf(parseHand(handStr));
+  const a=choices.indexOf(CH2_SHAPE_LABEL[shape]);
+  return Object.assign({q:'この手牌の<b>待ちの形</b>はどれ？',tlab:'待ちの形',
+    hand:handStr,choices,a,exp,ghand:true},opt||{});
+}
+function ch2ShapeGenMcq(shape,size,choices,exp,opt){
+  const g=ch2Gen(shape,size);
+  return ch2ShapeMcq(g.hand.join(''),choices,exp,opt);
+}
+function ch2IsShapeMcq(handStr,shape,exp){
+  // ○×型: この待ちの形は◯◯？(正解はch2ShapeOf)
+  const ok=ch2ShapeOf(parseHand(handStr))===shape;
+  return {q:'この手牌の待ちの形は、'+CH2_SHAPE_LABEL[shape]+'？',hand:handStr,
+    choices:[CH2_SHAPE_LABEL[shape]+'になっている','なっていない'],a:ok?0:1,exp,ghand:true};
+}
+const CH2_SHAPES5=['リャンメン','カンチャン','ペンチャン','シャンポン','単騎'];
 function buildCh1(key){
-  const f=CH1_LESSONS[key];
+  const f=CH1_LESSONS[key]||CH2_LESSONS[key];
   return f?f():[];
 }
+/* ---- 第2章 19レッスンの中身(キーはTHEMESのdiff.ch1と一致) ---- */
+const CH2_LESSONS={
+  /* A1-1 あと1枚はどれ？(復習1行→「待ち牌」の名前) */
+  wa1_1(){
+    return [
+      ch1Teach('第2章へようこそ！第1章のさいごに覚えた<b>テンパイ</b>…あと1枚でアガリの形だったね。',
+        {tlab:'おさらい1行',hands:[{label:'あと1枚でアガリ！',hand:'2s3s4sE',g:true}]}),
+      ch1Teach('そのアガリになる牌を、これからは<span class="term-chip">待ち牌</span>とよぶよ。テンパイの手牌には、かならず待ち牌があるんだ。さがしてみよう！',
+        {tlab:'待ち牌',hands:[{label:'この手牌の…',hand:'2s3s4sE',g:true},{label:'待ち牌は「東」',hand:'E'}]}),
+      ch2WaitPick('2s3s4sE',['W','5s','1s'],'東が来れば234sのメンツ＋東東のアタマ！のこった1枚とおなじ牌も、りっぱな待ち牌だよ。'),
+      ch2WaitPick('4m6m2p2p',['7m','5p','3m'],'5マンが来れば456m＋22p！4と6のあいだの牌が待ち牌だ。'),
+      ch2WaitPick('7p8p9p3s',['4s','6p','2s'],'3ソーが来れば789p＋33s。手牌のなかの1枚とおなじ牌が待ち牌になることもあるんだ。'),
+      ch2WaitPick('5p5p5pW',['B','6p','E'],'西が来れば555p＋西西でアガリ！'),
+      {q:'<b>待ち牌</b>とは、どんな牌のこと？',choices:['ツモればアガリになる牌','いらないので切る牌'],a:0,
+       exp:'テンパイの手牌がアガリになる、さいごの1枚。それが待ち牌だよ。'},
+      ch2WaitPick('1m2m3mG',['R','4m','9m'],'發とおなじ牌をツモれば、發發のアタマができてアガリ！'),
+    ];
+  },
+  /* A1-2 待ちは1枚とは限らない(体験→2種類あることを知る。LEVEL1のみヒントあり) */
+  wa1_2(){
+    return [
+      ch1Teach('この手牌、<b>なに</b>をツモればアガリかな？じつは…こたえは1つじゃないんだ！',
+        {tlab:'まさかの…',hands:[{label:'あと1枚でアガリ',hand:'6m7mSS',g:true}],
+         act:{label:'こたえを見る',result:'5マンでも8マンでも…アガリ！<b>待ち牌が2種類</b>ある形なんだ！'}}),
+      ch1Teach('手牌の形によっては、待ち牌が<b>2種類</b>あることも。だから「1つ見つけて終わり」じゃなくて、待ち牌を<b>ぜんぶ</b>さがすのが大事だよ！',
+        {tlab:'ぜんぶさがせ！'}),
+      ch2WaitCountMcq('3p4p7s7s','2ピンと5ピン、どちらでもアガリ！待ち牌は2種類だ。'),
+      ch2WaitCountMcq('8m8m8mE','東だけがアガリになる。待ち牌が1種類の形もあるよ。'),
+      ch2WaitFind('5m6m3s3s',['5m','3s','8m','N'],
+        {hint:'待ち牌は2種類あるよ',exp:'4マンなら456m、7マンなら567m。33sのアタマとあわせてアガリ！'}),
+      ch2WaitFind('2p3p9s9s',['2p','9s','5p','W'],
+        {hint:'待ち牌は2種類あるよ',exp:'1ピンでも4ピンでもアガリ！'}),
+      ch2WaitCountMcq('6s7s8sW','西だけ！のこった1枚とおなじ牌が待ち牌だよ。'),
+      {q:'待ち牌について、正しいのはどっち？',choices:['形によって、1種類のときも2種類のときもある','どんな手牌でも、かならず1種類だけ'],a:0,
+       exp:'だいじなのは、待ち牌を<b>ぜんぶ</b>見つけること！つぎのレッスンで練習しよう。'},
+    ];
+  },
+  /* A1-3 待ちを全部えらぼう(LEVEL2: ヒントなし・正解数も教えない) */
+  wa1_3(){
+    return [
+      ch1Teach('ここからはヒントなし！待ち牌を<b>ぜんぶ</b>えらんでから<b>「これで決定」</b>。まちがえても大丈夫、何度でも挑戦できるよ！',
+        {tlab:'これで決定！'}),
+      ch2WaitFind('4m5m6mS',['3m','7m','W','1m'],
+        {exp:'456mはできあがり。南とおなじ牌が来ればアタマ完成でアガリ！'}),
+      ch2WfGen('ryanmen',4),
+      ch2WfGen('kanchan',4),
+      ch2WaitFind('1m2m3m6p7p5s5s',['6p','9p','5s','3p'],
+        {exp:'5ピンなら567p、8ピンなら678p。55sのアタマとあわせてアガリ！'}),
+      ch2WfGen('shanpon',7),
+      ch2WfGen('tanki',7),
+    ];
+  },
+  /* A1-4 ★まとめ: 待ちはかせ(節目の達成フィードバックつき) */
+  wa1_4(){
+    const quiz=shuffle([
+      ch2WaitCountMcq('4p5p2s2s','3ピンと6ピンの2種類！ならんだ2枚は、待ち牌がふえやすいんだ。'),
+      ch2WaitPick('9s9s9sB',['G','8s','E'],'白とおなじ牌が来れば、白白のアタマ完成！'),
+      ch2WaitFind('3m4m8p8p',['3m','8p','6m','W'],{exp:'2マンでも5マンでもアガリ！'}),
+      ch2WfGen('ryanmen',4),
+      ch2WfGen('tanki',4),
+      ch1TenpaiMcq('2m5m8mE','どの1枚が来てもアガリにならない…待ち牌がない形は、テンパイじゃないよ。'),
+    ]);
+    return [
+      ch1Teach('まとめだよ！<b>待ち牌さがし</b>、どこまでできるようになったかな？',{tlab:'まとめ'}),
+    ].concat(quiz).concat([
+      ch1Teach('🎉 <b>待ち牌さがし、バッチリ！</b>じつは待ち牌には、<b>形</b>のひみつがあるんだ。つぎのテーマで見ていこう！',
+        {tlab:'つぎへ！'}),
+    ]);
+  },
+  /* ===== B ならび2枚の待ちの形(体験→名前の順を厳守) ===== */
+  /* B1-1 両側でアガれる(まだ名前は出さない) */
+  wb1_1(){
+    return [
+      ch1Teach('この形に注目！<b>6と7がならんだ2枚</b>。なにが来たらアガリかな？',
+        {tlab:'ならんだ2枚',hands:[{label:'67のならび＋アタマ',hand:'6m7mEE',g:true}],
+         act:{label:'たしかめる',result:'5マンなら567m、8マンなら678m。<b>りょうがわのどちらでも</b>アガリ！'}}),
+      ch1Teach('ならんだ2枚は、<b>両側(りょうがわ)</b>のどちらが来てもメンツになれる。だから待ち牌が2種類になるんだ！',
+        {tlab:'両側で待つ'}),
+      ch2WaitFind('2p3pWW',['2p','5p','W','8p'],{exp:'1ピンと4ピン、両側が待ち牌！'}),
+      ch2WfGen('ryanmen',4),
+      ch2WaitCountMcq('5s6s9p9p','ならんだ2枚は両側で待てるから、4ソーと7ソーの2種類！'),
+      ch2WfGen('ryanmen',7),
+      {q:'ならんだ2枚(たとえば45)は、どこで待てる？',choices:['両側(3と6)のどちらでも','小さいほう(3)だけ'],a:0,
+       exp:'ならんだ2枚の待ち牌は、両側の2種類だよ！'},
+    ];
+  },
+  /* B1-2 リャンメン(名前の初出) */
+  wb1_2(){
+    return [
+      ch1Teach('きみがもう見つけられる「ならんだ2枚で両側を待つ形」。この形の名前は<span class="term-chip">リャンメン</span>！',
+        {tlab:'リャンメン',hands:[{label:'リャンメン(45)＋アタマ',hand:'4m5mEE',g:true}]}),
+      ch1Teach('待ち牌をさがすときは、まず<b>待ちの形</b>を見る。リャンメンを見つけたら、待ち牌は両側の2種類だ！',
+        {tlab:'待ちの形'}),
+      ch2IsShapeMcq('3s4sNN','ryanmen','34のならび2枚。りっぱなリャンメンだよ！'),
+      ch2IsShapeMcq('4p6pNN','ryanmen','4と6は、となりあっていない…この形はリャンメンじゃないんだ。(なんの形かは、このあとのレッスンで！)'),
+      ch2WfGen('ryanmen',7),
+      ch2WfGen('ryanmen',4),
+      {q:'リャンメンの<b>待ち牌</b>は何種類？',choices:['2種類(両側)','1種類'],a:0,
+       exp:'ならんだ2枚の両側、2種類が待ち牌！'},
+      ch2WaitFind('4s5s1m2m3mGG',['4s','7s','G','2s'],
+        {exp:'リャンメン45の両側、3ソーと6ソーが待ち牌！'}),
+    ];
+  },
+  /* B1-3 真ん中を待つ(まだ名前は出さない) */
+  wb1_3(){
+    return [
+      ch1Teach('こんどはこの形。<b>4と6</b>…あいだが1つ空いているね。なにが来たらアガリ？',
+        {tlab:'あいだが空いた2枚',hands:[{label:'46＋アタマ',hand:'4m6mWW',g:true}],
+         act:{label:'たしかめる',result:'<b>5マンだけ</b>がアガリ！あいだ＝<b>真ん中</b>を待つ形なんだ。'}}),
+      ch1Teach('くらべてみよう。ならんだ45は両側の2種類。あいだが空いた46は、<b>真ん中の1種類だけ</b>。',
+        {tlab:'くらべてみよう',hands:[{label:'45 → 待ち牌は3と6',hand:'4m5mWW',g:true},
+          {label:'46 → 待ち牌は5だけ',hand:'4m6mWW',g:true}]}),
+      ch2WaitPick('3p5pEE',['3p','6p','2p'],'3と5のあいだ、4ピンだけが待ち牌！'),
+      ch2WfGen('kanchan',4),
+      ch2WaitCountMcq('2s4s7p7p','2と4のあいだの3ソーだけ。真ん中を待つ形は1種類なんだ。'),
+      ch2WfGen('kanchan',7),
+      {q:'あいだが1つ空いた2枚(たとえば57)の待ち牌は？',choices:['真ん中の1種類(6)だけ','両側の2種類(4と8)'],a:0,
+       exp:'あいだの空いた2枚は、真ん中しか待てないんだ。'},
+    ];
+  },
+  /* B1-4 カンチャン(名前の初出) */
+  wb1_4(){
+    return [
+      ch1Teach('真ん中を待つこの形の名前は<span class="term-chip">カンチャン</span>！「あいだ(間)で待つ」形だよ。',
+        {tlab:'カンチャン',hands:[{label:'カンチャン(46)＋アタマ',hand:'4m6mEE',g:true}]}),
+      ch2ShapeMcq('5s7s9p9p',['リャンメン','カンチャン'],'5と7のあいだ空き。カンチャンだ！'),
+      ch2ShapeGenMcq('ryanmen',4,['リャンメン','カンチャン'],'ならんだ2枚で両側を待つ。リャンメン！'),
+      ch2ShapeGenMcq('kanchan',4,['リャンメン','カンチャン'],'あいだが空いた2枚で真ん中を待つ。カンチャン！'),
+      ch2WfGen('kanchan',7),
+      ch2WfGen('ryanmen',7),
+      {q:'カンチャンの<b>待ち牌</b>は何種類？',choices:['1種類(真ん中)','2種類(両側)'],a:0,
+       exp:'あいだの1つだけを待つのがカンチャンだよ。'},
+    ];
+  },
+  /* B1-5 端っこを待つ(12→3と23→1・4の実物比較。まだ名前は出さない) */
+  wb1_5(){
+    return [
+      ch1Teach('さいごはこの形。<b>1と2</b>のならび…ならんでいるのに、なにかがちがうぞ？',
+        {tlab:'はしっこの2枚',hands:[{label:'12＋アタマ',hand:'1p2pSS',g:true}],
+         act:{label:'たしかめる',result:'待ち牌は<b>3だけ</b>！1のそとがわには牌がないから、かた側でしか待てないんだ。'}}),
+      ch1Teach('くらべてみよう。おなじ「ならんだ2枚」でも、<b>23</b>なら1と4の2種類。<b>12</b>は3だけ。0の牌はないからね！',
+        {tlab:'くらべてみよう',hands:[{label:'23 → 待ち牌は1と4',hand:'2p3pSS',g:true},
+          {label:'12 → 待ち牌は3だけ',hand:'1p2pSS',g:true}]}),
+      ch1Teach('9のがわもおなじ。<b>89</b>は10の牌がないから、待ち牌は<b>7だけ</b>だよ。',
+        {tlab:'89のならび',hands:[{label:'89 → 待ち牌は7だけ',hand:'8s9sSS',g:true}]}),
+      ch2WaitPick('8m9mNN',['6m','9m','W'],'89のならびは、7だけが待ち牌！'),
+      ch2WfGen('penchan',4),
+      ch2WaitCountMcq('1s2s5p5p','3ソーだけ！はしっこの12は、かた側でしか待てないよ。'),
+      ch2WfGen('penchan',7),
+      {q:'12のならび2枚は、どこで待てる？',choices:['3だけ(かた側)','0と3の両側'],a:0,
+       exp:'0の牌はない！はしっこのならびは、かた側だけなんだ。'},
+    ];
+  },
+  /* B1-6 ペンチャン(名前の初出)+ならび2枚3形まとめ(節目) */
+  wb1_6(){
+    return [
+      ch1Teach('はしっこ(端)で待つこの形の名前は<span class="term-chip">ペンチャン</span>！12と89、この2つだけの特別な形だよ。',
+        {tlab:'ペンチャン',hands:[{label:'ペンチャン(12)',hand:'1m2mEE',g:true},
+          {label:'ペンチャン(89)',hand:'8m9mEE',g:true}]}),
+      ch1Teach('これで<b>ならび2枚の待ちの形</b>が3つそろった！形を見れば、待ち牌はすぐわかる！',
+        {tlab:'3つそろった！',hands:[{label:'リャンメン(45)→3・6',hand:'4s5sWW',g:true},
+          {label:'カンチャン(46)→5',hand:'4p6pWW',g:true},
+          {label:'ペンチャン(12)→3',hand:'1m2mWW',g:true}]}),
+      ch2ShapeGenMcq('ryanmen',4,['リャンメン','カンチャン','ペンチャン'],'ならんだ2枚で両側待ち。リャンメン！'),
+      ch2ShapeGenMcq('kanchan',4,['リャンメン','カンチャン','ペンチャン'],'あいだ空きで真ん中待ち。カンチャン！'),
+      ch2ShapeGenMcq('penchan',4,['リャンメン','カンチャン','ペンチャン'],'12か89のはしっこ待ち。ペンチャン！'),
+      ch2WfGen('penchan',7),
+      ch2WfGen('ryanmen',7),
+      ch1Teach('🎉 <b>ならび2枚の3つの形、マスター！</b>つぎは<b>トイツ</b>をつかった、ふしぎな待ちだよ。',
+        {tlab:'つぎへ！'}),
+    ];
+  },
+  /* ===== C いろいろな待ち ===== */
+  /* C1-1 2組のトイツ(仕組みの体験が先。まだ名前は出さない) */
+  wc1_1(){
+    return [
+      ch1Teach('この手牌、メンツは234mの1つ。のこりは…<b>トイツが2組</b>！なにが来たらアガリかな？',
+        {tlab:'トイツが2組',hands:[{label:'メンツ＋トイツ2組',hand:'2m3m4m5p5p6s6s',g:true}],
+         act:{label:'たしかめる',result:'5ピンなら555pのコーツ＋66sのアタマ。6ソーなら666s＋55p。<b>どちらでもアガリ</b>！'}}),
+      ch1Teach('トイツが2組あると、<b>かた方がコーツに、もうかた方がアタマに</b>なれる。だから待ち牌は2種類。トイツそのものが待ちになるんだ！',
+        {tlab:'トイツで待つ'}),
+      ch2WaitFind('1m1m9p9p',['2m','8p','E','9m'],
+        {exp:'1マンなら111m＋99p、9ピンなら999p＋11m！'}),
+      ch2WfGen('shanpon',7),
+      ch2WaitCountMcq('3s3sWW','3ソーと西、どちらが来てもアガリ。トイツ2組の待ちは2種類だ！'),
+      ch2WfGen('shanpon',7),
+      {q:'トイツが2組のこったテンパイ。待ち牌はどれ？',choices:['2組のトイツと<b>おなじ牌</b>','トイツのとなりの牌'],a:0,
+       exp:'どちらかのトイツがコーツになればアガリ。だから待ち牌はトイツとおなじ牌だよ！'},
+    ];
+  },
+  /* C1-2 シャンポン(名前の初出) */
+  wc1_2(){
+    return [
+      ch1Teach('トイツ2組で待つこの形の名前は<span class="term-chip">シャンポン</span>！どちらのトイツも待ちになるよ。',
+        {tlab:'シャンポン',hands:[{label:'シャンポン',hand:'5p5p6s6s',g:true}]}),
+      ch2ShapeGenMcq('shanpon',7,['リャンメン','カンチャン','ペンチャン','シャンポン'],'トイツが2組。シャンポンだ！'),
+      ch2ShapeGenMcq('ryanmen',7,['リャンメン','カンチャン','ペンチャン','シャンポン'],'ならんだ2枚で両側待ち。リャンメン！'),
+      ch2WfGen('shanpon',7),
+      ch2WaitFind('6m6m2p3p4pRR',['5m','7m','G','6m'],
+        {exp:'6マンと中のシャンポン！どちらが来てもアガリだよ。'}),
+      {q:'シャンポンの<b>待ち牌</b>は？',choices:['2組のトイツとおなじ牌(2種類)','トイツのあいだの牌'],a:0,
+       exp:'トイツがコーツになるのを待つ形。だから待ち牌はトイツとおなじ牌！'},
+      ch2ShapeGenMcq('kanchan',4,['リャンメン','カンチャン','ペンチャン','シャンポン'],'あいだ空きの真ん中待ち。カンチャンだ！'),
+    ];
+  },
+  /* C2-1 アタマがない！(単騎の仕組みの体験。まだ名前は出さない) */
+  wc2_1(){
+    return [
+      ch1Teach('この手牌…メンツは<b>2つともできあがり</b>。でも、たいへんだ！<b>アタマがない！</b>',
+        {tlab:'アタマがない！',hands:[{label:'メンツ2つ＋1枚',hand:'1m2m3m4p5p6p7s',g:true}],
+         act:{label:'どうする？',result:'のこった<b>7ソー</b>とおなじ牌が来れば…77sのアタマができてアガリ！'}}),
+      ch1Teach('メンツがぜんぶそろっていたら、のこりの<b>1枚</b>とおなじ牌を待って、アタマを作ればいい。1枚だけでも、りっぱなテンパイなんだ！',
+        {tlab:'1枚で待つ'}),
+      ch2WaitPick('4s5s6sR',['G','3s','7s'],'中とおなじ牌が来ればアタマ完成でアガリ！'),
+      ch2WfGen('tanki',7),
+      ch2WaitCountMcq('7p8p9pE','東だけ。のこった1枚とおなじ牌が待ち牌だよ。'),
+      ch2WfGen('tanki',7),
+      {q:'メンツはそろったけど、アタマがない。待ち牌は？',choices:['のこった1枚と<b>おなじ牌</b>','のこった1枚の<b>となりの牌</b>'],a:0,
+       exp:'おなじ牌が来ればアタマ完成でアガリ！'},
+    ];
+  },
+  /* C2-2 単騎(名前の初出) */
+  wc2_2(){
+    return [
+      ch1Teach('1枚でアタマを待つこの形の名前は<span class="term-chip">単騎（タンキ）</span>！「1枚だけで待つ」という意味だよ。',
+        {tlab:'単騎',hands:[{label:'メンツ2つ＋単騎の1枚',hand:'1m2m3m4p5p6p7s',g:true}]}),
+      ch2ShapeGenMcq('tanki',7,['シャンポン','単騎'],'のこりは1枚だけ。単騎だ！'),
+      ch2ShapeGenMcq('shanpon',7,['シャンポン','単騎'],'トイツが2組。シャンポンだ！'),
+      ch2WfGen('tanki',7),
+      ch2ShapeMcq('2p2p3s4s5sEE',['シャンポン','単騎'],'2ピンと東、トイツが2組。シャンポンだよ！'),
+      {q:'単騎の<b>待ち牌</b>は何種類？',choices:['1種類(のこった1枚とおなじ牌)','2種類'],a:0,
+       exp:'1枚でアタマを待つから、待ち牌はその1枚とおなじ牌だけ！'},
+      ch2WaitFind('1m1m1m9p9p9pG',['R','B','E'],
+        {exp:'發とおなじ牌が来ればアタマ完成！メンツがコーツでも、のこりが1枚なら単騎だよ。'}),
+    ];
+  },
+  /* C2-3 ★5つの待ち総まとめ(初めて5種を整理。「まずは基本の5つ」・節目) */
+  wc2_3(){
+    const quiz=shuffle([
+      ch2ShapeGenMcq('ryanmen',4,CH2_SHAPES5,'ならんだ2枚の両側待ち。リャンメン！'),
+      ch2ShapeGenMcq('kanchan',4,CH2_SHAPES5,'あいだ空きの真ん中待ち。カンチャン！'),
+      ch2ShapeGenMcq('penchan',4,CH2_SHAPES5,'12か89のはしっこ待ち。ペンチャン！'),
+      ch2ShapeGenMcq('shanpon',7,CH2_SHAPES5,'トイツ2組の待ち。シャンポン！'),
+      ch2ShapeGenMcq('tanki',7,CH2_SHAPES5,'1枚でアタマを待つ。単騎！'),
+      ch2WfGen('shanpon',7),
+      ch2WfGen('kanchan',7),
+    ]);
+    return [
+      ch1Teach('ならび2枚の3つ: <b>リャンメン</b>(両側)・<b>カンチャン</b>(真ん中)・<b>ペンチャン</b>(はしっこ)。',
+        {tlab:'ならび2枚の3つ',hands:[{label:'リャンメン(45)',hand:'4s5sWW',g:true},
+          {label:'カンチャン(46)',hand:'4p6pWW',g:true},{label:'ペンチャン(12)',hand:'1m2mWW',g:true}]}),
+      ch1Teach('トイツと1枚の2つ: <b>シャンポン</b>(トイツ2組)・<b>単騎</b>(1枚でアタマ待ち)。これで<b>まずは基本の5つ</b>がそろった！',
+        {tlab:'基本の5つ',hands:[{label:'シャンポン',hand:'5p5p6s6s',g:true},
+          {label:'単騎(メンツ1つ＋1枚)',hand:'1m2m3m7s',g:true}]}),
+    ].concat(quiz).concat([
+      ch1Teach('🎉 <b>基本の5つの待ちの形、マスター！</b>つぎはいよいよ、<b>本物の13枚</b>から待ち牌をさがすよ！',
+        {tlab:'つぎへ！'}),
+    ]);
+  },
+  /* ===== D 実戦の待ち(13枚) ===== */
+  /* D1-1 13枚から待ちを探す */
+  wd1_1(){
+    return [
+      ch1Teach('13枚でも、やることはおなじ。<b>できているメンツとアタマをのぞく</b>と、のこりの形が見えてくる。そこが待ちのヒントだ！',
+        {tlab:'13枚の待ち',hands:[{label:'メンツ3つ＋アタマをのぞくと…67だけ！',hand:'1m2m3m4p5p6pEE7s8s9s6s7s',g:true}]}),
+      ch1Teach('のこった2枚(か1枚)の<b>待ちの形</b>を見きわめれば、待ち牌がわかる。67ならリャンメン、待ち牌は5と8！',
+        {tlab:'のこりに注目'}),
+      ch2WaitFind('1m2m3m4p5p6pWW4s5s7s8s9s',['4s','7s','W','2s'],
+        {exp:'のこりは45のリャンメン！両側の3ソーと6ソーが待ち牌。'}),
+      ch2WfGen('kanchan',13),
+      ch2WfGen('ryanmen',13),
+      ch2ShapeMcq('2m3m4m6p7p8p1s1s1sNN5s7s',CH2_SHAPES5,'のこりは57。あいだの6を待つカンチャン！'),
+      ch1TenpaiMcq('2m4m6m8m1p3p5p7p9p2s4sEW','どの1枚が来てもアガリにならない…13枚でも、まずはテンパイかどうかをたしかめよう！'),
+    ];
+  },
+  /* D1-2 待ちを全部当てよう(複合形の入口=「手全体を見ると待ちが増える」体験。名称なし) */
+  wd1_2(){
+    return [
+      ch1Teach('13枚の待ち牌さがし、どんどんいくよ！<b>ぜんぶ</b>見つけてから「これで決定」だ！',
+        {tlab:'待ち牌さがし'}),
+      ch2WfGen('shanpon',13),
+      ch2WfGen('penchan',13),
+      ch2WfGen('tanki',13),
+      ch2WfGen('ryanmen',13),
+      ch2WaitFind('2m3m4m5m6m7p8p9p1s1s1sEE',['5m','2s','W'],
+        {exp:'<b>手ぜんたい</b>を見ると、待ち牌がふえることがある！23456とつながった形は、1マン・4マン・7マンの3種類。リャンメンが2つかさなったような形なんだ。'}),
+      {q:'つながりが長い形(23456など)では…',choices:['待ち牌がふえることがある','待ち牌はかならず2種類'],a:0,
+       exp:'手ぜんたいを見わたすのが、待ち牌さがしのコツだよ！'},
+    ];
+  },
+  /* D1-3 待ちの形はどれ？(13枚で5種を見きわめ) */
+  wd1_3(){
+    return [
+      ch1Teach('こんどは13枚から<b>待ちの形</b>を見きわめよう！メンツとアタマをのぞいて、のこりに注目！',
+        {tlab:'形を見きわめる'}),
+      ch2ShapeGenMcq('ryanmen',13,CH2_SHAPES5,'のこりはならんだ2枚。両側待ちのリャンメン！'),
+      ch2ShapeGenMcq('kanchan',13,CH2_SHAPES5,'あいだ空きの2枚。真ん中待ちのカンチャン！'),
+      ch2ShapeGenMcq('shanpon',13,CH2_SHAPES5,'トイツが2組のこっている。シャンポン！'),
+      ch2ShapeGenMcq('tanki',13,CH2_SHAPES5,'メンツ4つ＋1枚。アタマを待つ単騎！'),
+      ch2WfGen('kanchan',13),
+      ch2WfGen('shanpon',13),
+    ];
+  },
+  /* D1-4 ★第2章チャレンジ「アガリが見える！」(待ち全選択→その待ち牌をツモって自分でアガリ) */
+  wd1_4(){
+    return [
+      ch1Teach('いよいよ<b>第2章チャレンジ</b>！13枚の待ち牌をぜんぶ見つけて…さいごは、見つけた待ち牌をツモって<b>自分の手でアガろう</b>！',
+        {tlab:'第2章チャレンジ'}),
+      ch2WfGen('ryanmen',13),
+      ch2ShapeGenMcq('penchan',13,CH2_SHAPES5,'12か89のはしっこ待ち。ペンチャン！'),
+      ch2WfGen('shanpon',13),
+      ch2WaitFind('2m3m4m6p7p8p5s6s7s3s3sEE',['4s','5s','W','2s'],
+        {q:'チャレンジ！この手牌の<b>待ち牌</b>を、ぜんぶ見つけよう！',
+         exp:'3ソーと東のシャンポン！つぎはこの手牌で、ほんとうにアガってみよう！'}),
+      ch1Mini(['2m','3m','4m','6p','7p','8p','5s','6s','7s','3s','3s','E','E'],['1p','3s'],'234m678p567s333sEE',
+        {level:3,riichi:true,
+         exp:'第2章チャレンジ、クリア！🎉 待ち牌が見えたから、まよわずアガれたね！'}),
+      ch1Teach('🎉 <b>第2章「アガリが見える」クリア！</b>13枚のテンパイから、<b>待ち牌が見える</b>ようになった！<br>つぎは、アガるために必要な<b>「役」</b>をもっと覚えていこう！',
+        {tlab:'第2章クリア'}),
+    ];
+  },
+};
 function ch1ThemeUnlocked(t){
   // requires付きテーマ(D1〜)は前提テーマを全クリアするまでロック(既存テーマは常に解放)
   if(!t||!t.requires) return true;
@@ -3945,6 +4483,7 @@ function quitLesson(){
 function qFormatKey(q){
   if(q.mini) return 'mini';       // 第1章C: 4枚ミニ麻雀(体験ゲーム。ch1t併用=誘導・スコア外)
   if(q.mt) return 'match';        // A1-4: 数牌マッチング(Duolingo型ペア当て。将来他教材でも再利用可)
+  if(q.wf) return 'wfind';        // 第2章: 待ち牌さがし(全選択→「これで決定」。誤答は正解非開示で再挑戦)
   if(q.ch1t) return 'teach';      // 第1章: 教えるページ(スコア外・check()非経由)
   if(q.pick1) return 'pickone';   // 第1章: 牌を1枚えらぶ
   if(q.pickm) return 'pickmulti'; // 第1章: 牌を複数えらぶ
@@ -4328,6 +4867,40 @@ const QFORMATS={
       return {ansText:'正解： '+q.answers.map(i=>tileLabel(q.cands[i])).join('・')+diff, expText:q.exp||''};
     },
   },
+  wfind:{
+    /* 第2章 待ち牌さがし: 待ち牌をぜんぶ選んで「これで決定」。ぴったり一致で自動check()。
+       不正解のときは正解を開示せず(選びなおして再挑戦・missとして記録・miss0でせいかい)。
+       ヒント(q.hint)はLEVEL1の指定問題のみ。それ以外は正解数も教えない */
+    cat:null, scoring:'wfind',
+    qid(q){ return null; },
+    render(q){
+      L.wf={miss:0,done:false};
+      let html='<div class="q-type">'+(q.tlab||'待ち牌さがし')+'</div>';
+      html+='<div class="q-text">'+q.q+'</div>';
+      if(q.hand) html+=(q.grouped?'<div class="tc-lab">手牌</div>'+ch1HandGrouped(q.hand):handHTML(q.hand));
+      if(q.grouped) html+='<div class="tc-lab">↓ この中からえらぼう</div>';
+      html+='<div class="ch1-cands" onpointerdown="ch1CandDown(event)">'+q.cands.map((cd,i)=>
+        '<button class="tw" id="ckb-'+i+'">'
+        +'<div class="tile '+(cd.length===2?cd[1]:'z')+'">'+tileFace(cd)+'</div></button>').join('')+'</div>';
+      html+='<p class="ch1-hint">タップ、または おしたまま横になぞって まとめて選択できるよ</p>';
+      html+='<div class="wf-msg" id="wf-msg">'+(q.hint?'💡 '+q.hint:'')+'</div>';
+      L.sel=new Set();
+      return html;
+    },
+    answer(q){ return {kind:'wf', done:!!(L.wf&&L.wf.done), miss:L.wf?L.wf.miss:0}; },
+    reveal(q,ans,res){
+      // 開示は完答時のみ到達(選んだ牌=正解ぜんぶ)。correct表示に切り替える
+      for(const i of q.answers){ const el=ch1CkTile(i);
+        if(el){ el.classList.remove('sel'); el.classList.add('correct'); } }
+    },
+    feedback(q,res){
+      const d=res.details||{};
+      if(!res.isCorrect&&d.miss>0)
+        return {ansText:'待ち牌をぜんぶ見つけた！でも、決定までに'+d.miss+'回まちがえたね',
+          expText:'まよったら、できているメンツとアタマをのぞいて、のこりの形をよく見てみよう！'};
+      return {ansText:'お見事！待ち牌をぜんぶ見つけた！', expText:q.exp||''};
+    },
+  },
 };
 
 /* ---- scorer: 副作用なしの純粋関数 (Question, UserAnswer) → ScoreResult ---- */
@@ -4340,6 +4913,11 @@ const SCORERS={
     // 数牌マッチング: 全ペア完了+誤マッチ0回でせいかい(ミニ麻雀と同じ思想)
     const ok=!!ans.done&&ans.miss===0;
     return {S:ok?1:0, isCorrect:ok, isPerfect:ok, details:{miss:ans.miss}};
+  },
+  wfind:(q,ans)=>{
+    // 第2章 待ち牌さがし: 完答到達+誤決定0回でせいかい(ミニ麻雀・マッチングと同じ思想)
+    const ok=!!ans.done&&ans.miss===0;
+    return {S:ok?1:0, isCorrect:ok, isPerfect:ok, details:{miss:ans.miss||0}};
   },
   mini:(q,ans)=>{
     // 4枚ミニ麻雀: アガリ到達+誤discard(組の牌を切ろうとした)0回でせいかい。
@@ -4431,7 +5009,7 @@ function ch1CkTile(i){ const b=document.getElementById('ckb-'+i); return b?b.fir
 function ch1Pick(i){
   if(!L||L.checked) return;
   const q=L.qs[L.idx]; if(!q) return;
-  if(q.pickm){
+  if(q.pickm||q.wf){
     if(L.sel.has(i)) L.sel.delete(i); else L.sel.add(i);
     const el=ch1CkTile(i); if(el) el.classList.toggle('sel',L.sel.has(i));
   }else{
@@ -4450,7 +5028,7 @@ function ch1SelAdd(i){
 }
 function ch1CandDown(ev){
   if(!L||L.checked) return;
-  const q=L.qs[L.idx]; if(!q||!q.pickm) return;
+  const q=L.qs[L.idx]; if(!q||!(q.pickm||q.wf)) return;
   const startBtn=ev.target.closest?ev.target.closest('button.tw'):null;
   if(!startBtn||!startBtn.id||startBtn.id.indexOf('ckb-')!==0) return;
   ev.preventDefault();
@@ -4566,6 +5144,12 @@ function renderFoot(){
     foot.innerHTML='<button class="btn" id="answer-btn" disabled>ぜんぶペアにしよう！</button>';
     return;
   }
+  if(qNow&&qNow.wf&&!L.checked){
+    // 第2章 待ち牌さがし: こたえあわせではなく「これで決定」。不正解でも正解を開示せず再挑戦させる
+    const readyW=(L.sel instanceof Set)&&L.sel.size>0;
+    foot.innerHTML='<button class="btn" id="answer-btn" '+(readyW?'':'disabled')+' onclick="ch2WfSubmit(this)">これで決定</button>';
+    return;
+  }
   if(qNow&&qNow.mini&&!L.checked){
     // ミニ麻雀: こたえあわせボタンなし。誘導(ch1t)はアガリ後つづける、採点対象はアガリで自動check()
     if(qNow.ch1t){
@@ -4594,6 +5178,29 @@ function answerNow(btn){
   btn.classList.add('pressing');
   btn.textContent='判定中…';
   requestAnimationFrame(()=>requestAnimationFrame(()=>{ if(L&&!L.checked) check(); }));
+}
+/* 第2章 待ち牌さがし「これで決定」: 選択が正解セットとぴったり一致したときだけcheck()へ。
+   不正解のときは正解を一切開示しない(どれが正しい/いくつあるかも言わない)。選択はそのまま残し、
+   固定領域(wf-msg)のメッセージだけ変えて再挑戦させる。誤決定はmissとして記録(miss0でせいかい) */
+function ch2WfSubmit(btn){
+  if(!L||L.checked) return;
+  const q=L.qs[L.idx]; if(!q||!q.wf) return;
+  const want=new Set(q.answers);
+  const sel=(L.sel instanceof Set)?L.sel:new Set();
+  const ok=sel.size===want.size&&[...sel].every(i=>want.has(i));
+  if(ok){
+    if(L.wf) L.wf.done=true;
+    if(btn){ btn.disabled=true; btn.classList.add('pressing'); btn.textContent='判定中…'; }
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{ if(L&&!L.checked) check(); }));
+    return;
+  }
+  if(L.wf) L.wf.miss++;
+  const g=document.getElementById('wf-msg');
+  if(g){ g.classList.add('retry');
+    g.innerHTML=(L.wf&&L.wf.miss>=2)
+      ?'うーん、まだぴったりじゃない…。<b>えらびすぎ</b>や<b>えらび忘れ</b>がないか見なおして、もういちど！'
+      :'まだ待ち牌とぴったりじゃないみたい。えらびなおして、もういちど「これで決定」！'; }
+  renderFoot();
 }
 
 /* ================= Compareフロー（P4-A） =================
