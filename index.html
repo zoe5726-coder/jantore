@@ -2954,9 +2954,10 @@ function ch1MiniDiscard(i){
     return;
   }
   if(mg.riichiOn&&mg.riichiSt==='none'&&ch1MiniRiichiCands(five).includes(i)){
-    // テンパイになる牌は「宣言→打牌」の順で: 切るまえにリーチ宣言をうながす(ミスにしない)
+    // テンパイになる牌は「宣言→打牌」の順で: 切るまえにリーチ宣言をうながす(ミスにしない)。
+    // 「今回の練習では」= リーチ体験のための教材上の手順であり、実戦ルールの強制ではないことを示す
     const g=document.getElementById('mg-guide');
-    if(g) g.innerHTML='その牌を切るなら、切るまえに「リーチ！」を宣言しよう';
+    if(g) g.innerHTML='この牌を切るとテンパイ！今回の練習では、切るまえに「リーチ！」を宣言しよう';
     const b=document.getElementById('mg-riichi');
     if(b){ b.classList.add('ch1-shake');
       setTimeout(()=>{const b2=document.getElementById('mg-riichi'); if(b2) b2.classList.remove('ch1-shake');},500); }
@@ -3231,11 +3232,13 @@ function ch1WaitMulti(handStr,cands,exp){
   return {pickm:true,tlab:'待ちさがし',q:'この手牌の待ちを、ぜんぶ選ぼう！',
     hand:handStr,cands:c2,answers,exp,grouped:true};
 }
-/* D2-2: リーチできる？(正解=ch1MiniWaitsでテンパイ判定・鳴きなし前提を問題文に明記) */
+/* D2-2: テンパイ確認Quiz(正解=ch1MiniWaitsで決定論判定)。
+   リーチの実操作(ツモ後14枚で宣言→打牌)はミニ麻雀側で体験させるため、
+   13枚に対して「リーチできる？」とは聞かない(操作順との混同を防ぐ) */
 function d2RiichiMcq(handStr,exp){
   const a=ch1MiniWaits(parseHand(handStr)).length?0:1;
-  return {q:'この13枚（鳴かずに自分の手だけで作っている）。「リーチ！」できる？',hand:handStr,
-    choices:['リーチできる（テンパイ！）','まだできない（テンパイじゃない）'],a,exp,ghand:true};
+  return {q:'この13枚は、テンパイしている？',hand:handStr,
+    choices:['テンパイしている','まだテンパイしていない'],a,exp,ghand:true};
 }
 function ch1TenpaiMcq(handStr,exp){
   const a=ch1MiniWaits(parseHand(handStr)).length?0:1;
@@ -3456,10 +3459,10 @@ const CH1_LESSONS={
   /* B2-2 アタマ — トイツの役割(暗記でなく牌姿で問う) */
   b2_2(){
     return [
-      ch1Teach('アガリの形は、メンツを4つ…だけじゃたりない！さいごに<b>トイツが1組</b>ひつようなんだ。',
-        {tlab:'あと1組',hands:[{label:'メンツ4つ＋？',hand:'123m456p789sEEE'}]}),
-      ch1Teach('アガリの形をささえるこのトイツを<span class="term-chip">アタマ</span>とよぶよ。メンツ4つ＋アタマ1つでアガリ！',
-        {tlab:'アタマ',hands:[{label:'メンツ4つ＋アタマ(99s)',hand:'123m456p789sEEE99s'}]}),
+      ch1Teach('麻雀では、3枚のメンツとはべつに、<b>おなじ牌2枚の組</b>もいっしょに使うんだ。',
+        {tlab:'2枚の組',hands:[{label:'メンツ',hand:'123m'},{label:'おなじ2枚の組',hand:'EE'}]}),
+      ch1Teach('この2枚の組には<span class="term-chip">アタマ</span>という役割があるよ。トイツは、アタマとして使えるんだ！',
+        {tlab:'アタマ',hands:[{label:'メンツ＋アタマ',hand:'123mEE',g:true}]}),
       ch1HeadMulti('345m77p',null,{exp:'3・4・5はシュンツ（メンツ）。のこった7ピン2枚がアタマだよ。'}),
       ch1HeadMulti('777sEE',null,{exp:'7ソーは3枚だからコーツ（メンツ）。2枚の東がアタマ！枚数で見わけよう。'}),
       ch1HeadMulti('234p55m',null,{exp:'2・3・4のシュンツと、5マンのペア。ペアのほうがアタマだよ。'}),
@@ -3474,10 +3477,10 @@ const CH1_LESSONS={
       ch1MentsuMcq('ESW','字牌はならべてもシュンツにならない。東・南・西はメンツじゃないよ。'),
       {q:'この3枚はどれ？',hand:'EEE',choices:['コーツ（メンツ）','トイツ','シュンツ'],
        a:ch1IsTriplet(parseHand('EEE'))?0:-1,exp:'おなじ東が3枚だからコーツ。コーツはメンツだよ。'},
-      {q:'この東2枚は、アガリの形のなかでどう使える？',hand:'EE',
+      {q:'この東2枚の組は、どう使える？',hand:'EE',
        choices:['アタマとして使える','シュンツとして使える','使いみちはない'],
        a:ch1IsPair(parseHand('EE'))?0:-1,
-       exp:'おなじ2枚＝トイツはアタマになれる！字牌はシュンツにはなれないけど、アタマにもコーツにもなれるよ。'},
+       exp:'おなじ2枚＝トイツはアタマとして使える！字牌はシュンツにはなれないけど、アタマにもコーツにもなれるよ。'},
       ch1RunMcq('891m','9のつぎは1にもどらない。8・9・1はシュンツにならないよ。'),
       {q:'この3枚はどれ？',hand:'678s',choices:['シュンツ','コーツ','トイツ'],
        a:ch1IsRun(parseHand('678s'))?0:-1,exp:'6・7・8とならんだシュンツ！'},
@@ -3511,7 +3514,7 @@ const CH1_LESSONS={
   /* C1-2 はじめてのツモ(ツモる・切る・捨て牌を導入。LEVEL1誘導ミニ=スコア外) */
   c1_2(){
     return [
-      ch1Teach('ここからは本番みたいにあそぼう！山から1枚引くことを<span class="term-chip">ツモる</span>、いらない1枚をすてることを<span class="term-chip">切る</span>というよ。切った牌は<span class="term-chip">捨て牌</span>にならぶんだ。',
+      ch1Teach('ほんものの麻雀は<b>13枚</b>でやるんだ。まずは少ない枚数のミニ麻雀で、ながれをおぼえよう！山から1枚引くことを<span class="term-chip">ツモる</span>、いらない1枚をすてることを<span class="term-chip">切る</span>というよ。切った牌は<span class="term-chip">捨て牌</span>にならんで、切ったあとの手牌は見やすいようにならびなおすよ。',
         {tlab:'ツモる・切る'}),
       ch1Mini(['1m','2m','5p','5p'],['3m'],'123m55p',
         {guided:true,exp:'3マンをツモって123m＋55p。ツモった瞬間にアガリになることもあるんだ！'}),
@@ -3798,15 +3801,15 @@ const CH1_LESSONS={
   /* D2-2 リーチ — 最初のひとつの役(初心者用の基本ルールに限定・詳細条件や戦略は扱わない) */
   d2_2(){
     return [
-      ch1Teach('役のなかで、まずおぼえるのはひとつだけ。<span class="term-chip">リーチ</span>だよ！今まで練習してきたように<b>鳴かずに自分の手だけで作って、テンパイできる形になったら</b>、<b>牌を切るまえに「リーチ！」と宣言する</b>、代表的な役なんだ。',
+      ch1Teach('役のなかで、まずおぼえるのはひとつだけ。<span class="term-chip">リーチ</span>だよ！今まで練習してきたように<b>じぶんの手だけで作って、テンパイできる形になったら</b>、<b>牌を切るまえに「リーチ！」と宣言する</b>、代表的な役なんだ。',
         {tlab:'リーチ'}),
       ch1Teach('リーチを宣言したら、<b>テンパイになる牌を1枚切ろう</b>。それでリーチ成立！そのあとは<b>基本的にツモった牌をそのまま切って</b>待ち、待ち牌をツモったら…もちろん自分で「アガリ！」だ！',
         {tlab:'リーチのながれ'}),
       ch1Mini(['2m','3m','4m','5m','6m','7m','8p','8p','3s','4s','5s','6s','E'],['7s','N','8s'],'234m567m88p345s678s',
         {guided:true,riichi:true,
          exp:'はじめてのリーチ→ツモ！🎉 「リーチ！」と宣言してからテンパイになる牌を切る。あとはツモ切りで待つ。これがリーチの基本だよ。'}),
-      d2RiichiMcq('234m567m88p345s67s','あと1枚(5ソーか8ソー)でアガリ＝テンパイ！だからリーチできるよ。'),
-      d2RiichiMcq('123m456p789s1s5sWN','バラバラの牌がのこっていて、あと1枚ではアガれない…テンパイじゃないから、まだリーチできないよ。'),
+      d2RiichiMcq('234m567m88p345s67s','あと1枚(5ソーか8ソー)でアガリ＝テンパイ！テンパイなら、つぎのツモのあとに「リーチ！」を宣言できるチャンスだよ。'),
+      d2RiichiMcq('123m456p789s1s5sWN','バラバラの牌がのこっていて、あと1枚ではアガれない…まだテンパイじゃないよ。'),
       {q:'リーチのあと、ツモった牌がアガリ牌じゃなかったら？',
         choices:['ツモった牌をそのまま切る','手牌を組みかえて、べつの牌を切る'],a:0,
         exp:'リーチのあとは、基本的にツモった牌をそのまま切って待つよ（ツモ切り）。'},
@@ -3829,7 +3832,7 @@ const CH1_LESSONS={
         exp:'自分で引いてアガる＝ツモ。ずっと練習してきたやつだね！'},
       {q:'右の人が捨てた牌でアガった。これは？',choices:['ツモ','ロン'],a:1,
         exp:'ほかの人の捨て牌でアガる＝ロン！'},
-      ch1Teach('ほかの人が捨てた牌をもらって、自分の組を作ることを<span class="term-chip">鳴き</span>というよ。鳴きには<span class="term-chip">ポン</span>・<span class="term-chip">チー</span>・<span class="term-chip">カン</span>があるんだ。',
+      ch1Teach('ほかの人が捨てた牌をもらって、自分の組を作ることを<span class="term-chip">鳴き</span>というよ。鳴きには<span class="term-chip">ポン</span>・<span class="term-chip">チー</span>・<span class="term-chip">カン</span>があるんだ。ひとつだけおぼえておこう…<b>鳴いた手では、リーチはできない</b>よ！',
         {tlab:'鳴き'}),
       ch1Teach('<b>ポン</b>＝捨て牌で<b>おなじ牌3枚</b>の組(コーツ)を作る。だれの捨て牌でもOK！<br><b>チー</b>＝捨て牌で<b>ならんだ3枚</b>(シュンツ)を作る。<b>チーだけは「左の人」の捨て牌しか使えない</b>よ！<br><b>カン</b>＝<b>おなじ牌4枚</b>を使う特別な組の作り方。くわしくはまたこんど！'+zu(true),
         {tlab:'ポン・チー・カン'}),
