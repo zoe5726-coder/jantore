@@ -245,6 +245,20 @@ rt{font-size:.5em; font-weight:700; line-height:1; letter-spacing:-.04em; opacit
   width:var(--tile-w); aspect-ratio:5/7; height:auto;}
 .tile svg{width:100%; height:100%; display:block;}
 .hand .tile{flex:1 1 0; min-width:0; max-width:var(--tile-w);}
+/* 鳴いた組(共通部品 renderMeld/openHandHTML): 手の中＋スキマ＋右に鳴いた組。もらった牌は横向き。
+   横向き牌は「横1.4枚分×縦1枚分」の正方形の箱(=立てた牌とおなじ高さ)に入れ、箱の下にそろえて90度回転。
+   箱がフレックスの幅を1.4枚分とるので、回転してもとなりの牌にかさならない */
+.hand .mld-side{position:relative; flex:1.4 1 2.8px; min-width:0; max-width:calc(var(--tile-w) * 1.4);
+  aspect-ratio:1/1; align-self:flex-start;}   /* 牌の最小幅=枠線2px。1.4倍の基準に枠線分(2.8px)をたして立てた牌と同じ大きさに */
+.hand .mld-side>.tile{position:absolute; left:50%; top:64.2857%; width:71.4286%; max-width:none; min-width:0;
+  flex:none; transform:translate(-50%,-50%) rotate(90deg); box-shadow:3px 0 0 var(--tile-shadow);}
+.hand-open{align-items:flex-start;}
+.hand .mld-gap{flex:0 0 clamp(8px, 3vw, 16px);}
+.hand .mld-sep{flex:0 0 clamp(3px, 1.2vw, 6px);}
+.mld-demo{display:grid; grid-template-columns:1fr 1fr; gap:2px 14px;}
+.mld-demo .hand{margin:4px 0 8px;}
+.oh-legend{display:flex; justify-content:space-between; font-size:11px; font-weight:800; color:var(--ink-soft);
+  margin:-8px 2px 10px;}
 button.tile{transition:transform .08s;}
 .tw .tile{transition:transform .08s;}
 /* 選択/開示の視認性原則(手牌UI共通原則§8):
@@ -1304,6 +1318,83 @@ function sortTiles(tiles){
 }
 function handHTML(str){
   return '<div class="hand">'+sortTiles(parseHand(str)).map(t=>tileHTML(t)).join('')+'</div>';
+}
+/* ================= 鳴いた組の表示(共通部品) =================
+   実際の卓とおなじ見せ方: 手の中の牌 ＋ はっきりしたスキマ ＋ 右側に鳴いた組。
+   もらった牌(called)は横向き。横向きの位置=だれからもらったか(麻雀の標準的な置き方):
+     チー: 左の人からだけ → いつも左はし(のこり2枚は小さい順)
+     ポン: 左の人→左はし / 向かいの人→まん中 / 右の人→右はし
+     カン(4枚・表示のみ): 左の人→左はし / 向かいの人→左から2枚目 / 右の人→右はし
+   meld={type:'chi'|'pon'|'kan', tiles:'345s'または配列, called:'4s', from:'left'|'opposite'|'right'}
+   横向きの牌は「横幅1.4枚分」の箱に入れて回転させる(回転しても並びがくずれない=占有サイズが正しい) */
+const MELD_FROM=['left','opposite','right'];
+function meldNorm(m){
+  const tiles=sortTiles(Array.isArray(m.tiles)?m.tiles.slice():parseHand(m.tiles));
+  const type=m.type;
+  const from=type==='chi'?'left':m.from;
+  const called=m.called||tiles[0];
+  return {type,tiles,called,from};
+}
+function meldCheck(m){
+  // データの正しさ(決定論)。問題があれば理由の文字列、なければ''
+  const n=meldNorm(m);
+  if(!['chi','pon','kan'].includes(n.type)) return 'type';
+  if(!MELD_FROM.includes(n.from)) return 'from';
+  if(m.type==='chi'&&m.from&&m.from!=='left') return 'chi-from';        // チーは左の人からだけ
+  if(!n.tiles.includes(n.called)) return 'called';
+  if(n.type==='chi'&&!(n.tiles.length===3&&ch1IsRun(n.tiles))) return 'chi-shape';
+  if(n.type==='pon'&&!(n.tiles.length===3&&n.tiles.every(t=>t===n.tiles[0]))) return 'pon-shape';
+  if(n.type==='kan'&&!(n.tiles.length===4&&n.tiles.every(t=>t===n.tiles[0]))) return 'kan-shape';
+  return '';
+}
+function meldLayout(m){
+  // 表示順の牌配列と横向きの位置(side)
+  const n=meldNorm(m);
+  const rest=n.tiles.slice(); rest.splice(rest.indexOf(n.called),1);
+  let side;
+  if(n.type==='chi') side=0;
+  else if(n.from==='left') side=0;
+  else if(n.from==='right') side=n.tiles.length-1;
+  else side=1;                                                            // 向かいの人: まん中(カンは左から2枚目)
+  const arr=rest.slice(); arr.splice(side,0,n.called);
+  return {tiles:arr,side};
+}
+function renderMeld(m){
+  const lay=meldLayout(m);
+  return lay.tiles.map((t,i)=>i===lay.side
+    ?'<span class="mld-side" data-called="'+t+'">'+tileHTML(t,'mld-t')+'</span>'
+    :tileHTML(t,'mld-t')).join('');
+}
+function renderOpenMelds(melds){
+  if(!melds||!melds.length) return '';
+  return '<span class="mld-gap" aria-hidden="true"></span>'
+    +melds.map(m=>renderMeld(m)).join('<span class="mld-sep" aria-hidden="true"></span>');
+}
+function openHandHTML(concealed,melds,opt){
+  // concealed=手の中の牌(配列・並べ替え済みで渡す) / melds=鳴いた組 / opt.drawHTML=ツモ牌などを手の中の右に
+  opt=opt||{};
+  return '<div class="hand hand-open'+(opt.cls?' '+opt.cls:'')+'">'
+    +concealed.map(t=>tileHTML(t)).join('')
+    +(opt.drawHTML||'')
+    +renderOpenMelds(melds)+'</div>';
+}
+function ohPanelHTML(items){
+  // 教える用の図: [{lab, hand(手の中の牌), melds, legend}] → ラベル＋手牌(＋鳴いた組)
+  return items.map(it=>(it.lab?'<div class="tc-lab">'+it.lab+'</div>':'')
+    +openHandHTML(sortTiles(parseHand(it.hand)),it.melds||[])
+    +(it.legend?'<div class="oh-legend"><span>← 手の中の牌</span><span>鳴いた組 →</span></div>':'')).join('');
+}
+function meldDemoHTML(items){
+  // 鳴いた組だけを並べた見本: [{lab, meld}]
+  return '<div class="mld-demo">'+items.map(it=>'<div class="mld-demo-cell"><div class="tc-lab">'+it.lab+'</div>'
+    +'<div class="hand hand-open mld-only">'+renderMeld(it.meld)+'</div></div>').join('')+'</div>';
+}
+function meldTilesAll(melds){ return (melds||[]).reduce((a,m)=>a.concat(meldNorm(m).tiles),[]); }
+function removeTiles(from,sub){
+  // fromからsubの牌を1枚ずつ取りのぞく。足りなければnull
+  const out=from.slice();
+  for(const t of sub){ const i=out.indexOf(t); if(i<0) return null; out.splice(i,1); }
+  return out;
 }
 /* ================= TableView（P3-A・ステートレス） =================
    tableHTML(context, reveal): contextは局面データそのもの、revealは表示プリセット。
@@ -3907,6 +3998,11 @@ function ch1MtNextSet(){
 
 /* ---- 問題ビルダー(正解インデックスは必ずバリデータ/コード比較で算出) ---- */
 function ch1Teach(text,opt){ return Object.assign({ch1t:true,text},opt||{}); }
+function ch1NakiSeeMcq(hand,melds,exp,opt){
+  // 「この手は鳴いている？」正解=鳴いた組があるか(決定論)。表示は手の中＋右に鳴いた組
+  return Object.assign({q:'この手は、<b>鳴いている</b>？',oh:{hand,melds},
+    choices:['鳴いている','鳴いていない'],a:melds.length?0:1,exp},opt||{});
+}
 function ch1SamePick(target,distractors,opt){
   // そっくりさん探し: 正解=targetと完全一致する牌(1枚だけ混ぜること)
   const cands=shuffle([target].concat(distractors));
@@ -4717,6 +4813,23 @@ const CH1_LESSONS={
         exp:'ざんねん、チーは「左の人」の捨て牌だけ。右の人や向かいの人からはチーできないよ。'},
       {q:'「カン」で使うのは、おなじ牌なん枚？',choices:['3枚','4枚'],a:1,
         exp:'おなじ牌4枚を使う特別な組の作り方がカン。くわしいルールは、またこんど！'},
+      ch1Teach('鳴いたら、そろった組は<b>手牌の右に、すこしはなして</b>ならべて、みんなに見せるよ。そして、ほかの人から<b>もらった牌は横向き</b>に置くんだ。',
+        {tlab:'鳴いた組の置き方',panel:ohPanelHTML([{lab:'向かいの人の「發」をポンした手',hand:'234m678p34s55s',
+          melds:[{type:'pon',tiles:'GGG',from:'opposite'}],legend:true}])}),
+      ch1Teach('横向きの牌の<b>位置</b>で、だれからもらったかがわかるよ。チーは「左の人」からだけだから、<b>チーの組はいつも左はしが横向き</b>。いまは「<b>横向き＝もらった牌</b>」だけ覚えればOK！',
+        {tlab:'横向きの牌',panel:meldDemoHTML([
+          {lab:'チー（左の人から）',meld:{type:'chi',tiles:'345s',called:'4s',from:'left'}},
+          {lab:'ポン（左の人から）',meld:{type:'pon',tiles:'555m',from:'left'}},
+          {lab:'ポン（向かいの人から）',meld:{type:'pon',tiles:'555m',from:'opposite'}},
+          {lab:'ポン（右の人から）',meld:{type:'pon',tiles:'555m',from:'right'}}])}),
+      ch1NakiSeeMcq('234m678p34s55s',[{type:'pon',tiles:'GGG',from:'opposite'}],
+        '右にはなれた組があって、1枚が横向き。ほかの人の捨て牌をもらった＝鳴いている手だね！'),
+      ch1NakiSeeMcq('234m678p34s55sGGG',[],
+        '13枚ぜんぶ手の中。はなれた組も横向きの牌もないから、鳴いていない手だよ。'),
+      {q:'鳴いた組の中で、<b>横向き</b>に置く牌は？',
+        oh:{hand:'234m678p55sEE',melds:[{type:'chi',tiles:'345s',called:'4s',from:'left'}]},
+        choices:['ほかの人からもらった牌','自分でツモった牌'],a:0,
+        exp:'横向き＝ほかの人からもらった牌。これで「鳴いた手」がひと目でわかるね！'},
     ];
   },
   /* D2-4 ★第1章チャレンジ: 麻雀を打てる！(主役は1局の通し体験。復習Quizは軽く) */
@@ -4907,7 +5020,11 @@ const CH2_SHAPES5=['リャンメン','カンチャン','ペンチャン','シャ
    第3章「役がわかる」— 役判定エンジン(決定論・純粋関数。AI判定禁止)
    ・正解は必ずここで算出する(教材の手書きanswer禁止)
    ・ctx={menzen(既定true), win:'tsumo'|'ron'|null, rw:場風, sw:自風,
-         riichi, winTile(アガリ牌), dblRiichi/haitei/houtei/tenhou(任意Road用フラグ)}
+         riichi, winTile(アガリ牌), dblRiichi/haitei/houtei/tenhou(任意Road用フラグ),
+         melds:[{type:'chi'|'pon', tiles:'345s', called:'4s', from:'left'|'opposite'|'right'}] (鳴いた組・任意)}
+   ・鳴いた組(melds)がある手は、判定用の手牌文字列に鳴いた組の牌も含めた14枚で渡す(後方互換)。
+     分解は「鳴いた組がそのまま1メンツになる分解」だけに絞る。ポンのコーツは暗刻に数えない。
+     meldsなしのmenzen:falseは従来どおり(表示は旧形式)。カンは表示専用(14枚判定の対象外)
    ・役満が1つでもあれば通常役はつけない(役満優先)
    ・排他: チンイツ⇔ホンイツ / 純チャン⇔チャンタ / 二盃口⇔イーペーコー・七対子
    ============================================================ */
@@ -4916,7 +5033,31 @@ function ch3IsHonor(t){ return t.length===1; }
 function ch3IsTermHon(t){ return ch3IsTerm(t)||ch3IsHonor(t); }
 function ch3Cnt(tiles){ const c={}; tiles.forEach(t=>c[t]=(c[t]||0)+1); return c; }
 /* 14枚の「アタマ+4メンツ」全分解を列挙(牌構成で重複除去・各段で同型枝を刈る) */
-function ch3Decomps(tiles){
+function ch3Decomps(tiles,ctx){
+  const all=ch3DecompsRaw(tiles);
+  const ms=ch3MeldList(ctx);
+  if(!ms.length) return all;
+  // 鳴いた組(固定メンツ)をそれぞれ別のセットに割り当てられる分解だけ残す。d.mi=鳴いた組に対応するセット番号
+  const out=[];
+  for(const d of all){
+    const used=new Set(), mi=[];
+    let ok=true;
+    for(const m of ms){
+      const key=m.slice().sort().join('');
+      const k=d.sets.findIndex((g,ix)=>!used.has(ix)&&g.map(x=>tiles[x]).sort().join('')===key);
+      if(k<0){ ok=false; break; }
+      used.add(k); mi.push(k);
+    }
+    if(ok) out.push(Object.assign({},d,{mi}));
+  }
+  return out;
+}
+function ch3MeldList(ctx){
+  // ctx.melds→判定用の牌配列(3枚の組だけ。カン=4枚は14枚判定の対象外なので含めない)
+  if(!ctx||!Array.isArray(ctx.melds)) return [];
+  return ctx.melds.map(m=>sortTiles(Array.isArray(m.tiles)?m.tiles:parseHand(m.tiles))).filter(t=>t.length===3);
+}
+function ch3DecompsRaw(tiles){
   if(!tiles||tiles.length!==14) return [];
   const out=[], seen=new Set(), headTried=new Set();
   for(let i=0;i<14;i++)for(let j=i+1;j<14;j++){
@@ -4982,7 +5123,7 @@ function ch3SuitInfo(tiles){
 function ch3HasPinfu(tiles,ctx){
   // ピンフ(厳密): 鳴いていない+4メンツ全シュンツ+アタマが役牌でない+リャンメン待ち
   if(!ctx||ctx.menzen===false||!ctx.winTile) return false;
-  for(const d of ch3Decomps(tiles)){
+  for(const d of ch3Decomps(tiles,ctx)){
     const sets=d.sets.map(g=>g.map(k=>tiles[k]));
     if(!sets.every(gt=>ch1IsRun(gt))) continue;
     if(ch3IsYakuhaiTile(d.headTile,ctx)) continue;
@@ -4996,13 +5137,13 @@ function ch3HasPinfu(tiles,ctx){
   }
   return false;
 }
-function ch3HasToitoi(tiles){
-  return ch3Decomps(tiles).some(d=>d.sets.every(g=>ch1IsTriplet(g.map(k=>tiles[k]))));
+function ch3HasToitoi(tiles,ctx){
+  return ch3Decomps(tiles,ctx).some(d=>d.sets.every(g=>ch1IsTriplet(g.map(k=>tiles[k]))));
 }
-function ch3RunPairsMax(tiles){
+function ch3RunPairsMax(tiles,ctx){
   // 同一シュンツのペア数の最大(1=イーペーコー・2=二盃口)
   let best=0;
-  for(const d of ch3Decomps(tiles)){
+  for(const d of ch3Decomps(tiles,ctx)){
     const runs=d.sets.map(g=>g.map(k=>tiles[k])).filter(gt=>ch1IsRun(gt)).map(gt=>gt.slice().sort().join(''));
     const c={}; runs.forEach(r=>c[r]=(c[r]||0)+1);
     const pairs=Object.values(c).reduce((a,n)=>a+Math.floor(n/2),0);
@@ -5010,12 +5151,12 @@ function ch3RunPairsMax(tiles){
   }
   return best;
 }
-function ch3HasIipeiko(tiles,ctx){ return (!ctx||ctx.menzen!==false)&&ch3RunPairsMax(tiles)>=1; }
-function ch3HasRyanpeikou(tiles,ctx){ return (!ctx||ctx.menzen!==false)&&ch3RunPairsMax(tiles)>=2; }
-function ch3ChantaKind(tiles){
+function ch3HasIipeiko(tiles,ctx){ return (!ctx||ctx.menzen!==false)&&ch3RunPairsMax(tiles,ctx)>=1; }
+function ch3HasRyanpeikou(tiles,ctx){ return (!ctx||ctx.menzen!==false)&&ch3RunPairsMax(tiles,ctx)>=2; }
+function ch3ChantaKind(tiles,ctx){
   // 'junchan'(1・9のみ・字牌なし)/'chanta'(1・9・字)/null。シュンツを1つも含まない形は混老頭系なので対象外
   let best=null;
-  for(const d of ch3Decomps(tiles)){
+  for(const d of ch3Decomps(tiles,ctx)){
     const sets=d.sets.map(g=>g.map(k=>tiles[k]));
     if(!ch3IsTermHon(d.headTile)) continue;
     if(!sets.every(gt=>gt.some(ch3IsTermHon))) continue;
@@ -5025,8 +5166,8 @@ function ch3ChantaKind(tiles){
   }
   return best;
 }
-function ch3HasSanshoku(tiles){
-  for(const d of ch3Decomps(tiles)){
+function ch3HasSanshoku(tiles,ctx){
+  for(const d of ch3Decomps(tiles,ctx)){
     const runs=d.sets.map(g=>g.map(k=>tiles[k])).filter(gt=>ch1IsRun(gt));
     const byLo={};
     runs.forEach(gt=>{ const ns=gt.map(t=>+t[0]).sort((a,b)=>a-b); (byLo[ns[0]]=byLo[ns[0]]||new Set()).add(gt[0][1]); });
@@ -5034,8 +5175,8 @@ function ch3HasSanshoku(tiles){
   }
   return false;
 }
-function ch3HasIttsu(tiles){
-  for(const d of ch3Decomps(tiles)){
+function ch3HasIttsu(tiles,ctx){
+  for(const d of ch3Decomps(tiles,ctx)){
     const runs=d.sets.map(g=>g.map(k=>tiles[k])).filter(gt=>ch1IsRun(gt));
     const bySu={};
     runs.forEach(gt=>{ const ns=gt.map(t=>+t[0]).sort((a,b)=>a-b); (bySu[gt[0][1]]=bySu[gt[0][1]]||new Set()).add(ns[0]); });
@@ -5045,13 +5186,15 @@ function ch3HasIttsu(tiles){
 }
 function ch3AnkouMax(tiles,ctx){
   // 暗刻の最大数。ロンで完成したコーツは暗刻にならない(ロン牌をシュンツかアタマに割り当てられれば全コーツ暗刻)
+  // 鳴いた組(ctx.melds)のコーツ=ポンは暗刻に数えない。ロン牌は手の中(鳴いた組以外)のメンツ/アタマにだけ入る
   let best=0;
-  for(const d of ch3Decomps(tiles)){
-    const trips=d.sets.filter(g=>ch1IsTriplet(g.map(k=>tiles[k])));
+  for(const d of ch3Decomps(tiles,ctx)){
+    const mi=d.mi||[];
+    const trips=d.sets.filter((g,ix)=>!mi.includes(ix)&&ch1IsTriplet(g.map(k=>tiles[k])));
     let n=trips.length;
     if(ctx&&ctx.win==='ron'&&ctx.winTile){
       const w=ctx.winTile;
-      const inRun=d.sets.some(g=>{const gt=g.map(k=>tiles[k]);return !ch1IsTriplet(gt)&&gt.includes(w);});
+      const inRun=d.sets.some((g,ix)=>{const gt=g.map(k=>tiles[k]);return !mi.includes(ix)&&!ch1IsTriplet(gt)&&gt.includes(w);});
       const inHead=tiles[d.head[0]]===w;
       if(!inRun&&!inHead&&trips.some(g=>tiles[g[0]]===w)) n-=1;
     }
@@ -5100,9 +5243,12 @@ const CH3_YAKU_LABEL={riichi:'リーチ',tsumo:'ツモ',yakuhai:'役牌',pinfu:'
 /* 役の一覧(決定論)。教材の正解は必ずこの関数から作る */
 function ch3YakuList(tiles,ctx){
   ctx=ctx||{};
-  const std=!!ch1MiniWin(tiles), chii=ch3IsChiitoi(tiles), kok=ch3IsKokushi(tiles);
+  const hasM=ch3MeldList(ctx).length>0;
+  // 鳴いた組があるときは「鳴いた組がそのまま1メンツ」の分解ができるときだけ基本形。七対子・国士は鳴いて作れない
+  const std=hasM?ch3Decomps(tiles,ctx).length>0:!!ch1MiniWin(tiles);
+  const chii=!hasM&&ch3IsChiitoi(tiles), kok=!hasM&&ch3IsKokushi(tiles);
   if(!std&&!chii&&!kok) return [];
-  const menzen=ctx.menzen!==false;
+  const menzen=ctx.menzen!==false&&!hasM;
   const ym=[];
   if(std&&ch3HasDaisangen(tiles)) ym.push('daisangen');
   if(std&&ch3HasSuuankou(tiles,ctx)) ym.push('suuankou');
@@ -5126,15 +5272,15 @@ function ch3YakuList(tiles,ctx){
   const si=ch3SuitInfo(tiles);
   if(si.nSuits===1&&si.honors) out.push('honitsu');
   if(si.nSuits===1&&!si.honors&&si.nSuits===1&&tiles.every(t=>t.length===2)) out.push('chinitsu');
-  if(std&&ch3HasToitoi(tiles)) out.push('toitoi');
+  if(std&&ch3HasToitoi(tiles,ctx)) out.push('toitoi');
   const rp=std&&ch3HasRyanpeikou(tiles,ctx);
   if(chii&&!rp) out.push('chiitoi');                       // 二盃口に取れる形は二盃口を優先(七対子と複合しない)
   if(rp) out.push('ryanpeikou');
   else if(std&&ch3HasIipeiko(tiles,ctx)) out.push('iipeiko');
-  const ck=std?ch3ChantaKind(tiles):null;
+  const ck=std?ch3ChantaKind(tiles,ctx):null;
   if(ck==='junchan') out.push('junchan'); else if(ck==='chanta') out.push('chanta');
-  if(std&&ch3HasSanshoku(tiles)) out.push('sanshoku');
-  if(std&&ch3HasIttsu(tiles)) out.push('ittsu');
+  if(std&&ch3HasSanshoku(tiles,ctx)) out.push('sanshoku');
+  if(std&&ch3HasIttsu(tiles,ctx)) out.push('ittsu');
   if(std&&ch3HasSanankou(tiles,ctx)) out.push('sanankou');
   if(std&&ch3HasShousangen(tiles)) out.push('shousangen');
   if((std||chii)&&ch3HasHonroutou(tiles)) out.push('honroutou');
@@ -5160,8 +5306,9 @@ function ch3CtxHTML(c){
   const chips=[];
   if(c.rw) chips.push('<span class="ch3-chip">'+CH3_WIND_JP[c.rw]+'場</span>');
   if(c.sw) chips.push('<span class="ch3-chip">あなた：'+CH3_WIND_JP[c.sw]+'家</span>');
-  if(c.menzen===true) chips.push('<span class="ch3-chip">鳴きなし</span>');
-  if(c.menzen===false) chips.push('<span class="ch3-chip warn">鳴きあり</span>');
+  // 鳴いたかどうかはチップ(ラベル)ではなく牌の置き方で見せる(手の中＋右に鳴いた組・もらった牌は横向き)。
+  // 鳴いた組データのない旧形式のmenzen:falseだけ、互換のためチップを残す(教材には残さない=テストで検出)
+  if(c.menzen===false&&!(Array.isArray(c.melds)&&c.melds.length)) chips.push('<span class="ch3-chip warn">鳴きあり</span>');
   if(c.dblRiichi) chips.push('<span class="ch3-chip riichi">さいしょの捨て牌でリーチ宣言</span>');
   else if(c.riichi) chips.push('<span class="ch3-chip riichi">リーチ中</span>');
   if(c.win==='tsumo') chips.push('<span class="ch3-chip">ツモでアガった</span>');
@@ -5189,6 +5336,19 @@ function ch3RiverJunk(hand13,winTile){
   }
   return out;
 }
+function ch3HandSplit(q){
+  // 判定用の手牌(鳴いた組の牌もふくむ)を「手の中の牌」と「鳴いた組」に分ける。鳴いた組がなければnull
+  const c=q.ctx3||{};
+  if(!q.hand||!Array.isArray(c.melds)||!c.melds.length) return null;
+  const concealed=removeTiles(sortTiles(parseHand(q.hand)),meldTilesAll(c.melds));
+  if(!concealed) return null;
+  return {concealed,melds:c.melds};
+}
+function ch3OpenHandHTML(q){
+  const sp=ch3HandSplit(q); if(!sp) return null;
+  return '<div class="tc-lab">あなたの手牌（'+sp.concealed.length+'枚）＋鳴いた組</div>'
+    +openHandHTML(sp.concealed,sp.melds);
+}
 function ch3BoardHTML(q){
   const c=q.ctx3||{};
   if(!c.win||!c.winTile||!q.hand) return null;
@@ -5197,6 +5357,28 @@ function ch3BoardHTML(q){
   const idx=tiles.indexOf(c.winTile);
   if(idx<0) return null;
   const hand13=tiles.slice(); hand13.splice(idx,1);
+  const sp=ch3HandSplit(q);
+  if(sp){
+    // 鳴いた組あり: アガリ牌は手の中の牌で使う(鳴いた組は完成ずみ)。手の中＋スキマ＋右に鳴いた組
+    const wi=sp.concealed.indexOf(c.winTile);
+    if(wi<0) return null;
+    const conc=sp.concealed.slice(); conc.splice(wi,1);
+    let h='<div class="ch3-board">';
+    if(c.win==='ron'){
+      h+='<div class="tc-lab">相手の捨て牌</div>'
+        +'<div class="ch3-river">'
+        +ch3RiverJunk(hand13,c.winTile).map(t=>tileHTML(t)).join('')
+        +'<span class="ch3-now">'+tileHTML(c.winTile)+'<span class="ch3-now-lab">今の牌</span></span>'
+        +'</div>'
+        +'<div class="tc-lab">あなたの手牌（'+conc.length+'枚）＋鳴いた組</div>'
+        +openHandHTML(conc,sp.melds);
+    }else{
+      h+='<div class="tc-lab">あなたの手牌（'+conc.length+'枚）＋ツモった牌＋鳴いた組</div>'
+        +openHandHTML(conc,sp.melds,{cls:'ch3-tsumo-row',
+          drawHTML:'<span class="ch3-tsumo-gap"></span><span class="ch3-now">'+tileHTML(c.winTile)+'<span class="ch3-now-lab">ツモ</span></span>'});
+    }
+    return h+'</div>';
+  }
   let html='<div class="ch3-board">';
   if(c.win==='ron'){
     html+='<div class="tc-lab">相手の捨て牌</div>'
@@ -5216,7 +5398,11 @@ function ch3BoardHTML(q){
   return html+'</div>';
 }
 /* ---- 第3章 ビルダー(正解は必ずch3YakuList/ch3IsYakuhaiTile等で算出) ---- */
-function ch3Ctx(o){ return Object.assign({menzen:true},o||{}); }
+function ch3Ctx(o){
+  const c=Object.assign({menzen:true},o||{});
+  if(Array.isArray(c.melds)&&c.melds.length) c.menzen=false;   // 鳴いた組がある=鳴いている(表示と判定を一致させる)
+  return c;
+}
 function ch3ListOf(handStr,ctx3){ return ch3YakuList(sortTiles(parseHand(handStr)),ctx3); }
 function ch3HasMcq(key,handStr,ctx3,exp,opt){
   const has=ch3ListOf(handStr,ctx3).includes(key);
@@ -5298,7 +5484,7 @@ function ch3PinfuFails(handStr,ctx3){
   // ピンフ不成立の理由を決定論で分析: naki/kotsu(シュンツでないメンツ)/head(役牌アタマ)/wait(リャンメンでない)
   const tiles=ch3T(handStr), fails=[];
   if(ctx3.menzen===false) fails.push('naki');
-  const all=ch3Decomps(tiles).filter(d=>d.sets.every(g=>ch1IsRun(g.map(k=>tiles[k]))));
+  const all=ch3Decomps(tiles,ctx3).filter(d=>d.sets.every(g=>ch1IsRun(g.map(k=>tiles[k]))));
   if(!all.length){ fails.push('kotsu'); return fails; }
   const headOK=all.filter(d=>!ch3IsYakuhaiTile(d.headTile,ctx3));
   if(!headOK.length) fails.push('head');
@@ -5764,9 +5950,11 @@ const CH3_LESSONS={
         {tlab:'リーチの条件'}),
       ch3RiichiOkMcq('2m3m4m4p5p6p7s8s9s3s4s9p9p',ch3Ctx({}),
         '鳴いていなくて、テンパイ！リーチを宣言できるよ。'),
-      ch1Teach('「鳴き」は第1章でみたね。<b>ポンやチーで、相手の捨て牌をもらってメンツを作る</b>ことだった。この章の問題では、鳴いたかどうかを<b>【鳴きなし】【鳴きあり】</b>のチップでしめすよ。よく見て判断しよう！',
-        {tlab:'鳴きの見かた'}),
-      ch3RiichiOkMcq('2m3m4m4p5p6p7s8s9s3s4s9p9p',ch3Ctx({menzen:false}),
+      ch1Teach('「鳴き」は第1章でみたね。<b>ポンやチーで、相手の捨て牌をもらってメンツを作る</b>ことだった。鳴いた手は、<b>手牌の右にはなれた組</b>があって、もらった牌が<b>横向き</b>。その組がなければ、鳴いていない手だよ。牌の置き方をよく見て判断しよう！',
+        {tlab:'鳴きの見かた',panel:ohPanelHTML([
+          {lab:'鳴いていない手（13枚ぜんぶ手の中）',hand:'234m456p789s34s99p'},
+          {lab:'鳴いた手（789sをチーした）',hand:'234m456p34s99p',melds:[{type:'chi',tiles:'789s',called:'7s',from:'left'}],legend:true}])}),
+      ch3RiichiOkMcq('2m3m4m4p5p6p7s8s9s3s4s9p9p',ch3Ctx({melds:[{type:'chi',tiles:'789s',called:'7s',from:'left'}]}),
         'テンパイしていても、<b>鳴いた手ではリーチできない</b>んだったね。'),
       ch3RiichiOkMcq('2m5m8m1p4p7p2s5s8sESWN',ch3Ctx({}),
         '鳴いていなくても、テンパイしていなければリーチはできないよ。'),
@@ -5785,7 +5973,7 @@ const CH3_LESSONS={
         {tlab:'条件に注意！'}),
       ch3HasMcq('tsumo','2m3m4m4p5p6p7s8s9s3s5s4s9p9p',ch3Ctx({win:'tsumo',winTile:'4s'}),
         '鳴いていない手をツモでアガった。役「ツモ」がつく！'),
-      ch3HasMcq('tsumo','2m3m4m4p5p6p7s8s9s3s5s4s9p9p',ch3Ctx({menzen:false,win:'tsumo',winTile:'4s'}),
+      ch3HasMcq('tsumo','2m3m4m4p5p6p7s8s9s3s5s4s9p9p',ch3Ctx({melds:[{type:'chi',tiles:'789s',called:'7s',from:'left'}],win:'tsumo',winTile:'4s'}),
         'ツモでアガっても、<b>鳴いていたら</b>役のツモはつかないんだ。ここがまちがえやすいポイント！'),
       ch3HasMcq('tsumo','2m3m4m4p5p6p7s8s9s3s5s4s9p9p',ch3Ctx({win:'ron',winTile:'4s'}),
         'ロンでアガったときは、役のツモはつかないよ。'),
@@ -5812,9 +6000,9 @@ const CH3_LESSONS={
   /* ★A1-5 最初の役マスター */
   ya1_5(){
     const quiz=shuffle([
-      ch3RiichiOkMcq('2m3m4m4p5p6p7s8s9s3s4s9p9p',ch3Ctx({menzen:false}),
+      ch3RiichiOkMcq('2m3m4m4p5p6p7s8s9s3s4s9p9p',ch3Ctx({melds:[{type:'chi',tiles:'789s',called:'7s',from:'left'}]}),
         '鳴いた手ではリーチできない！'),
-      ch3HasMcq('tsumo','2m3m4m4p5p6p7s8s9s3s5s4s9p9p',ch3Ctx({menzen:false,win:'tsumo',winTile:'4s'}),
+      ch3HasMcq('tsumo','2m3m4m4p5p6p7s8s9s3s5s4s9p9p',ch3Ctx({melds:[{type:'chi',tiles:'789s',called:'7s',from:'left'}],win:'tsumo',winTile:'4s'}),
         '鳴いていたら、役のツモはつかない。'),
       ch3YakuFind('2m3m4m4p5p6p7s8s9s3s5s4s9p9p',ch3Ctx({riichi:true,win:'tsumo',winTile:'4s'}),
         ['riichi','tsumo'],'リーチ＋ツモ、2役！'),
@@ -5906,7 +6094,7 @@ const CH3_LESSONS={
         {tlab:'鳴いてもOK'}),
       ch3HasMcq('yakuhai','2m3m4m4p5p6pRRR6s7s8s9s9s',ch3Ctx({rw:'E',sw:'S'}),
         '中は三元牌。りっぱな役牌だ！'),
-      ch3HasMcq('yakuhai','2m3m4m4p5p6pRRR6s7s8s9s9s',ch3Ctx({menzen:false,rw:'E',sw:'S'}),
+      ch3HasMcq('yakuhai','2m3m4m4p5p6pRRR6s7s8s9s9s',ch3Ctx({melds:[{type:'pon',tiles:'RRR',from:'opposite'}],rw:'E',sw:'S'}),
         '<b>鳴いていても役牌はつく</b>！ポンでそろえてもOKだよ。'),
       ch3HasMcq('yakuhai','2m3m4m4p5p6pNNN6s7s8s9s9s',ch3Ctx({rw:'E',sw:'S'}),
         '北は、東場・南家では三元牌でも自風でも場風でもない…役牌にならないんだ。'),
@@ -6019,7 +6207,7 @@ const CH3_LESSONS={
         '發は三元牌。役牌アタマだからピンフにならない！'),
       ch3PinfuWhyMcq('2m3m4m4p5p6p7s8s9s2p2p3s5s4s',ch3Ctx({win:'ron',winTile:'4s',rw:'E',sw:'S'}),
         'カンチャン待ちだから！リャンメンで待とう。'),
-      ch3PinfuWhyMcq('2m3m4m4p5p6p7s8s9s2p2p3s4s5s',ch3Ctx({menzen:false,win:'ron',winTile:'5s',rw:'E',sw:'S'}),
+      ch3PinfuWhyMcq('2m3m4m4p5p6p7s8s9s2p2p3s4s5s',ch3Ctx({melds:[{type:'chi',tiles:'234m',called:'2m',from:'left'}],win:'ron',winTile:'5s',rw:'E',sw:'S'}),
         '形はカンペキでも、鳴いていたらピンフはつかない！'),
       ch3HasMcq('pinfu','2m3m4m5p6p7p3s4s5s6s7s8s9p9p',ch3Ctx({win:'ron',winTile:'5s',rw:'E',sw:'S'}),
         'ぜんぶシュンツ・9pのアタマもOK。34sの両側(2sか5s)で待つリャンメンでアガったから、ピンフ成立！'),
@@ -6032,7 +6220,7 @@ const CH3_LESSONS={
     const quiz=shuffle([
       ch3HasMcq('pinfu','3m4m5m6p7p8p2s3s4s6s7s8s4p4p',ch3Ctx({win:'ron',winTile:'8p',rw:'E',sw:'S'}),
         'ぜんぶシュンツ・4pアタマ・67p+8pのリャンメン。ピンフ！'),
-      ch3HasMcq('pinfu','3m4m5m6p7p8p2s3s4s6s7s8s4p4p',ch3Ctx({menzen:false,win:'ron',winTile:'8p',rw:'E',sw:'S'}),
+      ch3HasMcq('pinfu','3m4m5m6p7p8p2s3s4s6s7s8s4p4p',ch3Ctx({melds:[{type:'chi',tiles:'234s',called:'3s',from:'left'}],win:'ron',winTile:'8p',rw:'E',sw:'S'}),
         '鳴いていたらピンフはつかない！'),
       ch3PinfuWhyMcq('3m4m5m6p7p8p2s2s2s6s7s8s4p4p',ch3Ctx({win:'ron',winTile:'8s',rw:'E',sw:'S'}),
         '222sのコーツが入っているから！'),
@@ -6083,7 +6271,7 @@ const CH3_LESSONS={
         '1・9・字牌がゼロ。タンヤオ！'),
       ch3HasMcq('tanyao','1m2m3m4p5p6p6s7s8s3p3p5m6m7m',ch3Ctx({}),
         '1マンがまじっている…タンヤオにならない！'),
-      ch3HasMcq('tanyao','2m3m4m4p5p6p6s7s8s3p3p5m6m7m',ch3Ctx({menzen:false}),
+      ch3HasMcq('tanyao','2m3m4m4p5p6p6s7s8s3p3p5m6m7m',ch3Ctx({melds:[{type:'chi',tiles:'678s',called:'8s',from:'left'}]}),
         '鳴いていてもタンヤオはつく！つかいやすい役だよ。'),
       ch3GenTanyaoMcq(),
       {q:'タンヤオの条件は？',choices:['2〜8の数牌だけで手を作る','おなじ種類の数牌だけで作る'],a:0,
@@ -6137,7 +6325,7 @@ const CH3_LESSONS={
         'マンズ＋東だけ。ホンイツ！'),
       ch3HasMcq('honitsu','1m2m3m4m5m6m7m8m9m1m1m2p3p4p',ch3Ctx({}),
         'ピンズがまじっている…2種類だとホンイツにならないよ。'),
-      ch3HasMcq('honitsu','2p3p4p5p6p7p2p2pSSSWWW',ch3Ctx({menzen:false}),
+      ch3HasMcq('honitsu','2p3p4p5p6p7p2p2pSSSWWW',ch3Ctx({melds:[{type:'pon',tiles:'WWW',from:'right'}]}),
         '鳴いていてもホンイツはつく！'),
       {q:'ホンイツの条件は？',choices:['数牌1種類＋字牌でそろえる','字牌だけでそろえる'],a:0,
        exp:'数牌は1種類だけ。字牌はまぜてOK！'},
@@ -6155,8 +6343,8 @@ const CH3_LESSONS={
         'マンズだけ！チンイツだ！'),
       ch3HasMcq('chinitsu','1m2m3m4m5m6m7m8m9m1m1mEEE',ch3Ctx({}),
         '東がまじっている。これはチンイツじゃなくて…そう、ホンイツ！'),
-      ch3HasMcq('chinitsu','2s3s4s4s5s6s6s7s8s9s9s9s2s2s',ch3Ctx({menzen:false}),
-        'ソーズだけ＋鳴きあり。チンイツは鳴いてもつくよ！'),
+      ch3HasMcq('chinitsu','2s3s4s4s5s6s6s7s8s9s9s9s2s2s',ch3Ctx({melds:[{type:'pon',tiles:'999s',from:'opposite'}]}),
+        'ソーズだけ。9ソーをポンしていても、チンイツは鳴いてもつくよ！'),
       {q:'チンイツの条件は？',choices:['1種類の数牌だけ(字牌なし)','1種類の数牌＋字牌'],a:0,
        exp:'字牌が1枚でもあればホンイツ、ゼロならチンイツだよ。'},
     ];
@@ -6227,11 +6415,11 @@ const CH3_LESSONS={
     return [
       ch1Teach('メンツをぜんぶコーツでそろえる役の名前は<span class="term-chip">トイトイ</span>！<b>鳴いてもつく</b>から、ポンをかさねて作れるよ。',
         {tlab:'トイトイ',hands:[{label:'トイトイ',hand:'222m555p777sEEE99p',g:true}]}),
-      ch3HasMcq('toitoi','2m2m2m5p5p5p7s7s7sEEE9p9p',ch3Ctx({menzen:false}),
+      ch3HasMcq('toitoi','2m2m2m5p5p5p7s7s7sEEE9p9p',ch3Ctx({melds:[{type:'pon',tiles:'555p',from:'left'},{type:'pon',tiles:'EEE',from:'right'}]}),
         'コーツ4つ！ポンしてそろえてもトイトイはつくよ。'),
-      ch3HasMcq('toitoi','2m2m2m5p5p5p6s7s8sEEE9p9p',ch3Ctx({menzen:false}),
-        'シュンツが1つある…トイトイにならない！'),
-      ch3HasMcq('toitoi','3m3m3m6p6p6p8s8s8sNNN5p5p',ch3Ctx({menzen:false,rw:'E',sw:'S'}),
+      ch3HasMcq('toitoi','2m2m2m5p5p5p6s7s8sEEE9p9p',ch3Ctx({melds:[{type:'pon',tiles:'EEE',from:'opposite'},{type:'chi',tiles:'678s',called:'6s',from:'left'}]}),
+        'チーで作ったシュンツ(678s)が1つある…トイトイにならない！'),
+      ch3HasMcq('toitoi','3m3m3m6p6p6p8s8s8sNNN5p5p',ch3Ctx({melds:[{type:'pon',tiles:'333m',from:'left'},{type:'pon',tiles:'NNN',from:'opposite'}],rw:'E',sw:'S'}),
         'コーツ4つでトイトイ！(北は役牌じゃないけど、トイトイがあるからアガれるね)'),
       {q:'トイトイは鳴いてもつく？',choices:['つく（ポンでそろえてOK）','つかない'],a:0,
        exp:'ポンはコーツを作る鳴き。トイトイと相性バツグンだ！'},
@@ -6300,9 +6488,9 @@ const CH3_LESSONS={
         {tlab:'イーペーコー'}),
       ch3HasMcq('iipeiko','2m2m3m3m4m4m5p6p7p7s8s9sEE',ch3Ctx({}),
         '234m×2組。イーペーコー！'),
-      ch3HasMcq('iipeiko','2m2m3m3m4m4m5p6p7p7s8s9sEE',ch3Ctx({menzen:false}),
+      ch3HasMcq('iipeiko','2m2m3m3m4m4m5p6p7p7s8s9sEE',ch3Ctx({melds:[{type:'chi',tiles:'789s',called:'7s',from:'left'}]}),
         'おなじ形でも、鳴いていたらイーペーコーはつかない！'),
-      ch3WhichMcq('2m2m2m5p5p5p7s7s7sEEE9p9p',ch3Ctx({menzen:false}),['toitoi','chiitoi','iipeiko'],
+      ch3WhichMcq('2m2m2m5p5p5p7s7s7sEEE9p9p',ch3Ctx({melds:[{type:'pon',tiles:'777s',from:'right'},{type:'pon',tiles:'222m',from:'opposite'}]}),['toitoi','chiitoi','iipeiko'],
         'コーツ4つ。トイトイだ！'),
       ch3WhichMcq('1m1m3m3m5p5p7p7p9s9s1s1sEE',ch3Ctx({}),['toitoi','chiitoi','iipeiko'],
         'トイツ7組。七対子！'),
@@ -6344,7 +6532,7 @@ const CH3_LESSONS={
         'ぜんぶのブロックに1・9・字。チャンタだ！'),
       ch3HasMcq('chanta','2m3m4m7p8p9p1s1s1sEEE9m9m',ch3Ctx({}),
         '234mが2〜8だけのメンツ…チャンタにならない！'),
-      ch3HasMcq('chanta','1p2p3p7s8s9s9m9m9mNNN1m1m',ch3Ctx({menzen:false}),
+      ch3HasMcq('chanta','1p2p3p7s8s9s9m9m9mNNN1m1m',ch3Ctx({melds:[{type:'chi',tiles:'789s',called:'9s',from:'left'}]}),
         '鳴いていてもチャンタはつくよ！'),
       {q:'チャンタの条件は？',choices:['ぜんぶのメンツとアタマに1・9・字牌が入る','1・9・字牌をつかわない'],a:0,
        exp:'シュンツなら123か789、コーツなら1・9・字牌。アタマも忘れずに！'},
@@ -6420,6 +6608,8 @@ const CH3_LESSONS={
         '2mのコーツは<b>ロンで完成</b>したから暗刻じゃない…暗刻2つでは三暗刻にならないんだ。'),
       ch3HasMcq('sanankou','2m2m2m5p5p5p7s7s7s2s3s4s9p9p',ch3Ctx({win:'ron',winTile:'3s'}),
         'ロン牌の3sはシュンツの一部。コーツ3つはじぶんでそろえた暗刻だから、三暗刻成立！'),
+      ch3HasMcq('sanankou','2m2m2m5p5p5p7s7s7s2s3s4s9p9p',ch3Ctx({melds:[{type:'pon',tiles:'777s',from:'right'}],win:'tsumo',winTile:'4s'}),
+        'ツモでアガっても、7ソーのコーツは右にはなれた組＝<b>ポンで作った</b>コーツ。暗刻は2つだけだから、三暗刻にならない！'),
       {q:'「暗刻」とは？',choices:['じぶんの力でそろえたコーツ','コーツならなんでも暗刻'],a:0,
        exp:'ポンやロンで完成したコーツは暗刻じゃない。ここが三暗刻のカギ！'},
     ];
@@ -6577,8 +6767,8 @@ const CH3_LESSONS={
       ch1Teach('役さがし、どんどんいくよ！<b>ぜんぶ</b>えらんでから「これで決定」！',{tlab:'役さがし'}),
       ch3YakuFind('1p1p1pRRR2p3p4p5p6p7p9p9p',ch3Ctx({win:'ron',winTile:'4p'}),
         ['yakuhai','tanyao','honitsu','chinitsu'],'中の役牌＋ピンズと字牌だけのホンイツ。2役！'),
-      ch3YakuFind('2m2m2m5p5p5p7s7s7s8s8s8s3m3m',ch3Ctx({menzen:false,win:'ron',winTile:'2m'}),
-        ['tanyao','toitoi','sanankou','chiitoi'],'2〜8のコーツ4つ。タンヤオ＋トイトイ＋三暗刻(暗刻3つ)の3役！'),
+      ch3YakuFind('2m2m2m5p5p5p7s7s7s8s8s8s3m3m',ch3Ctx({melds:[{type:'pon',tiles:'888s',from:'opposite'}],win:'ron',winTile:'3m'}),
+        ['tanyao','toitoi','sanankou','chiitoi'],'2〜8のコーツ4つでタンヤオ＋トイトイ。ポンした8ソーは暗刻じゃないけど、手の中の3つのコーツは暗刻(ロン牌の3マンはアタマ)。三暗刻もついて3役！'),
       ch3YakuFind('2m3m4m4p5p6p3s3s3s3p3p5m6m7m',ch3Ctx({riichi:true,win:'tsumo',winTile:'4p'}),
         ['riichi','tsumo','pinfu','tanyao'],'リーチ＋ツモ＋タンヤオ。333sがあるからピンフはつかないよ！'),
       ch3YakuFind('2m2m4m4m6p6p8p8p3s3s5s5s7s7s',ch3Ctx({}),
@@ -6596,11 +6786,11 @@ const CH3_LESSONS={
         '形は完成…でもリーチも役もない。<b>役なしではアガれない</b>！'),
       ch3AgariMcq('2m3m4m4p5p6p7s8s9s3s5s4s9p9p',ch3Ctx({riichi:true,win:'ron',winTile:'4s',rw:'E',sw:'S'}),
         'リーチがあるからアガれる！まよったらリーチ、が役なし防止のコツだよ。'),
-      ch3AgariMcq('2m3m4m4p5p6p7s7s7s3s4s5s2p2p',ch3Ctx({menzen:false,win:'ron',winTile:'5s'}),
+      ch3AgariMcq('2m3m4m4p5p6p7s7s7s3s4s5s2p2p',ch3Ctx({melds:[{type:'pon',tiles:'777s',from:'opposite'}],win:'ron',winTile:'5s'}),
         '鳴いていても、ぜんぶ2〜8ならタンヤオがある。アガれる！'),
-      ch3AgariMcq('2m3m4m4p5p6p7s8s9s3s5s4s9p9p',ch3Ctx({menzen:false,win:'ron',winTile:'4s',rw:'E',sw:'S'}),
+      ch3AgariMcq('2m3m4m4p5p6p7s8s9s3s5s4s9p9p',ch3Ctx({melds:[{type:'chi',tiles:'789s',called:'7s',from:'left'}],win:'ron',winTile:'4s',rw:'E',sw:'S'}),
         '鳴いた手で、タンヤオも役牌もない…アガれない！鳴くときは役をのこす意識がだいじなんだ。'),
-      ch3AgariMcq('2m3m4m4p5p6pWWW6s7s8s9s9s',ch3Ctx({menzen:false,win:'ron',winTile:'4p',rw:'E',sw:'W'}),
+      ch3AgariMcq('2m3m4m4p5p6pWWW6s7s8s9s9s',ch3Ctx({melds:[{type:'pon',tiles:'WWW',from:'right'}],win:'ron',winTile:'4p',rw:'E',sw:'W'}),
         '西家の西コーツ＝役牌！鳴いていてもアガれる。'),
       {q:'鳴くときに気をつけることは？',choices:['アガったときに役がのこるか','牌の見た目'],a:0,
        exp:'役なしでは(ほとんどの場合)アガれない。鳴くまえに役をかんがえよう！'},
@@ -6613,7 +6803,7 @@ const CH3_LESSONS={
         {tlab:'実戦の役さがし'}),
       ch3YakuFind('2m3m4m4p5p6pSSS6s7s8s9s9s',ch3Ctx({rw:'E',sw:'S',win:'ron',winTile:'4p'}),
         ['yakuhai','tanyao','pinfu'],'あなたは南家。南は自風の役牌！'),
-      ch3YakuFind('2m3m4m4p5p6p5m6m7m6s7s5s3p3p',ch3Ctx({menzen:false,win:'ron',winTile:'5s'}),
+      ch3YakuFind('2m3m4m4p5p6p5m6m7m6s7s5s3p3p',ch3Ctx({melds:[{type:'chi',tiles:'567m',called:'5m',from:'left'}],win:'ron',winTile:'5s'}),
         ['riichi','tsumo','pinfu','tanyao'],'鳴いたからピンフは消えた…でもタンヤオはのこる！'),
       ch3YakuFind('2m3m4m4p5p6p5m6m7m6s7s5s3p3p',ch3Ctx({riichi:true,win:'tsumo',winTile:'5s'}),
         ['riichi','tsumo','pinfu','tanyao'],'リーチ＋ツモ＋ピンフ＋タンヤオ、4役そろいぶみ！'),
@@ -6700,7 +6890,7 @@ const CH3_LESSONS={
         '234m×2＋567p×2。二盃口！'),
       ch3WhichMcq('2m2m3m3m4m4m5p5p6p6p7p7pEE',ch3Ctx({}),['ryanpeikou','chiitoi'],
         'トイツ7組に見えても、これは二盃口として数えるよ！'),
-      ch3HasMcq('ryanpeikou','2m2m3m3m4m4m5p5p6p6p7p7pEE',ch3Ctx({menzen:false}),
+      ch3HasMcq('ryanpeikou','2m2m3m3m4m4m5p5p6p6p7p7pEE',ch3Ctx({melds:[{type:'chi',tiles:'567p',called:'6p',from:'left'}]}),
         '鳴いたら二盃口はつかない！イーペーコーとおなじだね。'),
       ch1Teach('🎉 めずらしい役、コンプリート！おとなりの<b>「もっと役満」</b>ものぞいてみる？',{tlab:'おつかれさま！'}),
     ];
@@ -7067,6 +7257,8 @@ const QFORMATS={
       if(q.situ) html+=tableHTML(legacySituToContext(q.situ),'T0');  // P3-B: situHTML→TableView（situHTMLはlegacyとして残置）
       else if(q.context) html+=tableHTML(q.context, q.context.reveal||'T0');  // v3ネイティブcontext問題（Compare variant等）
       else if(bd3) html+=bd3;
+      else if(q.oh) html+=(q.oh.lab?'<div class="tc-lab">'+q.oh.lab+'</div>':'')+openHandHTML(sortTiles(parseHand(q.oh.hand)),q.oh.melds||[]);  // 鳴いた組つきの手(第1章D2-3など)
+      else if(q.ctx3&&ch3HandSplit(q)) html+=ch3OpenHandHTML(q);   // 鳴いた組: 手の中＋右に鳴いた組
       else if(q.hands2){ for(const h of q.hands2) html+='<div class="tc-lab">'+h.label+'</div>'+handHTML(h.hand); }  // 比較問題: 判断させる牌姿は区切らない
       else if(q.hand) html+=(q.ghand?ch1HandGrouped(q.hand):handHTML(q.hand));  // ghand=理牌+組スキマ表示(第1章等のTeach的表示)
       html+='<div class="choices">'+q.choices.map((ch,i)=>
@@ -7262,6 +7454,7 @@ const QFORMATS={
       const bdY=(q.ctx3&&typeof ch3BoardHTML==='function')?ch3BoardHTML(q):null;
       html+=ch3CtxHTML(bdY?Object.assign({},q.ctx3,{winTile:null}):q.ctx3);
       if(bdY) html+=bdY;
+      else if(ch3HandSplit(q)) html+=ch3OpenHandHTML(q);
       else if(q.hand) html+=(q.ghand?ch1HandGrouped(q.hand):handHTML(q.hand));
       html+='<div class="yf-cands">'+q.cands.map((nm,i)=>
         '<button class="yfb" id="ykb-'+i+'" onpointerdown="ch3YPick('+i+')">'+nm+'</button>').join('')+'</div>';
