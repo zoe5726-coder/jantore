@@ -329,6 +329,18 @@ button.tile.off:active{transform:none;}
   border:2px solid rgba(0,0,0,.14); background:var(--card,#fff); color:var(--ink); cursor:pointer;}
 .yfb.sel{border-color:var(--jade-deep); background:rgba(31,164,107,.10);}
 .yfb.correct{border-color:var(--jade-deep); background:rgba(31,164,107,.22);}
+/* 第3章 ロン/ツモ盤面: 相手の捨て牌(河)は手牌より少し小さく・「今の牌」は河の最後+小ラベル */
+.ch3-board{margin:2px 0 6px;}
+.ch3-river{display:flex; flex-wrap:nowrap; gap:2px; justify-content:center; align-items:flex-start;
+  min-height:52px; margin:2px 0 8px;}
+.ch3-river .tile{width:30px; max-width:30px; flex:none; opacity:.9;}
+.ch3-now{display:flex; flex-direction:column; align-items:center; flex:none; margin-left:10px;}
+.ch3-river .ch3-now .tile{opacity:1;}
+.ch3-now-lab{font-size:9px; font-weight:800; color:var(--ink-soft); margin-top:2px; white-space:nowrap;}
+.ch3-tsumo-row{align-items:flex-start;}
+.ch3-tsumo-row .ch3-now{margin-left:0; flex:1 1 0; min-width:0; max-width:var(--tile-w);}
+.ch3-tsumo-row .ch3-now .tile{width:100%; max-width:none; flex:none;}
+.ch3-tsumo-gap{width:10px; flex:0 0 10px;}
 .ch1-actbox{text-align:center; margin-top:12px;}
 .tc-actres{margin-top:10px; font-size:clamp(13px,3.8vw,15px); font-weight:800; line-height:1.6; min-height:1em;}
 .ch1-shake{animation:ch1shake .5s var(--m-ease,ease);}
@@ -2947,7 +2959,7 @@ function ch1MiniInit(q){
   L.mg={hand:sortTiles(q.mini.hand), wall:q.mini.wall.slice(), disc:[],
         tsumo:null, phase:'draw', miss:0, won:false, windec:null,
         level:q.mini.level||2, target:parseHand(q.mini.target),
-        riichiOn:!!q.mini.riichi, riichiSt:'none'};
+        riichiOn:!!q.mini.riichi, riichiSt:'none', discIntro:!!q.mini.introDisc};
   // D2リーチ状態: 'none'(未リーチ)→'declared'(宣言中=打牌待ち)→'active'(成立)。
   // 操作順は本物と同じ「リーチ宣言→テンパイになる牌を切る」(slotは局開始から常設)
 }
@@ -3185,6 +3197,11 @@ function ch1MiniDiscard(i){
   mg.tsumo=null; mg.phase='draw';
   if(mg.riichiSt==='declared') mg.riichiSt='active';   // 宣言打牌の成立=リーチ成立
   ch1MiniPaint();
+  if(mg.discIntro&&mg.disc.length===1){
+    // はじめての捨て牌(C1-2)だけ: 切った牌がきえずに捨て牌へならぶことを1回だけ案内
+    const g=document.getElementById('mg-guide');
+    if(g) g.innerHTML='切った牌はここ（捨て牌）にならぶよ。きえてしまうわけじゃないんだ！';
+  }
 }
 
 /* ==== 数牌マッチング(A1-4まとめ・共通再利用可能な小さなマッチングUI) ====
@@ -3404,6 +3421,7 @@ function ch1HonorOrNumMcq(tile,exp){
 function ch1Mini(hand,wall,target,opt){
   opt=opt||{};
   const q={mini:{hand,wall,target,level:opt.level||2}};
+  if(opt.introDisc) q.mini.introDisc=true;   // C1-2: はじめての捨て牌ガイド(1回だけ)
   if(opt.riichi) q.mini.riichi=true;   // D2: リーチあり(テンパイ→宣言→ツモ切り→アガリ宣言)
   if(opt.guided){ q.ch1t=true; q.act=1; q.mini.level=1; }   // 誘導=LEVEL1・スコア外
   if(opt.exp) q.exp=opt.exp;
@@ -3724,7 +3742,7 @@ const CH1_LESSONS={
       ch1Mini(['1m','2m','5p','5p'],['3m'],'123m55p',
         {guided:true,exp:'3マンをツモって123m＋55p。ツモった瞬間にアガリになることもあるんだ！'}),
       ch1Mini(['2p','3p','4p','8s'],['E','8s'],'234p88s',
-        {guided:true,exp:'いらない東を切って、8ソーをツモってアガリ！これが麻雀のきほんの流れだよ。'}),
+        {guided:true,introDisc:true,exp:'いらない東を切って、8ソーをツモってアガリ！これが麻雀のきほんの流れだよ。'}),
       {q:'ツモって5枚になったら、さいしょにすることは？',
        choices:['アガリかどうか、たしかめる','かならず1枚切る'],a:0,
        exp:'アガリなら、切らずにそのままアガリ！「ツモったら必ず切る」じゃないよ。'},
@@ -4492,33 +4510,78 @@ function ch3CtxHTML(c){
   if(c.note) chips.push('<span class="ch3-chip">'+c.note+'</span>');
   return chips.length?'<div class="ch3-ctx">'+chips.join('')+'</div>':'';
 }
+/* ---- 第3章 ロン/ツモ盤面(UI自体を教材にする) ----
+   ロン: 「相手の捨て牌」に今切られた牌(=アガリ牌)を置き、自分の手牌はロン前の13枚で見せる。
+   ツモ: 第1章で確立した「13枚+右端に分離したツモ牌」を維持。
+   内部判定は14枚完成形のまま(表示だけを分ける)。「今の牌」の小ラベルは状況説明であり、
+   正解ヒント(これがアガリ牌！)にはしない(河の並び順=時系列の表現)。 */
+function ch3RiverJunk(hand13,winTile){
+  // 相手の河のダミー捨て牌(決定論): アガリ牌と紛らわしくならないよう、
+  // その手の待ち牌(特殊形込み)・4枚使用済み・アガリ牌自身は置かない
+  const cnt=ch3Cnt(hand13.concat([winTile]));
+  const waits=ch3WaitsAll?ch3WaitsAll(hand13):[];
+  const out=[];
+  for(const cd of ['1p','9m','2s','W','9p','1m','N','1s','5p']){
+    if(out.length>=3) break;
+    if(cd===winTile||(cnt[cd]||0)>=4) continue;
+    if(waits.includes(cd)) continue;
+    out.push(cd);
+  }
+  return out;
+}
+function ch3BoardHTML(q){
+  const c=q.ctx3||{};
+  if(!c.win||!c.winTile||!q.hand) return null;
+  const tiles=sortTiles(parseHand(q.hand));
+  if(tiles.length!==14) return null;
+  const idx=tiles.indexOf(c.winTile);
+  if(idx<0) return null;
+  const hand13=tiles.slice(); hand13.splice(idx,1);
+  let html='<div class="ch3-board">';
+  if(c.win==='ron'){
+    html+='<div class="tc-lab">相手の捨て牌</div>'
+      +'<div class="ch3-river">'
+      +ch3RiverJunk(hand13,c.winTile).map(t=>tileHTML(t)).join('')
+      +'<span class="ch3-now">'+tileHTML(c.winTile)+'<span class="ch3-now-lab">今の牌</span></span>'
+      +'</div>'
+      +'<div class="tc-lab">あなたの手牌（13枚）</div>'
+      +'<div class="hand">'+hand13.map(t=>tileHTML(t)).join('')+'</div>';
+  }else{
+    html+='<div class="tc-lab">あなたの手牌（13枚）＋ツモった牌</div>'
+      +'<div class="hand ch3-tsumo-row">'+hand13.map(t=>tileHTML(t)).join('')
+      +'<span class="ch3-tsumo-gap"></span>'
+      +'<span class="ch3-now">'+tileHTML(c.winTile)+'<span class="ch3-now-lab">ツモ</span></span>'
+      +'</div>';
+  }
+  return html+'</div>';
+}
 /* ---- 第3章 ビルダー(正解は必ずch3YakuList/ch3IsYakuhaiTile等で算出) ---- */
 function ch3Ctx(o){ return Object.assign({menzen:true},o||{}); }
 function ch3ListOf(handStr,ctx3){ return ch3YakuList(sortTiles(parseHand(handStr)),ctx3); }
 function ch3HasMcq(key,handStr,ctx3,exp,opt){
   const has=ch3ListOf(handStr,ctx3).includes(key);
   return Object.assign({q:'この手に「<b>'+CH3_YAKU_LABEL[key]+'</b>」はつく？',hand:handStr,ctx3,
-    choices:['つく','つかない'],a:has?0:1,exp,ghand:true},opt||{});
+    choices:['つく','つかない'],a:has?0:1,exp},opt||{});
 }
 function ch3AgariMcq(handStr,ctx3,exp,opt){
   // 役あり/なし: 形が完成していても役がなければアガれない(第1章D2-1の実戦定着)
   const n=ch3ListOf(handStr,ctx3).length;
   return Object.assign({q:'この手・この状況で、<b>アガれる？</b>',hand:handStr,ctx3,
-    choices:['アガれる（役がある）','アガれない（役がない）'],a:n>0?0:1,exp,ghand:true},opt||{});
+    choices:['アガれる（役がある）','アガれない（役がない）'],a:n>0?0:1,exp},opt||{});
 }
 function ch3WhichMcq(handStr,ctx3,choiceKeys,exp,opt){
   const list=ch3ListOf(handStr,ctx3);
   const hits=choiceKeys.filter(k=>list.includes(k));
   const a=hits.length===1?choiceKeys.indexOf(hits[0]):-1;   // 交差1つでない出題はテストで検出
   return Object.assign({q:'この手についている<b>役</b>はどれ？',hand:handStr,ctx3,
-    choices:choiceKeys.map(k=>CH3_YAKU_LABEL[k]),a,exp,ghand:true},opt||{});
+    choices:choiceKeys.map(k=>CH3_YAKU_LABEL[k]),a,exp},opt||{});
 }
 function ch3YakuFind(handStr,ctx3,candKeys,exp,opt){
   const list=ch3ListOf(handStr,ctx3);
   const answers=candKeys.map((k,i)=>list.includes(k)?i:-1).filter(i=>i>=0);
   return Object.assign({yf:true,tlab:'役さがし',
     q:'この手についている<b>役</b>を<b>ぜんぶ</b>えらんで、「これで決定」！',
-    hand:handStr,ctx3,cands:candKeys.map(k=>CH3_YAKU_LABEL[k]),candKeys,answers,exp,ghand:true,
+    hand:handStr,ctx3,cands:candKeys.map(k=>CH3_YAKU_LABEL[k]),candKeys,answers,exp,
     _bad:list.some(k=>!candKeys.includes(k))||answers.length===0},opt||{});
 }
 function ch3BlockPick(handStr,q,exp,opt){
@@ -4530,7 +4593,7 @@ function ch3BlockPick(handStr,q,exp,opt){
 function ch3TripMcq(tile,ctx3,exp,opt){
   const ok=ch3IsYakuhaiTile(tile,ctx3);
   return Object.assign({q:'この3枚をそろえたら、<b>役</b>になる？',hand:tile+tile+tile,ctx3,
-    choices:['役になる','ならない'],a:ok?0:1,exp,ghand:true},opt||{});
+    choices:['役になる','ならない'],a:ok?0:1,exp},opt||{});
 }
 /* ---- 第3章 構造判定ヘルパー(すべて決定論) ---- */
 function ch3T(handStr){ return sortTiles(parseHand(handStr)); }
@@ -4541,7 +4604,7 @@ function ch3AllRuns(handStr){
 function ch3AllTrips(handStr){ return ch3HasToitoi(ch3T(handStr)); }
 function ch3StructMcq(q,handStr,ok,choices,exp,opt){
   // ○×型(正解okは必ず決定論ヘルパーで算出して渡す)
-  return Object.assign({q,hand:handStr,choices,a:ok?0:1,exp,ghand:true},opt||{});
+  return Object.assign({q,hand:handStr,choices,a:ok?0:1,exp},opt||{});
 }
 function ch3CompareMcq(q,hands,okA,okB,exp,opt){
   // 2つの手の比較(正解=条件を満たす方。両方/どちらも満たさない出題はa=-1でテスト検出)
@@ -4551,7 +4614,7 @@ function ch3CompareMcq(q,hands,okA,okB,exp,opt){
 function ch3WinAllMcq(handStr,exp,opt){
   const ok=ch3WinAll(ch3T(handStr));
   return Object.assign({q:'この14枚は、<b>アガリの形</b>になっている？',hand:handStr,
-    choices:['アガリの形になっている','なっていない'],a:ok?0:1,exp,ghand:true},opt||{});
+    choices:['アガリの形になっている','なっていない'],a:ok?0:1,exp},opt||{});
 }
 function ch3YakuhaiPickM(cands,ctx3,q,exp,opt){
   // 役牌になる牌をぜんぶタップ(正解=ch3IsYakuhaiTile)
@@ -4569,7 +4632,7 @@ function ch3RiichiOkMcq(hand13,ctx3,exp,opt){
   // リーチを宣言できる？(条件=鳴いていない+テンパイ。決定論: ch1MiniWaits再利用)
   const ok=(ctx3.menzen!==false)&&ch1MiniWaits(ch3T(hand13)).length>0;
   return Object.assign({q:'この手・この状況で、<b>リーチを宣言できる？</b>',hand:hand13,ctx3,
-    choices:['できる','できない'],a:ok?0:1,exp,ghand:true},opt||{});
+    choices:['できる','できない'],a:ok?0:1,exp},opt||{});
 }
 function ch3PinfuFails(handStr,ctx3){
   // ピンフ不成立の理由を決定論で分析: naki/kotsu(シュンツでないメンツ)/head(役牌アタマ)/wait(リャンメンでない)
@@ -4601,7 +4664,7 @@ function ch3PinfuWhyMcq(handStr,ctx3,exp,opt){
   const keys=['naki','kotsu','head','wait'];
   const a=fails.length===1?keys.indexOf(fails[0]):-1;
   return Object.assign({q:'この手に<b>ピンフ</b>がつかない理由は？',hand:handStr,ctx3,
-    choices:keys.map(k=>CH3_PINFU_WHY[k]),a,exp,ghand:true},opt||{});
+    choices:keys.map(k=>CH3_PINFU_WHY[k]),a,exp},opt||{});
 }
 function ch3OffSuitPick(handStr,q,exp,opt){
   // 一色あつめのじゃま牌(いちばん多いスート以外の数牌)をタップ(決定論)
@@ -4955,11 +5018,11 @@ const CH2_LESSONS={
       ch1Teach('のこった2枚(か1枚)の<b>待ちの形</b>を見きわめれば、待ち牌がわかる。67ならリャンメン、待ち牌は5と8！',
         {tlab:'のこりに注目'}),
       ch2WaitFind('1m2m3m4p5p6pWW4s5s7s8s9s',['4s','7s','W','2s'],
-        {exp:'のこりは45のリャンメン！両側の3ソーと6ソーが待ち牌。'}),
-      ch2WfGen('kanchan',13),
-      ch2WfGen('ryanmen',13),
-      ch2ShapeMcq('2m3m4m6p7p8p1s1s1sNN5s7s',CH2_SHAPES5,'のこりは57。あいだの6を待つカンチャン！'),
-      ch1TenpaiMcq('2m4m6m8m1p3p5p7p9p2s4sEW','どの1枚が来てもアガリにならない…13枚でも、まずはテンパイかどうかをたしかめよう！'),
+        {grouped:false,exp:'のこりは45のリャンメン！両側の3ソーと6ソーが待ち牌。'}),
+      ch2WfGen('kanchan',13,{grouped:false}),
+      ch2WfGen('ryanmen',13,{grouped:false}),
+      ch2ShapeMcq('2m3m4m6p7p8p1s1s1sNN5s7s',CH2_SHAPES5,'のこりは57。あいだの6を待つカンチャン！',{ghand:false}),
+      Object.assign(ch1TenpaiMcq('2m4m6m8m1p3p5p7p9p2s4sEW','どの1枚が来てもアガリにならない…13枚でも、まずはテンパイかどうかをたしかめよう！'),{ghand:false}),
     ];
   },
   /* D1-2 待ちを全部当てよう(複合形の入口=「手全体を見ると待ちが増える」体験。名称なし) */
@@ -4967,12 +5030,12 @@ const CH2_LESSONS={
     return [
       ch1Teach('13枚の待ち牌さがし、どんどんいくよ！<b>ぜんぶ</b>見つけてから「これで決定」だ！',
         {tlab:'待ち牌さがし'}),
-      ch2WfGen('shanpon',13),
-      ch2WfGen('penchan',13),
-      ch2WfGen('tanki',13),
-      ch2WfGen('ryanmen',13),
+      ch2WfGen('shanpon',13,{grouped:false}),
+      ch2WfGen('penchan',13,{grouped:false}),
+      ch2WfGen('tanki',13,{grouped:false}),
+      ch2WfGen('ryanmen',13,{grouped:false}),
       ch2WaitFind('2m3m4m5m6m7p8p9p1s1s1sEE',['5m','2s','W'],
-        {exp:'<b>手ぜんたい</b>を見ると、待ち牌がふえることがある！23456とつながった形は、1マン・4マン・7マンの3種類。リャンメンが2つかさなったような形なんだ。'}),
+        {grouped:false,exp:'<b>手ぜんたい</b>を見ると、待ち牌がふえることがある！23456とつながった形は、1マン・4マン・7マンの3種類。リャンメンが2つかさなったような形なんだ。'}),
       {q:'つながりが長い形(23456など)では…',choices:['待ち牌がふえることがある','待ち牌はかならず2種類'],a:0,
        exp:'手ぜんたいを見わたすのが、待ち牌さがしのコツだよ！'},
     ];
@@ -4982,12 +5045,12 @@ const CH2_LESSONS={
     return [
       ch1Teach('こんどは13枚から<b>待ちの形</b>を見きわめよう！メンツとアタマをのぞいて、のこりに注目！',
         {tlab:'形を見きわめる'}),
-      ch2ShapeGenMcq('ryanmen',13,CH2_SHAPES5,'のこりはならんだ2枚。両側待ちのリャンメン！'),
-      ch2ShapeGenMcq('kanchan',13,CH2_SHAPES5,'あいだ空きの2枚。真ん中待ちのカンチャン！'),
-      ch2ShapeGenMcq('shanpon',13,CH2_SHAPES5,'トイツが2組のこっている。シャンポン！'),
-      ch2ShapeGenMcq('tanki',13,CH2_SHAPES5,'メンツ4つ＋1枚。アタマを待つ単騎！'),
-      ch2WfGen('kanchan',13),
-      ch2WfGen('shanpon',13),
+      ch2ShapeGenMcq('ryanmen',13,CH2_SHAPES5,'のこりはならんだ2枚。両側待ちのリャンメン！',{ghand:false}),
+      ch2ShapeGenMcq('kanchan',13,CH2_SHAPES5,'あいだ空きの2枚。真ん中待ちのカンチャン！',{ghand:false}),
+      ch2ShapeGenMcq('shanpon',13,CH2_SHAPES5,'トイツが2組のこっている。シャンポン！',{ghand:false}),
+      ch2ShapeGenMcq('tanki',13,CH2_SHAPES5,'メンツ4つ＋1枚。アタマを待つ単騎！',{ghand:false}),
+      ch2WfGen('kanchan',13,{grouped:false}),
+      ch2WfGen('shanpon',13,{grouped:false}),
     ];
   },
   /* D1-4 ★第2章チャレンジ「アガリが見える！」(待ち全選択→その待ち牌をツモって自分でアガリ) */
@@ -4995,11 +5058,11 @@ const CH2_LESSONS={
     return [
       ch1Teach('いよいよ<b>第2章チャレンジ</b>！13枚の待ち牌をぜんぶ見つけて…さいごは、見つけた待ち牌をツモって<b>自分の手でアガろう</b>！',
         {tlab:'第2章チャレンジ'}),
-      ch2WfGen('ryanmen',13),
-      ch2ShapeGenMcq('penchan',13,CH2_SHAPES5,'12か89のはしっこ待ち。ペンチャン！'),
-      ch2WfGen('shanpon',13),
+      ch2WfGen('ryanmen',13,{grouped:false}),
+      ch2ShapeGenMcq('penchan',13,CH2_SHAPES5,'12か89のはしっこ待ち。ペンチャン！',{ghand:false}),
+      ch2WfGen('shanpon',13,{grouped:false}),
       ch2WaitFind('2m3m4m6p7p8p5s6s7s3s3sEE',['4s','5s','W','2s'],
-        {q:'チャレンジ！この手牌の<b>待ち牌</b>を、ぜんぶ見つけよう！',
+        {grouped:false,q:'チャレンジ！この手牌の<b>待ち牌</b>を、ぜんぶ見つけよう！',
          exp:'3ソーと東のシャンポン！つぎはこの手牌で、ほんとうにアガってみよう！'}),
       ch1Mini(['2m','3m','4m','6p','7p','8p','5s','6s','7s','3s','3s','E','E'],['1p','3s'],'234m678p567s333sEE',
         {level:3,riichi:true,
@@ -5021,10 +5084,13 @@ const CH3_LESSONS={
         {tlab:'第3章の目標'}),
       {q:'アガリに必要なのは？',choices:['アガリの形 ＋ 役','アガリの形だけ'],a:0,
        exp:'形だけではダメ。役が1つは必要なんだ。'},
-      ch3AgariMcq('2m3m4m4p5p6p7s8s9s3s5s4s9p9p',ch3Ctx({win:'ron',winTile:'4s'}),
-        '4メンツ＋1アタマはできている…でも役がひとつもない！これではアガれないんだったね。'),
+      /* 「役なし」の判定問題はここでは出さない: この時点では役をまだ習っておらず、
+         「役がひとつもない」ことを自力で確認できないため。実物はイソピィの見本(Teach)として
+         見せるだけにして、判定問題は代表役を学び終えたJ「役を見つけよう」(J1-4)で出題する */
+      ch1Teach('たとえばこの手。形はできているけれど…イソピィが役をぜんぶしらべたよ。<b>役が1つもない</b>から、このままではアガれないんだ。どんな役があるかは、これからゆっくり覚えていこう！',
+        {tlab:'見本: 役がない手',hands:[{label:'形はできているのに…',hand:'2m3m4m4p5p6p7s8s9s3s4s5s9p9p'}]}),
       ch3AgariMcq('2m3m4m4p5p6p7s8s9s3s5s4s9p9p',ch3Ctx({riichi:true,win:'ron',winTile:'4s'}),
-        'おなじ手でも、<b>リーチ</b>をかけていれば役がある！アガれるよ。'),
+        '<b>リーチ</b>という役をかけているから、この手はアガれる！役が1つあればいいんだ。'),
       {q:'「役」はなんのためにある？',choices:['アガるための条件（役がないとアガれない）','牌をならべかえるための決まり'],a:0,
        exp:'役はアガリの条件。第3章でどんどん見つけられるようになろう！'},
     ];
@@ -5090,8 +5156,9 @@ const CH3_LESSONS={
         '鳴いていたら、役のツモはつかない。'),
       ch3YakuFind('2m3m4m4p5p6p7s8s9s3s5s4s9p9p',ch3Ctx({riichi:true,win:'tsumo',winTile:'4s'}),
         ['riichi','tsumo'],'リーチ＋ツモ、2役！'),
-      ch3AgariMcq('2m3m4m4p5p6p7s8s9s3s5s4s9p9p',ch3Ctx({win:'ron',winTile:'4s'}),
-        '役がひとつもない…アガれない！'),
+      /* 「役なし→アガれない」の判定問題はJ1-4へ(この段階では未習の役を確認できないため) */
+      ch3YakuFind('2m3m4m4p5p6p7s8s9s3s5s4s9p9p',ch3Ctx({riichi:true,win:'ron',winTile:'4s'}),
+        ['riichi','tsumo'],'ロンだから役はリーチだけ。ツモは「じぶんで引いてアガった」ときだけだよ！'),
       {q:'役の「ツモ」の条件は？',choices:['鳴いていない手をツモでアガる','ツモでアガればなんでもOK'],a:0,
        exp:'「鳴いていない」がだいじな条件だったね。'},
     ]);
@@ -5245,8 +5312,8 @@ const CH3_LESSONS={
         {tlab:'リャンメンだけ',hands:[{label:'リャンメン待ちならOK',hand:'6s7sWW',g:true}]}),
       {q:'“きれいな形”の役の、待ちの条件は？',choices:['リャンメン待ちでアガる','どの待ちでもよい'],a:0,
        exp:'第2章の待ちの形が、役の条件につながった！リャンメンだけだよ。'},
-      ch2ShapeMcq('4m5m9p9p',CH2_SHAPES5,'45の両側で待つリャンメン。この待ちなら条件クリア！'),
-      ch2ShapeMcq('4m6m9p9p',CH2_SHAPES5,'真ん中待ちのカンチャン。この待ちだと、“きれいな形”の役はつかないんだ。'),
+      ch2ShapeMcq('4m5m9p9p',CH2_SHAPES5,'45の両側で待つリャンメン。この待ちなら条件クリア！',{ghand:false}),
+      ch2ShapeMcq('4m6m9p9p',CH2_SHAPES5,'真ん中待ちのカンチャン。この待ちだと、“きれいな形”の役はつかないんだ。',{ghand:false}),
       {q:'単騎待ちでアガったら、“きれいな形”の役は？',choices:['つかない','つく'],a:0,
        exp:'リャンメン以外の待ちでは、この役はつかないよ。'},
     ];
@@ -5891,7 +5958,7 @@ const CH3_LESSONS={
       ch1Teach('いよいよ<b>第3章チャレンジ</b>！<b>待ち牌を見つけて→リーチして→ツモって→ついた役をぜんぶ見つける</b>。今まで覚えたことの総決算だ！',
         {tlab:'第3章チャレンジ'}),
       ch2WaitFind('2m3m4m4p5p6p5m6m7m6s7s3p3p',['4s','6s','9s','3p'],
-        {q:'チャレンジ①！この13枚の<b>待ち牌</b>をぜんぶ見つけよう！',
+        {grouped:false,q:'チャレンジ①！この13枚の<b>待ち牌</b>をぜんぶ見つけよう！',
          exp:'67sのリャンメン。5ソーと8ソーが待ち牌だ！'}),
       ch1Mini(['2m','3m','4m','4p','5p','6p','5m','6m','7m','6s','7s','3p','3p'],['1p','5s'],'234m456p567m567s33p',
         {level:3,riichi:true,
@@ -6321,11 +6388,15 @@ const QFORMATS={
       html+='<div class="q-type">'+L.course.title+'</div>';
       html+='<div class="q-text">'+q.q+'</div>';
       if(q.ctx) html+='<div class="q-ctx">'+q.ctx+'</div>';
-      if(q.ctx3) html+=ch3CtxHTML(q.ctx3);       // 第3章: 場風/自風/鳴き/ロン・ツモ等の状況チップ
+      // 第3章: ロン/ツモは牌の配置で分かる盤面(ロン=相手の捨て牌+自分の13枚/ツモ=13枚+右端ツモ牌)。
+      // 盤面が出るときはアガリ牌チップを重複表示しない(状況は牌の位置で理解させる)
+      const bd3=(q.ctx3&&typeof ch3BoardHTML==='function')?ch3BoardHTML(q):null;
+      if(q.ctx3) html+=ch3CtxHTML(bd3?Object.assign({},q.ctx3,{winTile:null}):q.ctx3);
       if(q.situ) html+=tableHTML(legacySituToContext(q.situ),'T0');  // P3-B: situHTML→TableView（situHTMLはlegacyとして残置）
       else if(q.context) html+=tableHTML(q.context, q.context.reveal||'T0');  // v3ネイティブcontext問題（Compare variant等）
-      else if(q.hands2){ for(const h of q.hands2) html+='<div class="tc-lab">'+h.label+'</div>'+ch1HandGrouped(h.hand); }  // 第3章: 2つの手の比較
-      else if(q.hand) html+=(q.ghand?ch1HandGrouped(q.hand):handHTML(q.hand));  // ghand=理牌+組スキマ表示(第1章)
+      else if(bd3) html+=bd3;
+      else if(q.hands2){ for(const h of q.hands2) html+='<div class="tc-lab">'+h.label+'</div>'+handHTML(h.hand); }  // 比較問題: 判断させる牌姿は区切らない
+      else if(q.hand) html+=(q.ghand?ch1HandGrouped(q.hand):handHTML(q.hand));  // ghand=理牌+組スキマ表示(第1章等のTeach的表示)
       html+='<div class="choices">'+q.choices.map((ch,i)=>
         '<button class="choice" id="ch-'+i+'" onpointerdown="selChoice('+i+')">'+ch+'</button>').join('')+'</div>';
       return html;
@@ -6513,8 +6584,10 @@ const QFORMATS={
       L.wf={miss:0,done:false};
       let html='<div class="q-type">'+(q.tlab||'役さがし')+'</div>';
       html+='<div class="q-text">'+q.q+'</div>';
-      html+=ch3CtxHTML(q.ctx3);
-      if(q.hand) html+=(q.ghand?ch1HandGrouped(q.hand):handHTML(q.hand));
+      const bdY=(q.ctx3&&typeof ch3BoardHTML==='function')?ch3BoardHTML(q):null;
+      html+=ch3CtxHTML(bdY?Object.assign({},q.ctx3,{winTile:null}):q.ctx3);
+      if(bdY) html+=bdY;
+      else if(q.hand) html+=(q.ghand?ch1HandGrouped(q.hand):handHTML(q.hand));
       html+='<div class="yf-cands">'+q.cands.map((nm,i)=>
         '<button class="yfb" id="ykb-'+i+'" onpointerdown="ch3YPick('+i+')">'+nm+'</button>').join('')+'</div>';
       html+='<div class="wf-msg" id="wf-msg">'+(q.hint?'💡 '+q.hint:'')+'</div>';
