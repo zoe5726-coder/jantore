@@ -245,6 +245,8 @@ rt{font-size:.5em; font-weight:700; line-height:1; letter-spacing:-.04em; opacit
   width:var(--tile-w); aspect-ratio:5/7; height:auto;}
 .tile svg{width:100%; height:100%; display:block;}
 .hand .tile{flex:1 1 0; min-width:0; max-width:var(--tile-w);}
+.fb-tiles{display:inline-flex; flex-wrap:wrap; gap:2px; vertical-align:middle;}
+.fb-tiles .tile{display:inline-block; width:22px; border-radius:3px; box-shadow:0 1.5px 0 var(--tile-shadow);}
 /* 鳴いた組(共通部品 renderMeld/openHandHTML): 手の中＋スキマ＋右に鳴いた組。もらった牌は横向き。
    横向き牌は「横1.4枚分×縦1枚分」の正方形の箱(=立てた牌とおなじ高さ)に入れ、箱の下にそろえて90度回転。
    箱がフレックスの幅を1.4枚分とるので、回転してもとなりの牌にかさならない */
@@ -1315,6 +1317,11 @@ function parseHand(str){
 function sortTiles(tiles){
   const order=t=>t.length===1?100+'ESWNBGR'.indexOf(t):({m:0,p:10,s:20}[t[1]])+ +t[0];
   return tiles.slice().sort((a,b)=>order(a)-order(b));
+}
+function fbTilesHTML(codes){
+  // 牌タップ問題の「正解」表示は、文字(5萬など未習の漢字表記)ではなく牌そのもので見せる(R31)
+  // <p>の中に置くので<div>は使わない(divだと段落が切れて牌が段落の外へ押し出される)
+  return '<span class="fb-tiles">'+codes.map(c=>tileHTML(c).replace(/^<div/,'<span').replace(/<\/div>$/,'</span>')).join('')+'</span>';
 }
 function handHTML(str){
   return '<div class="hand">'+sortTiles(parseHand(str)).map(t=>tileHTML(t)).join('')+'</div>';
@@ -3861,7 +3868,11 @@ function ch1ReadMcq(cd,exp,opt){
   }
   wrong=[...new Set(wrong)].filter(w=>w!==right);
   const choices=shuffle([right].concat(wrong));
-  return Object.assign({q:'この牌の読み方は？',hand:cd,choices,a:choices.indexOf(right),exp:exp||('「'+right+'」だよ。')},opt||{});
+  // 既定の解説(G): まちがえた人が「どこを見ればいいか」わかるように、しくみ(数字の読み＋種類)に分けて見せる
+  const how=cd.length===2
+    ?(cd[0]+'は「'+TILE_READ.num[+cd[0]]+'」、'+TILE_READ.suitName[cd[1]]+'は「'+TILE_READ.suit[cd[1]]+'」→「'+right+'」だよ。')
+    :(HONOR[cd]+'は「'+right+'」。字牌は7つの名前で覚えよう。');
+  return Object.assign({q:'この牌の読み方は？',hand:cd,choices,a:choices.indexOf(right),exp:exp||how},opt||{});
 }
 function ch1MatchInit(q){
   const kind=q.mt.kind;
@@ -4227,7 +4238,7 @@ const CH1_LESSONS={
       ch1SamePick('5p',['5m','5s','3p'],{tlab:'えらんでみよう',q:'5のピンズはどれ？',hand:'',
         exp:'まるが5つでピンズの5！おなじ5でもマンズ・ソーズはべつの牌だよ。'}),
       ch1SuitMcq('7s','棒の絵はソーズ！7本かぞえてみてね。'),
-      ch1SuitMcq('2m','漢数字はマンズ。「二萬（リャンマン）」ってよぶよ。'),
+      ch1SuitMcq('2m','漢数字がかいてあるからマンズ。これは「2のマンズ」だね！'),
     ];
   },
   /* A1-3 字牌(Teach2+Try/Quiz4) */
@@ -4316,8 +4327,8 @@ const CH1_LESSONS={
         guide:['つぎは索子（ソーズ）！読み方とペアにしよう！','そのちょうし！のこりもペアにしよう！'],okText:'索子（ソーズ）もバッチリ！'}),
       ch1ReadMatch('read',readTileItems(uniq),{title:'3種類まぜて',qtype:'読み方マッチング',
         guide:['マンズ・ピンズ・ソーズがまざっているよ。種類をよく見てね！','あとすこし！'],okText:'まぜても読めたね！'}),
-      ch1ReadMcq(shuffle(TILES34.filter(t=>t.length===2))[0],'数字の読み＋種類の呼び方だったね。'),
-      ch1ReadMcq(shuffle(TILES34.filter(t=>t.length===2))[0],'まよったら、数字と種類を1つずつ読んでみよう。'),
+      ch1ReadMcq(shuffle(TILES34.filter(t=>t.length===2))[0]),
+      ch1ReadMcq(shuffle(TILES34.filter(t=>t.length===2))[0]),
     ];
   },
   /* R1-3 字牌の読み方(7種・数牌とは別のしくみ) */
@@ -4464,7 +4475,7 @@ const CH1_LESSONS={
   /* C1-1 はじめてのアガリ形(アガリ・手牌を導入。まだミニ麻雀は動かさない) */
   c1_1(){
     return [
-      ch1Teach('3枚の<span class="term-chip">メンツ</span>と、2枚の<span class="term-chip">アタマ</span>。この2つがそろった5枚が<span class="term-chip">アガリ</span>の形だよ！',
+      ch1Teach('麻雀のゴールは、牌で<b>決まった形を完成させる</b>こと。完成させることを<span class="term-chip">アガリ</span>というよ！いちばん小さいアガリの形は、3枚の<span class="term-chip">メンツ</span>1つと2枚の<span class="term-chip">アタマ</span>1つの5枚。',
         {tlab:'アガリ',hands:[{label:'メンツ',hand:'123m'},{label:'アタマ',hand:'55p'}]}),
       ch1Teach('コーツ＋アタマでもアガリ！そして、じぶんが持っている牌のことを<span class="term-chip">手牌（てはい）</span>とよぶよ。',
         {tlab:'手牌',hands:[{label:'メンツ（コーツ）',hand:'EEE'},{label:'アタマ',hand:'55p'}]}),
@@ -4480,7 +4491,9 @@ const CH1_LESSONS={
   /* C1-2 はじめてのツモ(ツモる・切る・捨て牌を導入。LEVEL1誘導ミニ=スコア外) */
   c1_2(){
     return [
-      ch1Teach('ほんものの麻雀は<b>13枚</b>でやるんだ。まずは少ない枚数のミニ麻雀で、ながれをおぼえよう！山から1枚引くことを<span class="term-chip">ツモる</span>、いらない1枚をすてることを<span class="term-chip">切る</span>というよ。切った牌は<span class="term-chip">捨て牌</span>にならんで、切ったあとの手牌は見やすいようにならびなおすよ。',
+      ch1Teach('本物の麻雀は<b>13枚</b>。まず少ない枚数で仕組みを覚えよう。いちばん小さい<b>4枚</b>の<b>ミニ麻雀</b>からスタート！1枚引いて<b>5枚</b>になったとき、メンツ1つ＋アタマ1つができていればアガリだよ。',
+        {tlab:'ミニ麻雀',hands:[{label:'手牌は4枚',hand:'1m2m5p5p'}]}),
+      ch1Teach('うらむきに積んである牌を<span class="term-chip">山</span>というよ。山から1枚引くことを<span class="term-chip">ツモる</span>、いらない1枚をすてることを<span class="term-chip">切る</span>という。切った牌は<span class="term-chip">捨て牌（すてはい）</span>としてならべて、手牌は見やすいようにならびなおすよ。まずはイソピィといっしょにやってみよう！',
         {tlab:'ツモる・切る'}),
       ch1Mini(['1m','2m','5p','5p'],['3m'],'123m55p',
         {guided:true,exp:'3マンをツモって123m＋55p。ツモった瞬間にアガリになることもあるんだ！'}),
@@ -4514,7 +4527,7 @@ const CH1_LESSONS={
     return [
       ch1Teach('この手牌、3マンが来れば123m＋55pでアガリ！あと1枚でアガれる形を<span class="term-chip">テンパイ</span>というよ。',
         {tlab:'テンパイ',hands:[{label:'あと1枚…！',hand:'1m2m5p5p'}]}),
-      ch1Teach('そのアガれる牌のことを<span class="term-chip">待ち</span>とよぶよ。テンパイしたら、待ちをツモればアガリだ！',
+      ch1Teach('そのアガれる牌のことを<span class="term-chip">待ち</span>とよぶよ。テンパイしたら、待ちをツモればアガリだ！待ちが2種類以上ある形もあるよ。',
         {tlab:'待ち',hands:[{label:'この形の待ちは3マン',hand:'3m'}]}),
       ch1WaitPick('5s6s7sN',['4s','8s','5p'],null,
         '北をツモれば、567sのメンツ＋北北のアタマでアガリ！'),
@@ -4547,9 +4560,9 @@ const CH1_LESSONS={
   /* C2-1 2メンツ+1アタマ(C1の拡張。新用語なし) */
   c2_1(){
     return [
-      ch1Teach('C1では、3枚の組が1つだったね。メンツ1つ＋アタマ1つでアガリだった！',
+      ch1Teach('4枚ミニ麻雀では、3枚の組が1つだったね。メンツ1つ＋アタマ1つでアガリだった！',
         {tlab:'まえはこうだった',hands:[{label:'1メンツ＋1アタマ（5枚）',hand:'123m55p',g:true}]}),
-      ch1Teach('今度は3枚の組を<b>2つ</b>にしてみよう！<b>2メンツ＋1アタマ</b>、これが7枚ミニ麻雀のアガリだよ。コーツがまじってもOK！',
+      ch1Teach('今度は3枚の組を<b>2つ</b>にしてみよう！手牌は<b>7枚</b>。1枚ツモって<b>8枚</b>になったとき、<b>2メンツ＋1アタマ</b>ができていればアガリだよ。コーツがまじってもOK！',
         {tlab:'組を2つに！',hands:[{label:'2メンツ＋1アタマ（8枚）',hand:'123m456p77s',g:true},
           {label:'コーツ入りでもアガリ',hand:'EEE456p77s',g:true}]}),
       ch1Part8Multi('123m456p77s','mentsu','メンツになっている6枚（2組とも）をぜんぶ選ぼう！',
@@ -4571,7 +4584,7 @@ const CH1_LESSONS={
       ch1Mini(['1m','2m','3m','4p','5p','7s','7s'],['6p'],'123m456p77s',
         {guided:true,exp:'6ピンをツモって123m＋456p＋77s。7枚でも、ツモった瞬間アガリはあるんだ！'}),
       ch1Mini(['5m','5m','2p','3p','4p','7s','E'],['7s','7s'],'55m234p777s',
-        {guided:true,exp:'東を切って、7ソーをあつめてアガリ！やることはC1とまったくおなじだね。'}),
+        {guided:true,exp:'東を切って、7ソーをあつめてアガリ！やることは4枚のときとまったくおなじだね。'}),
       ch1Mini(['3p','4p','5p','8m','8m','G','2s'],['G','G'],'345p88mGGG',
         {exp:'2ソーはどの組にも入らない…切ってよし！發のコーツができてアガリ！'}),
       ch1Mini(['1s','2s','3s','6p','6p','R','9m'],['R','R'],'123s66pRRR',
@@ -4609,7 +4622,7 @@ const CH1_LESSONS={
       ch1JunkPick('345p88sWW1m',{exp:'345pのメンツと、8ソー・西のトイツをのこす。1マンが余っているね。'}),
       Object.assign(ch1WaitMulti('123m55p77s',['5p','7s','4m','W','2p'],
         '5ピンでも7ソーでもアガリ！トイツが2つあるときは、どちらかがコーツになればいいんだ。'),
-        {q:'この7枚の待ちを、ぜんぶ選ぼう！'}),
+        {q:'この7枚の待ちを、ぜんぶ選ぼう！<br><small>ヒント：1枚ずつ「これが来たら組ができる？」と試してみよう</small>'}),
     ]);
     return quiz.concat([
       ch1Mini(['2p','3p','4p','9s','9s','6m','7m'],['E','8m'],'234p678m99s',
@@ -4622,11 +4635,11 @@ const CH1_LESSONS={
   /* C3-1 3メンツ+1アタマ(新用語なし。C1→C2→C3の成長を一画面で見せる) */
   c3_1(){
     return [
-      ch1Teach('また3枚の組がひとつ増えたね！こんどは<b>3メンツ＋1アタマ</b>、11枚のアガリだよ。',
+      ch1Teach('また3枚の組がひとつ増えたね！手牌は<b>10枚</b>。1枚ツモって<b>11枚</b>で<b>3メンツ＋1アタマ</b>ならアガリだよ。',
         {tlab:'組がまたひとつ',hands:[
-          {label:'C1: 1メンツ＋1アタマ（5枚）',hand:'123m55p',g:true},
-          {label:'C2: 2メンツ＋1アタマ（8枚）',hand:'123m456p77s',g:true},
-          {label:'C3: 3メンツ＋1アタマ（11枚）',hand:'123m456p789sEE',g:true}]}),
+          {label:'4枚ミニ麻雀: 1メンツ＋1アタマ（5枚）',hand:'123m55p',g:true},
+          {label:'7枚ミニ麻雀: 2メンツ＋1アタマ（8枚）',hand:'123m456p77s',g:true},
+          {label:'10枚ミニ麻雀: 3メンツ＋1アタマ（11枚）',hand:'123m456p789sEE',g:true}]}),
       ch1Teach('シュンツでもコーツでも、3枚の組が<b>3つ</b>＋アタマならアガリ！',
         {tlab:'コーツまじりOK',hands:[
           {label:'コーツがまじってもOK',hand:'123m456pBBB77s',g:true},
@@ -4681,11 +4694,11 @@ const CH1_LESSONS={
     return [
       ch1Teach('4枚→7枚→10枚…そして、<b>本物の麻雀とおなじ13枚</b>になった！やることは今までとおなじだよ！',
         {tlab:'ついに13枚！',hands:[
-          {label:'C1: 4枚 → 1メンツ＋1アタマ',hand:'123m55p',g:true},
-          {label:'C2: 7枚 → 2メンツ＋1アタマ',hand:'123m456p77s',g:true},
-          {label:'C3: 10枚 → 3メンツ＋1アタマ',hand:'123m456p789sEE',g:true},
-          {label:'D1: 13枚 → 4メンツ＋1アタマ',hand:'123m567m234p789sEE',g:true}]}),
-      ch1Teach('14枚の<b>基本のアガリ形</b>が<span class="term-chip">4メンツ＋1アタマ</span>。3枚の組が4つ＋アタマ1つ！（じつは特別なアガリ形もあるけど、まずはこの基本形で練習しよう）',
+          {label:'4枚＋ツモ1枚 → 1メンツ＋1アタマ',hand:'123m55p',g:true},
+          {label:'7枚＋ツモ1枚 → 2メンツ＋1アタマ',hand:'123m456p77s',g:true},
+          {label:'10枚＋ツモ1枚 → 3メンツ＋1アタマ',hand:'123m456p789sEE',g:true},
+          {label:'13枚＋ツモ1枚 → 4メンツ＋1アタマ',hand:'123m567m234p789sEE',g:true}]}),
+      ch1Teach('13枚に1枚ツモった14枚の<b>基本のアガリ形</b>が<span class="term-chip">4メンツ＋1アタマ</span>。3枚の組が4つ＋アタマ1つ！（じつは特別なアガリ形もあるけど、まずはこの基本形で練習しよう）',
         {tlab:'基本のアガリ形',hands:[{label:'基本のアガリ形（14枚）',hand:'123m456pEEEBBB77s',g:true}]}),
       ch1PartNMulti('123m567m234p789sEE','mentsu','メンツになっている12枚（4組ぜんぶ）を選ぼう！',
         '123m・567m・234p・789s、4つのメンツ！東2枚がアタマだよ。'),
@@ -4769,7 +4782,7 @@ const CH1_LESSONS={
     return [
       ch1Teach('役のなかで、まずおぼえるのはひとつだけ。<span class="term-chip">リーチ</span>だよ！今まで練習してきたように<b>じぶんの手だけで作って、テンパイできる形になったら</b>、<b>牌を切るまえに「リーチ！」と宣言する</b>、代表的な役なんだ。',
         {tlab:'リーチ'}),
-      ch1Teach('リーチを宣言したら、<b>テンパイになる牌を1枚切ろう</b>。それでリーチ成立！そのあとは<b>基本的にツモった牌をそのまま切って</b>待ち、待ち牌をツモったら…もちろん自分で「アガリ！」だ！',
+      ch1Teach('リーチを宣言したら、<b>テンパイになる牌を1枚切ろう</b>。それでリーチ成立！そのあとは<b>基本的にツモった牌をそのまま切って</b>待つ（これを<span class="term-chip">ツモ切り</span>というよ）。待ち牌をツモったら…もちろん自分で「アガリ！」だ！',
         {tlab:'リーチのながれ'}),
       ch1Mini(['2m','3m','4m','5m','6m','7m','8p','8p','3s','4s','5s','6s','E'],['7s','N','8s'],'234m567m88p345s678s',
         {guided:true,riichi:true,
@@ -4792,25 +4805,28 @@ const CH1_LESSONS={
     return [
       ch1Teach('本物の麻雀は<b>4人</b>で打つよ。自分から見て「左の人」「向かいの人」「右の人」がいるんだ。'+zu(false),
         {tlab:'4人の麻雀'}),
-      ch1Teach('アガリ牌を<b>自分で山から引いて</b>アガるのが、おなじみの<b>ツモ</b>。それにたいして、<b>ほかの人が捨てた牌</b>でアガることを<span class="term-chip">ロン</span>というよ。',
-        {tlab:'ツモとロン'}),
+      ch1Teach('アガリ牌を<b>自分で山から引いて</b>アガるのが、おなじみの<b>ツモ</b>。それにたいして、<b>ほかの人が捨てた牌</b>でアガることを<span class="term-chip">ロン</span>というよ。ほかの人も自分とおなじように牌を切って、捨て牌がならんでいくんだ。',
+        {tlab:'ツモとロン',panel:ch3BoardHTML({hand:'234m567m88p345s678s',ctx3:{win:'ron',winTile:'8s'}})}),
       {q:'自分で山から引いた牌でアガった。これは？',choices:['ツモ','ロン'],a:0,
         exp:'自分で引いてアガる＝ツモ。ずっと練習してきたやつだね！'},
       {q:'右の人が捨てた牌でアガった。これは？',choices:['ツモ','ロン'],a:1,
-        exp:'ほかの人の捨て牌でアガる＝ロン！'},
+        exp:'ほかの人の捨て牌でアガる＝ロン！自分で山から引いてアガるのがツモだったね。'},
       ch1Teach('ほかの人が捨てた牌をもらって、自分の組を作ることを<span class="term-chip">鳴き</span>というよ。鳴きには<span class="term-chip">ポン</span>・<span class="term-chip">チー</span>・<span class="term-chip">カン</span>があるんだ。ひとつだけおぼえておこう…<b>鳴いた手では、リーチはできない</b>よ！',
         {tlab:'鳴き'}),
-      ch1Teach('<b>ポン</b>＝捨て牌で<b>おなじ牌3枚</b>の組(コーツ)を作る。だれの捨て牌でもOK！<br><b>チー</b>＝捨て牌で<b>ならんだ3枚</b>(シュンツ)を作る。<b>チーだけは「左の人」の捨て牌しか使えない</b>よ！<br><b>カン</b>＝<b>おなじ牌4枚</b>を使う特別な組の作り方。くわしくはまたこんど！'+zu(true),
-        {tlab:'ポン・チー・カン'}),
+      ch1Teach('<b>ポン</b>は、手の中の<b>おなじ牌2枚</b>＋ほかの人の捨て牌<b>1枚</b>で、おなじ牌3枚の組(コーツ)を作ること。<b>だれの捨て牌でもOK</b>！',
+        {tlab:'ポン'}),
       {q:'向かいの人が捨てた「發」をもらって、發3枚の組を作った。これは？',
         choices:['ポン','チー'],a:0,
         exp:'おなじ牌3枚ならポン！ポンはだれの捨て牌でもOKだよ。'},
+      ch1Teach('<b>チー</b>は、手の中の<b>2枚</b>＋捨て牌<b>1枚</b>で、ならんだ3枚の組(シュンツ)を作ること。ただし<b>チーだけは「左の人」の捨て牌しか使えない</b>よ！'+zu(true),
+        {tlab:'チー'}),
       {q:'「チー」ができるのは、だれが捨てた牌？',
         choices:['左の人','向かいの人','右の人','だれでもOK'],a:0,
         exp:'チーだけは「左の人」の捨て牌だけ！ポンとカンはだれの捨て牌でもOKだよ。'},
       {q:'右の人が捨てた3ピンで、手の2ピン・4ピンとあわせてシュンツを作りたい。チーできる？',
         choices:['できる','できない（チーは左の人からだけ）'],a:1,
         exp:'ざんねん、チーは「左の人」の捨て牌だけ。右の人や向かいの人からはチーできないよ。'},
+      ch1Teach('<b>カン</b>は、<b>おなじ牌4枚</b>を使う特別な組の作り方。くわしいルールは、またこんど！',{tlab:'カン'}),
       {q:'「カン」で使うのは、おなじ牌なん枚？',choices:['3枚','4枚'],a:1,
         exp:'おなじ牌4枚を使う特別な組の作り方がカン。くわしいルールは、またこんど！'},
       ch1Teach('鳴いたら、そろった組は<b>手牌の右に、すこしはなして</b>ならべて、みんなに見せるよ。そして、ほかの人から<b>もらった牌は横向き</b>に置くんだ。',
@@ -7320,7 +7336,11 @@ const QFORMATS={
         mix:'ぜんぶまぜてもカンペキ！数牌はもうおまかせだね！'}[q.mt.kind];
       if(!res.isCorrect&&d.miss>0)
         return {ansText:'ぜんぶペアにできた！でも、まちがえたのが'+d.miss+'回…',
-          expText:q.mt.kind==='read'?'まちがえたところは、数字の読み方と「マン・ピン・ソー」の組み合わせをもういちど見てみよう！'
+          expText:q.mt.kind==='read'?(   // R31: まちがえた内容に合わせて「どこを見ればいいか」を短く(未習のしくみは持ち出さない)
+              q.mt.title==='数字の読み方'?'1イー・2リャン・3サン・4スー・5ウー・6ロー・7チー・8パー・9キュー。まちがえた数字をもういちど見てみよう！'
+              :q.mt.title==='種類の呼び方'?'マンズ→マン・ピンズ→ピン・ソーズ→ソー。牌の絵で種類を見わけよう！'
+              :q.mt.title==='字牌'?'東南西北＝トン・ナン・シャー・ペー、白發中＝ハク・ハツ・チュンだよ。'
+              :'数牌は「数字の読み＋マン・ピン・ソー」、字牌は7つの名前。まちがえた牌をもういちど見てみよう！')
             :'まちがえた牌は、絵と数字をもういちどよく見てみよう！'};
       return {ansText:okText, expText:''};
     },
@@ -7368,7 +7388,7 @@ const QFORMATS={
       if(!res.isCorrect){ const w=ch1CkTile(ans.index);
         if(w){ w.classList.remove('sel'); w.classList.add('wrong'); } }
     },
-    feedback(q,res){ return {ansText:'正解： '+tileLabel(q.cands[q.a]), expText:q.exp||''}; },
+    feedback(q,res){ return {ansText:'正解： '+fbTilesHTML([q.cands[q.a]]), expText:q.exp||''}; },
   },
   pickmulti:{
     cat:null, scoring:'idxset',
@@ -7403,9 +7423,9 @@ const QFORMATS={
     feedback(q,res){
       const d=res.details||{};
       let diff='';
-      if(d.miss&&d.miss.length) diff+='<br>❌ えらび忘れ： '+d.miss.map(i=>tileLabel(q.cands[i])).join('・');
-      if(d.extra&&d.extra.length) diff+='<br>⚠️ ちがう牌を選んだ： '+d.extra.map(i=>tileLabel(q.cands[i])).join('・');
-      return {ansText:'正解： '+q.answers.map(i=>tileLabel(q.cands[i])).join('・')+diff, expText:q.exp||''};
+      if(d.miss&&d.miss.length) diff+='<br>❌ えらび忘れ： '+fbTilesHTML(d.miss.map(i=>q.cands[i]));
+      if(d.extra&&d.extra.length) diff+='<br>⚠️ ちがう牌を選んだ： '+fbTilesHTML(d.extra.map(i=>q.cands[i]));
+      return {ansText:'正解： '+fbTilesHTML(q.answers.map(i=>q.cands[i]))+diff, expText:q.exp||''};
     },
   },
   wfind:{
