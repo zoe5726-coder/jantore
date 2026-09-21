@@ -247,6 +247,10 @@ rt{font-size:.5em; font-weight:700; line-height:1; letter-spacing:-.04em; opacit
 .hand .tile{flex:1 1 0; min-width:0; max-width:var(--tile-w);}
 .fb-tiles{display:inline-flex; flex-wrap:wrap; gap:2px; vertical-align:middle;}
 .fb-tiles .tile{display:inline-block; width:22px; border-radius:3px; box-shadow:0 1.5px 0 var(--tile-shadow);}
+.fb-tiles.tok{gap:1px; margin:0 1px;}
+.fb-tiles.tok .tile{width:17px; border-radius:2px; box-shadow:0 1px 0 var(--tile-shadow);}
+.wy{display:block; margin-top:6px;}
+.wy-row{display:flex; align-items:center; gap:6px; flex-wrap:wrap; font-size:12.5px; color:var(--ink-soft); margin:3px 0;}
 /* 鳴いた組(共通部品 renderMeld/openHandHTML): 手の中＋スキマ＋右に鳴いた組。もらった牌は横向き。
    横向き牌は「横1.4枚分×縦1枚分」の正方形の箱(=立てた牌とおなじ高さ)に入れ、箱の下にそろえて90度回転。
    箱がフレックスの幅を1.4枚分とるので、回転してもとなりの牌にかさならない */
@@ -1318,10 +1322,28 @@ function sortTiles(tiles){
   const order=t=>t.length===1?100+'ESWNBGR'.indexOf(t):({m:0,p:10,s:20}[t[1]])+ +t[0];
   return tiles.slice().sort((a,b)=>order(a)-order(b));
 }
+function splitHandsHTML(rows){
+  // 教える用: 牌のまとまりをスキマで区切って見せる([{lab, groups:['234m','56m']}])。Teach専用(実戦問題では使わない=R25)
+  return rows.map(r=>(r.lab?'<div class="tc-lab">'+r.lab+'</div>':'')+'<div class="hand">'
+    +r.groups.map(g=>parseHand(g).map(t=>tileHTML(t)).join('')).join('<span class="hand-gap"></span>')+'</div>').join('');
+}
+/* R32: 文中の牌コード(「456m」「33s」など。m/p/sの記号は教材で教えていない)を、第1〜2章では小さな牌の絵にする。
+   2〜4桁の数字＋m/p/sのまとまりだけを対象(「13枚」「12px」「300ms」等は対象外) */
+const TILE_TOKEN_RE=/(^|[^0-9A-Za-z#])([1-9]{2,4})([mps])(?![A-Za-z0-9])/g;
+function tileTokensHTML(html){
+  if(!html) return html;
+  // タグの中(属性など)は変換しない: タグとテキストに分けてテキスト部分だけ処理
+  return String(html).split(/(<[^>]+>)/).map(part=>part.startsWith('<')?part
+    :part.replace(TILE_TOKEN_RE,(m,pre,ds,su)=>pre+fbTilesHTML(ds.split('').map(d=>d+su),'tok'))).join('');
+}
+function tileTokLesson(html){
+  // 対象: 第1章・第2章のロードLesson(第3章以降の教材表示は変えない)
+  return (L&&L.course&&/^ch[12]/.test(L.course.id))?tileTokensHTML(html):html;
+}
 function fbTilesHTML(codes){
   // 牌タップ問題の「正解」表示は、文字(5萬など未習の漢字表記)ではなく牌そのもので見せる(R31)
   // <p>の中に置くので<div>は使わない(divだと段落が切れて牌が段落の外へ押し出される)
-  return '<span class="fb-tiles">'+codes.map(c=>tileHTML(c).replace(/^<div/,'<span').replace(/<\/div>$/,'</span>')).join('')+'</span>';
+  return '<span class="fb-tiles'+(arguments[1]?' '+arguments[1]:'')+'">'+codes.map(c=>tileHTML(c).replace(/^<div/,'<span').replace(/<\/div>$/,'</span>')).join('')+'</span>';
 }
 function handHTML(str){
   return '<div class="hand">'+sortTiles(parseHand(str)).map(t=>tileHTML(t)).join('')+'</div>';
@@ -4986,6 +5008,18 @@ function ch2Distractors(hand,waits,n){
   return shuffle(pool).slice(0,n);
 }
 /* ---- 第2章ビルダー(正解は必ずch1MiniWaits/ch2ShapeOfで算出) ---- */
+function ch2WaitWhyHTML(handStr,waits){
+  // 待ち牌ごとに「来たら完成する組」を牌で示す(決定論: ch1MiniWinの分解から、その牌を含むメンツ/アタマ)
+  const hand=parseHand(handStr||'');
+  const rows=sortTiles(waits).map(w=>{
+    const dec=ch1MiniWin(hand.concat([w])); if(!dec) return '';
+    const sets=(dec.mentsuSets||[]).map(g=>g.map(k=>hand.concat([w])[k]));
+    const g=sets.find(x=>x.includes(w));
+    const grp=g?sortTiles(g):dec.head;
+    return '<span class="wy-row">'+fbTilesHTML([w])+'が来たら →'+fbTilesHTML(grp)+(g?'':'のアタマ')+'</span>';
+  }).filter(Boolean);
+  return rows.length?'<span class="wy">'+rows.join('')+'</span>':'';
+}
 function ch2WaitFind(handStr,extras,opt){
   // 待ち牌さがし(wf): 全選択→「これで決定」。正解セット=ch1MiniWaits
   opt=opt||{};
@@ -5636,7 +5670,7 @@ const CH2_LESSONS={
       ch1Teach('この手牌、<b>なに</b>をツモればアガリかな？じつは…こたえは1つじゃないんだ！',
         {tlab:'まさかの…',hands:[{label:'あと1枚でアガリ',hand:'6m7mSS',g:true}],
          act:{label:'こたえを見る',result:'5マンでも8マンでも…アガリ！<b>待ち牌が2種類</b>ある形なんだ！'}}),
-      ch1Teach('手牌の形によっては、待ち牌が<b>2種類</b>あることも。だから「1つ見つけて終わり」じゃなくて、待ち牌を<b>ぜんぶ</b>さがすのが大事だよ！',
+      ch1Teach('手牌の形によっては、待ち牌が<b>2種類</b>あることも。だから「1つ見つけて終わり」じゃなくて、待ち牌を<b>ぜんぶ</b>さがすのが大事だよ！さがしかたは、<b>候補の牌を1枚ずつ手牌に足してみて</b>、アガリの形になるかたしかめること。',
         {tlab:'ぜんぶさがせ！'}),
       ch2WaitCountMcq('3p4p7s7s','2ピンと5ピン、どちらでもアガリ！待ち牌は2種類だ。'),
       ch2WaitCountMcq('8m8m8mE','東だけがアガリになる。待ち牌が1種類の形もあるよ。'),
@@ -5652,7 +5686,7 @@ const CH2_LESSONS={
   /* A1-3 待ちを全部えらぼう(LEVEL2: ヒントなし・正解数も教えない) */
   wa1_3(){
     return [
-      ch1Teach('ここからはヒントなし！待ち牌を<b>ぜんぶ</b>えらんでから<b>「これで決定」</b>。まちがえても大丈夫、何度でも挑戦できるよ！',
+      ch1Teach('ここからはヒントなし！待ち牌を<b>ぜんぶ</b>えらんでから<b>「これで決定」</b>。<b>1つ見つけても、ほかにもないか</b>のこりの候補もたしかめてから決定しよう。まちがえても大丈夫、何度でも挑戦できるよ！',
         {tlab:'これで決定！'}),
       ch2WaitFind('4m5m6mS',['3m','7m','W','1m'],
         {exp:'456mはできあがり。南とおなじ牌が来ればアタマ完成でアガリ！'}),
@@ -5876,11 +5910,13 @@ const CH2_LESSONS={
   wd1_1(){
     return [
       ch1Teach('13枚でも、やることはおなじ。<b>できているメンツとアタマをのぞく</b>と、のこりの形が見えてくる。そこが待ちのヒントだ！',
-        {tlab:'13枚の待ち',hands:[{label:'メンツ3つ＋アタマをのぞくと…67だけ！',hand:'1m2m3m4p5p6pEE7s8s9s6s7s',g:true}]}),
+        {tlab:'13枚の待ち',hands:[{label:'この13枚から…',hand:'1m2m3m4p5p6pEE7s8s9s6s7s'},
+          {label:'できているメンツ3つとアタマをのぞくと',hand:'1m2m3m4p5p6p7s8s9sEE',g:true},
+          {label:'のこりは67だけ！ここが待ちのヒント',hand:'6s7s'}]}),
       ch1Teach('のこった2枚(か1枚)の<b>待ちの形</b>を見きわめれば、待ち牌がわかる。67ならリャンメン、待ち牌は5と8！',
         {tlab:'のこりに注目'}),
       ch2WaitFind('1m2m3m4p5p6pWW4s5s7s8s9s',['4s','7s','W','2s'],
-        {grouped:false,exp:'のこりは45のリャンメン！両側の3ソーと6ソーが待ち牌。'}),
+        {grouped:false,hint:'できているメンツとアタマをさがして、のこった形に注目！',exp:'のこりは45のリャンメン！両側の3ソーと6ソーが待ち牌。'}),
       ch2WfGen('kanchan',13,{grouped:false}),
       ch2WfGen('ryanmen',13,{grouped:false}),
       ch2ShapeMcq('2m3m4m6p7p8p1s1s1sNN5s7s',CH2_SHAPES5,'のこりは57。あいだの6を待つカンチャン！',{ghand:false}),
@@ -5896,8 +5932,12 @@ const CH2_LESSONS={
       ch2WfGen('penchan',13,{grouped:false}),
       ch2WfGen('tanki',13,{grouped:false}),
       ch2WfGen('ryanmen',13,{grouped:false}),
+      ch1Teach('<b>つながりが長い形</b>は、見かたが1通りとはかぎらないよ。23456なら「234＋56」とも「23＋456」とも見られる。見かたごとに待ち牌をさがすと…？',
+        {tlab:'見かたは1通り？',panel:splitHandsHTML([{lab:'234＋56 と見ると → 4か7',groups:['2m3m4m','5m6m']},
+          {lab:'23＋456 と見ると → 1か4',groups:['2m3m','4m5m6m']}]),
+         act:{label:'まとめると？',result:'1マン・4マン・7マンの<b>3種類</b>！見かたをかえて、ぜんぶ見つけよう。'}}),
       ch2WaitFind('2m3m4m5m6m7p8p9p1s1s1sEE',['5m','2s','W'],
-        {grouped:false,exp:'<b>手ぜんたい</b>を見ると、待ち牌がふえることがある！23456とつながった形は、1マン・4マン・7マンの3種類。リャンメンが2つかさなったような形なんだ。'}),
+        {grouped:false,hint:'見かたを2通りためしてみよう',exp:'<b>手ぜんたい</b>を見ると、待ち牌がふえることがある！23456とつながった形は、1マン・4マン・7マンの3種類。リャンメンが2つかさなったような形なんだ。'}),
       {q:'つながりが長い形(23456など)では…',choices:['待ち牌がふえることがある','待ち牌はかならず2種類'],a:0,
        exp:'手ぜんたいを見わたすのが、待ち牌さがしのコツだよ！'},
     ];
@@ -7351,7 +7391,7 @@ const QFORMATS={
     render(q){
       let html='<div class="q-type">'+(q.tlab||'おぼえよう')+'</div>';
       html+='<div class="teach-card"><img class="tc-iso" src="'+S1IMG+'" alt="イソピィ">'
-        +'<div class="tc-bub">'+rubyize(q.text)+'</div></div>';
+        +'<div class="tc-bub">'+tileTokLesson(rubyize(q.text))+'</div></div>';
       if(q.seatMap) html+=ch3SeatMapHTML(q.seatMap);  // R28: 席の風の説明は文章だけにしない
       if(q.panel) html+='<div class="rd-panel">'+q.panel+'</div>';   // 牌の読み方などの図(ヘルパー関数で生成)
       if(q.hands){ for(const h of q.hands){ html+=(h.label?'<div class="tc-lab">'+h.label+'</div>':'')
@@ -7455,11 +7495,14 @@ const QFORMATS={
         if(el){ el.classList.remove('sel'); el.classList.add('correct'); } }
     },
     feedback(q,res){
+      // R32: 正解後は「その牌が来ると、どの組が完成するか」を牌で見せる(完成後の形)。
+      // 第2章の後半(13枚の実戦テーマ)ではテンポ優先で、まちがえたときだけ見せる
       const d=res.details||{};
+      const why=(L&&L.themeId==='th_ch2d'&&!(d.miss>0))?'':ch2WaitWhyHTML(q.hand,q.answers.map(i=>q.cands[i]));
       if(!res.isCorrect&&d.miss>0)
         return {ansText:'待ち牌をぜんぶ見つけた！でも、決定までに'+d.miss+'回まちがえたね',
-          expText:'まよったら、できているメンツとアタマをのぞいて、のこりの形をよく見てみよう！'};
-      return {ansText:'お見事！待ち牌をぜんぶ見つけた！', expText:q.exp||''};
+          expText:(q.exp?q.exp+'<br>':'')+'まよったら、できているメンツとアタマをのぞいて、のこりの形に1枚ずつ当てはめてみよう！'+why};
+      return {ansText:'お見事！待ち牌をぜんぶ見つけた！', expText:(q.exp||'')+why};
     },
   },
   yfind:{
@@ -7731,7 +7774,7 @@ function ch1Act(){
   const q=L.qs[L.idx]; if(!q||!q.ch1t||!q.act) return;
   L.actDone=true;
   const b=document.getElementById('ch1-act'); if(b) b.disabled=true;
-  const r=document.getElementById('ch1-act-res'); if(r) r.innerHTML=q.act.result;
+  const r=document.getElementById('ch1-act-res'); if(r) r.innerHTML=tileTokLesson(q.act.result);
   document.querySelectorAll('#q-area .hand .tile').forEach(el=>el.classList.add('ch1-shake'));
   renderFoot();
 }
@@ -7873,9 +7916,9 @@ function ch2WfSubmit(btn){
   if(L.wf) L.wf.miss++;
   const g=document.getElementById('wf-msg');
   if(g){ g.classList.add('retry');
-    g.innerHTML=(L.wf&&L.wf.miss>=2)
-      ?'うーん、まだぴったりじゃない…。<b>えらびすぎ</b>や<b>えらび忘れ</b>がないか見なおして、もういちど！'
-      :'まだ待ち牌とぴったりじゃないみたい。えらびなおして、もういちど「これで決定」！'; }
+    g.innerHTML='<span>'+((L.wf&&L.wf.miss>=2)
+      ?'うーん、まだぴったりじゃない…。できているメンツとアタマをのぞいて、<b>のこった形に候補を1枚ずつ当てはめて</b>みよう。<b>えらびすぎ</b>や<b>えらび忘れ</b>はないかな？'
+      :'まだ待ち牌とぴったりじゃないみたい。えらびなおして、もういちど「これで決定」！')+'</span>'; }   // span: flex行の中で<b>が列に割れないように(R32)
   renderFoot();
 }
 /* 第3章 役さがし(yf): 役名ボタンのトグル選択と「これで決定」。wfと同じ教育思想
@@ -7903,9 +7946,9 @@ function ch3YfSubmit(btn){
   if(L.wf) L.wf.miss++;
   const g=document.getElementById('wf-msg');
   if(g){ g.classList.add('retry');
-    g.innerHTML=(L.wf&&L.wf.miss>=2)
+    g.innerHTML='<span>'+((L.wf&&L.wf.miss>=2)
       ?'うーん、まだぴったりじゃない…。役の<b>条件を1つずつ</b>たしかめて、もういちど！'
-      :'まだ役とぴったりじゃないみたい。えらびなおして、もういちど「これで決定」！'; }
+      :'まだ役とぴったりじゃないみたい。えらびなおして、もういちど「これで決定」！')+'</span>'; }
   renderFoot();
 }
 
@@ -8076,7 +8119,7 @@ function renderFeedback(q,cat,res,ratingRes,fb){
     +(staminaOut?'スタミナが切れた…':title)+'</p>'+comboChip+'</div>'
     +rvClear+comboEnd+ratingLine+dbgLine
     +(!staminaOut&&fb.ansText?'<p class="fb-exp"><b>'+fb.ansText+'</b></p>':'')
-    +'<p class="fb-exp">'+fb.expText+'</p>'
+    +'<p class="fb-exp">'+tileTokLesson(fb.expText)+'</p>'
     +'</div>';
   const area=document.getElementById('q-area');
   area.insertAdjacentHTML('beforeend',card);
