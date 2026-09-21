@@ -331,11 +331,59 @@ button.tile.off:active{transform:none;}
   background:var(--jade-soft); color:var(--ink); border:1px solid rgba(0,0,0,.10);}
 .ch3-chip.warn{background:rgba(216,67,59,.10); color:var(--verm-deep);}
 .ch3-chip.riichi{background:rgba(232,169,60,.16); color:var(--gold-deep);}
+/* 4人の席と風の図(R28): あなたを下に固定し、右=下家・向かい=対面・左=上家。
+   席順は反時計回り(東→南→西→北)=「つぎの風の人が右どなり」という正しい関係で描く */
+.ch3-seatmap{display:flex; flex-direction:column; align-items:center; gap:6px; margin:10px auto 12px;}
+.ch3-seatmap .sm-row{display:flex; align-items:center; gap:8px;}
+.ch3-seatmap .sm-table{width:72px; height:56px; background:var(--jade-soft); border:2px solid var(--jade);
+  border-radius:12px; display:flex; align-items:center; justify-content:center;
+  color:var(--jade-deep); font-size:11px; font-weight:800;}
+.ch3-seatmap .sm-cell{min-width:46px; padding:6px 10px; border-radius:10px; background:var(--card,#fff);
+  border:1.5px solid var(--line); text-align:center; font-weight:800; font-size:15px; color:var(--ink);}
+.ch3-seatmap .sm-cell.you{background:var(--jade); border-color:var(--jade-deep); color:#fff;}
+.ch3-seatmap .sm-you-lab{display:block; font-size:10px; font-weight:800; line-height:1.2; opacity:.92;}
 .yf-cands{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:10px 0 2px;}
 .yfb{font-size:13px; font-weight:800; padding:9px 14px; border-radius:12px;
   border:2px solid rgba(0,0,0,.14); background:var(--card,#fff); color:var(--ink); cursor:pointer;}
 .yfb.sel{border-color:var(--jade-deep); background:rgba(31,164,107,.10);}
 .yfb.correct{border-color:var(--jade-deep); background:rgba(31,164,107,.22);}
+/* ================= ストリーク達成演出(StreakCelebration・2026-09-21) =================
+   その日の学習条件を初めて達成した瞬間に1回だけ表示する専用オーバーレイ。
+   type=personal(毎日)/milestone(節目)。将来type=friend(フレンドストリーク)を同構造で追加する */
+.streakfx{position:fixed; inset:0; z-index:95; display:flex; align-items:center; justify-content:center;
+  background:rgba(14,37,28,.55); backdrop-filter:blur(2px); opacity:0; pointer-events:none;
+  transition:opacity .18s ease; padding:16px;}
+.streakfx.show{opacity:1; pointer-events:auto;}
+.sfx-card{position:relative; width:min(340px,92vw); background:var(--card); border-radius:22px;
+  border:2px solid var(--line); box-shadow:0 12px 40px rgba(0,0,0,.25);
+  padding:26px 18px calc(18px + env(safe-area-inset-bottom, 0px) * 0); text-align:center; overflow:hidden;
+  transform:scale(.92); transition:transform .22s cubic-bezier(.34,1.56,.64,1);}
+.streakfx.show .sfx-card{transform:scale(1);}
+.streakfx.milestone .sfx-card{border-color:var(--gold); box-shadow:0 12px 44px rgba(232,169,60,.35);}
+.sfx-flame{font-size:clamp(44px,13vw,56px); line-height:1; animation:sfxFlame .9s ease-in-out infinite alternate;}
+@keyframes sfxFlame{from{transform:scale(1) rotate(-3deg);} to{transform:scale(1.12) rotate(3deg);}}
+.sfx-num{font-size:clamp(58px,18vw,76px); font-weight:900; line-height:1.02; color:var(--gold-deep);
+  font-variant-numeric:tabular-nums; animation:sfxPop .5s cubic-bezier(.34,1.56,.64,1);}
+.streakfx.milestone .sfx-num{color:var(--verm);}
+@keyframes sfxPop{0%{transform:scale(.3); opacity:0;} 60%{transform:scale(1.15);} 100%{transform:scale(1); opacity:1;}}
+.sfx-label{font-size:clamp(19px,5.6vw,23px); font-weight:900; margin-top:2px;}
+.sfx-badge{display:inline-block; margin-top:8px; padding:4px 14px; border-radius:999px;
+  background:rgba(232,169,60,.16); color:var(--gold-deep); font-weight:900; font-size:clamp(12px,3.6vw,14px);}
+.sfx-iso{display:flex; align-items:flex-start; gap:10px; margin:16px 0 4px; text-align:left;}
+.sfx-iso img{width:52px; height:auto; flex:none; border-radius:10px; animation:sfxHop .7s ease-in-out infinite alternate;}
+@keyframes sfxHop{from{transform:translateY(0);} to{transform:translateY(-5px);}}
+.sfx-bub{flex:1; background:var(--paper); border:2px solid var(--line); border-radius:12px;
+  padding:9px 12px; font-size:clamp(12.5px,3.8vw,14px); font-weight:800; line-height:1.5;}
+.sfx-next{margin-top:14px; width:100%;}
+.sfx-conf{position:absolute; top:-12px; font-size:13px; opacity:0; animation:sfxFall 1.5s ease-in forwards;}
+.streakfx.milestone .sfx-conf{font-size:16px;}
+@keyframes sfxFall{0%{opacity:0; transform:translateY(0) rotate(0);} 12%{opacity:1;}
+  100%{opacity:0; transform:translateY(340px) rotate(240deg);}}
+@media (prefers-reduced-motion: reduce){
+  .sfx-flame,.sfx-num,.sfx-iso img{animation:none !important;}
+  .sfx-conf{display:none !important;}
+  .streakfx,.sfx-card{transition:none !important;}
+}
 /* 第3章 ロン/ツモ盤面: 相手の捨て牌(河)は手牌より少し小さく・「今の牌」は河の最後+小ラベル */
 .ch3-board{margin:2px 0 6px;}
 .ch3-river{display:flex; flex-wrap:nowrap; gap:2px; justify-content:center; align-items:flex-start;
@@ -1799,12 +1847,12 @@ const THEMES=[
   requires:'th_ch3a',
   subThemes:[
    {id:'st_ch3b1', title:'役牌', lessons:[
-    {diff:{ch1:'yb1_1'}},                      // B1-1 白・發・中
-    {diff:{ch1:'yb1_2'}},                      // B1-2 自分の風
-    {diff:{ch1:'yb1_3'}},                      // B1-3 場の風
-    {diff:{ch1:'yb1_4'}},                      // B1-4 役牌
-    {diff:{ch1:'yb1_5'}},                      // B1-5 これは役牌になる？
-    {diff:{ch1:'yb1_6'}},                      // ★B1-6 役牌マスター
+    {diff:{ch1:'yb1_1'}},                      // B1-1 白・發・中(三元牌)
+    {diff:{ch1:'yb1_2'}},                      // B1-2 4人の席と風牌(R28: 自風の前提)
+    {diff:{ch1:'yb1_3'}},                      // B1-3 自分の風(自風)
+    {diff:{ch1:'yb1_4'}},                      // B1-4 場の風(場風)
+    {diff:{ch1:'yb1_5'}},                      // B1-5 役牌(命名・整理)
+    {diff:{ch1:'yb1_6'}},                      // ★B1-6 役牌マスター(実戦練習統合)
    ]},
   ]},
  {id:'th_ch3c', course:'ch3c', title:'ピンフ', sub:'条件を1つずつ積み上げる',
@@ -2061,6 +2109,10 @@ const SND_DEFS={
   discard(ctx,t0){ sndClick(ctx,t0,0.35); sndTone(ctx,t0,180,0.03,0.06,'square'); }, // 牌を置く「コッ」
   lessonComplete(ctx,t0){ [523,659,784].forEach((f,i)=>sndTone(ctx,t0+i*0.09,f,0.14,0.15,'sine')); },
   themeComplete(ctx,t0){ [523,659,784,1047].forEach((f,i)=>sndTone(ctx,t0+i*0.1,f,0.16,0.16,'sine')); },
+  streak(ctx,t0){ [587,740,880].forEach((f,i)=>sndTone(ctx,t0+i*0.08,f,0.13,0.16,'triangle'));
+    sndTone(ctx,t0+0.24,1175,0.2,0.14,'sine'); },                       // 毎日の達成: 正解音より少し豪華な短いジングル
+  streakMile(ctx,t0){ [587,740,880,1175].forEach((f,i)=>sndTone(ctx,t0+i*0.09,f,0.15,0.16,'triangle'));
+    sndTone(ctx,t0+0.36,1568,0.26,0.13,'sine'); sndTone(ctx,t0+0.36,784,0.26,0.10,'sine'); }, // 節目: さらに一段特別
   // 将来拡張スロット(麻雀固有SE): 実装時にここへ追加するだけでよい
   tsumo:null, ron:null, riichi:null, pon:null, chi:null, kan:null,
 };
@@ -4148,7 +4200,7 @@ const CH1_LESSONS={
       ch1TenpaiMcq('234m567p345s88sWW','西か8ソーが来ればアガリ。あと1枚＝テンパイ！'),
     ]);
     return [
-      ch1Teach('いよいよ<b>第1章チャレンジ</b>！ここまで覚えたことをぜんぶ使って、<b>自分の力で1局アガりきろう</b>。ツモって、切って、テンパイできる形になったら<b>切るまえに「リーチ！」</b>。待ち牌が来たら…「アガリ！」だ！',
+      ch1Teach('いよいよ<b>第1章チャレンジ</b>！ここまで覚えたことをぜんぶ使って、<b>自分の力でアガりきろう</b>。ツモって、切って、テンパイできる形になったら<b>切るまえに「リーチ！」</b>。待ち牌が来たら…「アガリ！」だ！',
         {tlab:'第1章チャレンジ'}),
     ].concat(quiz).concat([
       ch1Mini(['3m','4m','5m','6m','7m','8m','2p','3p','4p','5p','5p','7s','W'],['8s','N','6s'],'345m678m234p678s55p',
@@ -4559,6 +4611,19 @@ function ch3YakuList(tiles,ctx){
 }
 /* ---- 第3章 状況表示(場風/自風/鳴き/リーチ/アガリ方)。用語は導入済みのものだけ使う ---- */
 const CH3_WIND_JP={E:'東',S:'南',W:'西',N:'北'};
+/* 4人の席の図(R28): あなた(sw)を下に固定。麻雀の席は反時計回りに東→南→西→北なので、
+   あなたの右どなり(下家)=つぎの風、向かい(対面)=2つ先、左どなり(上家)=3つ先。
+   例: あなたが東家なら 右=南家・向かい=西家・左=北家(実際の卓と同じ正しい関係) */
+function ch3SeatMapHTML(sw){
+  const ORD=['E','S','W','N'];
+  const i=ORD.indexOf(sw); if(i<0) return '';
+  const nx=k=>CH3_WIND_JP[ORD[(i+k)%4]];
+  return '<div class="ch3-seatmap">'
+    +'<div class="sm-cell">'+nx(2)+'</div>'
+    +'<div class="sm-row"><div class="sm-cell">'+nx(3)+'</div><div class="sm-table">麻雀卓</div><div class="sm-cell">'+nx(1)+'</div></div>'
+    +'<div class="sm-cell you">'+nx(0)+'<span class="sm-you-lab">あなた</span></div>'
+    +'</div>';
+}
 function ch3CtxHTML(c){
   if(!c) return '';
   const chips=[];
@@ -4566,7 +4631,7 @@ function ch3CtxHTML(c){
   if(c.sw) chips.push('<span class="ch3-chip">あなた：'+CH3_WIND_JP[c.sw]+'家</span>');
   if(c.menzen===true) chips.push('<span class="ch3-chip">鳴きなし</span>');
   if(c.menzen===false) chips.push('<span class="ch3-chip warn">鳴きあり</span>');
-  if(c.dblRiichi) chips.push('<span class="ch3-chip riichi">1巡目でリーチ宣言</span>');
+  if(c.dblRiichi) chips.push('<span class="ch3-chip riichi">さいしょの捨て牌でリーチ宣言</span>');
   else if(c.riichi) chips.push('<span class="ch3-chip riichi">リーチ中</span>');
   if(c.win==='tsumo') chips.push('<span class="ch3-chip">ツモでアガった</span>');
   if(c.win==='ron') chips.push('<span class="ch3-chip">ロンでアガった</span>');
@@ -5168,6 +5233,8 @@ const CH3_LESSONS={
         {tlab:'リーチの条件'}),
       ch3RiichiOkMcq('2m3m4m4p5p6p7s8s9s3s4s9p9p',ch3Ctx({}),
         '鳴いていなくて、テンパイ！リーチを宣言できるよ。'),
+      ch1Teach('「鳴き」は第1章でみたね。<b>ポンやチーで、相手の捨て牌をもらってメンツを作る</b>ことだった。この章の問題では、鳴いたかどうかを<b>【鳴きなし】【鳴きあり】</b>のチップでしめすよ。よく見て判断しよう！',
+        {tlab:'鳴きの見かた'}),
       ch3RiichiOkMcq('2m3m4m4p5p6p7s8s9s3s4s9p9p',ch3Ctx({menzen:false}),
         'テンパイしていても、<b>鳴いた手ではリーチできない</b>んだったね。'),
       ch3RiichiOkMcq('2m5m8m1p4p7p2s5s8sESWN',ch3Ctx({}),
@@ -5251,11 +5318,29 @@ const CH3_LESSONS={
        exp:'白・發・中の3種類が三元牌。東南西北は「風の牌」、つぎのレッスンで！'},
     ];
   },
-  /* B1-2 自分の風(自風) */
+  /* B1-2 4人の席と風牌(R28: 自風より先に「4人の席に東南西北がある」を視覚で理解する。
+     親・子・局・東1局などはここでは教えない(点数計算の章で正式導入)) */
   yb1_2(){
     return [
-      ch1Teach('麻雀では、すわる席に<b>東家・南家・西家・北家</b>という名前がついているよ。じぶんの席とおなじ風の牌を<span class="term-chip">自風（じかぜ）</span>とよぶんだ。',
-        {tlab:'自風'}),
+      ch1Teach('つぎは<b>東・南・西・北</b>のはなし…のまえに、だいじなこと。麻雀は<b>4人</b>であそぶゲームで、<b>4つの席に東・南・西・北の「風」が1つずつ</b>わりあてられているんだ。',
+        {tlab:'4人の席',seatMap:'E'}),
+      ch1Teach('席の風で、人のよびかたもきまるよ。東の席の人は<b>東家（トンチャ）</b>、南なら<b>南家（ナンチャ）</b>、西なら<b>西家（シャーチャ）</b>、北なら<b>北家（ペーチャ）</b>。問題では<b>【あなた：南家】</b>のように表示するね。',
+        {tlab:'東家・南家…',seatMap:'S'}),
+      {q:'図を見て！<b>あなたの席の風</b>はどれ？',seatMap:'W',choices:['西','南'],a:0,
+       exp:'「あなた」の席についている風が、あなたの風。この図では西だね。'},
+      {q:'図を見て！あなたは<b>なに家</b>？',seatMap:'N',choices:['北家','東家'],a:0,
+       exp:'北の席にすわっているから北家。席の風で、よびかたがきまるんだ。'},
+      ch1Teach('そして、東・南・西・北の<b>牌</b>の4種類は、まとめて<span class="term-chip">風牌（かぜはい）</span>とよぶよ。第1章でおぼえた字牌のなかまだね。',
+        {tlab:'風牌',hands:[{label:'風牌',hand:'ESWN'}]}),
+      {q:'風牌はどれ？',choices:['東・南・西・北','白・發・中'],a:0,
+       exp:'東南西北が風牌。白發中は三元牌だったね！'},
+    ];
+  },
+  /* B1-3 自分の風(自風)。まえのレッスンの「席の風」から接続 */
+  yb1_3(){
+    return [
+      ch1Teach('まえのレッスンでみたとおり、<b>あなたの席にも風</b>がある。<b>じぶんの席の風とおなじ牌</b>を<span class="term-chip">自風（じかぜ）</span>とよぶんだ。',
+        {tlab:'自風',seatMap:'S'}),
       ch1Teach('自風の牌は、<b>3枚そろえるだけで役になる</b>！たとえば、あなたが<b>南家</b>なら「南」が自風だよ。',
         {tlab:'自風は役になる',hands:[{label:'南家なら役！',hand:'SSS'}]}),
       ch3TripMcq('S',ch3Ctx({sw:'S'}),'あなたは南家。南は自風だから、3枚で役になる！'),
@@ -5266,12 +5351,12 @@ const CH3_LESSONS={
        exp:'東家なら東、南家なら南。じぶんの席の風が自風だよ。'},
     ];
   },
-  /* B1-3 場の風(場風) */
-  yb1_3(){
+  /* B1-4 場の風(場風)。「場にも風がある」の意味から導入(何局あるか・南場へいつ移るか等へは広げない) */
+  yb1_4(){
     return [
-      ch1Teach('麻雀の対局には<b>東場（とんば）・南場（なんば）</b>という「場」があるよ。場とおなじ風の牌が<span class="term-chip">場風（ばかぜ）</span>だ。',
-        {tlab:'場風'}),
-      ch1Teach('場風の牌も、<b>3枚そろえるだけで役になる</b>！<b>東場</b>なら「東」が場風だよ。',
+      ch1Teach('麻雀には、じぶんの席の風とはべつに、<b>その場ぜんたいの風</b>もあるんだ。いまが東の場なら<b>東場（トンば）</b>、南の場なら<b>南場（ナンば）</b>とよぶよ。',
+        {tlab:'場にも風がある'}),
+      ch1Teach('場とおなじ風の牌が<span class="term-chip">場風（ばかぜ）</span>。場風の牌も、<b>3枚そろえるだけで役になる</b>！<b>東場</b>なら「東」が場風だよ。問題では<b>【東場】</b>のように表示するね。',
         {tlab:'場風も役になる',hands:[{label:'東場なら役！',hand:'EEE'}]}),
       ch3TripMcq('E',ch3Ctx({rw:'E',sw:'S'}),'東場だから、東は場風。3枚で役になる！'),
       ch3TripMcq('S',ch3Ctx({rw:'E',sw:'S'}),'南は場風じゃないけど…あなたは南家！<b>自風</b>だから役になるんだ。'),
@@ -5281,8 +5366,8 @@ const CH3_LESSONS={
        exp:'東場なら東、南場なら南。場とおなじ風が場風だよ。'},
     ];
   },
-  /* B1-4 役牌(命名・整理) */
-  yb1_4(){
+  /* B1-5 役牌(命名・整理) */
+  yb1_5(){
     return [
       ch1Teach('<b>三元牌</b>・<b>自風</b>・<b>場風</b>。3枚そろえるだけで役になるこれらの牌を、まとめて<span class="term-chip">役牌（やくはい）</span>とよぶよ！',
         {tlab:'役牌',hands:[{label:'役牌のなかまたち',hand:'BGR'}]}),
@@ -5298,21 +5383,12 @@ const CH3_LESSONS={
        exp:'白發中＋じぶんの風＋場の風。これが役牌！'},
     ];
   },
-  /* B1-5 これは役牌になる？(状況を変えて判定・制御ランダム生成) */
-  yb1_5(){
-    return [
-      ch1Teach('ここからは実戦練習！<b>場</b>と<b>じぶんの席</b>をよく見て、役牌かどうか判断しよう。',
-        {tlab:'状況を見る'}),
-      ch3GenYakuhaiQ(),ch3GenYakuhaiQ(),ch3GenYakuhaiQ(),
-      ch3GenYakuhaiQ(),ch3GenYakuhaiQ(),ch3GenYakuhaiQ(),
-    ];
-  },
-  /* ★B1-6 役牌マスター(同じ牌でも状況で変わる体験) */
+  /* ★B1-6 役牌マスター(実戦練習+同じ牌でも状況で変わる体験。旧B1-5の反復練習を統合) */
   yb1_6(){
     const quiz=shuffle([
+      ch3GenYakuhaiQ(),ch3GenYakuhaiQ(),ch3GenYakuhaiQ(),
       ch3TripMcq('E',ch3Ctx({rw:'E',sw:'E'}),'東場の東家！東は場風でも自風でもある。もちろん役牌だよ。'),
       ch3TripMcq('S',ch3Ctx({rw:'E',sw:'W'}),'東場・西家では、南はどちらでもない…役にならないんだ。'),
-      ch3GenYakuhaiQ(),ch3GenYakuhaiQ(),
       ch3YakuhaiPickM(['E','S','W','N','B','G','R'],ch3Ctx({rw:'E',sw:'S'}),
         '東場・南家。この中で<b>役牌になる牌</b>をぜんぶタップ！',
         '三元牌(白發中)＋場風の東＋自風の南。西と北はちがうよ。'),
@@ -5320,7 +5396,7 @@ const CH3_LESSONS={
         '南場の西家。西は自風だから役牌！'),
     ]);
     return [
-      ch1Teach('<b>おなじ東東東でも、状況しだいで役になったりならなかったり</b>する。ここが役牌のおもしろいところ！',
+      ch1Teach('ここからは実戦練習！<b>おなじ東東東でも、状況しだいで役になったりならなかったり</b>する。<b>場</b>と<b>じぶんの席</b>をよく見て判断しよう！',
         {tlab:'状況しだい'}),
     ].concat(quiz).concat([
       ch1Teach('🎉 <b>役牌マスター！</b>この「役牌の見きわめ」は、つぎの役でもすぐ役に立つよ。おたのしみに！',
@@ -6045,10 +6121,10 @@ const CH3_LESSONS={
       ch1Teach('ここからは<b>よりみちロード</b>！まずは、リーチのパワーアップ版。<b>さいしょの捨て牌でいきなりリーチ</b>すると…<span class="term-chip">ダブルリーチ</span>！',
         {tlab:'ダブルリーチ'}),
       ch3WhichMcq('2m3m4m4p5p6p7s8s9s3s5s4s9p9p',ch3Ctx({dblRiichi:true,win:'ron',winTile:'4s'}),
-        ['dblriichi','riichi'],'1巡目の宣言だからダブルリーチ！'),
+        ['dblriichi','riichi'],'さいしょの捨て牌での宣言だからダブルリーチ！'),
       ch3WhichMcq('2m3m4m4p5p6p7s8s9s3s5s4s9p9p',ch3Ctx({riichi:true,win:'ron',winTile:'4s'}),
-        ['dblriichi','riichi'],'2巡目以降なら、ふつうのリーチだよ。'),
-      {q:'ダブルリーチの条件は？',choices:['1巡目(さいしょの捨て牌)でリーチ宣言','2回リーチする'],a:0,
+        ['dblriichi','riichi'],'2回目以降の捨て牌でのリーチなら、ふつうのリーチだよ。'),
+      {q:'ダブルリーチの条件は？',choices:['さいしょの捨て牌でリーチ宣言','2回リーチする'],a:0,
        exp:'配牌からいきなりテンパイしていたときのごほうびだ！'},
     ];
   },
@@ -6061,7 +6137,7 @@ const CH3_LESSONS={
         ch3Ctx({haitei:true,win:'tsumo',winTile:'4s',note:'山の残り0枚・さいごのツモ'}),
         '山のラスト1枚でツモ！ハイテイだ。'),
       ch3HasMcq('houtei','2m3m4m4p5p6p7s8s9s3s5s4s9p9p',
-        ch3Ctx({houtei:true,win:'ron',winTile:'4s',note:'この局さいごの捨て牌'}),
+        ch3Ctx({houtei:true,win:'ron',winTile:'4s',note:'ゲームのさいごの捨て牌'}),
         'さいごの捨て牌でロン！ホウテイだ。'),
       {q:'ハイテイとホウテイのちがいは？',choices:['ハイテイ=さいごのツモ／ホウテイ=さいごの捨て牌でロン','おなじ役のべつの名前'],a:0,
        exp:'ツモならハイテイ、ロンならホウテイ。セットでおぼえよう！'},
@@ -6079,7 +6155,7 @@ const CH3_LESSONS={
       ch3HasMcq('honroutou','1m1m1m9p9p9p1s1s1sEEENN',ch3Ctx({win:'ron',winTile:'1m'}),
         'ぜんぶ1・9・字！混老頭＋トイトイもつく！'),
       ch3WhichMcq('BBBGGGRR1m2m3m4p5p6p',ch3Ctx({}),['shousangen','honroutou'],
-        '123mや456pは中張入り。これは小三元のほうだ！'),
+        '123mや456pには2〜8の牌が入っている。これは小三元のほうだ！'),
     ];
   },
   /* ★X1-4 二盃口 */
@@ -6131,14 +6207,14 @@ const CH3_LESSONS={
     return [
       ch1Teach('伝説の役満その1。1種類の数牌で<b>1112345678999＋どれか1枚</b>…<span class="term-chip">九蓮宝燈（チューレンポートー）</span>！',
         {tlab:'九蓮宝燈',hands:[{label:'1112345678999+5',hand:'111m2345678m999m5m',g:true}]}),
-      ch1Teach('伝説の役満その2。親が<b>配られた13枚＋さいしょのツモでいきなりアガリ</b>…<span class="term-chip">天和（テンホー）</span>！一生に一度、出会えるかどうかの役だよ。',
+      ch1Teach('伝説の役満その2。<b>配られた13枚＋いちばんさいしょのツモでいきなりアガリ</b>…<span class="term-chip">天和（テンホー）</span>！一生に一度、出会えるかどうかの役だよ。',
         {tlab:'天和'}),
       ch3HasMcq('chuuren','1m1m1m2m3m4m5m6m7m8m9m9m9m5m',ch3Ctx({}),
         '1112345678999＋5。役満・九蓮宝燈！'),
       ch3HasMcq('tenhou','2m3m4m4p5p6p7s8s9s3s5s4s9p9p',
-        ch3Ctx({tenhou:true,win:'tsumo',winTile:'4s',note:'親・配牌+第1ツモでアガリ'}),
+        ch3Ctx({tenhou:true,win:'tsumo',winTile:'4s',note:'配られた13枚+さいしょのツモでアガリ'}),
         'いきなりアガっていた…！役満・天和！'),
-      {q:'天和の条件は？',choices:['親が配牌＋さいしょのツモでアガる','さいごのツモでアガる'],a:0,
+      {q:'天和の条件は？',choices:['配られた13枚＋さいしょのツモでアガる','さいごのツモでアガる'],a:0,
        exp:'はじまった瞬間にアガリ。まさに奇跡の役満！'},
       ch1Teach('🎉 <b>「もっと役を覚える」コンプリート！</b>ここまで来たきみは、もう役はかせだ！(嶺上開花・槍槓などカンにかかわる役は、カンをくわしく学ぶときに登場するよ)',
         {tlab:'役はかせ！'}),
@@ -6456,6 +6532,7 @@ const QFORMATS={
       // 盤面が出るときはアガリ牌チップを重複表示しない(状況は牌の位置で理解させる)
       const bd3=(q.ctx3&&typeof ch3BoardHTML==='function')?ch3BoardHTML(q):null;
       if(q.ctx3) html+=ch3CtxHTML(bd3?Object.assign({},q.ctx3,{winTile:null}):q.ctx3);
+      if(q.seatMap) html+=ch3SeatMapHTML(q.seatMap);  // R28: 席の風を学習中は4人卓の図で視覚化
       if(q.situ) html+=tableHTML(legacySituToContext(q.situ),'T0');  // P3-B: situHTML→TableView（situHTMLはlegacyとして残置）
       else if(q.context) html+=tableHTML(q.context, q.context.reveal||'T0');  // v3ネイティブcontext問題（Compare variant等）
       else if(bd3) html+=bd3;
@@ -6531,6 +6608,7 @@ const QFORMATS={
       let html='<div class="q-type">'+(q.tlab||'おぼえよう')+'</div>';
       html+='<div class="teach-card"><img class="tc-iso" src="'+S1IMG+'" alt="イソピィ">'
         +'<div class="tc-bub">'+q.text+'</div></div>';
+      if(q.seatMap) html+=ch3SeatMapHTML(q.seatMap);  // R28: 席の風の説明は文章だけにしない
       if(q.hands){ for(const h of q.hands){ html+=(h.label?'<div class="tc-lab">'+h.label+'</div>':'')
         +(h.g?ch1HandGrouped(h.hand):handHTML(h.hand)); } }
       else if(q.hand) html+=handHTML(q.hand);
@@ -6730,6 +6808,55 @@ const SCORERS={
     return {S, isCorrect:ans.tile===q.a, isPerfect:S>=1, details:{chosen:ans.tile}};
   },
 };
+
+/* ================= ストリーク達成演出(StreakCelebration) =================
+   ・ストリーク計算(finishLesson内の既存ロジック)とは分離した表示専用コンポーネント。
+   ・opts={type:'personal'|'friend', days, name?}。将来のフレンドストリークは
+     type:'friend'+相手名で同じ器を使う(現在はpersonalのみ使用。架空データでの表示はしない)。
+   ・節目(STREAK_MILESTONES)は自動でmilestone表示に切り替え。
+   ・SEは表示と同時(効果音OFFならSoundManager側で無音)。つづけるで閉じる */
+const STREAK_MILESTONES={7:'1週間達成！',14:'2週間達成！',30:'30日連続！',50:'50日連続！',100:'100日連続！'};
+function streakComment(days){
+  if(days===1) return '今日からスタート！まいにち少しずつ、いっしょにがんばろう！';
+  if(days===2) return '2日連続！明日も待ってるよ！';
+  if(days===3) return '3日連続！いい感じ！';
+  const mile={7:'1週間つづいた！ほんとうにすごい！',14:'2週間連続！もう習慣になってきたね！',
+    30:'30日連続！りっぱな雀士だよ！',50:'50日連続！イソピィもほこらしい！',100:'100日連続！…でんせつだよ！'};
+  if(mile[days]) return mile[days];
+  const pool=[days+'日連続！つづいてるね！',days+'日連続！いい調子だね！',
+    '今日もえらい！'+days+'日連続！','コツコツがちからになるよ。'+days+'日連続！'];
+  return pool[days%pool.length];
+}
+function showStreakFx(opts){
+  try{
+    const days=opts&&opts.days||S.streak||1;
+    const mileLabel=STREAK_MILESTONES[days]||null;
+    const old=document.getElementById('streakfx'); if(old) old.remove();
+    const wrap=document.createElement('div');
+    wrap.id='streakfx';
+    wrap.className='streakfx'+(mileLabel?' milestone':'');
+    const confN=mileLabel?14:8;
+    let conf='';
+    for(let i=0;i<confN;i++){
+      const em=['🎉','✨','🔥','⭐'][i%4];
+      conf+='<span class="sfx-conf" style="left:'+(6+Math.random()*88)+'%;animation-delay:'+(Math.random()*0.5)+'s;">'+em+'</span>';
+    }
+    wrap.innerHTML='<div class="sfx-card">'+conf
+      +'<div class="sfx-flame">🔥</div>'
+      +'<div class="sfx-num">'+days+'</div>'
+      +'<div class="sfx-label">日連続！</div>'
+      +(mileLabel?'<div class="sfx-badge">🏆 '+mileLabel+'</div>':'')
+      +'<div class="sfx-iso"><img src="'+S1IMG+'" alt="イソピィ"><div class="sfx-bub">'+streakComment(days)+'</div></div>'
+      +'<button class="btn sfx-next" onclick="closeStreakFx()">つづける</button>'
+      +'</div>';
+    document.body.appendChild(wrap);
+    requestAnimationFrame(()=>{ wrap.classList.add('show'); sndPlay(mileLabel?'streakMile':'streak'); });
+  }catch(e){}
+}
+function closeStreakFx(){
+  const el=document.getElementById('streakfx');
+  if(el){ el.classList.remove('show'); setTimeout(()=>el.remove(),200); }
+}
 
 /* ================= レッスンシェル ================= */
 function renderQ(){
@@ -7315,6 +7442,14 @@ function finishLesson(){
     S.lastDay=today;
   }else if(S.streak===0){ S.streak=1; }
   if(S.streak>(S.bestStreak||0)) S.bestStreak=S.streak;  // 最長連続記録
+  // ストリーク達成演出イベント(2026-09-21): 計算(上)と演出(showStreakFx)を分離。
+  // firstToday=更新前判定の「当日初達成」。streakFxDay(保存)で同日再演出を恒久防止
+  // (リロード/PWA再起動でも再発火しない)。既存ユーザーの過去分をまとめて再生することもない
+  let streakEvent=null;
+  if(firstToday&&S.streakFxDay!==today){
+    S.streakFxDay=today;
+    streakEvent={type:'personal',days:S.streak};
+  }
   // 日別学習履歴(カレンダー用)。将来'protected'(連続記録ブロック)と区別するため状態文字列で保存
   if(S.learningDays[today]!=='protected') S.learningDays[today]='completed';
   // デイリーミッション進行(第8段階): 学習ロードのレッスンのみ対象(トレーニング/Compareは対象外)。
@@ -7357,7 +7492,12 @@ function finishLesson(){
   // ここまでで報酬・進捗はすべて確定済み。以降は演出のみ:
   // 通常は直接リザルト。初回制覇時のみ COMPLETE または MASTER を1回だけ挟む
   sndPlay(roadEvents.some(e=>e.type==='theme'||e.type==='subtheme')?'themeComplete':'lessonComplete');
-  playClearSequence(roadEvents,()=>renderResult({xp,duration,firstToday,bestInfo,cid}));
+  playClearSequence(roadEvents,()=>{
+    renderResult({xp,duration,firstToday,bestInfo,cid});
+    // 当日初達成のみ: リザルトの上にストリーク達成演出(閉じるとリザルトが見える)。
+    // 将来: この直後にフレンドストリーク成立時 showStreakFx({type:'friend',...}) を連結する
+    if(streakEvent) setTimeout(()=>showStreakFx(streakEvent),260);
+  });
 }
 /* 達成演出(第7段階追補×2): 上位が下位を包含し、出るのは最大1回。
    優先順位: 大テーマMASTER > 小テーマCOMPLETE > (なし=直接リザルト)。
