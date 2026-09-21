@@ -74,6 +74,39 @@ button{font-family:inherit; cursor:pointer; touch-action:manipulation;} /* タ�
 
 /* ---------- path ---------- */
 .path-wrap{flex:1; padding:8px 0 96px; overflow-y:auto;}
+.sec-list-head{margin:14px 16px 4px;}
+.sec-list-head h2{margin:0; font-size:clamp(17px,4.6vw,20px); color:var(--ink);}
+.sec-list-head p{margin:4px 0 0; font-size:clamp(11.5px,3.2vw,13px); color:var(--ink-soft); font-weight:700;}
+.sec-card{display:block; box-sizing:border-box; width:calc(100% - 32px); margin:12px 16px 0; text-align:left;
+  background:var(--card); border:2px solid var(--line); border-radius:18px; padding:14px 16px;
+  font:inherit; color:var(--ink); cursor:pointer; box-shadow:0 3px 0 var(--line);}
+.sec-card:active{transform:translateY(2px); box-shadow:0 1px 0 var(--line);}
+.sec-card .sc-top{display:flex; justify-content:space-between; align-items:center; gap:8px;}
+.sec-card .sc-no{font-size:12px; font-weight:900; letter-spacing:.08em; color:var(--jade-deep);}
+.sec-card .sc-badge{font-size:11.5px; font-weight:800; padding:3px 10px; border-radius:999px;
+  background:var(--jade-soft); color:var(--jade-deep); white-space:nowrap;}
+.sec-card .sc-name{font-size:clamp(17px,4.8vw,20px); font-weight:900; margin-top:4px;}
+.sec-card .sc-desc{font-size:clamp(11.5px,3.2vw,13px); color:var(--ink-soft); font-weight:700; margin-top:2px;}
+.sec-card .sc-prog{display:flex; align-items:center; gap:10px; margin-top:10px;}
+.sec-card .sc-bar{flex:1; min-width:0; height:10px; border-radius:999px; background:var(--line); overflow:hidden;}
+.sec-card .sc-bar i{display:block; height:100%; background:var(--jade); border-radius:999px;}
+.sec-card .sc-num{font-size:12.5px; font-weight:800; font-variant-numeric:tabular-nums; color:var(--ink-soft);}
+.sec-card .sc-opt{font-size:11px; font-weight:700; color:var(--ink-soft); margin-top:6px;}
+.sec-card .sc-here{font-size:12px; font-weight:800; color:var(--jade-deep); margin-top:8px;}
+.sec-card.current{border-color:var(--jade); box-shadow:0 3px 0 var(--jade-deep);}
+.sec-card.current .sc-badge{background:var(--jade); color:#fff;}
+.sec-card.done .sc-badge{background:rgba(232,169,60,.18); color:var(--gold-deep);}
+.sec-card.done .sc-bar i{background:var(--gold);}
+.sec-card.locked{background:var(--paper); box-shadow:none;}
+.sec-card.locked .sc-name,.sec-card.locked .sc-desc{opacity:.6;}
+.sec-card.locked .sc-badge{background:rgba(0,0,0,.06); color:var(--ink-soft);}
+.sec-list-foot{text-align:center; color:var(--ink-soft); font-size:12px; padding:12px 24px 0;}
+.sec-back-row{margin:10px 16px 0;}
+.sec-back{border:none; background:none; padding:10px 8px 10px 4px; min-height:44px; font:inherit; font-size:14px; font-weight:800;
+  color:var(--jade-deep); cursor:pointer;}
+.sec-next{display:block; box-sizing:border-box; width:calc(100% - 32px); margin:18px 16px 0; padding:14px;
+  border:none; border-radius:14px; background:var(--jade); color:#fff; font:inherit; font-size:15px; font-weight:800;
+  box-shadow:0 3px 0 var(--jade-deep); cursor:pointer;}
 .section-band{margin:18px 16px 6px; background:var(--jade); color:#fff; border-radius:14px;
   padding:12px 16px; box-shadow:0 4px 0 var(--jade-deep);}
 .section-band h2{margin:0; font-size:clamp(15px, 4.1vw, 18px); letter-spacing:.08em;}
@@ -754,7 +787,7 @@ button.tile.off:active{transform:none;}
   <!-- 4タブ構成(第8段階追加改善): ホーム=今日 / コース=学ぶ / トレーニング=鍛える / マイページ=自分を見る -->
   <div class="nav">
     <button id="nav-home" class="on" onclick="showScreen('home')"><span class="i">🏠</span>ホーム</button>
-    <button id="nav-course" onclick="showScreen('course')"><span class="i">📚</span>コース</button>
+    <button id="nav-course" onclick="openSectionList()"><span class="i">📚</span>コース</button>
     <button id="nav-training" onclick="showScreen('training')"><span class="i">🎯</span>トレーニング</button>
     <button id="nav-shop" onclick="showScreen('shop')"><span class="i">🛍️</span>ショップ</button>
     <button id="nav-profile" onclick="showScreen('profile')"><span class="i" id="nav-av">🐦</span>マイページ</button>
@@ -1640,7 +1673,7 @@ const COURSES=[
 {id:'ch3g',title:'役満',icon:'👑',section:2,type:'ch1',desc:'めったに出ない、とても特別な役。',questions:[]},
 {id:'ch3h',title:'役を見つけよう',icon:'🔦',section:2,type:'ch1',desc:'手牌と状況から、ついている役をぜんぶ見つける！',questions:[]},
 {id:'ch3x',title:'もっと役を覚える',icon:'📚',section:2,type:'ch1',desc:'よゆうがあったら。めずらしい役と、もっと役満。(やらなくても先へ進めるよ)',questions:[]},
-{id:'rules',title:'基本ルール',icon:'📖',section:3,desc:'麻雀のきほんのき。和了の形からフリテンまで。',questions:[
+{id:'rules',title:'基本ルール',icon:'📖',section:null,desc:'麻雀のきほんのき。和了の形からフリテンまで。',questions:[
  {q:'麻雀の和了（あがり）の基本形はどれ？',choices:['4面子＋1雀頭','5面子','7ペア＋1枚','13枚バラバラ'],a:0,exp:'3枚1組の「面子」を4つと、2枚1組の「雀頭」を1つ揃えた計14枚が基本の和了形です。（例外役：七対子・国士無双）'},
  {q:'対局開始時、子の手牌は何枚？',choices:['12枚','13枚','14枚','16枚'],a:1,exp:'全員13枚でスタートし、ツモって14枚になったら1枚捨てます。'},
  {q:'ドラ表示牌が五萬のとき、ドラは？',hand:'5m',choices:['四萬','五萬','六萬','九萬'],a:2,exp:'ドラは表示牌の「次の牌」。五萬の次なので六萬がドラです。'},
@@ -1648,7 +1681,7 @@ const COURSES=[
  {q:'フリテンの説明で正しいのは？',choices:['自分の捨て牌に待ち牌があるとロンできない','フリテンだとツモ和了もできない','相手の捨て牌に待ち牌があるとロンできない','リーチ中だけ発生する'],a:0,exp:'待ち牌のどれか1種でも自分の河にあるとロン不可。ただしツモ和了はできます。'},
  {q:'流局したとき、ノーテンの人はどうなる？',choices:['何も起きない','テンパイ者に罰符を支払う','点数が没収される','次局親になれない'],a:1,exp:'ノーテン罰符は場に合計3,000点。例：テンパイ1人なら3人が1,000点ずつ支払います。'},
 ]},
-{id:'yaku',title:'役',icon:'🎴',section:3,desc:'和了に必要な「役」を覚えよう。',questions:[
+{id:'yaku',title:'役',icon:'🎴',section:null,desc:'和了に必要な「役」を覚えよう。',questions:[
  {q:'リーチを宣言できる条件は？',choices:['門前（鳴いていない）でテンパイしている','2翻以上ある','親のときだけ','ドラを持っている'],a:0,exp:'鳴いていない（門前）テンパイで、1,000点を供託できれば宣言できます。'},
  {q:'タンヤオの条件は？',choices:['2〜8の数牌だけで作る','字牌だけで作る','同じ色だけで作る','1・9を必ず使う'],a:0,exp:'1・9・字牌を使わず、2〜8の数牌のみ。鳴いてもOK（喰いタン）が一般的なルールです。'},
  {q:'ピンフの条件に「含まれない」のはどれ？',choices:['すべて順子で作る','雀頭が役牌でない','リャンメン待ち','刻子をひとつ含む'],a:3,exp:'ピンフは「順子×4＋役牌でない雀頭＋リャンメン待ち」。刻子（同じ牌3枚）が入るとピンフになりません。'},
@@ -1656,7 +1689,7 @@ const COURSES=[
  {q:'東場で南家が「東」を3枚集めた。役になる？',hand:'EEE',choices:['ならない','なる（1翻）','なる（2翻）','ロン和了のときだけなる'],a:1,exp:'東場の「東」は場風牌なので、どの家が刻子にしても1翻。自風（南家なら南）と重なる「ダブ東」なら2翻です。'},
  {q:'ドラを2枚持っていれば役なしでも和了できる？',choices:['できる','できない','ツモならできる','親ならできる'],a:1,exp:'ドラは役ではなく「おまけの翻」。リーチやタンヤオなど、最低1つは役が必要です。'},
 ]},
-{id:'score',title:'点数計算',icon:'🧮',section:3,desc:'符と翻から点数を出せるようになろう。',questions:[
+{id:'score',title:'点数計算',icon:'🧮',section:null,desc:'符と翻から点数を出せるようになろう。',questions:[
  {q:'子の30符4翻、ロンの点数は？',choices:['5,200点','6,400点','7,700点','8,000点'],a:2,exp:'基本点=30×2^(2+4)=1,920。子のロンは×4で7,680→切り上げて7,700点。'},
  {q:'親の満貫ツモ。支払いは？',choices:['2,600オール','3,000オール','4,000オール','6,000オール'],a:2,exp:'親の満貫は12,000点。ツモなら子3人が4,000点ずつ＝4,000オールです。'},
  {q:'子の40符2翻、ロンの点数は？',choices:['2,000点','2,600点','3,200点','3,900点'],a:1,exp:'基本点=40×2^4=640。×4=2,560→切り上げて2,600点。'},
@@ -1664,42 +1697,42 @@ const COURSES=[
  {q:'満貫になるのは何翻から？',choices:['3翻','4翻','5翻','6翻'],a:2,exp:'5翻から満貫（子8,000/親12,000）。※4翻30符は7,700点。「切り上げ満貫」ルールを採用する場合もあります。'},
  {q:'親の30符3翻、ロンの点数は？',choices:['3,900点','4,800点','5,800点','7,700点'],a:2,exp:'基本点=30×2^5=960。親のロンは×6=5,760→切り上げて5,800点。子なら3,900点です。'},
 ]},
-{id:'waits',title:'待ち当て',icon:'🔍',section:4,desc:'「完成まであと1枚」の最後の1枚＝待ちを当てよう。',type:'waits'},
-{id:'ukeire1',title:'受け入れ当て',icon:'🧩',section:4,desc:'1シャンテンの手牌から、テンパイする牌を全部当てよう。',type:'ukeire1'},
-{id:'nanikiru',title:'1択何切る',icon:'🀄',section:4,desc:'シャンテンを保って受け入れ最大の1枚を。',type:'discard',questions:[
+{id:'waits',title:'待ち当て',icon:'🔍',section:3,desc:'「完成まであと1枚」の最後の1枚＝待ちを当てよう。',type:'waits'},
+{id:'ukeire1',title:'受け入れ当て',icon:'🧩',section:3,desc:'1シャンテンの手牌から、テンパイする牌を全部当てよう。',type:'ukeire1'},
+{id:'nanikiru',title:'1択何切る',icon:'🀄',section:3,desc:'シャンテンを保って受け入れ最大の1枚を。',type:'discard',questions:[
  {id:'nk1',lv:3,fs:'nk:sh0:mg4',hand:'234556m456p678s88s',a:'5m',exp:'打5萬で23456萬の形が残り、1・4・7萬の三面張（受け11枚）。打2萬（4・7萬の7枚）より圧倒的に広いテンパイです。'},
  {id:'nk2',lv:4,fs:'nk:sh0:mg4',hand:'2224567m345p6788s',a:'8s',exp:'打8索で222萬を暗刻として活かし、4567萬＋雀頭88索…ではなく222萬＋456萬(or 567萬)の形で3・4・7萬待ち（受け10枚）。手の中の暗刻はくっつけて使うと強い！'},
  {id:'nk3',lv:5,fs:'nk:sh0:mg5',hand:'46677888m678p666s',a:'4m',exp:'打4萬で667788萬＋888…の複合形が残り、なんと5・6・7・8萬の4種待ち（受け9枚）。浮いた4萬を切るだけですが、残る形の強さを見抜けるかがポイント。'},
  {id:'nk4',lv:5,fs:'nk:sh0:mg5',hand:'12367m234777p678s',a:'7p',exp:'打7筒！777筒の暗刻を崩す勇気。77筒を雀頭にして67萬のリャンメン（5・8萬、受け8枚）が残ります。67萬を切ると7萬・6萬の単騎系しか残りません。'},
 ]},
-{id:'riichi',title:'リーチ判断',icon:'📣',section:4,desc:'局面を見て、曲げるかダマか。鳳凰卓の実測データで検証済み。',questions:SR_RIICHI_QUESTIONS},
-{id:'naki',title:'鳴き判断',icon:'🙋',section:5,desc:'ポン・チーの損得を見極めよう。',questions:[
+{id:'riichi',title:'リーチ判断',icon:'📣',section:3,desc:'局面を見て、曲げるかダマか。鳳凰卓の実測データで検証済み。',questions:SR_RIICHI_QUESTIONS},
+{id:'naki',title:'鳴き判断',icon:'🙋',section:null,desc:'ポン・チーの損得を見極めよう。',questions:[
  {q:'ポンする？',situ:{kyoku:'東1局',turn:5,seat:'子',dora:'8p',claim:'G',hand:'567m234p6p88p45sGG'},choices:['ポン','スルー'],a:0,exp:'發ポンで役が確定し、ドラ2（8筒×2）で3,900〜満貫級。打点・速度ともに十分なので積極的に鳴く。'},
  {q:'ピンフ・タンヤオ・リーチを狙える門前の好形1シャンテン。チーすると役が消える。どうする？',choices:['鳴かずに門前で進める','チーして速度を上げる','ポンできる牌を探す','手を崩して守備に回る'],a:0,exp:'鳴いて役がなくなる（＝和了できない）なら鳴きは論外。門前ならリーチ・ピンフ・ツモで打点も伸びます。'},
  {q:'オーラス、トップ目。1,000点でも和了れば逃げ切れる。役があるなら？',choices:['積極的に鳴いて最速で和了る','門前で高打点を狙う','鳴かずにベタオリする','ハイテイまで待つ'],a:0,exp:'順位が確定するなら打点は不要。役が残る鳴きはどんどん入れて、最速の和了を目指しましょう。'},
  {q:'鳴きのデメリットとして正しいのは？',choices:['打点と守備力が下がり、リーチできなくなる','ツモの回数が減る','ドラが使えなくなる','フリテンになる'],a:0,exp:'鳴くと門前役（リーチ・ツモ・ピンフ等）が消えて打点が下がり、手牌が減って降りにくくなります。この対価に見合うかが鳴き判断の軸です。'},
 ]},
-{id:'oshihiki',title:'押し引き',icon:'⚖️',section:5,desc:'押すか、引くか。勝敗を分ける判断。',questions:[
+{id:'oshihiki',title:'押し引き',icon:'⚖️',section:null,desc:'押すか、引くか。勝敗を分ける判断。',questions:[
  {q:'押し引き判断の基本となる比較は？',choices:['自分の手の価値 vs 放銃の危険','自分の点数 vs 相手の点数','ツモの良さ vs 運','捨て牌の枚数 vs 巡目'],a:0,exp:'「和了率×打点」で手の価値を測り、放銃率×失点と比べるのが押し引きの根本です。'},
  {q:'どうする？',situ:{kyoku:'東2局',turn:7,seat:'子',dora:'5p',note:'対面がリーチ中',hand:'24m46p77p234s678sW'},choices:['押す','オリる'],a:1,exp:'愚形×愚形の1シャンテンで打点も安い。この価値の手でリーチに立ち向かう理由がない。まず安全な西から降りよう。'},
  {q:'どうする？',situ:{kyoku:'東4局',turn:9,seat:'子',dora:'8p',note:'上家がリーチ中',hand:'567m234p88p45678s'},choices:['押す','オリる'],a:0,exp:'3/6/9索の三面張テンパイでドラ2（8筒×2）。良形×満貫級のテンパイは押す価値が十分。追いかけリーチで勝負。'},
  {q:'どうする？',situ:{kyoku:'南1局',turn:10,seat:'子',dora:'6p',note:'下家がリーチ中',hand:'24m68m355p24s678sW'},choices:['押す','オリる'],a:1,exp:'まだ2シャンテン。ここからアガリまで到達する確率は低く、無スジを何枚も通すことになる。即ベタオリが正解。'},
  {q:'リーチに対して無スジの牌を押してよいのは、主にどんなとき？',choices:['自分に押す価値のあるテンパイがあるとき','いつでも押してよい','安牌がないときだけ','親のときだけ'],a:0,exp:'無スジは放銃率が高い牌。見合うリターン（良形・高打点のテンパイ）があるときだけ勝負します。'},
 ]},
-{id:'gyakuten',title:'逆転条件',icon:'🔄',section:5,desc:'オーラスの点差計算をマスター。',questions:[
+{id:'gyakuten',title:'逆転条件',icon:'🔄',section:null,desc:'オーラスの点差計算をマスター。',questions:[
  {q:'オーラス2着目、トップと7,900点差。トップから直撃してまくれる最低打点は？',choices:['3,900点','5,200点','7,700点','8,000点'],a:1,exp:'直撃は「自分+X・相手-X」で差が2倍縮みます。5,200×2=10,400>7,900でOK。3,900×2=7,800では100点足りません！'},
  {q:'6,000点差の2着目。トップは子。満貫ツモ（2,000/4,000）で逆転できる？',choices:['できる','できない','親のときだけできる','同点になる'],a:0,exp:'自分が+8,000、トップの子は-2,000。差は10,000縮むので6,000点差は逆転です。ツモは全員から取れるのが強い！'},
  {q:'供託のリーチ棒は誰のもの？',choices:['和了した人','リーチした人に戻る','トップの人','山分けする'],a:0,exp:'供託されたリーチ棒1,000点は次に和了した人のもの。僅差のオーラスでは供託込みで逆転ラインを計算しましょう。'},
  {q:'同点で終局した場合、順位はどう決まる？',choices:['起家に近い方が上位','ジャンケンで決める','和了回数が多い方','同着になる'],a:0,exp:'一般的なルールでは同点の場合、起家（最初の親）に近い席順の方が上位になります。'},
 ]},
-{id:'anzen',title:'安全度',icon:'🛡️',section:6,desc:'現物・スジ・壁。牌の危険度を読む。',questions:[
+{id:'anzen',title:'安全度',icon:'🛡️',section:null,desc:'現物・スジ・壁。牌の危険度を読む。',questions:[
  {q:'リーチに対して最も安全な牌はどれ？',tchoices:[{t:'2m',lab:'現物'},{t:'4p',lab:'スジ'},{t:'W',lab:'2枚切れ'},{t:'5s',lab:'無スジ'}],a:0,exp:'リーチ者自身が捨てた牌（現物）はフリテンのルールにより絶対にロンされません。安全度は 現物 ＞ スジ・2枚切れ字牌 ＞ 無スジ の順。'},
  {q:'1筒がリーチ者の現物。「スジの4筒」が比較的安全な理由は？',choices:['2-3筒のリャンメン待ちならフリテンになるから','4筒は使いにくい牌だから','1筒と4筒は同じ牌扱いだから','カンチャン待ちが存在しないから'],a:0,exp:'4筒がリャンメンで当たるのは「2-3筒」持ちのときだけ。その待ちは1筒（現物）でフリテンなので、リャンメンには当たりません。ただしシャンポン・カンチャン・単騎には当たり得ます。'},
  {q:'7筒が場に4枚見えている。安全度が大きく上がる牌は？',tchoices:[{t:'6p'},{t:'8p'},{t:'9p'},{t:'5p'}],a:2,exp:'9筒がリャンメンで当たるには相手が「7-8筒」を持つ必要がありますが、7筒は4枚全部見えているので不可能（ノーチャンス）。残るはシャンポン・単騎などのみです。'},
  {q:'場に2枚切れの字牌が比較的安全な理由は？',choices:['シャンポン待ちがなくなり、残りは単騎だけだから','字牌は点数が安いから','鳴かれないから','ドラにならないから'],a:0,exp:'残り2枚が見えていればトイツで待たれる（シャンポン）ことがなく、当たるのはラス1枚の単騎待ちのみ。かなり安全です。'},
  {q:'安全度が高い順に並んでいるのはどれ？',choices:['現物 ＞ スジ・2枚切れ字牌 ＞ 無スジ2・8 ＞ 無スジ4〜6','無スジ4〜6 ＞ スジ ＞ 現物','スジ ＞ 現物 ＞ 字牌','どれも同じ'],a:0,exp:'現物が絶対安全。次にスジや枚数の切れた字牌、無スジでも端に近いほど当たる形が少なく、真ん中の4〜6が最も危険です。'},
 ]},
-{id:'betaori',title:'ベタオリ手順',icon:'🏃',section:6,desc:'降りると決めたら完璧に降りる。',questions:[
+{id:'betaori',title:'ベタオリ手順',icon:'🏃',section:null,desc:'降りると決めたら完璧に降りる。',questions:[
  {q:'ベタオリを決めたら、最初に切る牌は？',choices:['現物','手の中の危険牌','字牌','ドラ'],a:0,exp:'降りると決めたら和了は諦め、最も安全な現物から切るのが大原則。手の価値は一切考えなくてOKです。'},
  {q:'現物が1枚しかない。正しい考え方は？',choices:['残り巡目分の安全牌が足りるか数えて計画する','現物を最後まで温存する','諦めて手なりで進める','即座に現物を切って後は運に任せる'],a:0,exp:'流局まで何巡あるかを数え、現物・スジ・切れた字牌で最後まで凌げるかを先に計画します。足りないなら安全度の高い順に配分。'},
  {q:'現物が尽きた。次に切るべきは？',choices:['2枚切れの字牌やスジなど安全度の高い順','ドラの近く','真ん中の無スジ','ツモった牌をそのまま'],a:0,exp:'現物の次は「当たる形が少ない牌」。2枚切れ字牌、スジ、壁（ノーチャンス）の牌の順に安全度で選びます。'},
@@ -1954,25 +1987,9 @@ const THEMES=[
     {diff:{ch1:'yx2_3'}},                      // ★X2-3 九蓮宝燈・天和
    ]},
   ]},
- {id:'th_rules', course:'rules', title:'麻雀のきほん', sub:'ルール・アガリの形を知る',
-  qn:6,  // 静的プールが6問のため全問1周(重複出題はしない)。プール拡充後にqnを外せば既定10問
-  subThemes:[
-   // 静的プール(6問)のため難易度差は未設定(diff:null=全プールから抽選)。構造上は将来diffで分割可能
-   {id:'st_rules_kihon', title:'きほんのき', lessons:[{diff:null},{diff:null},{diff:null}]},
-   {id:'st_rules_matome', title:'総復習', lessons:[{diff:null},{diff:null}]},
-  ]},
- {id:'th_yaku', course:'yaku', title:'役を覚える', sub:'アガリに必要な「役」',
-  qn:6,  // 静的プール6問(同上)
-  subThemes:[
-   {id:'st_yaku_kihon', title:'よく出る役', lessons:[{diff:null},{diff:null},{diff:null}]},
-   {id:'st_yaku_matome', title:'総復習', lessons:[{diff:null},{diff:null}]},
-  ]},
- {id:'th_score', course:'score', title:'点数計算', sub:'符と翻から点数を出す',
-  qn:6,  // 静的プール6問(同上)
-  subThemes:[
-   {id:'st_score_kihon', title:'点数のきほん', lessons:[{diff:null},{diff:null},{diff:null}]},
-   {id:'st_score_matome', title:'総復習', lessons:[{diff:null},{diff:null}]},
-  ]},
+ /* 旧SECTION「入門」(th_rules/th_yaku/th_score)は2026-09-21のSECTION整理でRoadから削除
+    (第1〜3章の正式カリキュラムで作り直したため)。コースの問題データ(COURSES rules/yaku/score)は
+    開発用に残しているが、どのSECTIONにも属さずRoadには出ない */
  {id:'th_waits', course:'waits', title:'待ちの基本', sub:'待ちの形を見抜こう',
   subThemes:[                                  // 小テーマ間=枚数(4→7→10→13)で大きく段階化
    {id:'st_waits_4', title:'4枚形', chest:{after:2}, lessons:[  // 小テーマ内=まとめで前形を混ぜて反復
@@ -2017,11 +2034,15 @@ const SECTIONS=[
  {name:'麻雀を打てる',desc:'第1章：麻雀のきほん構造を体で覚える'},
  {name:'アガリが見える',desc:'第2章：待ち牌を見つける目を育てる'},
  {name:'役がわかる',desc:'第3章：アガリ形から役を見つけられるようになる'},
- {name:'入門',desc:'ルール・役・点数のきほん'},
  {name:'初級',desc:'手作りの技術を磨く'},
- {name:'中級',desc:'判断力で差をつける'},
- {name:'上級',desc:'守備を制する者は麻雀を制す'},
 ];
+/* SECTION(2026-09-21整理): 長い一本道Roadを学習段階ごとに分ける「大きな入口」=ナビゲーション単位。
+   SECTION一覧 → 選んだSECTIONだけのRoad → 大テーマ → 小テーマ → Lesson。
+   ・所属はCOURSES[].section(=このSECTIONS配列の番号)で決まる
+   ・進捗・解放は従来どおりテーマ単位(roadProgress/requires)。SECTION状態はそこから算出するだけで保存しない
+   ・旧「入門」(ルール/役/点数)は正式カリキュラムで作り直したため削除。旧「中級」「上級」は
+     テーマを持たない空の枠だったため削除(非表示コースはsection:nullで保持) */
+const SECTION_OPTIONAL_THEMES=['th_ch3x'];   // 任意Road: SECTIONの進捗・完了判定には数えない
 /* テーマ階層ヘルパー: 進捗はテーマ内の通しレッスン番号(小テーマをまたいだ連番)で管理 */
 function themeOf(id){ return THEMES.find(t=>t.id===id); }
 // 1レッスンの問題数(第7段階: 原則10問・1レッスン2〜3分想定)。
@@ -2250,7 +2271,7 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    開発UI・未検証Compare）を通常操作から隠す。コード・データ・機能は
    一切削除しておらず、このフラグをfalseにすれば全て復帰する。 */
 let PROTOTYPE_MODE=true;
-const PROTO_VISIBLE_COURSES=['ch1a','ch1b','ch1c','ch1d','ch1e','ch2a','ch2b','ch2c','ch2d','ch3a','ch3b','ch3c','ch3d','ch3e','ch3f','ch3g','ch3h','ch3x','rules','yaku','score','waits','ukeire1','nanikiru','riichi'];
+const PROTO_VISIBLE_COURSES=['ch1a','ch1b','ch1c','ch1d','ch1e','ch2a','ch2b','ch2c','ch2d','ch3a','ch3b','ch3c','ch3d','ch3e','ch3f','ch3g','ch3h','ch3x','waits','ukeire1','nanikiru','riichi'];
 function protoCourseVisible(id){ return !PROTOTYPE_MODE||PROTO_VISIBLE_COURSES.includes(id); }
 function staminaFree(){ return PROTOTYPE_MODE||S.owned.stamina; }   // プロトタイプはスタミナ消費なし
 function devUIVisible(){ return !PROTOTYPE_MODE||S.dev||location.hash==='#dev'; }
@@ -2752,7 +2773,9 @@ function nextLessonInfo(){
   }
   return first;
 }
-function goContinue(){                          // ホームの「つづきから」→コースの対象マスへ
+function goContinue(){                          // ホームの「つづきから」→対象SECTIONのRoadの対象マスへ
+  const nx=nextLessonInfo();
+  ROAD_SEC=nx?sectionOfTheme(nx.tid):null;
   showScreen('course');
   requestAnimationFrame(()=>requestAnimationFrame(scrollToNext));
 }
@@ -2847,21 +2870,109 @@ function startTraining(cat){
   renderQ();
 }
 
-/* ================= コースパス ================= */
+/* ================= コース: SECTION一覧 → SECTION別Road(2026-09-21) =================
+   コース画面は「SECTION一覧」から始まり、カードを選ぶとそのSECTIONだけのRoadへ画面を切り替える
+   (巨大な一本道の途中へスクロールするのではなく、SECTIONの先頭から表示)。
+   ・ROAD_SEC: null=SECTION一覧 / 数値=表示中のSECTION。表示状態だけで保存しない(localStorage不変)
+   ・SECTIONの状態は既存のroadProgress/requiresから毎回算出する(別の進捗管理は作らない)
+       locked=先頭テーマが未解放 / done=本編テーマを全部クリア(任意Roadは数えない)
+       current=「つづきから」の対象がこのSECTIONにある / open=それ以外の解放済み
+   ・学習順序・テーマ解放条件は従来のまま(SECTIONは表示とナビゲーションの区切り) */
+let ROAD_SEC=null;
+function sectionThemes(si){
+  return THEMES.filter(t=>{ const c=COURSES.find(x=>x.id===t.course);
+    return c&&c.section===si&&protoCourseVisible(c.id); });
+}
+function sectionOfTheme(tid){
+  const t=themeOf(tid), c=t&&COURSES.find(x=>x.id===t.course);
+  return c&&typeof c.section==='number'?c.section:null;
+}
+function sectionInfo(si,nx){
+  const ths=sectionThemes(si);
+  const core=ths.filter(t=>!SECTION_OPTIONAL_THEMES.includes(t.id));
+  const opt=ths.filter(t=>SECTION_OPTIONAL_THEMES.includes(t.id));
+  let done=0,total=0;
+  core.forEach(t=>{ total+=themeLessons(t).length; done+=themeFrontier(t); });
+  const unlocked=core.length>0&&ch1ThemeUnlocked(core[0]);
+  const current=!!nx&&sectionOfTheme(nx.tid)===si;
+  const state=!unlocked?'locked':(total>0&&done>=total?'done':(current?'current':'open'));
+  return {si,ths,core,done,total,state,current,
+    optLessons:opt.reduce((a,t)=>a+themeLessons(t).length,0)};
+}
 function renderPath(){
   const wrap=document.getElementById('path-wrap');
-  // コース=学習ロード専用画面(第8段階追加改善)。ストリーク/ミッションはホームへ、
-  // レーティングはマイページ・トレーニングへ移設し、開いた瞬間にSECTION→ロードが見える
-  let html='';
+  if(!wrap) return;
+  if(window.__ROAD_ALL){
+    // 開発・自動テスト専用: 全SECTIONを従来の一本道として並べる(通常操作からは到達しない)
+    wrap.innerHTML=SECTIONS.map((_,i)=>sectionThemes(i).length?sectionRoadHTML(i,{bare:true}):'').join('')+ROAD_FOOT;
+    return;
+  }
+  if(ROAD_SEC===null||!SECTIONS[ROAD_SEC]) wrap.innerHTML=sectionListHTML();
+  else wrap.innerHTML=sectionRoadHTML(ROAD_SEC);
+  // 「📍現在地へ」はSECTION Road上に進めるマスがあるときだけ出す(一覧・完了SECTIONでは隠す)
+  const lb=document.querySelector('#screen-course .loc-btn');
+  if(lb) lb.style.display=(ROAD_SEC!==null&&wrap.querySelector('.node.next'))?'':'none';
+}
+const ROAD_FOOT='<p style="text-align:center;color:var(--ink-soft);font-size:12px;padding:10px 24px 0;">マスを順番にクリアして進もう。クリア済みのマスは何度でも挑戦できます</p>';
+function sectionListHTML(){
+  const nx=(typeof nextLessonInfo==='function')?nextLessonInfo():null;
+  let html='<div class="sec-list-head"><h2>学習ロード</h2>'
+    +'<p>SECTIONをえらんでね。順番にクリアすると、つぎのSECTIONがひらくよ</p></div>';
+  SECTIONS.forEach((sec,si)=>{
+    const inf=sectionInfo(si,nx);
+    if(!inf.ths.length) return;
+    const pct=inf.total?Math.round(inf.done/inf.total*100):0;
+    const badge={locked:'🔒 未解放',done:'✓ 完了',current:'▶ 学習中',
+      open:(inf.done>0?'途中まで':'はじめられる')}[inf.state];
+    html+='<button class="sec-card '+inf.state+'" data-sec="'+si+'" onclick="openSection('+si+')">'
+      +'<div class="sc-top"><span class="sc-no">SECTION '+(si+1)+'</span>'
+      +'<span class="sc-badge">'+badge+'</span></div>'
+      +'<div class="sc-name">'+sec.name+'</div>'
+      +'<div class="sc-desc">'+sec.desc+'</div>'
+      +'<div class="sc-prog"><span class="sc-bar"><i style="width:'+pct+'%"></i></span>'
+      +'<span class="sc-num">'+inf.done+'/'+inf.total+'</span></div>'
+      +(inf.optLessons?'<div class="sc-opt">＋よりみちロード '+inf.optLessons+'Lesson（任意）</div>':'')
+      +(inf.state==='current'&&nx?'<div class="sc-here">いまここ：'+nx.title+' ─ '+nx.sub+' '+nx.label+'</div>':'')
+      +'</button>';
+  });
+  html+='<p class="sec-list-foot">クリアしたSECTIONは、いつでも開いて復習できます</p>';
+  return html;
+}
+function openSectionList(){
+  ROAD_SEC=null;
+  showScreen('course');
+  try{ window.scrollTo(0,0); }catch(e){}
+}
+function openSection(si){
+  const inf=sectionInfo(si,(typeof nextLessonInfo==='function')?nextLessonInfo():null);
+  if(inf.state==='locked'){
+    // 未解放: 開かずに概要だけ見せる(Lessonは開始できない)
+    const prev=SECTIONS[si-1];
+    openModal('<h3>🔒 SECTION '+(si+1)+'：'+SECTIONS[si].name+'</h3>'
+      +'<p>'+SECTIONS[si].desc+'</p>'
+      +'<p style="font-weight:800;margin:10px 0 4px;">このSECTIONで学ぶこと</p>'
+      +'<p>'+inf.ths.map(t=>'・'+t.title).join('<br>')+'</p>'
+      +(prev?'<p style="margin-top:10px;">SECTION '+si+'「'+prev.name+'」をクリアすると解放されるよ。</p>':'')
+      +'<button class="btn" onclick="closeModal()">とじる</button>');
+    return;
+  }
+  ROAD_SEC=si;
+  if(!document.getElementById('screen-course').classList.contains('show')) showScreen('course');
+  else renderPath();
+  try{ window.scrollTo(0,0); }catch(e){}   // SECTIONの先頭から表示
+}
+function sectionRoadHTML(si,opt){
+  const sec=SECTIONS[si], bare=!!(opt&&opt.bare);
+  let html=bare?'':'<div class="sec-back-row"><button class="sec-back" onclick="openSectionList()">← SECTION一覧</button></div>';
   const offsets=['','l','r','','l','r'];
   // 階層: SECTION帯 → 大テーマ帯(theme-band) → 小テーマ見出し(subtheme-head) → レッスンマス(node)
-  SECTIONS.forEach((sec,si)=>{
+  // (以下のマークアップは旧renderPathの1SECTION分をそのまま使用)
+  {
     const ths=THEMES.filter(t=>{
       const c=COURSES.find(x=>x.id===t.course);
       return c&&c.section===si&&protoCourseVisible(c.id);
     });
     const rest=COURSES.filter(c=>c.section===si&&protoCourseVisible(c.id)&&!THEMES.some(t=>t.course===c.id));
-    if(!ths.length&&!rest.length) return;  // 表示できるものがないセクションは帯ごと出さない
     html+='<div class="section-band"><h2>SECTION '+(si+1)+'：'+sec.name+'</h2><p>'+sec.desc+'</p></div>';
     ths.forEach(t=>{
       const c=COURSES.find(x=>x.id===t.course);
@@ -2924,9 +3035,17 @@ function renderPath(){
       });
       html+='</div>';
     }
-  });
-  html+='<p style="text-align:center;color:var(--ink-soft);font-size:12px;padding:10px 24px 0;">マスを順番にクリアして進もう。クリア済みのマスは何度でも挑戦できます</p>';
-  wrap.innerHTML=html;
+  
+  }
+  if(bare) return html;
+  // つぎのSECTIONが解放済みなら、Roadの最後から進める
+  const ni=si+1;
+  if(SECTIONS[ni]&&sectionThemes(ni).length){
+    const nInf=sectionInfo(ni,null);
+    if(nInf.state!=='locked')
+      html+='<button class="sec-next" onclick="openSection('+ni+')">SECTION '+(ni+1)+'「'+SECTIONS[ni].name+'」へすすむ →</button>';
+  }
+  return html+ROAD_FOOT;
 }
 
 /* ================= コース開始 ================= */
