@@ -3,6 +3,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ツモッピィ</title>
+<!-- PWA/ホーム画面の表示名(ユーザー向け正式名称=ツモッピィ。旧開発名「雀トレ」は内部ID・ファイル名のみ) -->
+<meta name="application-name" content="ツモッピィ">
+<meta name="apple-mobile-web-app-title" content="ツモッピィ">
+<!-- manifestは名前・アイコンのみ(displayは指定しない=起動方法は従来どおり。起動方法を変えると
+     iOSで保存領域が分かれ学習履歴が見えなくなる恐れがあるため、ここでは変えない) -->
+<link rel="manifest" href="manifest.webmanifest">
 <!-- アプリアイコン: favicon(埋め込み)。ホーム画面追加用はapple-touch-icon.png(公開リポジトリ側に配置) -->
 <link rel="icon" type="image/png" href="data:image/png;base64,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">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
@@ -74,6 +80,42 @@ button{font-family:inherit; cursor:pointer; touch-action:manipulation;} /* タ�
 
 /* ---------- path ---------- */
 .path-wrap{flex:1; padding:8px 0 96px; overflow-y:auto;}
+/* ルビ(麻雀用語の読みがな): 本文を押し下げすぎない小さめの読み。子ども向けに見た目を変えない */
+ruby{ruby-position:over; ruby-align:center;}
+rt{font-size:.5em; font-weight:700; line-height:1; letter-spacing:-.04em; opacity:.78; white-space:nowrap;}
+.tc-bub{line-height:1.75;}
+.term-chip ruby rt{opacity:.85;}
+.rd-panel{margin:10px auto 4px; max-width:360px;}
+.rd-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:6px;}
+.rd-cell{display:flex; align-items:baseline; justify-content:center; gap:8px; padding:8px 4px; border-radius:12px;
+  background:var(--card); border:1.5px solid var(--line);}
+.rd-cell b{font-size:20px; font-variant-numeric:tabular-nums;}
+.rd-cell span{font-size:15px; font-weight:800; color:var(--jade-deep);}
+.rd-rows{display:flex; flex-direction:column; gap:8px;}
+.rd-row{display:flex; align-items:center; justify-content:center; gap:6px; flex-wrap:nowrap;}
+.rd-row .tile{width:40px; max-width:40px; flex:none;}
+.rd-name{font-size:13px; font-weight:800; color:var(--ink-soft); min-width:4.2em; text-align:center;}
+.rd-part{font-size:15px; font-weight:800; padding:4px 8px; border-radius:10px; background:var(--card); border:1.5px solid var(--line);}
+.rd-plus,.rd-arrow{font-size:14px; font-weight:800; color:var(--ink-soft);}
+.rd-read{font-size:17px; color:var(--jade-deep);}
+.rd-hon{display:flex; justify-content:center; gap:8px; margin-bottom:8px;}
+.rd-hcell{display:flex; flex-direction:column; align-items:center; gap:4px;}
+.rd-hcell .tile{width:40px; max-width:40px;}
+.rd-hcell b{font-size:14px; color:var(--jade-deep);}
+.mt-lbl{min-width:56px; padding:12px 10px; border-radius:12px; border:2px solid var(--line); background:var(--card);
+  font-size:21px; font-weight:800; text-align:center; box-shadow:0 3px 0 var(--line);}
+.mt-lbl.sel{border-color:var(--jade); background:var(--jade-soft);}
+.mt-lbl.correct{border-color:var(--jade); background:color-mix(in srgb, var(--jade) 18%, #fff);}
+.mt-num.mt-word{font-size:16px; padding:15px 0; max-width:128px;}
+.au-row{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:12px;
+  padding-top:12px; border-top:1px solid var(--line);}
+.au-txt{display:flex; flex-direction:column; min-width:0;}
+.au-t{font-size:13px; font-weight:800;}
+.au-d{font-size:11px; font-weight:700; color:var(--ink-soft); margin-top:2px;}
+.btn.au-btn{display:inline-block; width:auto; flex:none; min-height:44px; padding:8px 14px; font-size:13px; white-space:nowrap;}
+.btn.au-btn:disabled{opacity:.6;}
+.au-msg{font-size:11.5px; font-weight:800; margin-top:6px; color:var(--ink-soft); min-height:0;}
+.au-msg.ok{color:var(--jade-deep);} .au-msg.ng{color:var(--verm-deep);}
 .sec-list-head{margin:14px 16px 4px;}
 .sec-list-head h2{margin:0; font-size:clamp(17px,4.6vw,20px); color:var(--ink);}
 .sec-list-head p{margin:4px 0 0; font-size:clamp(11.5px,3.2vw,13px); color:var(--ink-soft); font-weight:700;}
@@ -1654,6 +1696,7 @@ const COURSES=[
 /* 第1章「麻雀を打てる」(正式カリキュラムv1.0・完全初心者向け)。
    type:'ch1'はTeach/Try/Quiz構成の初心者レッスン(問題はCH1_LESSONSから決定論的に生成) */
 {id:'ch1a',title:'牌を知ろう',icon:'🐣',section:0,type:'ch1',desc:'まずは牌とともだちになろう。',questions:[]},
+{id:'ch1r',title:'牌の読み方',icon:'🗣️',section:0,type:'ch1',desc:'牌のよび方を、しくみから覚えよう。',questions:[]},
 {id:'ch1b',title:'組を作ろう',icon:'🧱',section:0,type:'ch1',desc:'メンツ・トイツ・アタマを覚えよう。',questions:[]},
 {id:'ch1c',title:'ミニ麻雀',icon:'🀄',section:0,type:'ch1',desc:'ツモって、切って、アガリをつくろう。',questions:[]},
 {id:'ch1d',title:'本物の13枚へ',icon:'🏆',section:0,type:'ch1',desc:'本物の麻雀とおなじ13枚に挑戦！',questions:[]},
@@ -1757,6 +1800,19 @@ const THEMES=[
     {diff:{ch1:'a1_2'}},                       // マンズ・ピンズ・ソーズ(短尺)
     {diff:{ch1:'a1_3'}},                       // 字牌(短尺)
     {diff:{ch1:'a1_4'}},                       // ★まとめ: 牌はかせ
+   ]},
+  ]},
+ /* 牌の読み方(2026-09-21追加・任意の基礎教養): 数牌=「数字の読み+種類の呼び方」の規則で読む→字牌7種→ミックス。
+    麻雀の判断力とは別の知識なので本編の関門にはしない(SECTION_OPTIONAL_THEMES・どのテーマもrequiresにしない)。
+    牌を知ろう(マンズ/ピンズ/ソーズ/字牌の見分け)を学んでから開く */
+ {id:'th_ch1r', course:'ch1r', title:'牌の読み方', sub:'しくみがわかれば34種類ぜんぶ読める',
+  requires:'th_ch1a',
+  subThemes:[
+   {id:'st_r1', title:'牌のよび方', lessons:[
+    {diff:{ch1:'r1_1'}},                       // 読み方のしくみ(数字の読み+種類の呼び方)
+    {diff:{ch1:'r1_2'}},                       // 数牌を読もう(27種)
+    {diff:{ch1:'r1_3'}},                       // 字牌の読み方(7種)
+    {diff:{ch1:'r1_4'}},                       // ★まとめ: 34種ミックス
    ]},
   ]},
  {id:'th_ch1b', course:'ch1b', title:'組を作ろう', sub:'メンツ・トイツ・アタマ',
@@ -2042,7 +2098,7 @@ const SECTIONS=[
    ・進捗・解放は従来どおりテーマ単位(roadProgress/requires)。SECTION状態はそこから算出するだけで保存しない
    ・旧「入門」(ルール/役/点数)は正式カリキュラムで作り直したため削除。旧「中級」「上級」は
      テーマを持たない空の枠だったため削除(非表示コースはsection:nullで保持) */
-const SECTION_OPTIONAL_THEMES=['th_ch3x'];   // 任意Road: SECTIONの進捗・完了判定には数えない
+const SECTION_OPTIONAL_THEMES=['th_ch1r','th_ch3x'];   // 任意(牌の読み方・もっと役を覚える): SECTIONの進捗・完了判定には数えない
 /* テーマ階層ヘルパー: 進捗はテーマ内の通しレッスン番号(小テーマをまたいだ連番)で管理 */
 function themeOf(id){ return THEMES.find(t=>t.id===id); }
 // 1レッスンの問題数(第7段階: 原則10問・1レッスン2〜3分想定)。
@@ -2249,6 +2305,73 @@ function sndToggle(){
   if(S.sound!==false) sndPlay('select');       // ONにした瞬間だけ試し鳴らし(ユーザー操作起点)
   renderProfile();
 }
+/* ================= 最新版に更新(2026-09-21) =================
+   現在の配信構成: GitHub Pages上の単一HTML(index.html)+assets。Service Worker・Cache Storageは使っていない
+   (=アプリ本体はブラウザの通常のHTTPキャッシュだけで保持されている)。
+   手動更新の流れ:
+     ①(将来SWを入れた場合に備え)登録済みSWがあれば update()→waitingへSKIP_WAITING。現状は登録0件で何もしない
+     ②アプリ本体HTMLと外部WAVをネットワークから取り直してHTTPキャッシュを最新にする(fetch cache:'reload')
+     ③Cache Storageはツモッピィ自身のアプリ用キャッシュ(名前が APP_CACHE_PREFIX で始まるもの)だけ削除。現状は0件
+     ④更新用の目印(?u=時刻)付きURLへ1回だけ移動して読み込み直す→起動後に目印をURLから消して完了表示
+   学習データ(localStorage jantore-v1)には一切触れない(clear/removeItemしない)。更新前にsave()で確実に保存する。
+   自動で再読み込みを繰り返す経路は無い(ボタン操作時だけ1回)。処理中は再入不可。 */
+const APP_CACHE_PREFIX='tsumoppy-app';
+let APP_UPDATING=false;
+function appUpdateStatus(msg,kind){
+  const el=document.getElementById('app-update-msg');
+  if(el){ el.textContent=msg||''; el.className='au-msg'+(kind?' '+kind:''); }
+}
+function appUpdateBtn(disabled,label){
+  const b=document.getElementById('app-update-btn');
+  if(b){ b.disabled=!!disabled; if(label) b.textContent=label; }
+}
+async function appUpdate(){
+  if(APP_UPDATING) return;                       // 連打防止
+  APP_UPDATING=true;
+  appUpdateBtn(true,'最新版を確認中…'); appUpdateStatus('');
+  try{ save(); }catch(e){}                        // 学習データは今の状態で確実に保存(消さない)
+  try{
+    // ① Service Worker(現状は未使用。登録があれば新SWを取得→待機中なら有効化)
+    if('serviceWorker' in navigator&&navigator.serviceWorker.getRegistrations){
+      const regs=await navigator.serviceWorker.getRegistrations();
+      for(const r of regs){
+        try{ await r.update(); }catch(e){}
+        if(r.waiting) r.waiting.postMessage({type:'SKIP_WAITING'});
+      }
+    }
+    // ② アプリ本体を取り直す(オフライン等で失敗したらここで中断し、今の版をそのまま使える)
+    const base=location.href.split('#')[0].replace(/[?&]u=\d+/,'').replace(/\?$/,'');
+    const res=await fetch(base,{cache:'reload'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    await res.text();
+    appUpdateBtn(true,'更新しています…');
+    // 外部WAV・manifest・アイコンも取り直す(失敗しても更新は続ける)
+    const extra=Object.keys(SND_FILES).map(k=>SND_DIR+SND_FILES[k]).concat(['manifest.webmanifest']);
+    await Promise.all(extra.map(u=>fetch(u,{cache:'reload'}).catch(()=>null)));
+    // ③ ツモッピィ自身のアプリ用キャッシュだけ削除(他のCache Storageには触れない)
+    if(window.caches&&caches.keys){
+      const keys=await caches.keys();
+      await Promise.all(keys.filter(k=>k.indexOf(APP_CACHE_PREFIX)===0).map(k=>caches.delete(k)));
+    }
+    // ④ 1回だけ読み込み直す(目印付きURL→起動時に目印を消す。自動の再読込ループは無い)
+    appUpdateStatus('更新を確認しました。読み込み直します…','ok');
+    const sep=base.indexOf('?')>=0?'&':'?';
+    setTimeout(()=>{ location.replace(base+sep+'u='+Date.now()); },300);
+  }catch(e){
+    APP_UPDATING=false;
+    appUpdateBtn(false,'最新版に更新');
+    appUpdateStatus('更新できませんでした。通信環境を確認してください（今のままでも使えます）','ng');
+  }
+}
+function appUpdateAfterBoot(){
+  // 更新ボタン経由で起動したときだけ: URLの目印を消して完了を知らせる(ここから再読込はしない)
+  try{
+    if(!/[?&]u=\d+/.test(location.search)) return false;
+    const clean=location.href.replace(/([?&])u=\d+&?/,'$1').replace(/[?&](#|$)/,'$1');
+    history.replaceState(null,'',clean);
+    return true;
+  }catch(e){ return false; }
+}
 // ローカル(端末)の年月日でYYYY-MM-DD。旧実装はUTC日付だったため日本の朝にストリークがずれた。
 // 保存形式は同じYYYY-MM-DD文字列なので既存localStorageと互換。
 function todayStr(){
@@ -2263,6 +2386,38 @@ function todayStr(){
    公式マスコット=イソピィ(ISOPPY・一索の鳥) / 監修・メソッド=ZOE(ゾエ)。
    旧開発名「雀トレ」は内部ID(jantore-*のlocalStorageキー・ファイル名等)にのみ残す(互換性優先)。
    新しいユーザー向け文言は原則BRANDの名称を使用する。 */
+/* ================= ルビ(読みがな)の一元管理(2026-09-21) =================
+   目的: 小学校高学年くらいの子どもでも、麻雀用語の漢字で学習がつまずかないようにする。
+   ・対象は麻雀の専門用語・特殊な読みの語だけ(一般的な漢字には付けない。大人が読んでも煩雑にしない)
+   ・読みはこの RUBY_TERMS にだけ書く(各Lessonに同じ読みを手書きしない)
+   ・日本語読みの語はひらがな、中国語由来の麻雀名はカタカナ(TSUMOPPY_TERMS.md と同じ)
+   ・「牌の呼び方」(5筒=ウーピン等)はここではなく TILE_READ で別管理(ルビと呼称は別概念)
+   使い方: rb('数牌') → <ruby>数牌<rt>すうぱい</rt></ruby>
+           rubyize(文) → 文中の「用語（よみ）」表記(初出Teachの書き方)を用語のルビに変換(辞書にある語だけ)
+           rbFirst(短い見出し) → 見出し中の辞書語の最初の1回だけルビ(SECTION名・テーマ名) */
+const RUBY_TERMS={
+  '麻雀':'マージャン','牌':'はい','萬子':'マンズ','筒子':'ピンズ','索子':'ソーズ',
+  '数牌':'すうぱい','字牌':'じはい','手牌':'てはい','捨て牌':'すてはい','風牌':'かぜはい','三元牌':'さんげんぱい',
+  '自風':'じかぜ','場風':'ばかぜ','役牌':'やくはい','東家':'トンチャ','南家':'ナンチャ','西家':'シャーチャ','北家':'ペーチャ',
+  '東場':'トンば','南場':'ナンば','単騎':'タンキ','暗刻':'アンコ','三暗刻':'サンアンコー','役満':'ヤクマン',
+  '七対子':'チートイツ','三色':'サンショク','大三元':'ダイサンゲン','四暗刻':'スーアンコー','国士無双':'コクシムソウ',
+  '小四喜':'ショウスーシー','二盃口':'リャンペーコー','字一色':'ツーイーソー','緑一色':'リューイーソー',
+  '清老頭':'チンロウトウ','混老頭':'ホンロウトウ','九蓮宝燈':'チューレンポートー','天和':'テンホー',
+  '海底摸月':'ハイテイ','河底撈魚':'ホウテイ',
+};
+const RUBY_KEYS=Object.keys(RUBY_TERMS).sort((a,b)=>b.length-a.length);
+const RUBY_PAREN_RE=new RegExp('('+RUBY_KEYS.join('|')+')（[^（）<>]{1,14}）','g');
+const RUBY_WORD_RE=new RegExp('('+RUBY_KEYS.join('|')+')','g');
+function rb(term){ const r=RUBY_TERMS[term]; return r?'<ruby>'+term+'<rt>'+r+'</rt></ruby>':term; }
+function rubyize(html){
+  if(typeof html!=='string'||!html||html.indexOf('<ruby>')>=0) return html;
+  return html.replace(RUBY_PAREN_RE,(m,t)=>rb(t));
+}
+function rbFirst(text){
+  if(typeof text!=='string'||!text) return text;
+  const seen=new Set();
+  return text.replace(RUBY_WORD_RE,t=>{ if(seen.has(t)) return t; seen.add(t); return rb(t); });
+}
 const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE',
   mascotName:'イソピィ',mascotNameEn:'ISOPPY',method:'ZOE'};
 
@@ -2271,7 +2426,7 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    開発UI・未検証Compare）を通常操作から隠す。コード・データ・機能は
    一切削除しておらず、このフラグをfalseにすれば全て復帰する。 */
 let PROTOTYPE_MODE=true;
-const PROTO_VISIBLE_COURSES=['ch1a','ch1b','ch1c','ch1d','ch1e','ch2a','ch2b','ch2c','ch2d','ch3a','ch3b','ch3c','ch3d','ch3e','ch3f','ch3g','ch3h','ch3x','waits','ukeire1','nanikiru','riichi'];
+const PROTO_VISIBLE_COURSES=['ch1a','ch1r','ch1b','ch1c','ch1d','ch1e','ch2a','ch2b','ch2c','ch2d','ch3a','ch3b','ch3c','ch3d','ch3e','ch3f','ch3g','ch3h','ch3x','waits','ukeire1','nanikiru','riichi'];
 function protoCourseVisible(id){ return !PROTOTYPE_MODE||PROTO_VISIBLE_COURSES.includes(id); }
 function staminaFree(){ return PROTOTYPE_MODE||S.owned.stamina; }   // プロトタイプはスタミナ消費なし
 function devUIVisible(){ return !PROTOTYPE_MODE||S.dev||location.hash==='#dev'; }
@@ -2761,6 +2916,11 @@ function nextLessonInfo(){
       const c=COURSES.find(x=>x.id===t.course);
       if(!c||c.section!==si||!protoCourseVisible(c.id)) continue;
       if(!ch1ThemeUnlocked(t)) continue;      // ロック中テーマは「つづきから」の対象外
+      if(typeof SECTION_OPTIONAL_THEMES!=='undefined'&&SECTION_OPTIONAL_THEMES.includes(t.id)&&!themeFrontier(t)){
+        // 任意テーマ(未着手)は、同じSECTIONでこれより後ろのテーマを学び始めていたら「つづきから」に出さない
+        const later=THEMES.slice(THEMES.indexOf(t)+1).filter(u=>{ const cu=COURSES.find(x=>x.id===u.course); return cu&&cu.section===si; });
+        if(later.some(u=>themeFrontier(u)>0)) continue;
+      }
       const list=themeLessons(t), fr=themeFrontier(t);
       if(fr<list.length){
         const ls=list[fr];
@@ -2927,11 +3087,11 @@ function sectionListHTML(){
     html+='<button class="sec-card '+inf.state+'" data-sec="'+si+'" onclick="openSection('+si+')">'
       +'<div class="sc-top"><span class="sc-no">SECTION '+(si+1)+'</span>'
       +'<span class="sc-badge">'+badge+'</span></div>'
-      +'<div class="sc-name">'+sec.name+'</div>'
+      +'<div class="sc-name">'+rbFirst(sec.name)+'</div>'
       +'<div class="sc-desc">'+sec.desc+'</div>'
       +'<div class="sc-prog"><span class="sc-bar"><i style="width:'+pct+'%"></i></span>'
       +'<span class="sc-num">'+inf.done+'/'+inf.total+'</span></div>'
-      +(inf.optLessons?'<div class="sc-opt">＋よりみちロード '+inf.optLessons+'Lesson（任意）</div>':'')
+      +(inf.optLessons?'<div class="sc-opt">＋よりみち（'+inf.ths.filter(t=>SECTION_OPTIONAL_THEMES.includes(t.id)).map(t=>t.title).join('・')+'）'+inf.optLessons+'Lesson（任意）</div>':'')
       +(inf.state==='current'&&nx?'<div class="sc-here">いまここ：'+nx.title+' ─ '+nx.sub+' '+nx.label+'</div>':'')
       +'</button>';
   });
@@ -2973,13 +3133,13 @@ function sectionRoadHTML(si,opt){
       return c&&c.section===si&&protoCourseVisible(c.id);
     });
     const rest=COURSES.filter(c=>c.section===si&&protoCourseVisible(c.id)&&!THEMES.some(t=>t.course===c.id));
-    html+='<div class="section-band"><h2>SECTION '+(si+1)+'：'+sec.name+'</h2><p>'+sec.desc+'</p></div>';
+    html+='<div class="section-band"><h2>SECTION '+(si+1)+'：'+rbFirst(sec.name)+'</h2><p>'+sec.desc+'</p></div>';
     ths.forEach(t=>{
       const c=COURSES.find(x=>x.id===t.course);
       const list=themeLessons(t);
       const fr=themeFrontier(t);
       html+='<div class="theme-band"><span class="tb-ico">'+c.icon+'</span>'
-        +'<div class="tb-txt"><h3>'+t.title+'</h3><p>'+t.sub+'</p></div>'
+        +'<div class="tb-txt"><h3>'+rbFirst(t.title)+'</h3><p>'+t.sub+'</p></div>'
         +'<span class="tb-prog">'+fr+'/'+list.length+'</span></div>';
       let gi=0;  // テーマ内の通しレッスン番号(小テーマをまたいで連番・蛇行も連続)
       t.subThemes.forEach(st=>{
@@ -3535,7 +3695,7 @@ function ch1MiniDiscard(i){
   if(mg.discIntro&&mg.disc.length===1){
     // はじめての捨て牌(C1-2)だけ: 切った牌がきえずに捨て牌へならぶことを1回だけ案内
     const g=document.getElementById('mg-guide');
-    if(g) g.innerHTML='切った牌はここ（捨て牌）にならぶよ。きえてしまうわけじゃないんだ！';
+    if(g) g.innerHTML='切った牌はここ（'+rb('捨て牌')+'）にならぶよ。きえてしまうわけじゃないんだ！';
   }
 }
 
@@ -3547,10 +3707,77 @@ function ch1MiniDiscard(i){
    UI: 正解ペアはslot位置を残したまま非表示(盤面固定原則)・誤答は消さず再回答可。 */
 function ch1Match(kind,opt){ return Object.assign({mt:{kind}},opt||{}); }
 const CH1MT_NAME={m:'萬子',p:'筒子',s:'索子',mix:'ミックス'};
+/* ---- 牌の読み方(呼称)データ(2026-09-21) ----
+   「牌の呼び方」は漢字のルビ(RUBY_TERMS)とは別概念なのでここで独立管理する。
+   数牌=数字の読み+種類の呼び方の組み合わせ(34個の丸暗記ではなく規則で覚える)。字牌は1つずつの呼び名。
+   将来の「牌の読み方ドリル」(ランダムな牌→読みを選ぶ)もこのデータと tileReading() をそのまま使う。 */
+const TILE_READ={
+  num:{1:'イー',2:'リャン',3:'サン',4:'スー',5:'ウー',6:'ロー',7:'チー',8:'パー',9:'キュー'},
+  suit:{m:'マン',p:'ピン',s:'ソー'},
+  suitName:{m:'マンズ',p:'ピンズ',s:'ソーズ'},
+  honor:{E:'トン',S:'ナン',W:'シャー',N:'ペー',B:'ハク',G:'ハツ',R:'チュン'},
+};
+const TILES34=['m','p','s'].flatMap(su=>[1,2,3,4,5,6,7,8,9].map(n=>n+su)).concat(['E','S','W','N','B','G','R']);
+function tileReading(cd){
+  if(cd&&cd.length===2) return TILE_READ.num[+cd[0]]+TILE_READ.suit[cd[1]];
+  return TILE_READ.honor[cd]||'';
+}
+/* 読み方マッチングの出題セット生成(左=牌 or 文字 / 右=読み。セット内の読みは必ず一意) */
+function readSets(items,size){
+  const out=[]; for(let i=0;i<items.length;i+=size) out.push(items.slice(i,i+size));
+  // 最後が1つだけ余るときは前のセットと均す(1ペアだけのセットを作らない)
+  if(out.length>1&&out[out.length-1].length===1){ const a=out[out.length-2].pop(); out[out.length-1].unshift(a); }
+  return out;
+}
+function ch1ReadMatch(kind,items,opt){
+  // items: [{t:'1m'}|{lt:'1'}, n:'読み'] / opt: {title, qtype, guide:[start,mid], okText, size}
+  const o=opt||{};
+  return {mt:{kind:'read', sets:readSets(items,o.size||5), title:o.title||'読み方', qtype:o.qtype||'牌の読み方',
+    guide:o.guide||['牌と読み方をタップしてペアにしよう！','そのちょうし！のこりもペアにしよう！'],
+    okText:o.okText||'ぜんぶペアにできた！', word:true}};
+}
+function readTileItems(tiles){ return tiles.map(t=>({t, n:tileReading(t)})); }
+/* Teach用の図(文字列データから生成。教材本文にHTMLを直書きしない) */
+function readNumPanel(){
+  return '<div class="rd-grid">'+[1,2,3,4,5,6,7,8,9].map(n=>
+    '<div class="rd-cell"><b>'+n+'</b><span>'+TILE_READ.num[n]+'</span></div>').join('')+'</div>';
+}
+function readSuitPanel(){
+  return '<div class="rd-rows">'+['m','p','s'].map(su=>
+    '<div class="rd-row">'+tileHTML('5'+su)+'<span class="rd-name">'+TILE_READ.suitName[su]+'</span>'
+    +'<span class="rd-arrow">→</span><b class="rd-read">'+TILE_READ.suit[su]+'</b></div>').join('')+'</div>';
+}
+function readComboPanel(tiles){
+  return '<div class="rd-rows">'+tiles.map(cd=>
+    '<div class="rd-row">'+tileHTML(cd)+'<span class="rd-part">'+TILE_READ.num[+cd[0]]+'</span><span class="rd-plus">＋</span>'
+    +'<span class="rd-part">'+TILE_READ.suit[cd[1]]+'</span><span class="rd-arrow">→</span><b class="rd-read">'+tileReading(cd)+'</b></div>').join('')+'</div>';
+}
+function readHonorPanel(){
+  const row=cds=>'<div class="rd-hon">'+cds.map(cd=>'<div class="rd-hcell">'+tileHTML(cd)+'<b>'+TILE_READ.honor[cd]+'</b></div>').join('')+'</div>';
+  return row(['E','S','W','N'])+row(['B','G','R']);
+}
+function ch1ReadMcq(cd,exp,opt){
+  // この牌の読み方は？(正解=tileReading。まぎらわしい選択肢=数字ちがい・種類ちがい)
+  const right=tileReading(cd);
+  let wrong=[];
+  if(cd.length===2){
+    const n=+cd[0], su=cd[1];
+    const nOther=[1,2,3,4,5,6,7,8,9].filter(x=>x!==n);
+    wrong=[TILE_READ.num[n]+TILE_READ.suit[shuffle(['m','p','s'].filter(x=>x!==su))[0]],
+           TILE_READ.num[shuffle(nOther)[0]]+TILE_READ.suit[su]];
+  }else{
+    wrong=shuffle(Object.keys(TILE_READ.honor).filter(x=>x!==cd)).slice(0,2).map(x=>TILE_READ.honor[x]);
+  }
+  wrong=[...new Set(wrong)].filter(w=>w!==right);
+  const choices=shuffle([right].concat(wrong));
+  return Object.assign({q:'この牌の読み方は？',hand:cd,choices,a:choices.indexOf(right),exp:exp||('「'+right+'」だよ。')},opt||{});
+}
 function ch1MatchInit(q){
   const kind=q.mt.kind;
   let sets;
-  if(kind==='mix'){
+  if(q.mt.sets){
+    sets=q.mt.sets;                    // 読み方マッチング等: 出題セットをビルダー側で確定済み
+  }else if(kind==='mix'){
     // 1〜9を1回ずつ使い、スートを混在させる(=セット内の数字は必ず一意)。
     // 各数字のスートはランダム(「1=必ず1索」等の規則性は作らない。1索は索子ステップで必ず出題済み)。
     // 各セットに3スートが登場するまで再生成
@@ -3572,9 +3799,11 @@ function ch1MatchInit(q){
     return a;
   });
   L.mt={kind, sets, nums, si:0, selT:null, selN:null, gotT:sets[0].map(()=>false),
-        gotN:sets[0].map(()=>false), miss:0, finished:false, lock:false};
+        gotN:sets[0].map(()=>false), miss:0, finished:false, lock:false,
+        title:q.mt.title||null, qtype:q.mt.qtype||null, guide:q.mt.guide||null, word:!!q.mt.word};
 }
 function ch1MtGuideMsg(kind,phase){
+  if(L&&L.mt&&L.mt.guide) return rubyize(phase==='mid'?L.mt.guide[1]:L.mt.guide[0]);
   if(phase==='mid') return 'そのちょうし！のこりもペアにしよう！';
   return {m:'牌と、おなじ数字をタップしてペアにしよう！',p:'つぎは筒子！おなじ数字をペアにしよう！',
     s:'つぎは索子！おなじ数字をペアにしよう！',mix:'さいごは、ぜんぶまぜてみよう！'}[kind];
@@ -3585,8 +3814,9 @@ function ch1MatchSetHTML(){
   for(let i=0;i<set.length;i++){
     const cd=set[i].t;
     html+='<button class="tw mt-t'+(mt.gotT[i]?' mt-done':'')+'" id="mtt-'+i+'" onpointerdown="ch1MtPickT('+i+')">'
-      +'<div class="tile '+cd[1]+'">'+tileFace(cd)+'</div></button>';
-    html+='<button class="mt-num'+(mt.gotN[i]?' mt-done':'')+'" id="mtn-'+i+'" onpointerdown="ch1MtPickN('+i+')">'
+      +(cd?'<div class="tile '+(cd.length===2?cd[1]:'z')+'">'+tileFace(cd)+'</div>'
+          :'<div class="mt-lbl">'+rubyize(set[i].lt)+'</div>')+'</button>';
+    html+='<button class="mt-num'+(mt.word?' mt-word':'')+(mt.gotN[i]?' mt-done':'')+'" id="mtn-'+i+'" onpointerdown="ch1MtPickN('+i+')">'
       +nums[i]+'</button>';
   }
   html+='</div>';
@@ -3594,11 +3824,11 @@ function ch1MatchSetHTML(){
 }
 function ch1MtProg(){
   const mt=L.mt;
-  return CH1MT_NAME[mt.kind]+'　'+mt.sets.map((s2,i)=>i<mt.si?'●':(i===mt.si?'◎':'○')).join('');
+  return (mt.title?rubyize(mt.title):rb(CH1MT_NAME[mt.kind]))+'　'+mt.sets.map((s2,i)=>i<mt.si?'●':(i===mt.si?'◎':'○')).join('');
 }
 function ch1MatchHTML(q){
   const mt=L.mt;
-  let html='<div class="q-type">数牌マッチング・'+CH1MT_NAME[mt.kind]+'</div>';
+  let html='<div class="q-type">'+(mt.qtype?mt.qtype+'・'+rubyize(mt.title||''):'数牌マッチング・'+rb(CH1MT_NAME[mt.kind]))+'</div>';
   html+='<div class="teach-card mt-guide-card"><img class="tc-iso" src="'+S1IMG+'" alt="イソピィ">'
     +'<div class="tc-bub" id="mt-guide">'+ch1MtGuideMsg(mt.kind,'start')+'</div></div>';
   html+='<div class="mt-prog" id="mt-prog">'+ch1MtProg()+'</div>';
@@ -3878,7 +4108,7 @@ const CH1_LESSONS={
   /* A1-1 牌にさわってみよう(短尺: Teach2+Try4) */
   a1_1(){
     return [
-      ch1Teach('やっほー、ボクはイソピィ！これが麻雀の<span class="term-chip">牌（ハイ）</span>だよ。まずはさわってみよう！',
+      ch1Teach('やっほー、ボクはイソピィ！これが麻雀（マージャン）の<span class="term-chip">牌（ハイ）</span>だよ。まずはさわってみよう！',
         {tlab:'はじめまして',hand:'5m3p7s E',
          act:{label:'牌にさわってみる',result:'カチャッ♪ いい音！これから牌ととってもなかよくなるよ🐣'}}),
       ch1Teach('牌にはいろんな絵や数字がかいてあるね。まずは「おなじ牌」を見つけられたらバッチリ！',
@@ -3946,6 +4176,88 @@ const CH1_LESSONS={
     // 総まとめ: 数牌27種マッチング(萬子1〜9→筒子1〜9→索子1〜9→MIX)。
     // 「数牌を見た瞬間に数字が分かる」の網羅確認(全27種を最低1回、自分でマッチさせる)
     return shuffle(qs).concat([ch1Match('m'),ch1Match('p'),ch1Match('s'),ch1Match('mix')]);
+  },
+  /* ===== 牌の読み方(th_ch1r・任意の基礎教養・2026-09-21) =====
+     34種類の丸暗記にしない: 数牌は「数字の読み(9つ)＋種類の呼び方(3つ)」の組み合わせで読めることを先に見せる。
+     段階: 数字の読み→種類の呼び方→組み合わせ(実際の牌)→3種類まぜる→字牌7種→34種ミックス。
+     語源は「中国語の数字の読み方がもとになっている」まで(歴史・発音の違いには広げない) */
+  /* R1-1 読み方のしくみ */
+  r1_1(){
+    const nums=shuffle([1,2,3,4,5,6,7,8,9]).map(n=>({lt:String(n),n:TILE_READ.num[n]}));
+    return [
+      ch1Teach('牌には、それぞれ<b>よび方</b>があるよ。たとえばこの牌は「イーマン」。どうしてそう読むのか、しくみを見てみよう！',
+        {tlab:'牌のよび方',hands:[{label:'イーマン',hand:'1m'}]}),
+      ch1Teach('麻雀では、<b>中国語の数字の読み方がもとになった</b>よび方をつかうんだ。1から9まで、この9つだよ！',
+        {tlab:'数字の読み方',panel:readNumPanel()}),
+      ch1ReadMatch('read',nums,{title:'数字の読み方',qtype:'読み方マッチング',
+        guide:['数字と読み方をタップしてペアにしよう！','そのちょうし！のこりもペアにしよう！'],
+        okText:'数字の読み方、バッチリ！'}),
+      ch1Teach('つぎは牌の種類。<span class="term-chip">萬子（マンズ）</span>は「マン」、<span class="term-chip">筒子（ピンズ）</span>は「ピン」、<span class="term-chip">索子（ソーズ）</span>は「ソー」。「ズ」をとった形だね！',
+        {tlab:'種類の呼び方',panel:readSuitPanel()}),
+      ch1ReadMatch('read',[{t:'3m',n:'マン'},{t:'7p',n:'ピン'},{t:'4s',n:'ソー'}],{title:'種類の呼び方',qtype:'読み方マッチング',
+        guide:['牌の種類と呼び方をペアにしよう！','あとすこし！'],okText:'マン・ピン・ソー、バッチリ！',size:3}),
+      ch1Teach('<b>数字の読み ＋ 種類の呼び方</b>をくっつけると、牌の読み方になるよ。34個ぜんぶ丸暗記しなくて大丈夫！組み合わせれば読めるんだ。',
+        {tlab:'組み合わせると',panel:readComboPanel(['1m','5p','8s'])}),
+      ch1ReadMcq('3m','サン＋マンで「サンマン」！'),
+      ch1ReadMcq('7p','チー＋ピンで「チーピン」！'),
+      ch1ReadMcq('9s','キュー＋ソーで「キューソー」！'),
+    ];
+  },
+  /* R1-2 数牌を読もう(27種すべて) */
+  r1_2(){
+    const suitItems=su=>readTileItems(shuffle([1,2,3,4,5,6,7,8,9]).map(n=>n+su));
+    const mixTiles=shuffle(['m','p','s']).map(su=>shuffle([1,2,3,4,5,6,7,8,9])[0]+su)
+      .concat(shuffle(TILES34.filter(t=>t.length===2)).slice(0,6));
+    const uniq=[...new Set(mixTiles)].slice(0,5);
+    return [
+      ch1Teach('しくみをつかって、数牌を<b>ぜんぶ</b>読んでみよう！数字の読みに「マン・ピン・ソー」をつけるだけだよ。',
+        {tlab:'数牌を読もう',panel:readComboPanel(['2m','6p','9s'])}),
+      ch1ReadMatch('read',suitItems('m'),{title:'萬子',qtype:'読み方マッチング',
+        guide:['萬子（マンズ）の牌と読み方をペアにしよう！','そのちょうし！のこりもペアにしよう！'],okText:'萬子（マンズ）の読み方、バッチリ！'}),
+      ch1ReadMatch('read',suitItems('p'),{title:'筒子',qtype:'読み方マッチング',
+        guide:['つぎは筒子（ピンズ）！読み方とペアにしよう！','そのちょうし！のこりもペアにしよう！'],okText:'筒子（ピンズ）もバッチリ！'}),
+      ch1ReadMatch('read',suitItems('s'),{title:'索子',qtype:'読み方マッチング',
+        guide:['つぎは索子（ソーズ）！読み方とペアにしよう！','そのちょうし！のこりもペアにしよう！'],okText:'索子（ソーズ）もバッチリ！'}),
+      ch1ReadMatch('read',readTileItems(uniq),{title:'3種類まぜて',qtype:'読み方マッチング',
+        guide:['マンズ・ピンズ・ソーズがまざっているよ。種類をよく見てね！','あとすこし！'],okText:'まぜても読めたね！'}),
+      ch1ReadMcq(shuffle(TILES34.filter(t=>t.length===2))[0],'数字の読み＋種類の呼び方だったね。'),
+      ch1ReadMcq(shuffle(TILES34.filter(t=>t.length===2))[0],'まよったら、数字と種類を1つずつ読んでみよう。'),
+    ];
+  },
+  /* R1-3 字牌の読み方(7種・数牌とは別のしくみ) */
+  r1_3(){
+    const hon=readTileItems(shuffle(['E','S','W','N','B','G','R']));
+    return [
+      ch1Teach('<span class="term-chip">字牌（ジハイ）</span>には数字がないから、組み合わせのしくみはつかわないよ。<b>7つそれぞれに名前</b>があるんだ。',
+        {tlab:'字牌の読み方',panel:readHonorPanel()}),
+      ch1Teach('東・南・西・北は「トン・ナン・シャー・ペー」。白・發・中は「ハク・ハツ・チュン」。この7つだけ覚えればOK！',
+        {tlab:'7つだけ',hands:[{label:'トン・ナン・シャー・ペー',hand:'ESWN'},{label:'ハク・ハツ・チュン',hand:'BGR'}]}),
+      ch1ReadMatch('read',hon,{title:'字牌',qtype:'読み方マッチング',size:4,
+        guide:['字牌と読み方をペアにしよう！','あとすこし！'],okText:'字牌の読み方もバッチリ！'}),
+      ch1ReadMcq(shuffle(['E','S','W','N'])[0],'東・南・西・北＝トン・ナン・シャー・ペー！'),
+      ch1ReadMcq(shuffle(['B','G','R'])[0],'白・發・中＝ハク・ハツ・チュン！'),
+    ];
+  },
+  /* ★R1-4 まとめ: 34種ミックス(毎回すこし変わる=何度でも復習できる) */
+  r1_4(){
+    // 3セット×5枚: 各セットに萬子・筒子・索子・字牌が必ず入る(セット内の牌=読みはすべて別)
+    const used=new Set(), sets=[];
+    for(let k=0;k<3;k++){
+      const pickFrom=arr=>{ const c=shuffle(arr.filter(t=>!used.has(t)))[0]; used.add(c); return c; };
+      const set=[pickFrom(TILES34.filter(t=>t[1]==='m')),pickFrom(TILES34.filter(t=>t[1]==='p')),
+        pickFrom(TILES34.filter(t=>t[1]==='s')),pickFrom(TILES34.filter(t=>t.length===1)),pickFrom(TILES34)];
+      sets.push(shuffle(set));
+    }
+    const q=ch1ReadMatch('read',readTileItems(sets.flat()),{title:'34種ミックス',qtype:'読み方マッチング',
+      guide:['数牌も字牌もぜんぶまぜたよ。読み方とペアにしよう！','そのちょうし！のこりもペアにしよう！'],
+      okText:'34種類、どれでも読めるね！'});
+    const rest=shuffle(TILES34.filter(t=>!used.has(t)));
+    return [
+      ch1Teach('まとめだよ！数牌は<b>数字の読み＋マン・ピン・ソー</b>、字牌は<b>7つの名前</b>。まぜても読めるかな？',{tlab:'まとめ'}),
+      q,
+      ch1ReadMcq(rest[0]),ch1ReadMcq(rest[1]),ch1ReadMcq(rest.find(t=>t.length===1)||rest[2]),
+      ch1Teach('🎉 <b>牌の読み方、マスター！</b>読み方はいつでもここで復習できるよ。つぎは牌で「組」を作ってみよう！',{tlab:'つぎへ！'}),
+    ];
   },
   /* B1-1 ならんだ3枚=シュンツ(体験→名前の順) */
   b1_1(){
@@ -6812,11 +7124,12 @@ const QFORMATS={
     reveal(q,ans,res){},
     feedback(q,res){
       const d=res.details||{};
-      const okText={m:'萬子はバッチリ！',p:'筒子もバッチリ！',s:'索子もバッチリ！',
+      const okText=rubyize(q.mt.okText)||{m:rb('萬子')+'はバッチリ！',p:rb('筒子')+'もバッチリ！',s:rb('索子')+'もバッチリ！',
         mix:'ぜんぶまぜてもカンペキ！数牌はもうおまかせだね！'}[q.mt.kind];
       if(!res.isCorrect&&d.miss>0)
         return {ansText:'ぜんぶペアにできた！でも、まちがえたのが'+d.miss+'回…',
-          expText:'まちがえた牌は、絵と数字をもういちどよく見てみよう！'};
+          expText:q.mt.kind==='read'?'まちがえたところは、数字の読み方と「マン・ピン・ソー」の組み合わせをもういちど見てみよう！'
+            :'まちがえた牌は、絵と数字をもういちどよく見てみよう！'};
       return {ansText:okText, expText:''};
     },
   },
@@ -6826,8 +7139,9 @@ const QFORMATS={
     render(q){
       let html='<div class="q-type">'+(q.tlab||'おぼえよう')+'</div>';
       html+='<div class="teach-card"><img class="tc-iso" src="'+S1IMG+'" alt="イソピィ">'
-        +'<div class="tc-bub">'+q.text+'</div></div>';
+        +'<div class="tc-bub">'+rubyize(q.text)+'</div></div>';
       if(q.seatMap) html+=ch3SeatMapHTML(q.seatMap);  // R28: 席の風の説明は文章だけにしない
+      if(q.panel) html+='<div class="rd-panel">'+q.panel+'</div>';   // 牌の読み方などの図(ヘルパー関数で生成)
       if(q.hands){ for(const h of q.hands){ html+=(h.label?'<div class="tc-lab">'+h.label+'</div>':'')
         +(h.g?ch1HandGrouped(h.hand):handHTML(h.hand)); } }
       else if(q.hand) html+=handHTML(q.hand);
@@ -7938,7 +8252,12 @@ function renderProfile(){
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">'
     +'<span style="font-size:13px;font-weight:800;">🔊 効果音</span>'
     +'<button class="btn '+(S.sound===false?'gray':'')+'" style="width:auto;padding:8px 18px;font-size:13px;" onclick="sndToggle()">'
-    +(S.sound===false?'OFF':'ON')+'</button></div></div>'
+    +(S.sound===false?'OFF':'ON')+'</button></div>'
+    +'<div class="au-row"><div class="au-txt"><span class="au-t">🔄 最新版に更新</span>'
+    +'<span class="au-d">アプリを最新の状態にします（学習の記録はそのまま残ります）</span></div>'
+    +'<button class="btn au-btn" id="app-update-btn" onclick="appUpdate()"'+(APP_UPDATING?' disabled':'')+'>'
+    +(APP_UPDATING?'更新しています…':'最新版に更新')+'</button></div>'
+    +'<div class="au-msg" id="app-update-msg"></div></div>'
     +'<div class="card"><b style="font-size:14px;">🎨 アバター</b>'
     +'<div class="avatars" style="margin-top:10px;">'
     +AVATARS_FREE.map(a=>'<button class="av'+(S.avatar===a?' sel':'')+'" onclick="setAv(\''+a+'\')">'+a+'</button>').join('')
@@ -8028,4 +8347,8 @@ initV3();
 if(S.dev){ const v=validateV3(); console.log('[v3検証]', v.ok?'OK':'NG', v.count+'問', v.errors); }
 renderHUD(); renderPath();      // コース(ロード)を先に構築しておく
 showScreen('home');             // 起動時の初期画面はホーム(今日の状況→ミッション→つづきから)
+if(appUpdateAfterBoot()){       // 「最新版に更新」から起動したときだけ完了を知らせる(再読込はしない)
+  openModal('<h3>🔄 最新版に更新しました</h3><p>学習の記録はそのまま残っています。</p>'
+    +'<button class="btn" onclick="closeModal()">OK</button>');
+}
 </script>
