@@ -2069,11 +2069,33 @@ function loadState(){
 }
 function save(){ try{ localStorage.setItem('jantore-v1',JSON.stringify(S)); }catch(e){} }
 /* ================= SoundManager(共通SE) =================
-   ・Web Audio APIで短い生成音(外部音源/CDN非依存。将来SEファイルへ差し替え可能な1か所集中構造)
+   ・呼び出し側は「意味」だけを指定する: sndPlay('correct') / SoundManager.play('correct')。
+     ファイル名・パス・再生方法はこのブロックの中だけで管理する(呼び出し側にパスを書かない)
+   ・再生の優先順位: ①外部WAV(assets/sounds/<name>.wav)
+                     ②WAVが読めない/デコードできない/再生できない → SND_DEFS(Web Audio生成音)をfallback
+                     ③fallbackも失敗 → 無音のまま処理続行(音の失敗で学習を止めない)
    ・AudioContextは最初のユーザー操作で生成/resume(スマホのautoplay制限対応。勝手に鳴らさない)
-   ・ON/OFFはS.sound(localStorage jantore-v1に保存)。OFFなら全SE停止
-   ・イベント名で呼ぶ: select/correct/wrong/discard/lessonComplete/themeComplete
-     (将来: tsumo/ron/riichi/pon/chi/kan をSND_DEFSに1エントリ足すだけで拡張できる) */
+   ・ON/OFFはS.sound(localStorage jantore-v1に保存)。OFFならWAVもfallbackも鳴らさない
+   ・イベント名: select/correct/wrong/discard/lessonComplete/themeComplete/streak/streakMile
+     (将来: tsumo/ron/riichi/pon/chi/kan を SND_FILES と SND_DEFS に1エントリ足すだけで拡張できる) */
+/* ---- Sound Set(外部WAV)の定義: 役割名 → ファイル名 (1対1) ----
+   [TEMPORARY / NOT FINAL] 現在 assets/sounds/ に置いている8ファイルはすべて実装確認用の仮音源。
+   正式Sound Set完成時は assets/sounds/ の同名WAVを上書きするだけで移行できる
+   (この定義・呼び出し側・Lesson/回答/ストリークのロジックは変更不要)。
+   パスは相対(GitHub Pages / ローカル / 将来のCapacitor等でもそのまま参照できる) */
+const SND_DIR='assets/sounds/';
+const SND_FILES={
+  select:'select.wav',                  // 回答候補などを選んだ瞬間の操作音
+  correct:'correct.wav',                // 通常問題の正解
+  wrong:'wrong.wav',                    // 通常問題の不正解
+  discard:'discard.wav',                // ミニ麻雀で牌を切った
+  lessonComplete:'lessonComplete.wav',  // 1Lesson完了
+  themeComplete:'themeComplete.wav',    // テーマ(小テーマ)制覇=Lesson完了より上位
+  streak:'streak.wav',                  // 通常のストリーク達成演出
+  streakMile:'streakMile.wav',          // 7/14/30/50/100日の節目ストリーク
+  // 将来スロット(今回は未設定): tsumo:'tsumo.wav', ron:'ron.wav', riichi:'riichi.wav',
+  //                             pon:'pon.wav', chi:'chi.wav', kan:'kan.wav'
+};
 let SND_CTX=null;
 function sndCtx(){
   if(S.sound===false) return null;
@@ -2116,13 +2138,91 @@ const SND_DEFS={
   // 将来拡張スロット(麻雀固有SE): 実装時にここへ追加するだけでよい
   tsumo:null, ron:null, riichi:null, pon:null, chi:null, kan:null,
 };
+/* ---- 外部WAVの読み込み・キャッシュ ----
+   ・最初のユーザー操作(pointerdown)で1回だけ8ファイルを先読みし、以後はメモリ上のものを再利用する
+     (毎回ネットワーク取得しない。ページ表示時には何もしない)
+   ・http(s)(GitHub Pages/将来のアプリ内サーバー): fetch→decodeAudioData→AudioBuffer(低遅延)
+   ・fetchできない環境(file://で直接開いた場合など): <audio>要素を1音につき1つだけ作って再利用
+   ・読み込み完了前に鳴らすタイミングが来たら、その回だけ生成音(fallback)を即時に鳴らす(遅れて鳴らさない)
+   状態: SND_BANK[name] = {st:'loading'|'buffer'|'element'|'failed', buf, el} */
+const SND_BANK={};
+let SND_WARMED=false;
+function sndDecode(ctx,ab){
+  return new Promise((res,rej)=>{
+    try{ const p=ctx.decodeAudioData(ab,res,rej); if(p&&p.then) p.then(res,rej); }catch(e){ rej(e); }
+  });
+}
+function sndLoadElement(name,url,ent){
+  try{
+    const el=new Audio(); el.preload='auto';
+    el.addEventListener('canplaythrough',()=>{ if(ent.st==='loading') ent.st='element'; },{once:true});
+    el.addEventListener('error',()=>{ ent.st='failed'; },{once:true});
+    el.src=url; ent.el=el; el.load();
+  }catch(e){ ent.st='failed'; }
+}
+function sndLoad(name){
+  if(!SND_FILES[name]||SND_BANK[name]) return;
+  const ent=SND_BANK[name]={st:'loading',buf:null,el:null};
+  const url=SND_DIR+SND_FILES[name];
+  const ctx=SND_CTX;
+  if(!ctx||typeof fetch!=='function'){ sndLoadElement(name,url,ent); return; }
+  fetch(url).then(r=>{ if(!r.ok) throw new Error('HTTP '+r.status); return r.arrayBuffer(); })
+    .then(ab=>sndDecode(ctx,ab))
+    .then(buf=>{ ent.buf=buf; ent.st='buffer'; })
+    .catch(()=>{ sndLoadElement(name,url,ent); });   // file://等でfetch不可 → <audio>で再挑戦(それも失敗ならfailed)
+}
+function sndWarm(){
+  // 最初のユーザー操作で1回だけ: AudioContextを用意して8音を先読み(Sound OFF中は何もしない)
+  if(SND_WARMED||S.sound===false) return;
+  SND_WARMED=true;
+  try{ sndCtx(); Object.keys(SND_FILES).forEach(sndLoad); }catch(e){}
+  document.removeEventListener('pointerdown',sndWarm,true);
+}
+document.addEventListener('pointerdown',sndWarm,true);
+function sndSynth(name){
+  // fallback: 従来のWeb Audio生成音
+  try{
+    const def=SND_DEFS[name]; if(!def) return false;
+    const ctx=sndCtx(); if(!ctx) return false;
+    def(ctx,ctx.currentTime); return true;
+  }catch(e){ return false; }
+}
+function sndFile(name){
+  // 外部WAVを鳴らせたらtrue。未読込・失敗ならfalse(→呼び出し元がfallback)
+  const ent=SND_BANK[name]; if(!ent) return false;
+  if(ent.st==='buffer'){
+    const ctx=sndCtx(); if(!ctx) return false;
+    const src=ctx.createBufferSource(); src.buffer=ent.buf;
+    src.connect(ctx.destination); src.start(0);          // 使い捨てノード(再生終了で自動解放)
+    return true;
+  }
+  if(ent.st==='element'&&ent.el){
+    const el=ent.el;
+    try{ el.currentTime=0; }catch(e){}
+    const p=el.play();
+    if(p&&p.catch) p.catch(()=>{ ent.st='failed'; sndSynth(name); });   // 再生拒否時はその回もfallback
+    return true;
+  }
+  return false;
+}
 function sndPlay(name){
   try{
-    const def=SND_DEFS[name]; if(!def) return;
-    const ctx=sndCtx(); if(!ctx) return;
-    def(ctx,ctx.currentTime);
+    if(S.sound===false){ SoundManager.last={name,via:'off'}; return; }
+    if(!SND_WARMED) sndWarm();
+    let via='none';
+    if(sndFile(name)) via=SND_BANK[name].st==='buffer'?'wav':'wav-element';
+    else if(sndSynth(name)) via='synth';
+    SoundManager.last={name,via};
   }catch(e){}
 }
+/* 公開API: 呼び出し側は SoundManager.play('意味') または従来どおり sndPlay('意味') */
+const SoundManager={
+  play:n=>sndPlay(n),
+  toggle:()=>sndToggle(),
+  files:SND_FILES, dir:SND_DIR,
+  status:n=>(SND_BANK[n]?SND_BANK[n].st:'unloaded'),
+  last:null,                           // 直近の再生結果 {name, via:'wav'|'wav-element'|'synth'|'off'|'none'}(確認用)
+};
 function sndToggle(){
   S.sound=S.sound===false?true:false; save();
   if(S.sound!==false) sndPlay('select');       // ONにした瞬間だけ試し鳴らし(ユーザー操作起点)
