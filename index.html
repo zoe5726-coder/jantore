@@ -83,6 +83,14 @@ button{font-family:inherit; cursor:pointer; touch-action:manipulation;} /* タ�
 /* ルビ(麻雀用語の読みがな): 本文を押し下げすぎない小さめの読み。子ども向けに見た目を変えない */
 ruby{ruby-position:over; ruby-align:center;}
 rt{font-size:.5em; font-weight:700; line-height:1; letter-spacing:-.04em; opacity:.78; white-space:nowrap;}
+/* R33 ルビ「すべて」: 読める大きさ(最小9px)を保ち、行間を少しだけ広げる(本文より目立たせない) */
+ruby.rbf rt{font-size:max(9px,.5em); opacity:.72; font-weight:600;}
+html.ruby-full .tc-bub, html.ruby-full .q-text, html.ruby-full .fb-exp, html.ruby-full .choice,
+html.ruby-full .wf-msg, html.ruby-full .mg-guide-card .tc-bub{line-height:1.95;}
+html.ruby-full .choice{padding-top:9px; padding-bottom:9px;}
+/* 固定高さの吹き出し(盤面を動かさないため)は、すべてルビの行間ぶんだけ高さを足す */
+html.ruby-full .mg-guide-card .tc-bub{height:128px;}
+html.ruby-full .mt-guide-card .tc-bub{height:86px;}
 .tc-bub{line-height:1.75;}
 .term-chip ruby rt{opacity:.85;}
 .rd-panel{margin:10px auto 4px; max-width:360px;}
@@ -107,6 +115,8 @@ rt{font-size:.5em; font-weight:700; line-height:1; letter-spacing:-.04em; opacit
 .mt-lbl.sel{border-color:var(--jade); background:var(--jade-soft);}
 .mt-lbl.correct{border-color:var(--jade); background:color-mix(in srgb, var(--jade) 18%, #fff);}
 .mt-num.mt-word{font-size:16px; padding:15px 0; max-width:128px;}
+.rb-seg{display:flex; gap:6px; flex:none;}
+.rb-seg .btn{width:auto; min-height:40px; padding:8px 14px; font-size:13px;}
 .au-row{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:12px;
   padding-top:12px; border-top:1px solid var(--line);}
 .au-txt{display:flex; flex-direction:column; min-width:0;}
@@ -2242,8 +2252,10 @@ function themeFrontier(t){ return Math.min(S.roadProgress[t.id]||0,themeLessons(
 const DEFAULT_STATE={schemaVersion:1,xp:0,hearts:5,gems:120,streak:0,lastDay:null,avatar:'🐦',
   owned:{adfree:false,stamina:false,avatars:false},freeze:0,crowns:{},best:{},answered:0,correct:0,
   ratings:{waits:30,nanikiru:30,riichi:30},ratingN:{waits:0,nanikiru:0,riichi:0},seenNk:{},seenRq:{},bestStreak:0,
-  learningDays:{},trainingBest:{},roadProgress:{},daily:null,chests:{},dev:false,sound:true};
+  learningDays:{},trainingBest:{},roadProgress:{},daily:null,chests:{},dev:false,sound:true,
+  rubyMode:'standard'};   // R33: ルビ表示 'standard'(標準)|'full'(すべて)。無い旧データは標準
 let S=loadState();
+if(S.rubyMode!=='full') S.rubyMode='standard';   // R33: 未設定・不正値は標準(保存はユーザーが切り替えたときだけ)
 if((S.bestStreak||0)<S.streak) S.bestStreak=S.streak;  // 旧データ互換: 最長記録を現在値で初期化
 // 旧データ互換: 日別履歴が無い場合、最終学習日だけ'completed'として補完(過去の全履歴は復元不能)
 if(S.lastDay&&!S.learningDays[S.lastDay]) S.learningDays[S.lastDay]='completed';
@@ -2537,6 +2549,156 @@ function rbFirst(text){
   if(typeof text!=='string'||!text) return text;
   const seen=new Set();
   return text.replace(RUBY_WORD_RE,t=>{ if(seen.has(t)) return t; seen.add(t); return rb(t); });
+}
+/* ================= ルビ表示モード(R33) =================
+   標準(standard)= R29〜R32の方針そのまま(上のRUBY_TERMS・rubyize/rbFirst。麻雀用語の初出など)。
+   すべて(full)  = 画面に出る日本語の漢字に、辞書で管理した「正しい読み」のルビを付ける。
+   ・読みは推測しない: RUBY_FULL_SRC(教材で実際に使う語句→読み)だけを使う。辞書にない漢字はそのまま(=監査で検出して辞書に足す)
+   ・語句単位＋最長一致。文脈で読みが変わる漢字は前後の文字ごと登録する(例「の中[なか]」「中[チュン]が」)
+   ・書式: 漢字のまとまり[よみ] と送りがな・前後の文字。例 使[つか]う / の中[なか] / {捨て牌}[すてはい](まとめて1つのルビ)
+   ・DOMのテキストだけを処理(タグ・属性・牌のSVG・既存ruby・[data-noruby]には触れない)。付けたrubyは class="rbf"
+   ・標準へ戻すと rbf を元の文字に戻す(標準のrubyはそのまま)。牌の読み方(イーマン等)は別データ(TILE_READ)で無関係 */
+const RUBY_FULL_SRC=`
+# 一般語(第1〜3章の実教材・UIから抽出。読みは語句単位で確定したものだけ)
+上手[じょうず] 上級[じょうきゅう] の上[うえ] 中級[ちゅうきゅう] 初級[しょきゅう] 応用[おうよう]
+両側[りょうがわ] 両方[りょうほう] かた側[がわ] 側[がわ]
+一度[いちど] 一気[いっき] 一生[いっしょう] 一瞬[いっしゅん] 一色[いっしょく] 一覧[いちらん] 一部[いちぶ] 一歩手前[いっぽてまえ]
+主役[しゅやく] 予告[よこく] 人気[にんき] 今回[こんかい] 今度[こんど] 今日[きょう] 今[いま]
+仕組[しく]み 以上[いじょう] 以外[いがい] 以降[いこう] 任意[にんい] 伝説[でんせつ] 位置[いち]
+何切[なにき]る 何度[なんど] 何種類[なんしゅるい] 候補[こうほ] 出会[であ] 出[で]
+判断[はんだん] 判定中[はんていちゅう] 判定[はんてい] 反対[はんたい] 正反対[せいはんたい] 名前[なまえ] 問題[もんだい]
+基本[きほん] 基本形[きほんけい] 基本的[きほんてき] 場合[ばあい] 場所[ばしょ] 大事[だいじ] 大丈夫[だいじょうぶ] 奇跡[きせき]
+学習[がくしゅう] 学習中[がくしゅうちゅう] 安心[あんしん] 完成[かんせい] 完成形[かんせいけい] 実戦[じっせん] 実戦形[じっせんけい] 実戦編[じっせんへん] 実戦練習[じっせんれんしゅう]
+宣言[せんげん] 役割[やくわり] 復習[ふくしゅう] 必要[ひつよう] 意味[いみ] 意識[いしき] 成立[せいりつ]
+手作[てづく]り 技術[ぎじゅつ] 挑戦[ちょうせん] 数字[すうじ] 漢数字[かんすうじ] 漢字[かんじ] 最初[さいしょ] 最大[さいだい] 最高[さいこう] 最終進化形[さいしゅうしんかけい]
+本物[ほんもの] 条件[じょうけん] 枚数[まいすう] 枚形[まいけい] 案内[あんない] 構造[こうぞう] 横向[よこむ]き
+正解[せいかい] 正解率[せいかいりつ] 決定[けってい] 注意[ちゅうい] 注目[ちゅうもく] 特別[とくべつ] 状況[じょうきょう] 理由[りゆう] 登場[とうじょう]
+目標[もくひょう] 相性[あいしょう] 相手[あいて] 瞬間[しゅんかん] 知識[ちしき] 確認[かくにん] 種類[しゅるい] 緑色[みどりいろ] 練習[れんしゅう]
+自分[じぶん] 自慢[じまん] 表示[ひょうじ] 見事[みごと] 見抜[みぬ] 見本[みほん] 解放[かいほう] 未解放[みかいほう] 達成[たっせい] 選択[せんたく] 関係[かんけい] 防止[ぼうし] 順番[じゅんばん]
+中国語[ちゅうごくご] 丸暗記[まるあんき] 代表的[だいひょうてき] 日連続[にちれんぞく] 総仕上[そうしあ]げ 総決算[そうけっさん] 回目[かいめ]
+実測[じっそく] 検証[けんしょう] 済[ず]み 現在地[げんざいち] 連続[れんぞく] 製品[せいひん] 非表示[ひひょうじ] 動画広告[どうがこうこく] 宣言中[せんげんちゅう] 分[わ]かれ 自己[じこ] 完了[かんりょう] 明日[あした] 続[つづ]け 続[つづ]い 遊[あそ]べ 途中[とちゅう] 制覇[せいは] 次[つぎ] 変動[へんどう] 終了[しゅうりょう]
+# カレンダー(連続学習の記録): 曜日の見出しは1文字(月=げつ)、「9月」のような月名は数字つきで登録(がつ)
+最長[さいちょう] 記録[きろく] 予定[よてい] 週間[しゅうかん] 年[ねん] 月[げつ] 火[か] 水[すい] 木[もく] 金[きん] 土[ど] 1月[がつ] 2月[がつ] 3月[がつ] 4月[がつ] 5月[がつ] 6月[がつ] 7月[がつ] 8月[がつ] 9月[がつ] 10月[がつ] 11月[がつ] 12月[がつ]
+# 麻雀用語で標準辞書にない語(TERMSの表記方針に合わせる)
+小三元[ショウサンゲン] 嶺上開花[リンシャンカイホー] 槍槓[チャンカン] 配牌[はいぱい] 純[じゅん]チャン
+# 文脈で読みが変わる語(前後の文字ごと登録)
+真[ま]ん中[なか] の中[なか] リーチ中[ちゅう] ロック中[ちゅう]
+中[チュン]は 中[チュン]が 中[チュン]の 中[チュン]と 中[チュン]も 中[チュン]を 中[チュン]ア 中[チュン]2 ・中[チュン]
+發[ハツ]中[チュン] 東[トン] 南[ナン] 西[シャー] 北[ペー] 白[ハク] 發[ハツ] 白[しろ]い
+かた方[ほう] 方[かた] 4人[にん] 人[ひと] 1行[ぎょう] (間[あいだ]) (端[はし]) 「暗[あん]」
+入[はい]っ 入[はい]ら 入[はい]る 入[はい]り 入[い]れ ツ入[い]り ン入[い]り
+来[く]れ 来[く]る 来[き]た 来[き]て 来[こ]な
+数[かぞ]え 牌[はい]の数[かず] {捨て牌}[すてはい]の数[かず]
+組[く]み 組[くみ]
+# 1文字の語(教材内のすべての使い方で読みが同じことを確認済み)
+手[て] 形[かたち] 役[やく] 待[ま] 見[み] 覚[おぼ] 読[よ] 作[つく] 使[つか] 選[えら] 呼[よ] 探[さが] 捨[す] 持[も] 打[う] 引[ひ] 置[お] 積[つ]
+配[くば] 開[ひら] 進[すす] 試[ため] 足[た] 言[い] 知[し] 残[のこ] 決[き] 流[なが] 消[き] 満[み] 増[ふ] 合[あ] 取[と] 返[かえ] 前[まえ] 受[う] 当[あ]
+曲[ま] 磨[みが] 育[そだ] 考[かんが] 立[た] 忘[わす] 必[かなら]ず 重[かさ] 長[なが] 楽[たの] 強[つよ] 多[おお] 大[おお] 小[ちい] 少[すく] 新[あたら] 正[ただ]
+同[おな] 終[お] 動[うご] 余[あま] 空[あ] 独[ひと] 学[まな] 通[とお] 切[き] 鳴[な] 向[む]
+秒[びょう] 枚[まい] 種[しゅ] 回[かい] 本[ほん] 個[こ] 章[しょう] 第[だい] 日[にち]
+体[からだ] 先[さき] 全[ぜん] 力[ちから] 卓[たく] 右[みぎ] 左[ひだり] 図[ず] 字[じ] 場[ば] 山[やま] 席[せき] 扉[とびら] 絵[え] 緑[みどり] 棒[ぼう]
+横[よこ] 気[き] 版[ばん] 目[め] 系[けい] 超[ちょう] 音[おと] 鳥[とり] 風[かぜ]
+`;
+const RUBY_KANJI_RE=/[\u3400-\u9FFF\uF900-\uFAFF々〆ヶ]/;
+let RUBY_FULL_MAP=null, RUBY_FULL_MAXLEN=0;
+function rubyFullParse(annot){
+  // 'の中[なか]' → surface 'の中', parts [['の',null],['中','なか']]
+  const parts=[]; let i=0, buf='';
+  while(i<annot.length){
+    const ch=annot[i];
+    if(ch==='['){
+      const j=annot.indexOf(']',i); const rd=annot.slice(i+1,j);
+      if(buf.endsWith('}')&&buf.indexOf('{')>=0){   // {捨て牌}[すてはい]: 送りがなを含む語をまとめて1つのルビに
+        const b=buf.lastIndexOf('{'); if(b>0) parts.push([buf.slice(0,b),null]);
+        parts.push([buf.slice(b+1,-1),rd]); buf=''; i=j+1; continue;
+      }
+      let k=buf.length; while(k>0&&RUBY_KANJI_RE.test(buf[k-1])) k--;
+      if(k>0) parts.push([buf.slice(0,k),null]);
+      parts.push([buf.slice(k),rd]); buf=''; i=j+1; continue;
+    }
+    buf+=ch; i++;
+  }
+  if(buf) parts.push([buf,null]);
+  return {surface:parts.map(p=>p[0]).join(''),parts};
+}
+function rubyFullBuild(){
+  RUBY_FULL_MAP=new Map();
+  // 麻雀用語(標準と同じ読み)を土台に、一般語の辞書で広げる(同じ語は一般語側が後勝ち)
+  Object.keys(RUBY_TERMS).forEach(t=>RUBY_FULL_MAP.set(t,[[t,RUBY_TERMS[t]]]));
+  RUBY_FULL_SRC.split('\n').filter(l=>!/^\s*#/.test(l)).join(' ').split(/\s+/).filter(Boolean).forEach(a=>{ const e=rubyFullParse(a); RUBY_FULL_MAP.set(e.surface,e.parts); });
+  RUBY_FULL_MAXLEN=Math.max(...[...RUBY_FULL_MAP.keys()].map(k=>k.length));
+}
+function rubyModeFull(){ return !!(S&&S.rubyMode==='full'); }
+const RUBY_SKIP_SEL='ruby,rt,rp,svg,script,style,textarea,input,.tile,[data-noruby],#screen-profile,#screen-shop,#screen-training';
+function rubyFullText(str){
+  // 最長一致で語句を探し、[文字列|[base,reading]]の列を返す。変化がなければnull
+  if(!RUBY_FULL_MAP) rubyFullBuild();
+  const out=[]; let buf='', hit=false, i=0;
+  while(i<str.length){
+    let m=null, L=Math.min(RUBY_FULL_MAXLEN,str.length-i);
+    if(RUBY_KANJI_RE.test(str.slice(i,i+L))){
+      for(;L>0;L--){ const e=RUBY_FULL_MAP.get(str.substr(i,L)); if(e){ m=e; break; } }
+    }
+    if(m){ hit=true; for(const [b,r] of m){ if(r){ if(buf){ out.push(buf); buf=''; } out.push([b,r]); } else buf+=b; } i+=L; }
+    else { buf+=str[i]; i++; }
+  }
+  if(buf) out.push(buf);
+  return hit?out:null;
+}
+function rubyFullNode(tn){
+  const seg=rubyFullText(tn.nodeValue); if(!seg) return;
+  const f=document.createDocumentFragment();
+  for(const x of seg){
+    if(typeof x==='string') f.appendChild(document.createTextNode(x));
+    else { const r=document.createElement('ruby'); r.className='rbf'; r.appendChild(document.createTextNode(x[0]));
+      const rt=document.createElement('rt'); rt.textContent=x[1]; r.appendChild(rt); f.appendChild(r); }
+  }
+  // 親がflex/gridのときは、ルビで分かれたテキストが別々の並び要素にならないよう1つのspanにまとめる
+  const pe=tn.parentElement, disp=pe?getComputedStyle(pe).display:'';
+  if(/flex|grid/.test(disp)){ const w=document.createElement('span'); w.className='rbw'; w.appendChild(f); tn.parentNode.replaceChild(w,tn); }
+  else tn.parentNode.replaceChild(f,tn);
+}
+function rubyFullApply(root){
+  if(!rubyModeFull()||!root) return;
+  if(root.nodeType===3){ const pe=root.parentElement; if(pe&&!pe.closest(RUBY_SKIP_SEL)&&RUBY_KANJI_RE.test(root.nodeValue)) rubyFullNode(root); return; }
+  if(root.nodeType!==1||root.closest(RUBY_SKIP_SEL)) return;
+  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>
+    (RUBY_KANJI_RE.test(n.nodeValue)&&n.parentElement&&!n.parentElement.closest(RUBY_SKIP_SEL))?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT});
+  const list=[]; while(w.nextNode()) list.push(w.currentNode);
+  list.forEach(rubyFullNode);
+}
+function rubyFullRemove(root){
+  (root||document).querySelectorAll('ruby.rbf').forEach(r=>{
+    const base=[...r.childNodes].filter(n=>n.nodeType===3).map(n=>n.nodeValue).join('');
+    const p=r.parentNode; r.replaceWith(document.createTextNode(base)); if(p) p.normalize();
+  });
+  (root||document).querySelectorAll('span.rbw').forEach(w=>{ const p=w.parentNode; w.replaceWith(...w.childNodes); if(p) p.normalize(); });
+}
+let RUBY_OBS=null;
+function rubyObserve(){
+  if(RUBY_OBS||typeof MutationObserver==='undefined') return;
+  RUBY_OBS=new MutationObserver(ms=>{
+    if(!rubyModeFull()) return;
+    for(const m of ms){
+      if(m.type==='characterData'){ rubyFullApply(m.target); continue; }
+      m.addedNodes.forEach(n=>{ if(n.isConnected) rubyFullApply(n); });
+    }
+  });
+  RUBY_OBS.observe(document.body,{childList:true,subtree:true,characterData:true});
+}
+function setRubyMode(mode){
+  S.rubyMode=mode==='full'?'full':'standard'; save();
+  document.documentElement.classList.toggle('ruby-full',rubyModeFull());
+  if(rubyModeFull()) rubyFullApply(document.body); else rubyFullRemove(document);
+  if(typeof renderProfile==='function') renderProfile();
+}
+/* 監査用(開発・テスト): ルビが付いていない漢字のテキスト(=辞書にない語)を前後の文字つきで返す */
+function rubyFullUncovered(root){
+  const out=[]; root=root||document.body;
+  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>
+    (RUBY_KANJI_RE.test(n.nodeValue)&&n.parentElement&&!n.parentElement.closest(RUBY_SKIP_SEL)&&n.parentElement.offsetParent!==null)?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT});
+  while(w.nextNode()) out.push(w.currentNode.nodeValue);
+  return out;
 }
 const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE',
   mascotName:'イソピィ',mascotNameEn:'ISOPPY',method:'ZOE'};
@@ -8509,6 +8671,12 @@ function renderProfile(){
     +'<span style="font-size:13px;font-weight:800;">🔊 効果音</span>'
     +'<button class="btn '+(S.sound===false?'gray':'')+'" style="width:auto;padding:8px 18px;font-size:13px;" onclick="sndToggle()">'
     +(S.sound===false?'OFF':'ON')+'</button></div>'
+    +'<div class="au-row"><div class="au-txt"><span class="au-t">あ ルビ</span>'
+    +'<span class="au-d">'+(rubyModeFull()?'漢字にできるだけルビを表示':'麻雀用語やむずかしい漢字に表示')+'</span></div>'
+    +'<div class="rb-seg" role="group" aria-label="ルビ">'
+    +'<button class="btn '+(rubyModeFull()?'gray':'')+'" id="rb-std" aria-pressed="'+!rubyModeFull()+'" onclick="setRubyMode(\'standard\')">標準</button>'
+    +'<button class="btn '+(rubyModeFull()?'':'gray')+'" id="rb-full" aria-pressed="'+rubyModeFull()+'" onclick="setRubyMode(\'full\')">すべて</button>'
+    +'</div></div>'
     +'<div class="au-row"><div class="au-txt"><span class="au-t">🔄 最新版に更新</span>'
     +'<span class="au-d">アプリを最新の状態にします（学習の記録はそのまま残ります）</span></div>'
     +'<button class="btn au-btn" id="app-update-btn" onclick="appUpdate()"'+(APP_UPDATING?' disabled':'')+'>'
@@ -8599,10 +8767,13 @@ function closeModal(){ document.getElementById('modal-bg').classList.remove('sho
 
 /* ================= 起動 ================= */
 if(PROTOTYPE_MODE){ document.getElementById('nav-shop').style.display='none'; }  // ショップタブ非表示(PROTOTYPE_MODE=falseで復帰)
+document.documentElement.classList.toggle('ruby-full',rubyModeFull());   // R33: ルビ「すべて」は描画のたびに自動で付く(MutationObserver)
+rubyObserve();
 initV3();
 if(S.dev){ const v=validateV3(); console.log('[v3検証]', v.ok?'OK':'NG', v.count+'問', v.errors); }
 renderHUD(); renderPath();      // コース(ロード)を先に構築しておく
 showScreen('home');             // 起動時の初期画面はホーム(今日の状況→ミッション→つづきから)
+if(rubyModeFull()) rubyFullApply(document.body);
 if(appUpdateAfterBoot()){       // 「最新版に更新」から起動したときだけ完了を知らせる(再読込はしない)
   openModal('<h3>🔄 最新版に更新しました</h3><p>学習の記録はそのまま残っています。</p>'
     +'<button class="btn" onclick="closeModal()">OK</button>');
