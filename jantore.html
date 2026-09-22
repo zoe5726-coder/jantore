@@ -465,6 +465,8 @@ button.tile.off:active{transform:none;}
   transform:scale(.92); transition:transform .22s cubic-bezier(.34,1.56,.64,1);}
 .streakfx.show .sfx-card{transform:scale(1);}
 .streakfx.milestone .sfx-card{border-color:var(--gold); box-shadow:0 12px 44px rgba(232,169,60,.35);}
+.sfx-top{display:flex; align-items:flex-end; justify-content:center; gap:4px;}
+.uav-sfx{width:60px; height:60px; margin-left:-22px;}
 .sfx-flame{font-size:clamp(44px,13vw,56px); line-height:1; animation:sfxFlame .9s ease-in-out infinite alternate;}
 @keyframes sfxFlame{from{transform:scale(1) rotate(-3deg);} to{transform:scale(1.12) rotate(3deg);}}
 .sfx-num{font-size:clamp(58px,18vw,76px); font-weight:900; line-height:1.02; color:var(--gold-deep);
@@ -795,6 +797,38 @@ button.tile.off:active{transform:none;}
   color:#fff; box-shadow:0 3px 0 var(--jade-deep); white-space:nowrap;}
 .shop-item .buy.owned{background:var(--locked); box-shadow:0 3px 0 var(--line);}
 .avatars{display:flex; gap:10px; flex-wrap:wrap; justify-content:center;}
+/* R34 ユーザーアバター: 正方形の枠に絵を入れ、AVATARS.fit で身長と足元をそろえる(transform-originは足元) */
+.uav{display:inline-block; position:relative; width:64px; height:64px; flex:none; line-height:0;}
+.uav img{width:100%; height:100%; object-fit:contain; transform-origin:50% 100%;
+  transform:translateY(var(--av-dy,0%)) scale(var(--av-s,1)); -webkit-user-drag:none; user-select:none;}
+.uav-nav{width:26px; height:26px;}
+.nav #nav-av{display:inline-flex; align-items:center; justify-content:center; height:26px;}
+.av-me{display:flex; align-items:center; gap:14px;}
+.uav-me{width:112px; height:112px; background:var(--jade-soft); border-radius:24px;}
+.av-me-txt{display:flex; flex-direction:column; align-items:flex-start; gap:2px; min-width:0;}
+.av-me-k{font-size:11.5px; font-weight:800; color:var(--ink-soft);}
+.av-me-n{font-size:18px;}
+.av-me-s{font-size:12px; font-weight:700; color:var(--ink-soft); margin-bottom:6px;}
+.av-pop{animation:avPop .6s ease;}
+@keyframes avPop{0%{transform:scale(1);}35%{transform:scale(1.12);}100%{transform:scale(1);}}
+.avp-prev{display:flex; flex-direction:column; align-items:center; gap:4px; margin:4px 0 10px;}
+.uav-prev{width:128px; height:128px; background:var(--jade-soft); border-radius:28px;}
+.avp-prev-n{font-size:16px;}
+.avp-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+.avp-card{position:relative; display:flex; flex-direction:column; align-items:center; gap:2px; padding:8px 6px 8px;
+  background:var(--card); border:2px solid var(--line); border-radius:16px; cursor:pointer; min-height:44px; font:inherit; color:inherit;}
+.avp-card.sel{border-color:var(--jade); background:var(--jade-soft);}
+.avp-card:focus-visible{outline:3px solid var(--jade); outline-offset:2px;}
+.uav-card{width:84px; height:84px;}
+.avp-name{font-size:13.5px; font-weight:800;}
+.avp-check{position:absolute; top:6px; right:8px; width:22px; height:22px; border-radius:50%; background:var(--jade); color:#fff;
+  font-size:13px; font-weight:900; line-height:22px; text-align:center;}
+.avp-actions{display:flex; flex-direction:column; gap:8px; margin-top:12px;}
+.res-av{position:relative; display:inline-block;}
+.uav-res{width:120px; height:120px; animation:avBounce 1.6s ease-in-out .3s 2;}
+@keyframes avBounce{0%,100%{transform:translateY(0);}30%{transform:translateY(-10px) scale(1.04);}55%{transform:translateY(0);}70%{transform:translateY(-4px);}}
+.res-av-badge{position:absolute; right:-6px; bottom:4px; font-size:30px; line-height:1;}
+@media (prefers-reduced-motion: reduce){ .uav-res,.av-pop{animation:none;} }
 .av{font-size:30px; background:var(--card); border:2px solid var(--line); border-radius:14px; width:58px; height:58px;}
 .av.sel{border-color:var(--jade); background:var(--jade-soft);}
 .av.lock{opacity:.4;}
@@ -862,7 +896,7 @@ button.tile.off:active{transform:none;}
     <button id="nav-course" onclick="openSectionList()"><span class="i">📚</span>コース</button>
     <button id="nav-training" onclick="showScreen('training')"><span class="i">🎯</span>トレーニング</button>
     <button id="nav-shop" onclick="showScreen('shop')"><span class="i">🛍️</span>ショップ</button>
-    <button id="nav-profile" onclick="showScreen('profile')"><span class="i" id="nav-av">🐦</span>マイページ</button>
+    <button id="nav-profile" onclick="showScreen('profile')"><span class="i" id="nav-av"></span>マイページ</button>
   </div>
 </div>
 
@@ -2248,14 +2282,38 @@ function themeLessons(t){                      // 小テーマを平坦化した
 function themeFrontier(t){ return Math.min(S.roadProgress[t.id]||0,themeLessons(t).length); }
 </script>
 <script>
+/* ================= ユーザーアバター(R34) =================
+   イソピィ=公式マスコット(先生・案内役)。アバター=ユーザー本人(自分の分身)。役割を混ぜない。
+   ・定義はここだけ(AVATARS)。保存するのは安定したID(S.avatarId)だけで、画像パスはここで解決する
+   ・画像: assets/avatar/avatar_NN_id.png(添付された正式マスター・無加工) と _384.png(表示用に縮小しただけ)
+   ・fit: 4枚は別々に作られた絵なので、見た目の身長と足元をそろえる表示補正(s=拡大率, dy=下へずらす%)。絵そのものは変えない
+   ・将来(髪型/服/表情/ポーズ/アンロック等)は各エントリにフィールドを足して拡張する(今回は1キャラ1ポーズのみ) */
+const AVATAR_DIR='assets/avatar/';
+const AVATARS={
+  human: {id:'human', no:1,name:'おとこのこ',alt:'おとこのこのアバター',file:'avatar_01_human_384.png',master:'avatar_01_human.png', fit:{s:1.025,dy:0.64}},
+  cat:   {id:'cat',   no:2,name:'ねこ',      alt:'ねこのアバター',      file:'avatar_02_cat_384.png',  master:'avatar_02_cat.png',   fit:{s:1.003,dy:0.57}},
+  bird:  {id:'bird',  no:3,name:'ことり',    alt:'ことりのアバター',    file:'avatar_03_bird_384.png', master:'avatar_03_bird.png',  fit:{s:1.016,dy:1.74}},
+  dragon:{id:'dragon',no:4,name:'ドラゴン',  alt:'ドラゴンのアバター',  file:'avatar_04_dragon_384.png',master:'avatar_04_dragon.png',fit:{s:0.994,dy:-0.41}},
+};
+const AVATAR_DEFAULT='human';
+const AVATAR_ORDER=Object.keys(AVATARS).sort((a,b)=>AVATARS[a].no-AVATARS[b].no);
+function avatarOf(id){ return AVATARS[id]||AVATARS[AVATAR_DEFAULT]; }
+function avatarSrc(id){ return AVATAR_DIR+avatarOf(id).file; }
+function avatarImgHTML(id,cls){
+  const a=avatarOf(id);
+  return '<span class="uav'+(cls?' '+cls:'')+'" data-av="'+a.id+'"><img src="'+AVATAR_DIR+a.file+'" alt="'+a.alt+'" draggable="false"'
+    +' style="--av-s:'+a.fit.s+';--av-dy:'+a.fit.dy+'%"></span>';
+}
 /* ================= 状態管理 ================= */
 const DEFAULT_STATE={schemaVersion:1,xp:0,hearts:5,gems:120,streak:0,lastDay:null,avatar:'🐦',
   owned:{adfree:false,stamina:false,avatars:false},freeze:0,crowns:{},best:{},answered:0,correct:0,
   ratings:{waits:30,nanikiru:30,riichi:30},ratingN:{waits:0,nanikiru:0,riichi:0},seenNk:{},seenRq:{},bestStreak:0,
   learningDays:{},trainingBest:{},roadProgress:{},daily:null,chests:{},dev:false,sound:true,
-  rubyMode:'standard'};   // R33: ルビ表示 'standard'(標準)|'full'(すべて)。無い旧データは標準
+  rubyMode:'standard',   // R33: ルビ表示 'standard'(標準)|'full'(すべて)。無い旧データは標準
+  avatarId:'human'};     // R34: ユーザーアバター(AVATARSのID。画像パスは保存しない)。無い旧データ・不明なIDは human
 let S=loadState();
 if(S.rubyMode!=='full') S.rubyMode='standard';   // R33: 未設定・不正値は標準(保存はユーザーが切り替えたときだけ)
+if(!AVATARS[S.avatarId]) S.avatarId=AVATAR_DEFAULT; // R34: 未設定・不明なIDは human(保存はユーザーが選んだときだけ)
 if((S.bestStreak||0)<S.streak) S.bestStreak=S.streak;  // 旧データ互換: 最長記録を現在値で初期化
 // 旧データ互換: 日別履歴が無い場合、最終学習日だけ'completed'として補完(過去の全履歴は復元不能)
 if(S.lastDay&&!S.learningDays[S.lastDay]) S.learningDays[S.lastDay]='completed';
@@ -2478,7 +2536,8 @@ async function appUpdate(){
     await res.text();
     appUpdateBtn(true,'更新しています…');
     // 外部WAV・manifest・アイコンも取り直す(失敗しても更新は続ける)
-    const extra=Object.keys(SND_FILES).map(k=>SND_DIR+SND_FILES[k]).concat(['manifest.webmanifest']);
+    const extra=Object.keys(SND_FILES).map(k=>SND_DIR+SND_FILES[k]).concat(['manifest.webmanifest'])
+      .concat(AVATAR_ORDER.map(id=>avatarSrc(id)));   // R34: アバター画像も取り直す(古い画像が残らないように)
     await Promise.all(extra.map(u=>fetch(u,{cache:'reload'}).catch(()=>null)));
     // ③ ツモッピィ自身のアプリ用キャッシュだけ削除(他のCache Storageには触れない)
     if(window.caches&&caches.keys){
@@ -2845,7 +2904,7 @@ function renderHUD(){
   document.getElementById('hud-streak').textContent=S.streak;
   document.getElementById('hud-gems').textContent=S.gems;
   document.getElementById('hud-hearts').textContent=staminaFree()?'∞':S.hearts;
-  document.getElementById('nav-av').textContent=S.avatar;
+  document.getElementById('nav-av').innerHTML=avatarImgHTML(S.avatarId,'uav-nav');   // R34: マイページのタブ=自分のアバター
 }
 
 /* ================= レッスン/トレーニングの時間・ランク（第5段階） ================= */
@@ -7793,7 +7852,7 @@ function showStreakFx(opts){
       conf+='<span class="sfx-conf" style="left:'+(6+Math.random()*88)+'%;animation-delay:'+(Math.random()*0.5)+'s;">'+em+'</span>';
     }
     wrap.innerHTML='<div class="sfx-card">'+conf
-      +'<div class="sfx-flame">🔥</div>'
+      +'<div class="sfx-top">'+avatarImgHTML(S.avatarId,'uav-sfx')+'<div class="sfx-flame">🔥</div></div>'   // R34: 自分のアバターも一緒に(イソピィは下でコメント)
       +'<div class="sfx-num">'+days+'</div>'
       +'<div class="sfx-label">日連続！</div>'
       +(mileLabel?'<div class="sfx-badge">🏆 '+mileLabel+'</div>':'')
@@ -8524,7 +8583,7 @@ function renderResult(ctx){
           +L.course.title+'：'+(S.crowns[cid]||0)+'/5</p>');
   }
   area.innerHTML='<div class="center-col" style="gap:12px;">'
-    +'<div class="big-emoji stag"'+stagStyle(0)+'>'+(perfect?'🏆':'🐦')+'</div>'
+    +'<div class="res-av stag"'+stagStyle(0)+'>'+avatarImgHTML(S.avatarId,'uav-res')+(perfect?'<span class="res-av-badge" aria-hidden="true">🏆</span>':'')+'</div>'   // R34: 自分のアバターが「できた！」
     +'<h2 class="stag" style="margin:0;animation-delay:'+MOTION.resultStagger+'ms">'
     +(L.course.training?'トレーニング完了！':(perfect?'パーフェクト！':'レッスンクリア！'))+'</h2>'
     +streakCelebrate
@@ -8655,9 +8714,11 @@ function renderProfile(){
   const el=document.getElementById('profile-body');
   const rate=S.answered?Math.round(S.correct/S.answered*100):0;
   const crownsTotal=Object.values(S.crowns).reduce((a,b)=>a+b,0);
-  el.innerHTML='<div class="card" style="text-align:center;">'
-    +'<div style="font-size:56px;">'+S.avatar+'</div>'
-    +'<b style="font-size:17px;">あなた</b><br><span style="font-size:12px;color:var(--ink-soft);font-weight:700;">ツモッピィ 見習い雀士</span></div>'
+  el.innerHTML='<div class="card av-me" id="av-me">'
+    +avatarImgHTML(S.avatarId,'uav-me')
+    +'<div class="av-me-txt"><span class="av-me-k">あなたのアバター</span><b class="av-me-n">'+avatarOf(S.avatarId).name+'</b>'
+    +'<span class="av-me-s">ツモッピィ 見習い雀士</span>'
+    +'<button class="btn au-btn" id="av-change" onclick="openAvatarPicker()">アバターをかえる</button></div></div>'
     +'<div class="card"><b style="font-size:14px;">📊 記録</b><div class="stat-grid" style="margin-top:10px;">'
     +'<div class="stat-box"><div class="v">'+S.xp+'</div><div class="k">合計XP</div></div>'
     +'<div class="stat-box"><div class="v">'+S.streak+'🔥</div><div class="k">連続学習</div></div>'
@@ -8682,15 +8743,7 @@ function renderProfile(){
     +'<button class="btn au-btn" id="app-update-btn" onclick="appUpdate()"'+(APP_UPDATING?' disabled':'')+'>'
     +(APP_UPDATING?'更新しています…':'最新版に更新')+'</button></div>'
     +'<div class="au-msg" id="app-update-msg"></div></div>'
-    +'<div class="card"><b style="font-size:14px;">🎨 アバター</b>'
-    +'<div class="avatars" style="margin-top:10px;">'
-    +AVATARS_FREE.map(a=>'<button class="av'+(S.avatar===a?' sel':'')+'" onclick="setAv(\''+a+'\')">'+a+'</button>').join('')
-    +(PROTOTYPE_MODE?'':AVATARS_PAID.map(a=>S.owned.avatars
-       ?'<button class="av'+(S.avatar===a?' sel':'')+'" onclick="setAv(\''+a+'\')">'+a+'</button>'
-       :'<button class="av lock" onclick="showScreen(\'shop\')">'+a+'</button>').join(''))
-    +'</div>'
-    +(PROTOTYPE_MODE||S.owned.avatars?'':'<p style="font-size:11px;color:var(--ink-soft);margin:8px 0 0;">🔒はショップの「着せ替えパック」で解放</p>')
-    +'</div>'
+    // R34: 旧「🎨 アバター」(絵文字)は、上の「あなたのアバター」＋選択画面に置きかえた(S.avatarの値は互換のため残す)
     +(devUIVisible()?'<div class="card"><button class="btn gray" onclick="S.dev=!S.dev;save();renderProfile()">🔧 開発モード: '+(S.dev?'ON':'OFF')+'</button>'
     +(S.dev?'<p style="font-size:11px;color:var(--ink-soft);margin:8px 0 0;">回答後にLv/d/S/レーティング変動/seedを表示します</p>':'')
     +(S.dev?('<div style="margin-top:10px;"><b style="font-size:12px;">🀄 TableViewプレビュー（開発用fixture）</b>'
@@ -8701,7 +8754,37 @@ function renderProfile(){
     +'</div>':'')
     +'<div class="card"><button class="btn gray" onclick="resetAll()">データをリセット</button></div>';
 }
-function setAv(a){ S.avatar=a; save(); renderHUD(); renderProfile(); }
+function setAv(a){ S.avatar=a; save(); renderHUD(); renderProfile(); }   // 旧絵文字アバター(互換のため残置・画面からは呼ばない)
+/* R34 アバター選択: カードをえらぶ→大きなプレビューが変わる→「このアバターにする」で保存(誤操作防止と「選んだ感」)。
+   保存するのは S.avatarId だけ(XP・連続学習・進捗・ルビ等の設定には触れない) */
+let AVATAR_PICK=null;
+function openAvatarPicker(){
+  AVATAR_PICK=S.avatarId;
+  openModal('<h3>アバターをえらぼう</h3><div id="avp-body">'+avatarPickerBody()+'</div>');
+}
+function avatarPickerBody(){
+  const cur=avatarOf(AVATAR_PICK);
+  return '<div class="avp-prev">'+avatarImgHTML(cur.id,'uav-prev')+'<b class="avp-prev-n">'+cur.name+'</b></div>'
+    +'<div class="avp-grid" role="group" aria-label="アバターのえらびかた">'
+    +AVATAR_ORDER.map(id=>{ const a=AVATARS[id], on=id===AVATAR_PICK;
+      return '<button class="avp-card'+(on?' sel':'')+'" id="avp-'+id+'" aria-pressed="'+on+'" aria-label="'+a.name+(on?'（えらんでいる）':'')+'" onclick="avatarPick(\''+id+'\')">'
+        +avatarImgHTML(id,'uav-card')+'<span class="avp-name">'+a.name+'</span>'+(on?'<span class="avp-check" aria-hidden="true">✓</span>':'')+'</button>'; }).join('')
+    +'</div>'
+    +'<div class="avp-actions"><button class="btn" id="avp-ok" onclick="avatarConfirm()">'+(AVATAR_PICK===S.avatarId?'このアバターのままにする':'このアバターにする')+'</button>'
+    +'<button class="btn gray" onclick="closeModal()">やめる</button></div>';
+}
+function avatarPick(id){
+  if(!AVATARS[id]) return;
+  AVATAR_PICK=id; sndPlay('select');
+  const b=document.getElementById('avp-body'); if(b) b.innerHTML=avatarPickerBody();
+  const f=document.getElementById('avp-'+id); if(f) f.focus();
+}
+function avatarConfirm(){
+  const changed=AVATARS[AVATAR_PICK]&&AVATAR_PICK!==S.avatarId;
+  if(changed){ S.avatarId=AVATAR_PICK; save(); sndPlay('correct'); }
+  closeModal(); renderHUD(); renderProfile();
+  if(changed){ const me=document.querySelector('#av-me .uav'); if(me){ me.classList.add('av-pop'); setTimeout(()=>me.classList.remove('av-pop'),700); } }
+}
 function resetAll(){
   openModal('<h3>データをリセット？</h3><p>XP・クラウン・購入状況（モック）がすべて消えます。</p>'
   +'<div style="display:flex;flex-direction:column;gap:10px;">'
