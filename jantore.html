@@ -815,6 +815,7 @@ button.tile.off:active{transform:none;}
 .uav-prev{width:128px; height:128px; background:var(--jade-soft); border-radius:28px;}
 .avp-prev-n{font-size:16px;}
 .avp-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+.avp-grid>.avp-card:last-child:nth-child(odd){grid-column:1 / -1; width:calc(50% - 5px); justify-self:center;}   /* 奇数個(5体)のときは最後の1枚を中央に。カードの大きさは他と同じ */
 .avp-card{position:relative; display:flex; flex-direction:column; align-items:center; gap:2px; padding:8px 6px 8px;
   background:var(--card); border:2px solid var(--line); border-radius:16px; cursor:pointer; min-height:44px; font:inherit; color:inherit;}
 .avp-card.sel{border-color:var(--jade); background:var(--jade-soft);}
@@ -840,7 +841,7 @@ button.tile.off:active{transform:none;}
 /* ---------- modal ---------- */
 .modal-bg{position:fixed; inset:0; background:var(--overlay); z-index:50; display:none; align-items:flex-end; justify-content:center;}
 .modal-bg.show{display:flex;}
-.modal{background:var(--card); width:100%; max-width:430px; border-radius:22px 22px 0 0; padding:22px 20px calc(22px + env(safe-area-inset-bottom));}
+.modal{background:var(--card); width:100%; max-width:430px; border-radius:22px 22px 0 0; padding:22px 20px calc(22px + env(safe-area-inset-bottom)); max-height:92vh; overflow-y:auto; -webkit-overflow-scrolling:touch;}   /* 画面が低いときも中身が隠れないように(R34追加対応) */
 .modal h3{margin:0 0 6px; font-size:18px;}
 .modal p{margin:0 0 14px; font-size:13.5px; color:var(--ink-soft); line-height:1.6; font-family:'Noto Sans JP',sans-serif;}
 
@@ -2294,9 +2295,10 @@ const AVATARS={
   cat:   {id:'cat',   no:2,name:'ねこ',      alt:'ねこのアバター',      file:'avatar_02_cat_384.png',  master:'avatar_02_cat.png',   fit:{s:1.003,dy:0.57}},
   bird:  {id:'bird',  no:3,name:'ことり',    alt:'ことりのアバター',    file:'avatar_03_bird_384.png', master:'avatar_03_bird.png',  fit:{s:1.016,dy:1.74}},
   dragon:{id:'dragon',no:4,name:'ドラゴン',  alt:'ドラゴンのアバター',  file:'avatar_04_dragon_384.png',master:'avatar_04_dragon.png',fit:{s:0.994,dy:-0.41}},
+  girl:  {id:'girl',  no:5,name:'おんなのこ',alt:'おんなのこのアバター',file:'avatar_05_girl_384.png',  master:'avatar_05_girl.png',  fit:{s:0.983,dy:-0.87}},   // R34追加(no=画像ファイルの番号。並び順はAVATAR_ORDER)
 };
 const AVATAR_DEFAULT='human';
-const AVATAR_ORDER=Object.keys(AVATARS).sort((a,b)=>AVATARS[a].no-AVATARS[b].no);
+const AVATAR_ORDER=['human','girl','cat','bird','dragon'];   // 画面に並べる順(ファイル番号ではなくこの順で表示する)
 function avatarOf(id){ return AVATARS[id]||AVATARS[AVATAR_DEFAULT]; }
 function avatarSrc(id){ return AVATAR_DIR+avatarOf(id).file; }
 function avatarImgHTML(id,cls){
