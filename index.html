@@ -623,6 +623,9 @@ button.tile.off:active{transform:none;}
 .mt-t .tile,.mt-t .mt-lbl,.mt-num{transition:opacity .28s ease, transform .28s ease;}   /* 浮いた位置からゆっくり戻しながら薄くする */
 /* 正解済みペア: Duolingo式に「その場に薄く残す」。位置・サイズは不変・操作不可。
    完全に消さない(visibility:hidden/display:none禁止)。牌はうっすら読める濃さ */
+/* 正解が決まった瞬間に、そのペアの2要素だけを操作不能にする(見た目は変えない)。
+   薄くなるのは演出の最後(mt-done)のままなので手ごたえは不変。ほかの牌は待たずに押せる */
+.mt-solved{pointer-events:none;}
 .mt-done{opacity:.36; pointer-events:none;}   /* 正解済み: 薄く残す(消しきらない) */
 .mt-num.mt-done{border-color:var(--line); background:var(--card); box-shadow:0 3px 0 var(--line);}
 .mt-prog{text-align:center; font-size:12.5px; font-weight:800; color:var(--ink-soft);
@@ -2903,7 +2906,7 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
 const APP_VER='0.35.0';
-const BUILD_ID='20260923-07';
+const BUILD_ID='20260923-08';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -4399,8 +4402,12 @@ function ch1MatchInit(q){
     if(a.length>1&&a.every((n,i)=>n===set[i].n)) a=a.slice(1).concat([a[0]]);
     return a;
   });
+  // lock はセット完了の演出中だけ立てる全体ロック(途中の正解では立てない)。
+  // busyT/busyN は「不正解になった2要素だけ」を短時間受け付けないためのペア単位ロック。
+  // solved は正解にしたペアの数(累計)。advanced はセット完了処理を1回だけ走らせるための旗
   L.mt={kind, sets, nums, si:0, selT:null, selN:null, gotT:sets[0].map(()=>false),
-        gotN:sets[0].map(()=>false), miss:0, finished:false, lock:false,
+        gotN:sets[0].map(()=>false), miss:0, solved:0, finished:false, lock:false,
+        busyT:{}, busyN:{}, advanced:false,
         title:q.mt.title||null, qtype:q.mt.qtype||null, guide:q.mt.guide||null, word:!!q.mt.word};
 }
 function ch1MtGuideMsg(kind,phase){
@@ -4439,13 +4446,13 @@ function ch1MatchHTML(q){
 }
 function ch1MtTile(i){ const b=document.getElementById('mtt-'+i); return b?b.firstElementChild:null; }
 function ch1MtPickT(i){
-  const mt=L.mt; if(!L||L.checked||!mt||mt.lock||mt.finished||mt.gotT[i]) return;
+  const mt=L.mt; if(!L||L.checked||!mt||mt.lock||mt.finished||mt.gotT[i]||mt.busyT[i]) return;
   mt.selT=(mt.selT===i?null:i);
   mt.sets[mt.si].forEach((x,k)=>{ const t=ch1MtTile(k); if(t) t.classList.toggle('sel',mt.selT===k); });
   ch1MtResolve();
 }
 function ch1MtPickN(j){
-  const mt=L.mt; if(!L||L.checked||!mt||mt.lock||mt.finished||mt.gotN[j]) return;
+  const mt=L.mt; if(!L||L.checked||!mt||mt.lock||mt.finished||mt.gotN[j]||mt.busyN[j]) return;
   mt.selN=(mt.selN===j?null:j);
   mt.nums[mt.si].forEach((x,k)=>{ const e=document.getElementById('mtn-'+k); if(e) e.classList.toggle('sel',mt.selN===k); });
   ch1MtResolve();
@@ -4456,7 +4463,10 @@ function ch1MtPickN(j){
    ①correct音(SoundManagerのcorrect。音OFFなら鳴らさない・新しい音は作らない)
    ②2枚同時にポンッと弾んで少し浮く ③スッと薄くなる ④正解済みの薄い状態で残す(消さない・押せない)
    さいごのペアでも、この演出が終わってから「せいかい！」へ進む(演出を飛ばさない)。
-   待ち方: animationend/transitionendを使い、イベントが来ない環境でも止まらないようにタイマーで必ず後追いする */
+   待ち方: animationend/transitionendを使い、イベントが来ない環境でも止まらないようにタイマーで必ず後追いする。
+   【演出と入力受付の分離(R37)】正解が決まった瞬間に state を solved にし、そのペアの2要素だけを操作不能にする。
+   演出の終わり(animationend/transitionend)は「見た目の後始末」しか行わず、選択状態やほかのペアには触らない。
+   そのため正解演出が走っている最中でも、次の未解決ペアをすぐタップできる(演出は複数同時に走ってよい) */
 function mtReduceMotion(){
   try{ return !!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches); }catch(e){ return false; }
 }
@@ -4471,6 +4481,11 @@ function mtPairCorrectFx(tEl,nEl,onEnd){
   const reduce=mtReduceMotion();
   const tile=tEl&&tEl.firstElementChild;
   sndPlay('correct');                                   // 音OFFならsndPlay側で鳴らさない
+  // この2要素だけを即座に操作不能に(演出の終わりを待たない)。薄くする(mt-done)のは演出の最後のまま。
+  // ここで disabled は付けない: ブラウザ既定の無効色(グレー)が牌の色に乗り、演出の見た目が変わってしまうため。
+  // pointer-events:none でタップ自体が届かなくなり、state側(gotT/gotN)でも二重判定を止めている
+  if(tEl){ tEl.classList.add('mt-solved'); tEl.setAttribute('aria-disabled','true'); }
+  if(nEl){ nEl.classList.add('mt-solved'); nEl.setAttribute('aria-disabled','true'); }
   if(tile){ tile.classList.remove('sel'); tile.classList.add('correct'); }
   if(nEl){ nEl.classList.remove('sel'); nEl.classList.add('ok'); }
   const popMs=reduce?120:340, fadeMs=reduce?0:300;
@@ -4478,9 +4493,9 @@ function mtPairCorrectFx(tEl,nEl,onEnd){
   mtOnceAfter(reduce?null:(tile||nEl),'animationend',popMs,()=>{
     // 正解済み(薄い)へ。位置・サイズは変えない=のこりの牌は動かない
     if(tEl){ if(tile){ tile.classList.remove('correct','mt-pop'); }
-      tEl.classList.add('mt-done'); tEl.disabled=true; tEl.setAttribute('aria-disabled','true'); }
+      tEl.classList.add('mt-done'); tEl.disabled=true; }
     if(nEl){ nEl.classList.remove('ok','mt-pop');
-      nEl.classList.add('mt-done'); nEl.disabled=true; nEl.setAttribute('aria-disabled','true'); }
+      nEl.classList.add('mt-done'); nEl.disabled=true; }
     mtOnceAfter(reduce?null:(nEl||tEl),'transitionend',fadeMs,()=>onEnd&&onEnd());
   });
 }
@@ -4490,27 +4505,33 @@ function ch1MtResolve(){
   const ti=mt.selT, nj=mt.selN;
   const tile=mt.sets[mt.si][ti], num=mt.nums[mt.si][nj];
   const tEl=document.getElementById('mtt-'+ti), nEl=document.getElementById('mtn-'+nj);
-  mt.selT=null; mt.selN=null; mt.lock=true;
+  const si=mt.si;
+  mt.selT=null; mt.selN=null;              // 選択はここで空に=次のペアの1個目をすぐ選べる
   if(tile.n===num){
-    mt.gotT[ti]=true; mt.gotN[nj]=true;
+    // 【状態は即確定】演出の終わりを待たない。solved・正解数・正解音はこの1回だけ
+    mt.gotT[ti]=true; mt.gotN[nj]=true; mt.solved++;
+    const setDone=mt.gotT.every(x=>x);     // このペアでセットが揃ったか(揃えた本人だけが次へ進む)
+    if(setDone) mt.lock=true;              // セット完了の演出中だけ全体を止める(この時点で押せる牌はもう無い)
     mtPairCorrectFx(tEl,nEl,()=>{
-      if(mt.gotT.every(x=>x)){
-        // セット完了: 演出が終わってから次へ(さいごのペアでも演出を最後まで見せる)
-        setTimeout(()=>ch1MtNextSet(),220);
-      }else{
-        mt.lock=false;
+      // 演出の終わり=見た目の後始末だけ。ここで選択状態や他のペアには触らない
+      // (遅れて届いた古いペアのanimationendが、いま選んでいる牌を消さないようにするため)
+      if(setDone&&!mt.advanced&&mt.si===si){
+        mt.advanced=true;
+        setTimeout(()=>ch1MtNextSet(),220);   // さいごのペアでも演出を最後まで見せてから次へ
       }
     });
   }else{
-    // 不正解: ペアは消さない・答えは教えない・もう一度(採点対象としてmiss記録)
+    // 不正解: ペアは消さない・答えは教えない・もう一度(採点対象としてmiss記録)。
+    // 止めるのは「違った」と分かる短い間、その2要素だけ(画面全体は止めない)
     mt.miss++;
+    mt.busyT[ti]=true; mt.busyN[nj]=true;
     if(tEl&&tEl.firstElementChild){ tEl.firstElementChild.classList.remove('sel'); tEl.firstElementChild.classList.add('ch1-shake'); }
     if(nEl){ nEl.classList.remove('sel'); nEl.classList.add('ch1-shake'); }
     setTimeout(()=>{
       const t2=document.getElementById('mtt-'+ti), n2=document.getElementById('mtn-'+nj);
       if(t2&&t2.firstElementChild) t2.firstElementChild.classList.remove('ch1-shake');
       if(n2) n2.classList.remove('ch1-shake');
-      mt.lock=false;
+      if(mt.si===si){ delete mt.busyT[ti]; delete mt.busyN[nj]; }
     },420);
   }
 }
@@ -4521,6 +4542,7 @@ function ch1MtNextSet(){
     mt.si++;
     mt.gotT=mt.sets[mt.si].map(()=>false);
     mt.gotN=mt.sets[mt.si].map(()=>false);
+    mt.selT=null; mt.selN=null; mt.busyT={}; mt.busyN={}; mt.advanced=false;
     const a=document.getElementById('mt-area'); if(a) a.innerHTML=ch1MatchSetHTML();
     const p2=document.getElementById('mt-prog'); if(p2) p2.innerHTML=ch1MtProg();
     const g=document.getElementById('mt-guide'); if(g) g.innerHTML=ch1MtGuideMsg(mt.kind,'mid');
