@@ -89,7 +89,7 @@ rt{font-size:.5em; font-weight:700; line-height:1.05; letter-spacing:-.04em; opa
    そこでWebKitのときだけ、読みがなを本文へ1.5px近づける。position:relativeは「描く位置」だけをずらすので、
    行の高さ・折り返し・吹き出しやボタンの高さは変わらない(レイアウトは動かさない) */
 @supports (-webkit-hyphens:none){
-  rt{position:relative; top:1.5px;}
+  rt{position:relative; top:4px;}   /* 実機スクショと目標画像を文字の大きさ(em)で正規化して比較し、0.28em≒4px必要だった */
 }
 /* R33 ルビ「すべて」: 読める大きさ(最小9px)を保つ(本文より目立たせない) */
 ruby.rbf rt{font-size:max(9px,.5em); opacity:.72; font-weight:600;}
@@ -2851,7 +2851,7 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
 const APP_VER='0.34.2';
-const BUILD_ID='20260923-01';
+const BUILD_ID='20260923-02';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
