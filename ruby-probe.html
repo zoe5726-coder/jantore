@@ -17,21 +17,21 @@ img{max-width:100%;}
 :root{
   --ink:#1d2b27; --ink-soft:#5d726b; --line:#d3e0da; --card:#ffffff;
   --ground:#f2f6f3; --jade:#1f8a5f; --jade-soft:#e3f6ec; --jade-deep:#0f6a46;
-  --warn:#b2451f; --ok:#1f7a4d; --code:#eef3f0;
+  --warn:#b2451f; --ok:#1f7a4d; --code:#eef3f0; --pick:#fff6d9; --pick-line:#e0b23a;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     color-scheme: dark;
     --ink:#e6efea; --ink-soft:#9db0a8; --line:#2e4038; --card:#16201c;
     --ground:#0e1613; --jade:#4fc78f; --jade-soft:#17362a; --jade-deep:#8fe3ba;
-    --warn:#f0906a; --ok:#6fd7a4; --code:#16211c;
+    --warn:#f0906a; --ok:#6fd7a4; --code:#16211c; --pick:#2b2616; --pick-line:#a8862c;
   }
 }
 :root[data-theme="dark"]{
   color-scheme: dark;
   --ink:#e6efea; --ink-soft:#9db0a8; --line:#2e4038; --card:#16201c;
   --ground:#0e1613; --jade:#4fc78f; --jade-soft:#17362a; --jade-deep:#8fe3ba;
-  --warn:#f0906a; --ok:#6fd7a4; --code:#16211c;
+  --warn:#f0906a; --ok:#6fd7a4; --code:#16211c; --pick:#2b2616; --pick-line:#a8862c;
 }
 body{
   background:var(--ground); color:var(--ink);
@@ -42,15 +42,15 @@ body{
 h1{font-size:19px; margin:0; letter-spacing:.02em;}
 .sub{margin:0; font-size:13px; color:var(--ink-soft); line-height:1.7;}
 .panel{background:var(--card); border:1.5px solid var(--line); border-radius:12px; padding:14px;}
-.panel h2{font-size:13px; margin:0 0 10px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft);}
-.verdict{display:flex; flex-direction:column; gap:10px;}
-.vrow{display:flex; gap:10px; align-items:baseline; flex-wrap:wrap;}
+.panel h2{font-size:13px; margin:0 0 10px; letter-spacing:.08em; color:var(--ink-soft);}
+.vrow{display:flex; gap:10px; align-items:baseline; flex-wrap:wrap; margin-bottom:8px;}
 .vrow .k{font-size:13px; color:var(--ink-soft); min-width:9.5em;}
 .vrow .a{font-size:15px; font-weight:800;}
 .yes{color:var(--ok);} .no{color:var(--warn);}
 .env{font-size:12px; color:var(--ink-soft); line-height:1.8; word-break:break-all;}
+.note{font-size:12.5px; color:var(--ink-soft); line-height:1.8;}
 
-/* ===== 計測サンプル: アプリ(jantore.html)のルビCSSをそのまま再現 ===== */
+/* ===== アプリ(jantore.html)のルビCSSをそのまま再現 ===== */
 .stage ruby{ruby-position:over; -webkit-ruby-position:before; ruby-align:center; line-height:1.15;}
 .stage rt{font-size:.5em; font-weight:700; line-height:1.05; letter-spacing:-.04em; opacity:.78; white-space:nowrap; text-align:center;}
 .bub{background:var(--card); border:2px solid var(--line); border-radius:14px;
@@ -58,54 +58,55 @@ h1{font-size:19px; margin:0; letter-spacing:.02em;}
 .chip{display:inline-block; padding:1px 8px; border-radius:999px;
       background:var(--jade-soft); color:var(--jade-deep); font-weight:900;}
 
-/* --- 検証する手法 --- */
-@supports (-webkit-hyphens:none){ .mS rt{position:relative; top:4px;} }   /* 現行アプリと同じ仕組み */
-.mR rt{position:relative; top:8px;}        /* @supportsを通さない無条件 relative */
-.mM rt{margin-bottom:-4px;}                /* 負マージン */
-.mT rt{transform:translateY(4px);}         /* transform */
-.mV rt{vertical-align:-4px;}               /* vertical-align */
-.mL ruby{line-height:1;}                   /* ruby自身のline-heightを詰める */
-.mP{line-height:1.45;}                     /* 親のline-heightを下げる(ハーフレディング仮説) */
+/* --- 微調整ラダー: 効くと確認できた transform だけを使う --- */
+.t0 rt{transform:none;}
+.t2 rt{transform:translateY(2px);}
+.t3 rt{transform:translateY(3px);}
+.t4 rt{transform:translateY(4px);}
+.t5 rt{transform:translateY(5px);}
+.t6 rt{transform:translateY(6px);}
 
-.case{display:flex; flex-direction:column; gap:7px;}
-.case + .case{margin-top:16px; padding-top:16px; border-top:1px solid var(--line);}
-.case .lbl{display:flex; justify-content:space-between; align-items:baseline; gap:10px; font-size:12px;}
-.case .lbl b{font-size:13px;}
-.case .lbl span{color:var(--ink-soft); font-variant-numeric:tabular-nums; white-space:nowrap;}
+.step{display:flex; flex-direction:column; gap:6px;}
+.step + .step{margin-top:14px; padding-top:14px; border-top:1px solid var(--line);}
+.step .lbl{display:flex; justify-content:space-between; align-items:baseline; gap:10px; font-size:13px; font-weight:800;}
+.step .lbl span{font-weight:400; font-size:12px; color:var(--ink-soft); font-variant-numeric:tabular-nums;}
+.step.now .bub{background:var(--pick); border-color:var(--pick-line);}
+.step.now .lbl:after{content:'← いま入れた値'; font-size:11px; color:var(--pick-line); font-weight:800;}
+.big{font-size:22px; line-height:2.0;}
 .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;}
 pre{background:var(--code); border:1px solid var(--line); border-radius:10px; padding:12px;
     font-size:11.5px; line-height:1.6; overflow-x:auto; margin:0; color:var(--ink);}
 button{font-family:inherit; font-size:14px; font-weight:800; color:#fff; background:var(--jade);
        border:0; border-radius:10px; padding:10px 16px; cursor:pointer;}
 button:focus-visible{outline:3px solid var(--jade-deep); outline-offset:2px;}
-.note{font-size:12.5px; color:var(--ink-soft); line-height:1.8;}
 </style>
 
 <div class="wrap">
   <header>
     <h1>ルビ位置プローブ</h1>
-    <p class="sub">iPhone Safari で、ルビ（読みがな）を本文へ近づける手法のうち<strong>どれが実際に効くか</strong>を測るための検査ページです。このページを iPhone で開いて、下の結果をそのまま送ってください。</p>
+    <p class="sub">前回の実測で原因は確定しました。<strong>WebKitは <span class="mono">rt</span> への <span class="mono">position:relative</span> を無視する</strong>ため、これまでの <span class="mono">top:4px</span> は実機で1pxも動いていませんでした。代わりに <span class="mono">transform:translateY</span> は効きます（実測4.0px）。このページは、その<strong>移動量を目で確かめる</strong>ためのものです。</p>
   </header>
 
   <section class="panel">
-    <h2>判定</h2>
-    <div class="verdict" id="verdict"></div>
+    <h2>このiPhoneでの判定</h2>
+    <div id="verdict"></div>
   </section>
 
-  <section class="panel">
-    <h2>環境</h2>
-    <div class="env" id="env"></div>
+  <section class="panel stage">
+    <h2>移動量の見くらべ（下へ行くほどルビが本文に近づきます）</h2>
+    <p class="note" style="margin:0 0 14px">目標スクリーンショットと見くらべて、<strong>「牌（はい）」「麻雀（マージャン）」が1つの文字のかたまりに見える</strong>のはどれかを教えてください。黄色が今アプリに入れた値です。</p>
+    <div id="ladder"></div>
   </section>
 
-  <section class="panel stage" id="stage">
-    <h2>手法ごとの見え方と実測値</h2>
-    <p class="note" style="margin:0 0 14px">「すき間」は <span class="mono">本文の文字の上端 − ルビの下端</span>。数字が小さいほどルビが本文に近い。Chromium では 0 前後です。</p>
-    <div id="cases"></div>
+  <section class="panel stage">
+    <h2>大きい字でも確認</h2>
+    <div class="bub big t4" id="bigbox">これは<ruby>麻雀<rt>マージャン</rt></ruby>の<span class="chip"><ruby>牌<rt>はい</rt></ruby></span>です。</div>
+    <p class="note" style="margin:10px 0 0">4px のまま、文字だけ大きくした場合。字が大きいと相対的にルビが離れて見えるなら教えてください（その場合は px ではなく文字サイズ連動にします）。</p>
   </section>
 
   <section class="panel">
     <h2>結果データ</h2>
-    <p class="note" style="margin:0 0 10px">このテキストをコピーして送ってください（スクリーンショットでも可）。</p>
+    <p class="note" style="margin:0 0 10px">選んだ番号とあわせて、このテキストを送ってください。</p>
     <pre id="json">計測中…</pre>
     <div style="margin-top:12px"><button id="copy" type="button">結果をコピー</button></div>
   </section>
@@ -113,36 +114,31 @@ button:focus-visible{outline:3px solid var(--jade-deep); outline-offset:2px;}
 
 <script>
 (function(){
-  var CASES = [
-    {id:'m0', cls:'',   name:'① 補正なし（素のルビ）',          desc:'基準'},
-    {id:'mS', cls:'mS', name:'② 現行アプリと同じ',              desc:'@supports (-webkit-hyphens:none) → rt{position:relative; top:4px}'},
-    {id:'mR', cls:'mR', name:'③ 無条件 position:relative 8px',  desc:'@supports を通さずに rt{position:relative; top:8px}'},
-    {id:'mM', cls:'mM', name:'④ 負マージン',                    desc:'rt{margin-bottom:-4px}'},
-    {id:'mT', cls:'mT', name:'⑤ transform',                     desc:'rt{transform:translateY(4px)}'},
-    {id:'mV', cls:'mV', name:'⑥ vertical-align',                desc:'rt{vertical-align:-4px}'},
-    {id:'mL', cls:'mL', name:'⑦ ruby の line-height を 1 に',   desc:'ruby{line-height:1}'},
-    {id:'mP', cls:'mP', name:'⑧ 親の line-height を 1.45 に',   desc:'吹き出し側の行間を下げる'}
+  var STEPS = [
+    {id:'t0', px:0, name:'① 0px（補正なし）'},
+    {id:'t2', px:2, name:'② 2px'},
+    {id:'t3', px:3, name:'③ 3px'},
+    {id:'t4', px:4, name:'④ 4px', now:true},
+    {id:'t5', px:5, name:'⑤ 5px'},
+    {id:'t6', px:6, name:'⑥ 6px'}
   ];
 
   var SAMPLE =
     'これから<ruby>麻雀<rt>マージャン</rt></ruby>の'
     + '<span class="chip"><ruby>牌<rt>はい</rt></ruby></span>'
     + 'にさわってみるよ。ながい<ruby>文章<rt>ぶんしょう</rt></ruby>でも'
-    + '<ruby>確<rt>たし</rt></ruby>かめられるように、ここで<ruby>行<rt>ぎょう</rt></ruby>を'
+    + '<ruby>確<rt>たし</rt></ruby>かめられるように<ruby>行<rt>ぎょう</rt></ruby>を'
     + '<ruby>折<rt>お</rt></ruby>りかえします。';
 
-  var host = document.getElementById('cases');
-  CASES.forEach(function(c){
+  var host = document.getElementById('ladder');
+  STEPS.forEach(function(s){
     var d = document.createElement('div');
-    d.className = 'case';
-    d.innerHTML =
-      '<div class="lbl"><b>' + c.name + '</b><span id="g-' + c.id + '">–</span></div>'
-      + '<div class="note mono" style="font-size:11px">' + c.desc + '</div>'
-      + '<div class="bub ' + c.cls + '" id="b-' + c.id + '">' + SAMPLE + '</div>';
+    d.className = 'step' + (s.now ? ' now' : '');
+    d.innerHTML = '<div class="lbl">' + s.name + '<span id="g-' + s.id + '">–</span></div>'
+      + '<div class="bub ' + s.id + '" id="b-' + s.id + '">' + SAMPLE + '</div>';
     host.appendChild(d);
   });
 
-  // ベース文字を span で包む（上端を測るため）
   function wrapBases(root){
     root.querySelectorAll('ruby').forEach(function(r){
       Array.prototype.slice.call(r.childNodes).forEach(function(n){
@@ -155,81 +151,58 @@ button:focus-visible{outline:3px solid var(--jade-deep); outline-offset:2px;}
       });
     });
   }
+  function round(n){ return Math.round(n * 100) / 100; }
 
-  function measure(id){
-    var box = document.getElementById('b-' + id);
+  function measure(boxId){
+    var box = document.getElementById(boxId);
     wrapBases(box);
-    var vals = [];
+    var gaps = [], rtH = null, rtFS = null;
     box.querySelectorAll('ruby').forEach(function(r){
       var rt = r.querySelector('rt'), bs = r.querySelector('.bs');
       if(!rt || !bs) return;
       var a = rt.getBoundingClientRect(), b = bs.getBoundingClientRect();
       if(!a.width || !b.width) return;
-      vals.push(b.top - a.bottom);
+      gaps.push(b.top - a.bottom);
+      if(rtH === null){ rtH = a.height; rtFS = parseFloat(getComputedStyle(rt).fontSize); }
     });
-    if(!vals.length) return null;
-    vals.sort(function(x, y){ return x - y; });
-    return vals[Math.floor(vals.length / 2)];   // 中央値
+    if(!gaps.length) return null;
+    gaps.sort(function(x, y){ return x - y; });
+    return { gap: round(gaps[Math.floor(gaps.length / 2)]), rtH: round(rtH), rtFS: round(rtFS) };
   }
 
-  function round(n){ return Math.round(n * 100) / 100; }
-
-  var res = {};
-  CASES.forEach(function(c){
-    var g = measure(c.id);
-    res[c.id] = (g === null) ? null : round(g);
-    var el = document.getElementById('g-' + c.id);
-    el.textContent = (g === null) ? '計測不可' : ('すき間 ' + round(g) + 'px');
+  var res = {}, diag = null;
+  STEPS.forEach(function(s){
+    var m = measure('b-' + s.id);
+    res[s.px + 'px'] = m ? m.gap : null;
+    if(s.id === 't0' && m) diag = m;
+    document.getElementById('g-' + s.id).textContent = m ? ('すき間 ' + m.gap + 'px') : '計測不可';
   });
 
-  var supportsHyphens = false, supportsCallout = false, supportsScroll = false, supportsApple = false;
+  var supportsHyphens = false;
   try { supportsHyphens = CSS.supports('-webkit-hyphens', 'none'); } catch(e){}
-  try { supportsCallout = CSS.supports('-webkit-touch-callout', 'none'); } catch(e){}
-  try { supportsScroll  = CSS.supports('-webkit-overflow-scrolling', 'touch'); } catch(e){}
-  try { supportsApple   = CSS.supports('-apple-pay-button-style', 'plain'); } catch(e){}
+  var moved = (res['0px'] !== null && res['4px'] !== null) ? round(res['0px'] - res['4px']) : null;
+  var works = (moved !== null && moved > 2);
 
-  var dS = (res.m0 !== null && res.mS !== null) ? round(res.m0 - res.mS) : null;  // 現行の効き量
-  var dR = (res.m0 !== null && res.mR !== null) ? round(res.m0 - res.mR) : null;  // relative の効き量
-  var dM = (res.m0 !== null && res.mM !== null) ? round(res.m0 - res.mM) : null;
-  var dT = (res.m0 !== null && res.mT !== null) ? round(res.m0 - res.mT) : null;
-  var dV = (res.m0 !== null && res.mV !== null) ? round(res.m0 - res.mV) : null;
-  var dL = (res.m0 !== null && res.mL !== null) ? round(res.m0 - res.mL) : null;
-  var dP = (res.m0 !== null && res.mP !== null) ? round(res.m0 - res.mP) : null;
-
-  var relWorks = (dR !== null && dR > 4);
-  var appWorks = (dS !== null && dS > 2);
+  // rt の箱が文字より高い＝箱は密着していても見た目が離れる、という現象の確認用
+  var boxRatio = (diag && diag.rtFS) ? round(diag.rtH / diag.rtFS) : null;
 
   function row(k, ok, text){
     return '<div class="vrow"><span class="k">' + k + '</span>'
       + '<span class="a ' + (ok ? 'yes' : 'no') + '">' + text + '</span></div>';
   }
-
-  var best = 'まだ判定できません';
-  if(relWorks)      best = 'position:relative（top）で調整できます';
-  else if(dT !== null && dT > 2) best = 'transform:translateY で調整できます';
-  else if(dM !== null && dM > 2) best = 'margin-bottom（負の値）で調整できます';
-  else if(dV !== null && dV > 2) best = 'vertical-align で調整できます';
-  else if(dP !== null && dP > 2) best = '親の line-height を下げる方法が有効です';
-  else if(dL !== null && dL > 2) best = 'ruby の line-height を詰める方法が有効です';
-
   document.getElementById('verdict').innerHTML =
-      row('@supports 成立', supportsHyphens, supportsHyphens ? 'はい（Safari判定は有効）' : 'いいえ（Safari判定が効いていない）')
-    + row('現行アプリの補正', appWorks, appWorks ? ('効いている（' + dS + 'px 下がった）') : '効いていない（0px）')
-    + row('relative が効くか', relWorks, relWorks ? ('効く（' + dR + 'px 下がった）') : '効かない（無視されている）')
-    + row('素のすき間', true, (res.m0 === null ? '–' : res.m0 + 'px'))
-    + row('おすすめ手法', best !== 'まだ判定できません', best);
-
-  document.getElementById('env').innerHTML =
-      '画面幅 ' + window.innerWidth + 'px ／ 解像度倍率 ' + (window.devicePixelRatio || 1) + '<br>'
-    + 'UA: ' + navigator.userAgent;
+      row('Safari判定(@supports)', supportsHyphens, supportsHyphens ? 'はい（成立）' : 'いいえ')
+    + row('transform が効くか', works, works ? ('効く（' + moved + 'px 下がった）') : '効かない')
+    + row('ルビ箱の高さ', true, (boxRatio === null ? '–' : boxRatio + ' × 文字サイズ'))
+    + row('画面幅 / 倍率', true, window.innerWidth + 'px / ' + (window.devicePixelRatio || 1))
+    + '<p class="note" style="margin:6px 0 0">「ルビ箱の高さ」が 1.05 より大きいほど、箱の中で文字が上に寄り、見た目の空白が生まれます。</p>';
 
   var payload = {
-    width: window.innerWidth, dpr: window.devicePixelRatio || 1,
-    supports: { hyphens: supportsHyphens, touchCallout: supportsCallout,
-                overflowScrolling: supportsScroll, applePay: supportsApple },
-    gapPx: res,
-    effect: { 'S_supports4px': dS, 'R_relative8px': dR, 'M_margin-4px': dM,
-              'T_translateY4px': dT, 'V_valign-4px': dV, 'L_rubyLH1': dL, 'P_parentLH1.45': dP },
+    v: 2, width: window.innerWidth, dpr: window.devicePixelRatio || 1,
+    supportsHyphens: supportsHyphens,
+    transformWorks: works, movedPx: moved,
+    gapByTranslate: res,
+    rtBoxHeight: diag ? diag.rtH : null, rtFontSize: diag ? diag.rtFS : null, rtBoxRatio: boxRatio,
     ua: navigator.userAgent
   };
   var text = JSON.stringify(payload, null, 2);
@@ -238,15 +211,15 @@ button:focus-visible{outline:3px solid var(--jade-deep); outline-offset:2px;}
   document.getElementById('copy').addEventListener('click', function(){
     var btn = this;
     function done(msg){ btn.textContent = msg; setTimeout(function(){ btn.textContent = '結果をコピー'; }, 1800); }
-    if(navigator.clipboard && navigator.clipboard.writeText){
-      navigator.clipboard.writeText(text).then(function(){ done('コピーしました'); }, function(){ select(); });
-    } else { select(); }
     function select(){
       var r = document.createRange();
       r.selectNodeContents(document.getElementById('json'));
       var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
       done('選択しました（長押しでコピー）');
     }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ done('コピーしました'); }, select);
+    } else { select(); }
   });
 })();
 </script>

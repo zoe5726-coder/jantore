@@ -85,11 +85,15 @@ button{font-family:inherit; cursor:pointer; touch-action:manipulation;} /* タ�
    ルビ自身は小さいline-heightにして本文から離れないようにする(iPhone/Safariでも同じ見え方にする) */
 ruby{ruby-position:over; -webkit-ruby-position:before; ruby-align:center; line-height:1.15;}
 rt{font-size:.5em; font-weight:700; line-height:1.05; letter-spacing:-.04em; opacity:.78; white-space:nowrap; text-align:center;}
-/* iPhone/Safari(WebKit)だけ、ルビが本文から少し離れた位置に置かれる(Chromiumはすでに本文のすぐ上＝実測0〜1.3px)。
-   そこでWebKitのときだけ、読みがなを本文へ1.5px近づける。position:relativeは「描く位置」だけをずらすので、
-   行の高さ・折り返し・吹き出しやボタンの高さは変わらない(レイアウトは動かさない) */
+/* iPhone/Safari(WebKit)だけ、ルビが本文から少し離れて見える(Chromiumはすでに本文のすぐ上＝実測0〜-2px)。
+   iPhone実機(iOS18.7 / Safari26.5)で手法ごとの効きを実測したところ:
+     ・@supports (-webkit-hyphens:none) は成立する(Chromium141では不成立=巻き込まない)
+     ・rt への position:relative / top は WebKitが無視する(実測0px。以前のtop:4pxが効かなかった原因)
+     ・rt への transform:translateY は効く(実測4.0px)。Chromiumでは rt が変形対象外なので0px=無傷
+   そこでWebKitのときだけ transform で読みがなを本文へ4px近づける。
+   transformは描画位置だけを動かすので、行の高さ・折り返し・吹き出しやボタンの高さは変わらない */
 @supports (-webkit-hyphens:none){
-  rt{position:relative; top:4px;}   /* 実機スクショと目標画像を文字の大きさ(em)で正規化して比較し、0.28em≒4px必要だった */
+  rt{transform:translateY(4px);}   /* 実機スクショと目標画像を文字の大きさ(em)で正規化して比較し、0.28em≒4px必要だった */
 }
 /* R33 ルビ「すべて」: 読める大きさ(最小9px)を保つ(本文より目立たせない) */
 ruby.rbf rt{font-size:max(9px,.5em); opacity:.72; font-weight:600;}
@@ -2881,7 +2885,7 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
 const APP_VER='0.34.2';
-const BUILD_ID='20260923-04';
+const BUILD_ID='20260923-05';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
