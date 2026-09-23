@@ -81,9 +81,17 @@ button{font-family:inherit; cursor:pointer; touch-action:manipulation;} /* タ�
 /* ---------- path ---------- */
 .path-wrap{flex:1; padding:8px 0 96px; overflow-y:auto;}
 /* ルビ(麻雀用語の読みがな): 本文を押し下げすぎない小さめの読み。子ども向けに見た目を変えない */
-ruby{ruby-position:over; ruby-align:center;}
-rt{font-size:.5em; font-weight:700; line-height:1; letter-spacing:-.04em; opacity:.78; white-space:nowrap;}
-/* R33 ルビ「すべて」: 読める大きさ(最小9px)を保ち、行間を少しだけ広げる(本文より目立たせない) */
+/* ルビは「本文のすぐ上」に置く。行と行のすきまは本文側のline-heightで確保し、
+   ルビ自身は小さいline-heightにして本文から離れないようにする(iPhone/Safariでも同じ見え方にする) */
+ruby{ruby-position:over; -webkit-ruby-position:before; ruby-align:center; line-height:1.15;}
+rt{font-size:.5em; font-weight:700; line-height:1.05; letter-spacing:-.04em; opacity:.78; white-space:nowrap; text-align:center;}
+/* iPhone/Safari(WebKit)だけ、ルビが本文から少し離れた位置に置かれる(Chromiumはすでに本文のすぐ上＝実測0〜1.3px)。
+   そこでWebKitのときだけ、読みがなを本文へ1.5px近づける。position:relativeは「描く位置」だけをずらすので、
+   行の高さ・折り返し・吹き出しやボタンの高さは変わらない(レイアウトは動かさない) */
+@supports (-webkit-hyphens:none){
+  rt{position:relative; top:1.5px;}
+}
+/* R33 ルビ「すべて」: 読める大きさ(最小9px)を保つ(本文より目立たせない) */
 ruby.rbf rt{font-size:max(9px,.5em); opacity:.72; font-weight:600;}
 html.ruby-full .tc-bub, html.ruby-full .q-text, html.ruby-full .fb-exp, html.ruby-full .choice,
 html.ruby-full .wf-msg, html.ruby-full .mg-guide-card .tc-bub{line-height:1.95;}
@@ -99,13 +107,30 @@ html.ruby-full .mt-guide-card .tc-bub{height:86px;}
   background:var(--card); border:1.5px solid var(--line);}
 .rd-cell b{font-size:20px; font-variant-numeric:tabular-nums;}
 .rd-cell span{font-size:15px; font-weight:800; color:var(--jade-deep);}
-.rd-rows{display:flex; flex-direction:column; gap:8px;}
-.rd-row{display:flex; align-items:center; justify-content:center; gap:6px; flex-wrap:nowrap;}
-.rd-row .tile{width:40px; max-width:40px; flex:none;}
-.rd-name{font-size:13px; font-weight:800; color:var(--ink-soft); min-width:4.2em; text-align:center;}
-.rd-part{font-size:15px; font-weight:800; padding:4px 8px; border-radius:10px; background:var(--card); border:1.5px solid var(--line);}
-.rd-plus,.rd-arrow{font-size:14px; font-weight:800; color:var(--ink-soft);}
-.rd-read{font-size:17px; color:var(--jade-deep);}
+/* 牌の読み方の図: 3行を「同じ列」でそろえる(文字数がちがっても後ろの要素が動かない)。
+   6列 = [牌][数字の読み][＋][マン/ピン/ソー][→][完成した読み] / 4列 = [牌][種類の名前][→][読み]
+   1行ずつのdivを作らず、グリッドに直接ならべるので、列の位置は3行で必ず一致する */
+.rd-grid6{display:grid; grid-template-columns:auto auto auto auto auto auto;
+  column-gap:clamp(3px,1.5vw,7px); row-gap:10px; align-items:center; justify-items:center; justify-content:center;}
+.rd-grid4{display:grid; grid-template-columns:auto auto auto auto;
+  column-gap:clamp(4px,2.2vw,10px); row-gap:10px; align-items:center; justify-items:center; justify-content:center;}
+.rd-grid6 .tile,.rd-grid4 .tile{width:clamp(30px,9.5vw,40px); max-width:40px; flex:none;}
+.rd-name{font-size:clamp(12px,3.4vw,13px); font-weight:800; color:var(--ink-soft); min-width:4.2em; text-align:center;}
+.rd-part{font-size:clamp(13px,3.8vw,15px); font-weight:800; padding:4px clamp(4px,1.8vw,8px); border-radius:10px;
+  background:var(--card); border:1.5px solid var(--line); min-width:4.4em; text-align:center; box-sizing:border-box;}
+.rd-grid6 .rd-read,.rd-grid4 .rd-read{min-width:5.4em; text-align:center;}
+.rd-plus,.rd-arrow{font-size:clamp(12px,3.6vw,14px); font-weight:800; color:var(--ink-soft);}
+.rd-read{font-size:clamp(14px,4.4vw,17px); color:var(--jade-deep);}
+/* ドラの図: [ドラ表示牌]→[ドラ] を同じ列でそろえる / 字牌のじゅんばんは横一列 */
+.dr-grid{display:grid; grid-template-columns:auto auto auto; column-gap:clamp(8px,4vw,18px); row-gap:12px;
+  justify-content:center; align-items:center;}
+.dr-grid .tile{width:clamp(34px,10vw,44px); max-width:44px; flex:none;}
+.dr-hit b{color:var(--jade-deep);}
+.dr-cyc{display:flex; align-items:center; justify-content:center; gap:clamp(2px,1.4vw,6px); flex-wrap:nowrap;}
+.dr-cyc .tile{width:clamp(26px,8vw,36px); max-width:36px; flex:none;}
+/* 暗槓の実戦表示につかう「ふせ牌」: 手牌の牌とおなじ大きさ・高さにそろえる */
+.hand .mg-back,.hand-open .mg-back{width:var(--tile-w); height:auto; aspect-ratio:5/7; border-radius:5px;
+  flex:1 1 0; min-width:0; max-width:var(--tile-w); align-self:auto;}
 .rd-hon{display:flex; justify-content:center; gap:8px; margin-bottom:8px;}
 .rd-hcell{display:flex; flex-direction:column; align-items:center; gap:4px;}
 .rd-hcell .tile{width:40px; max-width:40px;}
@@ -469,8 +494,12 @@ button.tile.off:active{transform:none;}
 .uav-sfx{width:60px; height:60px; margin-left:-22px;}
 .sfx-flame{font-size:clamp(44px,13vw,56px); line-height:1; animation:sfxFlame .9s ease-in-out infinite alternate;}
 @keyframes sfxFlame{from{transform:scale(1) rotate(-3deg);} to{transform:scale(1.12) rotate(3deg);}}
-.sfx-num{font-size:clamp(58px,18vw,76px); font-weight:900; line-height:1.02; color:var(--gold-deep);
+/* 連続学習の日数: 「5日」は必ず同じ1行(数字が大・「日」は小さく少し上寄せ)。下の行は「連続！」 */
+.sfx-num{display:flex; align-items:flex-start; justify-content:center; gap:2px; white-space:nowrap;
+  font-weight:900; line-height:1.02; color:var(--gold-deep);
   font-variant-numeric:tabular-nums; animation:sfxPop .5s cubic-bezier(.34,1.56,.64,1);}
+.sfx-n{font-size:clamp(58px,18vw,76px); line-height:1;}
+.sfx-u{font-size:clamp(23px,7vw,30px); line-height:1; margin-top:.18em;}   /* 数字より小さく・上寄せ */
 .streakfx.milestone .sfx-num{color:var(--verm);}
 @keyframes sfxPop{0%{transform:scale(.3); opacity:0;} 60%{transform:scale(1.15);} 100%{transform:scale(1); opacity:1;}}
 .sfx-label{font-size:clamp(19px,5.6vw,23px); font-weight:900; margin-top:2px;}
@@ -487,6 +516,7 @@ button.tile.off:active{transform:none;}
 @keyframes sfxFall{0%{opacity:0; transform:translateY(0) rotate(0);} 12%{opacity:1;}
   100%{opacity:0; transform:translateY(340px) rotate(240deg);}}
 @media (prefers-reduced-motion: reduce){
+  .mt-pop{animation:none !important;}
   .sfx-flame,.sfx-num,.sfx-iso img{animation:none !important;}
   .sfx-conf{display:none !important;}
   .streakfx,.sfx-card{transition:none !important;}
@@ -562,10 +592,16 @@ button.tile.off:active{transform:none;}
   -webkit-tap-highlight-color:transparent;}
 .mt-num.sel{border-color:var(--jade); background:var(--jade-soft); color:var(--jade-deep);}
 .mt-num.ok{border-color:var(--jade); background:color-mix(in srgb, var(--jade) 18%, #fff);}
-.mt-t .tile,.mt-num{transition:opacity .18s;}
+/* ===== Matching Correct Feedback(共通仕様・正解した瞬間の気持ちよさ) =====
+   正しいペアがそろう → correct音 → ポンッと弾んで少し浮く(mt-pop) → スッと薄くなって残る(mt-done)。
+   「もう正解した」と分かるように消しきらない。動きを減らす設定では弾みだけ省き、色と薄さは残す */
+@keyframes mtPop{0%{transform:scale(1) translateY(0);} 38%{transform:scale(1.09) translateY(-7px);}
+  70%{transform:scale(1.02) translateY(-5px);} 100%{transform:scale(1) translateY(-5px);}}
+.mt-pop{animation:mtPop .34s cubic-bezier(.34,1.56,.64,1) forwards; z-index:1;}
+.mt-t .tile,.mt-t .mt-lbl,.mt-num{transition:opacity .28s ease, transform .28s ease;}   /* 浮いた位置からゆっくり戻しながら薄くする */
 /* 正解済みペア: Duolingo式に「その場に薄く残す」。位置・サイズは不変・操作不可。
    完全に消さない(visibility:hidden/display:none禁止)。牌はうっすら読める濃さ */
-.mt-done{opacity:.25; pointer-events:none;}
+.mt-done{opacity:.36; pointer-events:none;}   /* 正解済み: 薄く残す(消しきらない) */
 .mt-num.mt-done{border-color:var(--line); background:var(--card); box-shadow:0 3px 0 var(--line);}
 .mt-prog{text-align:center; font-size:12.5px; font-weight:800; color:var(--ink-soft);
   height:18px; margin:0;}
@@ -1880,6 +1916,8 @@ const COURSES=[
 {id:'ch3f',title:'ならびの役',icon:'🌈',section:2,type:'ch1',desc:'ならびかたに注目する役たち。',questions:[]},
 {id:'ch3g',title:'役満',icon:'👑',section:2,type:'ch1',desc:'めったに出ない、とても特別な役。',questions:[]},
 {id:'ch3h',title:'役を見つけよう',icon:'🔦',section:2,type:'ch1',desc:'手牌と状況から、ついている役をぜんぶ見つける！',questions:[]},
+{id:'ch3i',title:'ドラを知ろう',icon:'💎',section:2,type:'ch1',desc:'役ではないけれど、点を上げてくれる牌があるんだ。',questions:[]},
+{id:'ch3j',title:'カンを知ろう',icon:'🧩',section:2,type:'ch1',desc:'おなじ牌4枚でつくる、特別な組を覚えよう。',questions:[]},
 {id:'ch3x',title:'もっと役を覚える',icon:'📚',section:2,type:'ch1',desc:'よゆうがあったら。めずらしい役と、もっと役満。(やらなくても先へ進めるよ)',questions:[]},
 {id:'rules',title:'基本ルール',icon:'📖',section:null,desc:'麻雀のきほんのき。和了の形からフリテンまで。',questions:[
  {q:'麻雀の和了（あがり）の基本形はどれ？',choices:['4面子＋1雀頭','5面子','7ペア＋1枚','13枚バラバラ'],a:0,exp:'3枚1組の「面子」を4つと、2枚1組の「雀頭」を1つ揃えた計14枚が基本の和了形です。（例外役：七対子・国士無双）'},
@@ -2192,9 +2230,34 @@ const THEMES=[
     {diff:{ch1:'yj1_6'}},                      // ★J1-6 第3章チャレンジ「役がわかる！」
    ]},
   ]},
+ /* ドラ→カンの順(2026-09-23追加)。「役がないとアガれない」(J1-4)を理解したあとにドラを置き、
+    ドラを理解してからカン(カンドラ)へつなぐ。どちらも第3章の本編テーマ */
+ {id:'th_ch3i', course:'ch3i', title:'ドラを知ろう', sub:'役じゃないけど、点が上がる牌',
+  requires:'th_ch3h',
+  subThemes:[
+   {id:'st_ch3k1', title:'ドラ', lessons:[
+    {diff:{ch1:'yk1_1'}},                      // K1-1 ドラってなに？(ドラは役ではない)
+    {diff:{ch1:'yk1_2'}},                      // K1-2 ドラ表示牌(つぎの牌がドラ)
+    {diff:{ch1:'yk1_3'}},                      // K1-3 9のつぎは1・ドラは何枚ぶん
+    {diff:{ch1:'yk1_4'}},                      // K1-4 字牌のドラ(風牌・三元牌のじゅんばん)
+    {diff:{ch1:'yk1_5'}},                      // ★K1-5 ドラマスター
+   ]},
+  ]},
+ {id:'th_ch3j', course:'ch3j', title:'カンを知ろう', sub:'おなじ牌4枚の特別な組',
+  requires:'th_ch3i',                          // ドラ(K)を全クリアで解放(カンドラの前提)
+  subThemes:[
+   {id:'st_ch3m1', title:'カン', lessons:[
+    {diff:{ch1:'km1_1'}},                      // M1-1 おなじ牌が4枚(3枚との比較)
+    {diff:{ch1:'km1_2'}},                      // M1-2 暗槓
+    {diff:{ch1:'km1_3'}},                      // M1-3 大明槓
+    {diff:{ch1:'km1_4'}},                      // M1-4 加槓
+    {diff:{ch1:'km1_5'}},                      // M1-5 どのカン？
+    {diff:{ch1:'km1_6'}},                      // ★M1-6 カンすると何が起きる？(嶺上牌・カンドラ)
+   ]},
+  ]},
  /* 任意Road(第3章クリアで解放。ここを受講しなくても次章へ進める=どの将来テーマもth_ch3xをrequiresにしない) */
  {id:'th_ch3x', course:'ch3x', title:'もっと役を覚える', sub:'任意：めずらしい役ともっと役満',
-  requires:'th_ch3h',
+  requires:'th_ch3h',                          // 既存ユーザーの解放状態を変えないため、条件は従来どおり(役の総仕上げ)
   subThemes:[
    {id:'st_ch3x1', title:'めずらしい役', lessons:[
     {diff:{ch1:'yx1_1'}},                      // X1-1 ダブルリーチ
@@ -2597,6 +2660,7 @@ const RUBY_TERMS={
   '小四喜':'ショウスーシー','二盃口':'リャンペーコー','字一色':'ツーイーソー','緑一色':'リューイーソー',
   '清老頭':'チンロウトウ','混老頭':'ホンロウトウ','九蓮宝燈':'チューレンポートー','天和':'テンホー',
   '海底摸月':'ハイテイ','河底撈魚':'ホウテイ',
+  '暗槓':'アンカン','大明槓':'ダイミンカン','加槓':'カカン','嶺上牌':'リンシャンはい','表示牌':'ひょうじはい',
 };
 const RUBY_KEYS=Object.keys(RUBY_TERMS).sort((a,b)=>b.length-a.length);
 const RUBY_PAREN_RE=new RegExp('('+RUBY_KEYS.join('|')+')（[^（）<>]{1,14}）','g');
@@ -2645,12 +2709,16 @@ const RUBY_FULL_SRC=`
 # 文脈で読みが変わる語(前後の文字ごと登録)
 真[ま]ん中[なか] の中[なか] リーチ中[ちゅう] ロック中[ちゅう]
 中[チュン]は 中[チュン]が 中[チュン]の 中[チュン]と 中[チュン]も 中[チュン]を 中[チュン]ア 中[チュン]2 ・中[チュン]
+中[チュン]、 中[チュン]。 中[チュン]だ 中[チュン]→ 中[チュン]」
 發[ハツ]中[チュン] 東[トン] 南[ナン] 西[シャー] 北[ペー] 白[ハク] 發[ハツ] 白[しろ]い
 かた方[ほう] 方[かた] 4人[にん] 人[ひと] 1行[ぎょう] (間[あいだ]) (端[はし]) 「暗[あん]」
 入[はい]っ 入[はい]ら 入[はい]る 入[はい]り 入[い]れ ツ入[い]り ン入[い]り
 来[く]れ 来[く]る 来[き]た 来[き]て 来[こ]な
 数[かぞ]え 牌[はい]の数[かず] {捨て牌}[すてはい]の数[かず]
 組[く]み 組[くみ]
+# ドラ・カン(2026-09-23追加。第3章K/Mの教材で実際に使う語だけ)
+点[てん] 点数[てんすう] 高[たか] 上[あ]が 上[あ]げ の話[はなし] 価値[かち] 毎[まい]回 表[おもて]に 数[かず]が 何[なん]枚
+答[こた]え 起[お]き 別[べつ]に 分[わ]か 特別[とくべつ]
 # 1文字の語(教材内のすべての使い方で読みが同じことを確認済み)
 手[て] 形[かたち] 役[やく] 待[ま] 見[み] 覚[おぼ] 読[よ] 作[つく] 使[つか] 選[えら] 呼[よ] 探[さが] 捨[す] 持[も] 打[う] 引[ひ] 置[お] 積[つ]
 配[くば] 開[ひら] 進[すす] 試[ため] 足[た] 言[い] 知[し] 残[のこ] 決[き] 流[なが] 消[き] 満[み] 増[ふ] 合[あ] 取[と] 返[かえ] 前[まえ] 受[う] 当[あ]
@@ -2769,7 +2837,7 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    開発UI・未検証Compare）を通常操作から隠す。コード・データ・機能は
    一切削除しておらず、このフラグをfalseにすれば全て復帰する。 */
 let PROTOTYPE_MODE=true;
-const PROTO_VISIBLE_COURSES=['ch1a','ch1r','ch1b','ch1c','ch1d','ch1e','ch2a','ch2b','ch2c','ch2d','ch3a','ch3b','ch3c','ch3d','ch3e','ch3f','ch3g','ch3h','ch3x','waits','ukeire1','nanikiru','riichi'];
+const PROTO_VISIBLE_COURSES=['ch1a','ch1r','ch1b','ch1c','ch1d','ch1e','ch2a','ch2b','ch2c','ch2d','ch3a','ch3b','ch3c','ch3d','ch3e','ch3f','ch3g','ch3h','ch3i','ch3j','ch3x','waits','ukeire1','nanikiru','riichi'];
 function protoCourseVisible(id){ return !PROTOTYPE_MODE||PROTO_VISIBLE_COURSES.includes(id); }
 function staminaFree(){ return PROTOTYPE_MODE||S.owned.stamina; }   // プロトタイプはスタミナ消費なし
 function devUIVisible(){ return !PROTOTYPE_MODE||S.dev||location.hash==='#dev'; }
@@ -4086,14 +4154,54 @@ function readNumPanel(){
     '<div class="rd-cell"><b>'+n+'</b><span>'+TILE_READ.num[n]+'</span></div>').join('')+'</div>';
 }
 function readSuitPanel(){
-  return '<div class="rd-rows">'+['m','p','s'].map(su=>
-    '<div class="rd-row">'+tileHTML('5'+su)+'<span class="rd-name">'+TILE_READ.suitName[su]+'</span>'
-    +'<span class="rd-arrow">→</span><b class="rd-read">'+TILE_READ.suit[su]+'</b></div>').join('')+'</div>';
+  // 4列固定(牌・種類の名前・→・読み)。行ごとのdivを作らないので3行の列位置が必ずそろう
+  return '<div class="rd-grid4">'+['m','p','s'].map(su=>
+    tileHTML('5'+su)+'<span class="rd-name">'+TILE_READ.suitName[su]+'</span>'
+    +'<span class="rd-arrow">→</span><b class="rd-read">'+TILE_READ.suit[su]+'</b>').join('')+'</div>';
 }
 function readComboPanel(tiles){
-  return '<div class="rd-rows">'+tiles.map(cd=>
-    '<div class="rd-row">'+tileHTML(cd)+'<span class="rd-part">'+TILE_READ.num[+cd[0]]+'</span><span class="rd-plus">＋</span>'
-    +'<span class="rd-part">'+TILE_READ.suit[cd[1]]+'</span><span class="rd-arrow">→</span><b class="rd-read">'+tileReading(cd)+'</b></div>').join('')+'</div>';
+  // 6列固定([牌][数字の読み][＋][マン/ピン/ソー][→][完成した読み])。「リャン」「キュー」でも後ろの列は動かない
+  return '<div class="rd-grid6">'+tiles.map(cd=>
+    tileHTML(cd)+'<span class="rd-part rd-numr">'+TILE_READ.num[+cd[0]]+'</span><span class="rd-plus">＋</span>'
+    +'<span class="rd-part rd-suitr">'+TILE_READ.suit[cd[1]]+'</span><span class="rd-arrow">→</span>'
+    +'<b class="rd-read">'+tileReading(cd)+'</b>').join('')+'</div>';
+}
+/* ===== ドラ・カンの図(第3章K「ドラを知ろう」/ M「カンを知ろう」) =====
+   教材本文にHTMLを直書きしない。ドラは doraFromIndicator()(標準ルール)で計算し、答えを手書きしない */
+function doraCellHTML(cd,lab,cls){
+  return '<div class="rd-hcell'+(cls?' '+cls:'')+'">'+tileHTML(cd)+'<b>'+lab+'</b></div>';
+}
+function doraPanelHTML(inds){
+  return '<div class="dr-grid">'+inds.map(cd=>
+    doraCellHTML(cd,'ドラ表示牌')+'<span class="rd-arrow">→</span>'
+    +doraCellHTML(doraFromIndicator(cd),'ドラ','dr-hit')).join('')+'</div>';
+}
+function doraCyclePanelHTML(cds){
+  // 字牌のじゅんばん(さいごは最初にもどる)
+  return '<div class="dr-cyc">'+cds.map((cd,i)=>(i?'<span class="rd-arrow">→</span>':'')+tileHTML(cd)).join('')
+    +'<span class="rd-arrow">→</span>'+tileHTML(cds[0])+'</div>';
+}
+function doraCountOf(handStr,ctx3){
+  // その手のドラの枚数(表示牌から計算。手書きしない)
+  if(!ctx3||!ctx3.doraInd) return 0;
+  const d=doraFromIndicator(ctx3.doraInd);
+  return sortTiles(parseHand(handStr)).filter(t=>t===d).length;
+}
+/* カンの図: 実戦とおなじ見せ方(R30の鳴いた組の共通部品を使う)。
+   暗槓だけは「意味をおぼえる段階=4枚とも見せる」「実戦の見た目=両はしをふせる」を切りかえる */
+function ankanDemoHTML(tilesStr,lab,real){
+  const t=sortTiles(parseHand(tilesStr));
+  const inner=real
+    ?('<span class="tile mg-back"></span>'+tileHTML(t[1],'mld-t')+tileHTML(t[2],'mld-t')+'<span class="tile mg-back"></span>')
+    :t.map(x=>tileHTML(x,'mld-t')).join('');
+  return '<div class="mld-demo-cell"><div class="tc-lab">'+lab+'</div>'
+    +'<div class="hand hand-open mld-only">'+inner+'</div></div>';
+}
+function kanDemoHTML(items){
+  // [{lab, meld}] または [{lab, ankan:'1111m', real:true}]
+  return '<div class="mld-demo">'+items.map(it=>it.ankan?ankanDemoHTML(it.ankan,it.lab,it.real)
+    :'<div class="mld-demo-cell"><div class="tc-lab">'+it.lab+'</div>'
+      +'<div class="hand hand-open mld-only">'+renderMeld(it.meld)+'</div></div>').join('')+'</div>';
 }
 function readHonorPanel(){
   const row=cds=>'<div class="rd-hon">'+cds.map(cd=>'<div class="rd-hcell">'+tileHTML(cd)+'<b>'+TILE_READ.honor[cd]+'</b></div>').join('')+'</div>';
@@ -4196,6 +4304,40 @@ function ch1MtPickN(j){
   mt.nums[mt.si].forEach((x,k)=>{ const e=document.getElementById('mtn-'+k); if(e) e.classList.toggle('sel',mt.selN===k); });
   ch1MtResolve();
 }
+/* ===== Matching Correct Feedback(共通仕様) =====
+   マッチング形式(数牌マッチング・読み方マッチング。どちらも同じL.mtエンジン)で
+   「正しいペアがそろった瞬間」に必ず同じ手ごたえを返すための共通レイヤー。
+   ①correct音(SoundManagerのcorrect。音OFFなら鳴らさない・新しい音は作らない)
+   ②2枚同時にポンッと弾んで少し浮く ③スッと薄くなる ④正解済みの薄い状態で残す(消さない・押せない)
+   さいごのペアでも、この演出が終わってから「せいかい！」へ進む(演出を飛ばさない)。
+   待ち方: animationend/transitionendを使い、イベントが来ない環境でも止まらないようにタイマーで必ず後追いする */
+function mtReduceMotion(){
+  try{ return !!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches); }catch(e){ return false; }
+}
+function mtOnceAfter(el,evt,ms,fn){
+  // evt(アニメ/トランジション終了)が来たら即・来なくてもms後に必ず1回だけfnを呼ぶ
+  let done=false;
+  const go=()=>{ if(done) return; done=true; if(el) el.removeEventListener(evt,go); fn(); };
+  if(el&&ms>0) el.addEventListener(evt,go,{once:true});
+  setTimeout(go,ms+(ms>0?140:0));
+}
+function mtPairCorrectFx(tEl,nEl,onEnd){
+  const reduce=mtReduceMotion();
+  const tile=tEl&&tEl.firstElementChild;
+  sndPlay('correct');                                   // 音OFFならsndPlay側で鳴らさない
+  if(tile){ tile.classList.remove('sel'); tile.classList.add('correct'); }
+  if(nEl){ nEl.classList.remove('sel'); nEl.classList.add('ok'); }
+  const popMs=reduce?120:340, fadeMs=reduce?0:300;
+  if(!reduce){ if(tile) tile.classList.add('mt-pop'); if(nEl) nEl.classList.add('mt-pop'); }
+  mtOnceAfter(reduce?null:(tile||nEl),'animationend',popMs,()=>{
+    // 正解済み(薄い)へ。位置・サイズは変えない=のこりの牌は動かない
+    if(tEl){ if(tile){ tile.classList.remove('correct','mt-pop'); }
+      tEl.classList.add('mt-done'); tEl.disabled=true; tEl.setAttribute('aria-disabled','true'); }
+    if(nEl){ nEl.classList.remove('ok','mt-pop');
+      nEl.classList.add('mt-done'); nEl.disabled=true; nEl.setAttribute('aria-disabled','true'); }
+    mtOnceAfter(reduce?null:(nEl||tEl),'transitionend',fadeMs,()=>onEnd&&onEnd());
+  });
+}
 function ch1MtResolve(){
   const mt=L.mt;
   if(mt.selT===null||mt.selN===null) return;
@@ -4204,23 +4346,15 @@ function ch1MtResolve(){
   const tEl=document.getElementById('mtt-'+ti), nEl=document.getElementById('mtn-'+nj);
   mt.selT=null; mt.selN=null; mt.lock=true;
   if(tile.n===num){
-    // 正解: 軽いフィードバック→slot位置を保ったまま非表示(残りは動かさない)
     mt.gotT[ti]=true; mt.gotN[nj]=true;
-    if(tEl&&tEl.firstElementChild){ tEl.firstElementChild.classList.remove('sel'); tEl.firstElementChild.classList.add('correct'); }
-    if(nEl){ nEl.classList.remove('sel'); nEl.classList.add('ok'); }
-    setTimeout(()=>{
-      // 一度正解状態を見せてから「正解済み=薄い」へ移行(位置・サイズは不変・以後操作不可)
-      if(tEl){ tEl.firstElementChild.classList.remove('correct');
-        tEl.classList.add('mt-done'); tEl.disabled=true; tEl.setAttribute('aria-disabled','true'); }
-      if(nEl){ nEl.classList.remove('ok');
-        nEl.classList.add('mt-done'); nEl.disabled=true; nEl.setAttribute('aria-disabled','true'); }
+    mtPairCorrectFx(tEl,nEl,()=>{
       if(mt.gotT.every(x=>x)){
-        // セット完了: 全ペアが薄くなった状態を短く見せてから次へ(テンポは維持)
-        setTimeout(()=>ch1MtNextSet(),500);
+        // セット完了: 演出が終わってから次へ(さいごのペアでも演出を最後まで見せる)
+        setTimeout(()=>ch1MtNextSet(),220);
       }else{
         mt.lock=false;
       }
-    },220);
+    });
   }else{
     // 不正解: ペアは消さない・答えは教えない・もう一度(採点対象としてmiss記録)
     mt.miss++;
@@ -5688,6 +5822,20 @@ function ch3AgariMcq(handStr,ctx3,exp,opt){
   return Object.assign({q:'この手・この状況で、<b>アガれる？</b>',hand:handStr,ctx3,
     choices:['アガれる（役がある）','アガれない（役がない）'],a:n>0?0:1,exp},opt||{});
 }
+/* ---- ドラ(第3章K)の問題ビルダー: 正解はすべて計算で出す(手書きしない) ---- */
+function doraPickQ(ind,cands,exp,opt){
+  // ドラ表示牌を見せて、ドラを牌でえらぶ
+  const right=doraFromIndicator(ind);
+  const list=cands.includes(right)?cands.slice():cands.concat([right]);
+  return Object.assign({q:'この<b>ドラ表示牌</b>のとき、<b>ドラ</b>はどれ？',ctx:'ドラ表示牌',hand:ind,
+    tchoices:list.map(t=>({t})),a:list.indexOf(right),exp},opt||{});
+}
+function ch3DoraAgariMcq(handStr,ctx3,exp,opt){
+  // 「ドラがあってもアガれるとは限らない」: 判定は役の有無だけ(ドラの枚数は表示用に計算)
+  const n=doraCountOf(handStr,ctx3);
+  const c=Object.assign({},ctx3,{note:'この手のドラは'+n+'枚'});
+  return ch3AgariMcq(handStr,c,exp,opt);
+}
 function ch3WhichMcq(handStr,ctx3,choiceKeys,exp,opt){
   const list=ch3ListOf(handStr,ctx3);
   const hits=choiceKeys.filter(k=>list.includes(k));
@@ -7108,10 +7256,213 @@ const CH3_LESSONS={
         'リーチ＋ツモ＋ピンフ＋タンヤオの4役！自分の力でアガって、役もぜんぶ見つけられたね！'),
       ch3AgariMcq('2m3m4m4p5p6p7s8s9s3s5s4s9p9p',ch3Ctx({win:'ron',winTile:'4s',rw:'E',sw:'S'}),
         'さいごのひっかけ！形ができていても役がなければアガれない。もうだまされないね！'),
-      ch1Teach('🎉 <b>第3章「役がわかる」クリア！</b>アガリ形と状況から、<b>代表的な役が見えるようになった</b>！<br>つぎの章では、覚えた役をつかって、もっと上手にアガれるようになっていこう！',
-        {tlab:'第3章クリア'}),
+      ch1Teach('🎉 <b>役がわかる！</b>アガリ形と状況から、<b>代表的な役が見えるようになった</b>！<br>つぎは、役ではないけれど点を上げてくれる<b>ドラ</b>、そのあとに<b>カン</b>を覚えよう！',
+        {tlab:'役がわかる！'}),
       ch1Teach('ロードに<b>「もっと役を覚える」</b>もあらわれたよ。<b>やらなくても先へ進める</b>けど、めずらしい役やもっと役満に出会いたくなったら、のぞいてみてね！',
         {tlab:'よりみち案内'}),
+    ];
+  },
+  /* ===== K「ドラを知ろう」(第3章の役を学んだあと) =====
+     ねらい: ①ドラは役ではない ②ドラ表示牌の次の牌がドラ ③9→1・字牌のじゅんばん ④ドラは何枚ぶん。
+     「役がないとアガれない」(J1-4)を理解したあとに置く=「ドラがあればアガれる」という誤解を作らないため。
+     体験(点が上がる)→意味(おまけ)→名前(ドラ/ドラ表示牌)→判断(アガれる？どれがドラ？)の順。 */
+  /* K1-1 ドラってなに？(役ではない、を最初に確定させる) */
+  yk1_1(){
+    return [
+      ch1Teach('第3章でたくさんの<b>役</b>を覚えたね。ここからは、役とはべつの<b>点が高くなる牌</b>の話だよ。',
+        {tlab:'ドラ'}),
+      ch1Teach('おなじ「リーチだけ」でアガっても、その牌を手の中に持っていると<b>点が上がる</b>。この特別な牌を<span class="term-chip">ドラ</span>というよ。',
+        {tlab:'ドラ',act:{label:'ドラがあるとどうなる？',
+          result:'ドラを1枚持ってアガると点が上がる。2枚ならもっと上がる。持っているだけトクをする「おまけ」なんだ！'}}),
+      ch1Teach('でも、ここがいちばんだいじ！ <b>ドラは役ではない</b>よ。役は「アガるためのチケット」。ドラは「点をふやすおまけ」。おまけはチケットのかわりにならないんだ。',
+        {tlab:'ドラは役じゃない'}),
+      {q:'<b>ドラ</b>は役？',choices:['役ではない（点をふやすおまけ）','役のひとつ'],a:0,
+       exp:'ドラは役ではないよ。点をふやしてくれる「おまけ」なんだ。'},
+      ch3DoraAgariMcq('2m2m2m3m4m5m4p5p6p6s7s8s9p9p',ch3Ctx({doraInd:'1m',win:'ron',winTile:'5m',rw:'E',sw:'S'}),
+        'ドラが3枚もあるのに…役がないからアガれない！ドラはチケットのかわりにならないんだ。'),
+      ch3DoraAgariMcq('2m2m2m3m4m5m4p5p6p6s7s8s9p9p',ch3Ctx({doraInd:'1m',riichi:true,win:'ron',winTile:'5m',rw:'E',sw:'S'}),
+        'リーチという役があるからアガれる！そのうえドラ3枚で点もぐんと高い。これがドラの力だよ。'),
+      {q:'役がなくて、ドラだけ2枚ある手。アガれる？',choices:['アガれる','アガれない'],a:1,
+       exp:'役がないとアガれない。ドラは「役があるとき」に点を上げてくれるおまけだよ。'},
+    ];
+  },
+  /* K1-2 ドラ表示牌(表示牌そのものはドラではない) */
+  yk1_2(){
+    return [
+      ch1Teach('どの牌がドラになるかは、毎回かわるよ。卓の上で<b>1枚だけ表にしてある牌</b>で決まるんだ。この牌を<span class="term-chip">ドラ表示牌（ひょうじはい）</span>というよ。',
+        {tlab:'ドラ表示牌',panel:doraPanelHTML(['3m'])}),
+      ch1Teach('気をつけて！ <b>ドラ表示牌そのものはドラじゃない</b>。ドラになるのは<b>そのつぎの牌</b>だよ。',
+        {tlab:'つぎの牌がドラ',panel:doraPanelHTML(['4p','7s'])}),
+      {q:'<b>ドラ表示牌</b>そのものは、ドラ？',choices:['ドラではない（つぎの牌がドラ）','ドラになる'],a:0,
+       exp:'表示牌は「しるし」。ドラはそのつぎの牌だよ。'},
+      doraPickQ('3m',['2m','3m','4m','7m'],'3のつぎは4。だから4のマンズがドラだよ。'),
+      doraPickQ('4p',['3p','4p','5p','8p'],'4のつぎは5。ドラ表示牌そのものではないよ。'),
+      doraPickQ('7s',['6s','7s','8s','2s'],'7のつぎは8。数がひとつ大きい牌がドラだね。'),
+    ];
+  },
+  /* K1-3 9のつぎは1・ドラは何枚ぶん */
+  yk1_3(){
+    return [
+      ch1Teach('数牌のドラは「つぎの数字」だったね。じゃあ、<b>9</b>のつぎは？ …<b>1にもどる</b>よ！',
+        {tlab:'9のつぎは1',panel:doraPanelHTML(['9m'])}),
+      doraPickQ('9p',['8p','9p','1p','1s'],'9のつぎは1にもどる。9のピンズの表示なら、1のピンズがドラ！'),
+      doraPickQ('9s',['8s','9s','1s','1m'],'こちらも1にもどるよ。9のソーズの表示なら、1のソーズがドラ。'),
+      ch1Teach('ドラの牌を<b>2枚</b>持っていたら、ドラ2枚ぶん。<b>持っているだけ</b>点が上がるよ。',
+        {tlab:'ドラは何枚ぶん？',panel:doraPanelHTML(['1s']),
+         hands:[{label:'ドラの牌が手の中に2枚 → ドラ2枚ぶん',hand:'2s2s'}]}),
+      {q:'ドラ表示牌はこれ。つぎの2枚は、ドラ何枚ぶん？',panel:doraPanelHTML(['1s']),hand:'2s2s',
+       choices:['2枚ぶん','1枚ぶん','0枚（ドラなし）'],a:0,
+       exp:'ドラ表示牌のつぎの牌がドラ。その牌を2枚持っているから、ドラ2枚ぶんだよ。'},
+      {q:'ドラをたくさん持っている。でも役はない。アガれる？',choices:['アガれる','アガれない'],a:1,
+       exp:'なんまい持っていても、役がなければアガれない。ドラは役ではないよ。'},
+    ];
+  },
+  /* K1-4 字牌のドラ(風牌・三元牌のじゅんばん。どちらも第3章Bで導入ずみ) */
+  yk1_4(){
+    return [
+      ch1Teach('字牌にもドラはあるよ。でも字牌には数字がないから、<b>決まったじゅんばん</b>があるんだ。まずは<span class="term-chip">風牌（かぜはい）</span>。',
+        {tlab:'風牌のじゅんばん',panel:doraCyclePanelHTML(['E','S','W','N'])}),
+      ch1Teach('東→南→西→北、そして<b>北のつぎは東にもどる</b>。数牌の「9のつぎは1」とおなじ考え方だね。',
+        {tlab:'北のつぎは東',panel:doraPanelHTML(['N'])}),
+      doraPickQ('E',['E','S','W','N'],'東のつぎは南。風牌は 東→南→西→北→東 のじゅんばんだよ。'),
+      doraPickQ('N',['N','W','E','S'],'北のつぎは東にもどる！'),
+      ch1Teach('<span class="term-chip">三元牌（さんげんぱい）</span>は、白→發→中、そして<b>中のつぎは白にもどる</b>よ。',
+        {tlab:'三元牌のじゅんばん',panel:doraCyclePanelHTML(['B','G','R'])}),
+      doraPickQ('B',['B','G','R','E'],'白のつぎは發。三元牌は 白→發→中→白 のじゅんばんだよ。'),
+      doraPickQ('R',['R','G','B','N'],'中のつぎは白にもどるよ。'),
+    ];
+  },
+  /* ★K1-5 ドラマスター(数牌・9→1・風牌・三元牌・「役ではない」の総まとめ) */
+  yk1_5(){
+    return [
+      ch1Teach('ドラのまとめ！ ①<b>表示牌のつぎの牌</b>がドラ ②9のつぎは1・北のつぎは東・中のつぎは白 ③<b>ドラは役ではない</b>。この3つだよ。',
+        {tlab:'ドラマスター'}),
+      doraPickQ('8m',['7m','8m','9m','1m'],'8のつぎは9。数がひとつ大きい牌がドラだよ。'),
+      doraPickQ('9m',['9m','8m','1m','1p'],'9のつぎは1にもどる！'),
+      doraPickQ('W',['W','N','E','S'],'西のつぎは北。'),
+      doraPickQ('G',['G','R','B','E'],'發のつぎは中だよ。'),
+      ch3DoraAgariMcq('2m2m2m3m4m5m4p5p6p6s7s8s9p9p',ch3Ctx({doraInd:'1m',win:'ron',winTile:'5m',rw:'E',sw:'S'}),
+        'ドラが3枚でも、役がなければアガれない。もうだまされないね！'),
+      ch3DoraAgariMcq('2m3m4m4p5p6p5m6m7m6s7s5s3p3p',ch3Ctx({doraInd:'2p',riichi:true,win:'tsumo',winTile:'5s'}),
+        'リーチという役があるからアガれる。そのうえドラもついて点が高い！これがドラの正しい使いかただよ。'),
+      ch1Teach('🎉 ドラマスター！ ドラは<b>役ではない</b>けれど、役があるときに<b>手の価値を大きく上げて</b>くれる牌だったね。つぎは、そのドラともつながる<b>カン</b>を覚えよう！',
+        {tlab:'つぎはカン'}),
+    ];
+  },
+  /* ===== M「カンを知ろう」(ポン・チー(第1章D2-3)とドラ(K)のあと) =====
+     学習順: おなじ牌4枚→暗槓→大明槓→加槓→3種の整理→カンすると何が起きる(嶺上牌・カンドラ)。
+     体験→意味→名前→判断。名前を先に暗記させない。
+     今回は入れない(将来Lesson): 槍槓・嶺上開花・四槓子・四開槓・裏ドラ・赤ドラ・王牌の細かい構造・点数計算 */
+  /* M1-1 おなじ牌が4枚(ふつうのメンツ3枚との比較・枚数の疑問を残す) */
+  km1_1(){
+    return [
+      ch1Teach('第1章で、ほかの人の捨て牌をもらう<b>鳴き</b>には<b>ポン</b>・<b>チー</b>・<b>カン</b>がある、と覚えたね。ここでは<span class="term-chip">カン</span>をくわしく見ていくよ。',
+        {tlab:'カン'}),
+      ch1Teach('メンツは<b>3枚</b>の組だったね。カンは<b>おなじ牌を4枚</b>そろえて1つの組にすることだよ。',
+        {tlab:'3枚と4枚',hands:[{label:'ふつうのメンツ（コーツ）＝3枚',hand:'1m1m1m'},{label:'カン＝おなじ牌4枚',hand:'1m1m1m1m'}]}),
+      {q:'<b>カン</b>で使うのは、おなじ牌がなん枚？',choices:['3枚','4枚'],a:1,
+       exp:'おなじ牌4枚を1つの組にするのがカンだよ。'},
+      ch1Teach('4枚つかっても、アガリの形では<b>1つのメンツ</b>としてかぞえるよ。「4メンツ＋1アタマ」はそのままだよ。',
+        {tlab:'4枚で1メンツ'}),
+      {q:'カンした4枚は、アガリの形でいくつのメンツとしてかぞえる？',choices:['1つ','2つ'],a:0,
+       exp:'4枚つかっても1メンツ。アガリの形は「4メンツ＋1アタマ」のままだよ。'},
+      ch1Teach('…あれ？ 4枚で1メンツなら、<b>牌を1枚よけいに使っている</b>ことになるよね。この「ふしぎ」の答えは、このテーマのさいごで！',
+        {tlab:'ふしぎ'}),
+    ];
+  },
+  /* M1-2 暗槓(自分の手の中だけで4枚) */
+  km1_2(){
+    return [
+      ch1Teach('まずはこのケース。<b>自分の手の中だけ</b>に、おなじ牌が4枚そろったとき。',
+        {tlab:'手の中に4枚',hands:[{label:'手の中',hand:'1m1m1m1m'}]}),
+      ch1Teach('このとき、この4枚でカンできるよ。自分の手の中だけで作るカンを<span class="term-chip">暗槓（アンカン）</span>というんだ。ほかの人から牌をもらっていないので、<b>鳴いたことにはならない</b>よ。',
+        {tlab:'暗槓'}),
+      ch1Teach('実戦では、暗槓は<b>りょうはしの2枚をふせて</b>置くよ（自分だけで作った、というしるし）。ふせていても、4枚そろったカンだよ。',
+        {tlab:'暗槓の見た目',panel:kanDemoHTML([{ankan:'1m1m1m1m',lab:'おぼえる図（4枚とも見せる）'},
+          {ankan:'1m1m1m1m',lab:'実戦の見た目（りょうはしはふせる）',real:true}])}),
+      {q:'手の中に<b>おなじ牌が4枚</b>ある。暗槓できる？',hand:'3p3p3p3p',choices:['できる','できない'],a:0,
+       exp:'自分の手の中だけで4枚そろっているから暗槓できるよ。'},
+      {q:'手の中に<b>おなじ牌が3枚</b>ある。暗槓できる？',hand:'3p3p3p',choices:['できる','できない（まだ3枚）'],a:1,
+       exp:'暗槓はおなじ牌4枚。3枚ではまだできないよ。'},
+      {q:'暗槓は、ほかの人の<b>捨て牌</b>を使う？',choices:['使わない（自分の手の中だけ）','使う'],a:0,
+       exp:'暗槓は自分の手の中だけで作るカン。だから鳴いたことにならないんだ。'},
+    ];
+  },
+  /* M1-3 大明槓(3枚持っていて、ほかの人の4枚目をもらう) */
+  km1_3(){
+    return [
+      ch1Teach('つぎのケース。自分が<b>おなじ牌を3枚</b>持っているとき、ほかの人が<b>4枚目</b>を捨てたよ。',
+        {tlab:'3枚＋捨て牌',hands:[{label:'手の中',hand:'1p1p1p'},{label:'ほかの人が捨てた牌',hand:'1p'}]}),
+      ch1Teach('その捨て牌をもらって4枚の組にできるよ。これが<span class="term-chip">大明槓（ダイミンカン）</span>。<b>だれの捨て牌でもOK</b>だよ（左の人からだけ、なのはチーだけだったね）。',
+        {tlab:'大明槓',panel:kanDemoHTML([{lab:'大明槓（向かいの人からもらった）',
+          meld:{type:'kan',tiles:'1p1p1p1p',called:'1p',from:'opposite'}}])}),
+      ch1Teach('ポンとくらべてみよう。もらった牌が<b>横向き</b>なのは同じ。ちがいは<b>3枚か4枚か</b>だよ。',
+        {tlab:'ポンとのちがい',panel:kanDemoHTML([{lab:'ポン＝3枚',meld:{type:'pon',tiles:'1p1p1p',called:'1p',from:'opposite'}},
+          {lab:'大明槓＝4枚',meld:{type:'kan',tiles:'1p1p1p1p',called:'1p',from:'opposite'}}])}),
+      {q:'手の中におなじ牌が3枚。<b>右の人</b>が4枚目を捨てた。もらって4枚の組にするのは？',hand:'5s5s5s',
+       choices:['大明槓','暗槓'],a:0,
+       exp:'ほかの人の捨て牌で4枚にするのが大明槓。暗槓は自分の手の中だけだったね。'},
+      {q:'大明槓ができるのは、だれの捨て牌？',choices:['だれの捨て牌でもOK','左の人だけ'],a:0,
+       exp:'左の人だけ、というきまりがあるのはチー。ポンとカンはだれの捨て牌でもOKだよ。'},
+    ];
+  },
+  /* M1-4 加槓(ポンした組に、自分で引いた4枚目を足す) */
+  km1_4(){
+    return [
+      ch1Teach('3つめのケース。すでに<b>ポンしている組</b>があるとき…',
+        {tlab:'ポンしている',panel:kanDemoHTML([{lab:'ポンした組',meld:{type:'pon',tiles:'5s5s5s',called:'5s',from:'left'}}])}),
+      ch1Teach('あとから<b>自分で4枚目をツモった</b>ら、そのポンの組に足して4枚にできるよ。これが<span class="term-chip">加槓（カカン）</span>。',
+        {tlab:'加槓',panel:kanDemoHTML([{lab:'加槓（ポンの組に4枚目を足した）',
+          meld:{type:'kan',tiles:'5s5s5s5s',called:'5s',from:'left'}}])}),
+      {q:'ポンした3枚に、自分でツモった4枚目を足して4枚にした。これは？',choices:['加槓','大明槓'],a:0,
+       exp:'ポンした組に足すのが加槓。大明槓は「3枚持っていて、ほかの人の捨て牌をもらう」だったね。'},
+      {q:'加槓ができるのは、どんなとき？',
+       choices:['すでにポンした組があって、4枚目を自分で引いたとき','手の中に4枚そろったとき'],a:0,
+       exp:'手の中に4枚そろったときは暗槓だよ。加槓は「ポンした組＋自分で引いた4枚目」。'},
+      {q:'加槓のもとになるのは、どの鳴き？',choices:['ポン','チー'],a:0,
+       exp:'チーはならんだ3枚だから4枚にはできない。加槓のもとはポン（おなじ牌3枚）だよ。'},
+    ];
+  },
+  /* M1-5 どのカン？(3種類の視覚判断) */
+  km1_5(){
+    return [
+      ch1Teach('カンは3種類。<b>暗槓</b>＝自分の手の中だけで4枚／<b>大明槓</b>＝3枚持っていて、ほかの人の捨て牌をもらう／<b>加槓</b>＝ポンした組に、自分で引いた4枚目を足す。',
+        {tlab:'3種類のカン',panel:kanDemoHTML([{ankan:'1m1m1m1m',lab:'暗槓（実戦の見た目）',real:true},
+          {lab:'大明槓',meld:{type:'kan',tiles:'1p1p1p1p',called:'1p',from:'right'}},
+          {lab:'加槓',meld:{type:'kan',tiles:'5s5s5s5s',called:'5s',from:'left'}}])}),
+      {q:'自分の手の中だけで、おなじ牌が4枚そろった。これは？',hand:'7m7m7m7m',
+       choices:['暗槓','大明槓','加槓'],a:0,
+       exp:'ほかの人からもらっていない＝暗槓。だから鳴いたことにならないよ。'},
+      {q:'おなじ牌を3枚持っていたら、左の人が4枚目を捨てた。もらって4枚にした。これは？',hand:'9p9p9p',
+       choices:['大明槓','暗槓','加槓'],a:0,
+       exp:'ほかの人の捨て牌をもらって4枚にしたので大明槓だよ。'},
+      {q:'まえにポンした組に、いまツモった4枚目を足した。これは？',
+       choices:['加槓','暗槓','大明槓'],a:0,
+       exp:'ポンした組に自分で引いた4枚目を足す＝加槓。'},
+      {q:'この組を見て、鳴いてできたカンだと分かるのはどこ？',
+       oh:{lab:'ある人のカン',hand:'2m3m4m6p7p8p5s5s',melds:[{type:'kan',tiles:'1p1p1p1p',called:'1p',from:'opposite'}]},
+       choices:['1枚が横向きになっている','牌が4枚ならんでいる'],a:0,
+       exp:'横向き＝ほかの人からもらった牌のしるし。暗槓は自分だけで作るので、横向きの牌がないよ。'},
+    ];
+  },
+  /* ★M1-6 カンすると何が起きる？(嶺上牌・カンドラ。ドラ(K)を学んだあとだから分かる) */
+  km1_6(){
+    return [
+      ch1Teach('さいしょの「ふしぎ」の答えだよ。4枚で1メンツ＝牌を<b>1枚よけいに使っている</b>。だからカンをしたら、<b>いつものツモとはべつに、もう1枚</b>牌をもらうんだ。',
+        {tlab:'1枚もらう'}),
+      ch1Teach('この<b>おぎなう1枚</b>は、山のはしにある特別な場所から取るよ。この牌を<span class="term-chip">嶺上牌（リンシャンはい）</span>というんだ。',
+        {tlab:'嶺上牌'}),
+      {q:'カンをしたあと、どうする？',
+       choices:['いつものツモとはべつに、嶺上牌を1枚ツモる','なにもしない'],a:0,
+       exp:'カンで1枚よけいに使うから、1枚おぎなう。その牌が嶺上牌だよ。'},
+      ch1Teach('もうひとつ、うれしいことが起きるよ。カンをすると<b>ドラ表示牌が1枚ふえる</b>んだ。ふえた表示牌で決まるドラを<span class="term-chip">カンドラ</span>というよ。',
+        {tlab:'カンドラ',panel:doraPanelHTML(['3m','7p'])}),
+      {q:'カンをすると、ドラ表示牌はどうなる？',choices:['1枚ふえる','なくなる'],a:0,
+       exp:'カンをすると表示牌が1枚ふえる。そのぶんドラもふえるチャンスだよ（これがカンドラ）。'},
+      {q:'<b>カンドラ</b>は役？',choices:['役ではない（ドラとおなじ、点をふやすおまけ）','役のひとつ'],a:0,
+       exp:'カンドラもドラのなかま。役ではないから、やっぱり役は別にひつようだよ。'},
+      ch1Teach('🎉 <b>カンマスター！</b> カンで起きることは3つ。①おなじ牌4枚で<b>1メンツ</b> ②<b>嶺上牌</b>を1枚ツモる ③<b>ドラ表示牌がふえる</b>（カンドラ）。これだけ分かれば、実戦でカンを見てもこわくないよ！',
+        {tlab:'カンのまとめ'}),
     ];
   },
   /* ===== X 任意Road「もっと役を覚える」(第3章クリアで解放。次章の前提にしない) ===== */
@@ -7528,6 +7879,7 @@ const QFORMATS={
       html+='<div class="q-type">'+L.course.title+'</div>';
       html+='<div class="q-text">'+q.q+'</div>';
       if(q.ctx) html+='<div class="q-ctx">'+q.ctx+'</div>';
+      if(q.panel) html+='<div class="rd-panel">'+q.panel+'</div>';   // 図(ヘルパー関数で生成。ドラ・カンなど)
       // 第3章: ロン/ツモは牌の配置で分かる盤面(ロン=相手の捨て牌+自分の13枚/ツモ=13枚+右端ツモ牌)。
       // 盤面が出るときはアガリ牌チップを重複表示しない(状況は牌の位置で理解させる)
       const bd3=(q.ctx3&&typeof ch3BoardHTML==='function')?ch3BoardHTML(q):null;
@@ -7855,8 +8207,8 @@ function showStreakFx(opts){
     }
     wrap.innerHTML='<div class="sfx-card">'+conf
       +'<div class="sfx-top">'+avatarImgHTML(S.avatarId,'uav-sfx')+'<div class="sfx-flame">🔥</div></div>'   // R34: 自分のアバターも一緒に(イソピィは下でコメント)
-      +'<div class="sfx-num">'+days+'</div>'
-      +'<div class="sfx-label">日連続！</div>'
+      +'<div class="sfx-num"><span class="sfx-n">'+days+'</span><span class="sfx-u">日</span></div>'   // 「5日」は1行(数字と単位を分けてCSSで制御)
+      +'<div class="sfx-label">連続！</div>'
       +(mileLabel?'<div class="sfx-badge">🏆 '+mileLabel+'</div>':'')
       +'<div class="sfx-iso"><img src="'+S1IMG+'" alt="イソピィ"><div class="sfx-bub">'+streakComment(days)+'</div></div>'
       +'<button class="btn sfx-next" onclick="closeStreakFx()">つづける</button>'
@@ -8734,7 +9086,7 @@ function renderProfile(){
     +'<span style="font-size:13px;font-weight:800;">🔊 効果音</span>'
     +'<button class="btn '+(S.sound===false?'gray':'')+'" style="width:auto;padding:8px 18px;font-size:13px;" onclick="sndToggle()">'
     +(S.sound===false?'OFF':'ON')+'</button></div>'
-    +'<div class="au-row"><div class="au-txt"><span class="au-t">あ ルビ</span>'
+    +'<div class="au-row"><div class="au-txt"><span class="au-t">ルビ</span>'   /* 「あ ルビ」だと「あルビ」と読めてしまうため「ルビ」だけにした */
     +'<span class="au-d">'+(rubyModeFull()?'漢字にできるだけルビを表示':'麻雀用語やむずかしい漢字に表示')+'</span></div>'
     +'<div class="rb-seg" role="group" aria-label="ルビ">'
     +'<button class="btn '+(rubyModeFull()?'gray':'')+'" id="rb-std" aria-pressed="'+!rubyModeFull()+'" onclick="setRubyMode(\'standard\')">標準</button>'
