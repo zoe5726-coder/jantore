@@ -261,6 +261,24 @@ html.ruby-full .mt-guide-card .tc-bub{height:86px;}
 .btn:disabled{background:var(--locked); box-shadow:0 4px 0 var(--line); color:var(--card);}
 .btn.pressing{transform:translateY(3px); box-shadow:0 1px 0 var(--jade-deep); background:var(--jade-deep); color:#fff; opacity:.95;}
 
+/* ---------- training: 条件えらび(R36 枚数選択) ----------
+   色はすべて既存トークン(--card/--line/--ink/--ink-soft/--paper/--jade系/--locked)を使う。
+   ハードコードした色は置かない＝将来ダークモードを入れるときトークンの差し替えだけで済む */
+.tr-opt{margin:2px 0 0;}
+.tr-opt-h{font-size:12.5px; font-weight:800; color:var(--ink-soft); margin:0 0 7px;}
+.tr-grid{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+.tr-pick{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
+  min-height:54px; padding:8px 6px; border:2px solid var(--line); border-radius:14px;
+  background:var(--card); color:var(--ink); font-family:inherit; font-weight:900;
+  font-size:clamp(15px,4.2vw,17px); line-height:1.15; cursor:pointer; transition:transform .08s;}
+.tr-pick small{font-size:clamp(10px,2.9vw,11.5px); font-weight:800; color:var(--ink-soft);}
+.tr-pick:active{transform:translateY(2px);}
+.tr-pick.lock{background:var(--paper); color:var(--locked); border-color:var(--line);}
+.tr-pick.lock small{color:var(--locked);}
+.tr-pick.tr-any{grid-column:1/-1; border-color:var(--jade); background:var(--jade-soft); color:var(--jade-deep);}
+.tr-pick.tr-any small{color:var(--jade-deep); opacity:.85;}
+.tr-note{font-size:11px; color:var(--ink-soft); font-weight:700; margin:8px 0 0;}
+
 /* ---------- lesson ---------- */
 .lesson{position:fixed; inset:0; z-index:40; background:var(--paper); display:none; flex-direction:column; height:100dvh;}
 .lesson.show{display:flex;}
@@ -2884,8 +2902,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.34.2';
-const BUILD_ID='20260923-05';
+const APP_VER='0.35.0';
+const BUILD_ID='20260923-06';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -3213,12 +3231,16 @@ function pickTargetLv(cat){
   return Math.max(lo,Math.min(hi,Math.round((d-5)/10)));
 }
 const WLV_TILES={1:4,2:4,3:4,4:7,5:7,6:10,7:10,8:13,9:13};
-function genWaitsAt(targetLv){
+/* tiles を渡すとその枚数形に固定して生成する(R36 トレーニングの枚数選択)。
+   渡さなければ従来どおり targetLv から枚数を決める＝既存の呼び出しは挙動不変。
+   枚数を固定しても lv は waitsLv(枚数,待ちの数) で実際の難しさから決まるので、
+   レーティング(d=lv*10+5)は「その問題の本当の難しさ」を見たままになる */
+function genWaitsAt(targetLv,tiles){
   let bestQ=null,bestDiff=99;
   for(let tr=0;tr<25;tr++){
     const seed=(Math.random()*0x7fffffff)|0;
     const rng=mulberry32(seed);
-    const nt=WLV_TILES[targetLv];
+    const nt=tiles||WLV_TILES[targetLv];
     const g=genSuitTenpai(nt,rng);
     if(!g) continue;
     const lv=waitsLv(nt,g.waits.length);
@@ -3233,8 +3255,10 @@ function genWaitsAt(targetLv){
     if(diff===0) break;
   }
   if(!bestQ){
-    const g=genSuitTenpai(4,Math.random);   // 最終フォールバック
-    if(g) bestQ={wtype:true,level:4,counts:g.counts,waits:g.waits,suit:'m',seed:-1,lv:waitsLv(4,g.waits.length),fs:'w:fallback'};
+    const nt=tiles||4;                      // 最終フォールバック(選んだ枚数は守る)
+    const g=genSuitTenpai(nt,Math.random)||genSuitTenpai(4,Math.random);
+    if(g){ const n2=g.counts.reduce((a,b)=>a+b,0);
+      bestQ={wtype:true,level:n2,counts:g.counts,waits:g.waits,suit:'m',seed:-1,lv:waitsLv(n2,g.waits.length),fs:'w:fallback'}; }
   }
   return bestQ;
 }
@@ -3447,6 +3471,59 @@ function renderHome(){
 }
 
 /* ================= トレーニングハブ ================= */
+/* R36 トレーニングの「なん枚で練習するか」
+   ・Road=教える場所(4枚形→7枚形→10枚形→13枚形を順番に習う) / Training=自分で反復する場所。
+     そこでTrainingでは順番を強制せず、習った枚数形をユーザーが自分で選べるようにする。
+   ・解放判定は既存の roadProgress(テーマごとのクリア数)だけから毎回算出する。
+     新しい保存データは作らない＝localStorageの形は一切変えない。
+   ・選んだ枚数はボタンから startTraining に直接渡すだけで、どこにも保存しない(そのレッスン限り)。
+   ・将来トレーニング種別が増えたら trainOptionsHTML(cat) に分岐を足すだけで条件選択を追加できる */
+const WAITS_ST_TILES={st_waits_4:4,st_waits_7:7,st_waits_10:10,st_waits_13:13};
+function waitsTileSteps(){                    // [{n:枚数, need:解放に必要なクリア数, title:小テーマ名}]
+  const t=themeOf('th_waits');
+  if(!t||!t.subThemes) return [4,7,10,13].map(n=>({n,need:0,title:n+'枚形'}));
+  const out=[]; let acc=0;
+  t.subThemes.forEach(st=>{
+    const n=WAITS_ST_TILES[st.id];
+    if(n) out.push({n,need:acc+1,title:st.title});   // その小テーマを1レッスンでもクリアしたら解放
+    acc+=st.lessons.length;
+  });
+  return out.length?out:[4,7,10,13].map(n=>({n,need:0,title:n+'枚形'}));
+}
+function waitsTilesUnlocked(){
+  const prog=(S.roadProgress&&S.roadProgress.th_waits)||0;
+  const out=waitsTileSteps().filter(s=>prog>=s.need).map(s=>s.n);
+  return out.length?out:[4];                  // まだ何も習っていない人でも4枚形だけは練習できる
+}
+function nearestUnlockedTiles(n,list){        // おまかせ: レーティングが指す枚数に一番近い解放済み枚数
+  let best=list[0];
+  list.forEach(x=>{ if(Math.abs(x-n)<Math.abs(best-n)) best=x; });
+  return best;
+}
+function waitsTilesFor(l,lv){
+  if(!l||!l.wtiles) return null;              // 従来の呼び出し: 枚数を固定しない(挙動不変)
+  if(l.wtiles!=='auto') return l.wtiles;      // 手動で選んだ枚数に固定
+  return nearestUnlockedTiles(WLV_TILES[lv],waitsTilesUnlocked());
+}
+function trainLockInfo(n){
+  const st=waitsTileSteps().find(s=>s.n===n);
+  openModal('<h3>🔒 '+n+'枚形</h3>'
+    +'<p>学習ロードの「待ちの基本」で<b>'+(st?st.title:n+'枚形')+'</b>をならうと、ここでも れんしゅうできるよ。</p>'
+    +'<button class="btn" onclick="closeModal()">とじる</button>');
+}
+function trainOptionsHTML(cat){
+  if(cat!=='waits') return '<button class="btn" onclick="startTraining(\''+cat+'\')">トレーニング開始（7問）</button>';
+  const un=waitsTilesUnlocked(), steps=waitsTileSteps();
+  const cell=s=>un.includes(s.n)
+    ? '<button class="tr-pick" onclick="startTraining(\'waits\','+s.n+')">'+s.n+'枚形<small>7問</small></button>'
+    : '<button class="tr-pick lock" onclick="trainLockInfo('+s.n+')">🔒 '+s.n+'枚形<small>まだ ならってない</small></button>';
+  return '<div class="tr-opt"><p class="tr-opt-h">なんまいで れんしゅうする？</p>'
+    +'<div class="tr-grid">'+steps.map(cell).join('')
+    +'<button class="tr-pick tr-any" onclick="startTraining(\'waits\',\'auto\')">おまかせ'
+    +'<small>'+un.join('・')+'枚形から 7問</small></button></div>'
+    +(un.length<steps.length?'<p class="tr-note">🔒は 学習ロードでならうと ひらくよ</p>':'')
+    +'</div>';
+}
 function bandText(cat){
   const R=S.ratings[cat];
   const lo=cat==='waits'?2:1, hi=9;
@@ -3470,18 +3547,26 @@ function renderTraining(){
       +(best?'<p style="font-size:11.5px;color:var(--gold-deep);margin:0 0 4px;font-weight:800;">🏅 BEST '
         +fmtDur(best.ms,true)+(rank?'　ランク'+rank:'')+'</p>':'')
       +'<p style="font-size:11px;color:var(--ink-soft);margin:0 0 10px;font-weight:700;">'+(bandOverride||bandText(cat)+'（あなたのレーティングに合わせて自動調整）')+'</p>'
-      +'<button class="btn" onclick="startTraining(\''+cat+'\')">トレーニング開始（7問）</button>'
+      +trainOptionsHTML(cat)                  // 種別ごとの条件選択(待ち=枚数えらび / 他は開始ボタンのまま)
       +'</div>';
   };
   el.innerHTML='<div class="card" style="background:var(--jade);border-color:var(--jade-deep);color:#fff;">'
     +'<b>🎯 デイリートレーニング（プロト版）</b><br><span style="font-size:12px;opacity:.92;">学んだ能力の精度を上げ続ける場所。問題の難しさはレーティングに自動で追従します</span></div>'
-    +card('waits','🔍','待ちトレーニング','待ち当て・全形式ミックス')
+    +card('waits','🔍','待ちトレーニング','習った枚数形から えらんで練習',
+      bandText('waits')+'（おまかせは あなたのレーティングに合わせて自動調整）')
     +card('nanikiru','🀄','何切るトレーニング','受け入れ最大の1枚')
     +card('riichi','📣','リーチ判断トレーニング','曲げるかダマか・鳳凰卓実測で検証済み','検証済み問題からランダム7問（2択・レーティング反映）')
     +'<p style="text-align:center;font-size:11px;color:var(--ink-soft);padding:0 24px;">他のカテゴリ（役判定・点数計算・押し引き…）は学習ロードの進行で解放予定</p>';
 }
-function startTraining(cat){
+/* tiles: 数値=その枚数形だけ / 'auto'=おまかせ(習った枚数からレーティングに合わせて選ぶ)
+   / 省略=従来どおり枚数を固定しない(既存の呼び出し・自動テストは挙動不変) */
+function startTraining(cat,tiles){
   if(!staminaFree()&&S.hearts<=0){ staminaModal(); return; }
+  let wtiles=null;
+  if(cat==='waits'&&tiles!=null){
+    const un=waitsTilesUnlocked();
+    wtiles=(tiles==='auto'||!un.includes(tiles))?'auto':tiles;   // 未解放が来たら おまかせへ落とす
+  }
   const course = cat==='waits'
     ? {id:'tr-waits',title:'待ちトレーニング',type:'waits',training:true}
     : cat==='riichi'
@@ -3492,7 +3577,8 @@ function startTraining(cat){
     ? shuffle(SR_RIICHI_QUESTIONS.slice()).slice(0,7)
     : new Array(7).fill(null);
   L={course,qs,idx:0,correct:0,sel:null,checked:false,done:false,
-     rcat:cat,ratingStart:S.ratings[cat],bigMiss:0,startedAt:Date.now(),combo:0,maxCombo:0};
+     rcat:cat,ratingStart:S.ratings[cat],bigMiss:0,startedAt:Date.now(),combo:0,maxCombo:0,
+     wtiles};   // このレッスン中だけ有効。保存はしない(途中で枚数が変わることもない)
   document.getElementById('lesson').classList.add('show');
   renderQ();
 }
@@ -8288,7 +8374,7 @@ function closeStreakFx(){
 function renderQ(){
   if(L.course.training&&!L.qs[L.idx]){
     const lv=pickTargetLv(L.rcat);
-    L.qs[L.idx]=L.rcat==='waits'?genWaitsAt(lv):genNanikiruAt(lv);
+    L.qs[L.idx]=L.rcat==='waits'?genWaitsAt(lv,waitsTilesFor(L,lv)):genNanikiruAt(lv);
   }
   const q=L.qs[L.idx];
   L.sel=null; L.checked=false; L.actDone=false; L.judging=false; L.autoTok=null;
