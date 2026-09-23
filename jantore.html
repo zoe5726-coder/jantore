@@ -866,6 +866,10 @@ button.tile.off:active{transform:none;}
 @keyframes avBounce{0%,100%{transform:translateY(0);}30%{transform:translateY(-10px) scale(1.04);}55%{transform:translateY(0);}70%{transform:translateY(-4px);}}
 .res-av-badge{position:absolute; right:-6px; bottom:4px; font-size:30px; line-height:1;}
 @media (prefers-reduced-motion: reduce){ .uav-res,.av-pop{animation:none;} }
+/* 版の表示: 補助情報なので小さく薄く(ただしiPhoneで読める12px)。設定より目立たせない */
+.app-ver{margin:14px 0 4px; text-align:center; font-size:12px; font-weight:700; line-height:1.6;
+  color:var(--ink-soft); opacity:.75; letter-spacing:.02em;}
+.app-ver span{display:block;}
 .av{font-size:30px; background:var(--card); border:2px solid var(--line); border-radius:14px; width:58px; height:58px;}
 .av.sel{border-color:var(--jade); background:var(--jade-soft);}
 .av.lock{opacity:.4;}
@@ -2572,6 +2576,7 @@ function sndToggle(){
    自動で再読み込みを繰り返す経路は無い(ボタン操作時だけ1回)。処理中は再入不可。 */
 const APP_CACHE_PREFIX='tsumoppy-app';
 let APP_UPDATING=false;
+let APP_UPDATE_FETCHED=null;   // 取り直したHTMLに書かれていたbuild(=サーバー側の版。読み込み直すまでは画面の版ではない)
 function appUpdateStatus(msg,kind){
   const el=document.getElementById('app-update-msg');
   if(el){ el.textContent=msg||''; el.className='au-msg'+(kind?' '+kind:''); }
@@ -2598,7 +2603,11 @@ async function appUpdate(){
     const base=location.href.split('#')[0].replace(/[?&]u=\d+/,'').replace(/\?$/,'');
     const res=await fetch(base,{cache:'reload'});
     if(!res.ok) throw new Error('HTTP '+res.status);
-    await res.text();
+    const html=await res.text();
+    // 取り直したHTMLの版を読む(=サーバーにある版)。まだ「いま動いている版」ではないので、そこは混同しない
+    const m=html.match(/const BUILD_ID='([^']+)'/);
+    const fetched=m?m[1]:null;
+    APP_UPDATE_FETCHED=fetched;
     appUpdateBtn(true,'更新しています…');
     // 外部WAV・manifest・アイコンも取り直す(失敗しても更新は続ける)
     const extra=Object.keys(SND_FILES).map(k=>SND_DIR+SND_FILES[k]).concat(['manifest.webmanifest'])
@@ -2610,7 +2619,9 @@ async function appUpdate(){
       await Promise.all(keys.filter(k=>k.indexOf(APP_CACHE_PREFIX)===0).map(k=>caches.delete(k)));
     }
     // ④ 1回だけ読み込み直す(目印付きURL→起動時に目印を消す。自動の再読込ループは無い)
-    appUpdateStatus('更新を確認しました。読み込み直します…','ok');
+    appUpdateStatus(APP_UPDATE_FETCHED&&APP_UPDATE_FETCHED!==BUILD_ID
+      ?('新しい版（build '+APP_UPDATE_FETCHED+'）が見つかりました。読み込み直します…')
+      :'更新を確認しました。読み込み直します…','ok');
     const sep=base.indexOf('?')>=0?'&':'?';
     setTimeout(()=>{ location.replace(base+sep+'u='+Date.now()); },300);
   }catch(e){
@@ -2831,6 +2842,17 @@ function rubyFullUncovered(root){
 }
 const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE',
   mascotName:'イソピィ',mascotNameEn:'ISOPPY',method:'ZOE'};
+/* ================= 版(バージョン)の表示 =================
+   目的: 「最新版に更新」を押したあと、いま端末で動いているHTMLが本当に新しい版かを画面だけで確かめられるようにする。
+   ・値はここ1か所だけ(マイページの表示も、更新完了の知らせも、この定数を読む)
+   ・BUILD_IDは手動の通し番号(YYYYMMDD-連番)。gitのcommit hashは、この行を書き換えるとhash自体が変わってしまい
+     自分で自分を指せない(自己参照)ので使わない。将来ビルド工程を入れたら、そこで自動的に埋め込む方式へ移行する
+   ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
+   ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
+   ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
+const APP_VER='0.34.2';
+const BUILD_ID='20260923-01';
+function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
    スマホ体験評価用: 評価対象外の導線（未整備コース・課金/広告モック・
@@ -9106,7 +9128,8 @@ function renderProfile(){
       +'<button class="btn gray" style="padding:10px;font-size:13px;" onclick="startCompare(\'cmp_dev_001\')">🔁 Compareフロー検証（開発fixture）</button>'
       +'</div></div>'):'')
     +'</div>':'')
-    +'<div class="card"><button class="btn gray" onclick="resetAll()">データをリセット</button></div>';
+    +'<div class="card"><button class="btn gray" onclick="resetAll()">データをリセット</button></div>'
+    +'<div class="app-ver" id="app-ver"><span>バージョン '+APP_VER+'</span><span>build '+BUILD_ID+'</span></div>';
 }
 function setAv(a){ S.avatar=a; save(); renderHUD(); renderProfile(); }   // 旧絵文字アバター(互換のため残置・画面からは呼ばない)
 /* R34 アバター選択: カードをえらぶ→大きなプレビューが変わる→「このアバターにする」で保存(誤操作防止と「選んだ感」)。
@@ -9212,7 +9235,8 @@ renderHUD(); renderPath();      // コース(ロード)を先に構築してお�
 showScreen('home');             // 起動時の初期画面はホーム(今日の状況→ミッション→つづきから)
 if(rubyModeFull()) rubyFullApply(document.body);
 if(appUpdateAfterBoot()){       // 「最新版に更新」から起動したときだけ完了を知らせる(再読込はしない)
-  openModal('<h3>🔄 最新版に更新しました</h3><p>学習の記録はそのまま残っています。</p>'
+  // ここは「読み込み直したあと」なので、表示するbuildは"いま動いているHTML"の版そのもの
+  openModal('<h3>🔄 最新版に更新しました</h3><p>いま動いているのは <b>build '+BUILD_ID+'</b>（バージョン '+APP_VER+'）です。<br>学習の記録はそのまま残っています。</p>'
     +'<button class="btn" onclick="closeModal()">OK</button>');
 }
 </script>
