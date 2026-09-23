@@ -1430,6 +1430,12 @@ function fbTilesHTML(codes){
   // <p>の中に置くので<div>は使わない(divだと段落が切れて牌が段落の外へ押し出される)
   return '<span class="fb-tiles'+(arguments[1]?' '+arguments[1]:'')+'">'+codes.map(c=>tileHTML(c).replace(/^<div/,'<span').replace(/<\/div>$/,'</span>')).join('')+'</span>';
 }
+function ch1TouchHandHTML(str){
+  // 「牌にさわってみる」体験用: 牌そのものを押せる(見た目は通常の手牌と同じ・押すとその牌だけ動いて音が鳴る)
+  return '<div class="hand hand-touch">'+sortTiles(parseHand(str)).map((t,i)=>
+    '<button class="tw" id="ch1-atw-'+i+'" aria-label="牌にさわる" onpointerdown="ch1ActTile('+i+')">'
+    +tileHTML(t)+'</button>').join('')+'</div>';
+}
 function handHTML(str){
   return '<div class="hand">'+sortTiles(parseHand(str)).map(t=>tileHTML(t)).join('')+'</div>';
 }
@@ -2429,8 +2435,10 @@ const SND_FILES={
   themeComplete:'themeComplete.wav',    // テーマ(小テーマ)制覇=Lesson完了より上位
   streak:'streak.wav',                  // 通常のストリーク達成演出
   streakMile:'streakMile.wav',          // 7/14/30/50/100日の節目ストリーク
-  // 将来スロット(今回は未設定): tsumo:'tsumo.wav', ron:'ron.wav', riichi:'riichi.wav',
-  //                             pon:'pon.wav', chi:'chi.wav', kan:'kan.wav'
+  // 将来スロット(今回は未設定): tileTouch:'tileTouch.wav', tsumo:'tsumo.wav', ron:'ron.wav',
+  //   riichi:'riichi.wav', pon:'pon.wav', chi:'chi.wav', kan:'kan.wav'
+  // ※tileTouch(牌にさわる音)は現在 SND_DEFS の生成音(仮音)で鳴らしている。
+  //   正式WAVができたら assets/sounds/tileTouch.wav を置き、上の行を有効にするだけでよい
 };
 let SND_CTX=null;
 function sndCtx(){
@@ -2460,6 +2468,15 @@ function sndClick(ctx,t0,vol){
   const g=ctx.createGain(); g.gain.value=vol;
   src.connect(f); f.connect(g); g.connect(ctx.destination); src.start(t0);
 }
+function sndTap(ctx,t0,vol,hz,dur){
+  // ごく短い「コツッ」: ノイズを一瞬だけ鳴らし、帯域を絞って硬い当たりの質感にする
+  const n=Math.max(1,ctx.sampleRate*dur|0), buf=ctx.createBuffer(1,n,ctx.sampleRate), d=buf.getChannelData(0);
+  for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/n,3.4);
+  const src=ctx.createBufferSource(); src.buffer=buf;
+  const f=ctx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=hz; f.Q.value=1.1;
+  const g=ctx.createGain(); g.gain.value=vol;
+  src.connect(f); f.connect(g); g.connect(ctx.destination); src.start(t0);
+}
 const SND_DEFS={
   select(ctx,t0){ sndTone(ctx,t0,1250,0.035,0.10,'square'); },                       // 選択: ごく短いtick
   correct(ctx,t0){ sndTone(ctx,t0,660,0.09,0.16,'sine'); sndTone(ctx,t0+0.085,990,0.12,0.16,'sine'); }, // 明るい2音
@@ -2471,6 +2488,11 @@ const SND_DEFS={
     sndTone(ctx,t0+0.24,1175,0.2,0.14,'sine'); },                       // 毎日の達成: 正解音より少し豪華な短いジングル
   streakMile(ctx,t0){ [587,740,880,1175].forEach((f,i)=>sndTone(ctx,t0+i*0.09,f,0.15,0.16,'triangle'));
     sndTone(ctx,t0+0.36,1568,0.26,0.13,'sine'); sndTone(ctx,t0+0.36,784,0.26,0.10,'sine'); }, // 節目: さらに一段特別
+  /* tileTouch: 「牌にさわった」瞬間の音(第1章A1-1の体験)。UI操作のselect(電子的なtick)とは別物で、
+     牌どうしが軽く当たる「カチャッ」を短い2連のノイズ+かすかな木の響きで作る。合計約60ms。
+     [TEMPORARY] 生成音(仮音)。正式Sound Set完成時は assets/sounds/tileTouch.wav を置けばそちらが優先される */
+  tileTouch(ctx,t0){ sndTap(ctx,t0,0.46,2100,0.018); sndTap(ctx,t0+0.035,0.30,1500,0.022);
+    sndTone(ctx,t0+0.002,520,0.045,0.07,'triangle'); },
   // 将来拡張スロット(麻雀固有SE): 実装時にここへ追加するだけでよい
   tsumo:null, ron:null, riichi:null, pon:null, chi:null, kan:null,
 };
@@ -2540,6 +2562,12 @@ function sndFile(name){
     return true;
   }
   return false;
+}
+let SND_LAST={};
+function sndPlayTap(name,ms){
+  // 連打で音が重なりすぎないように、同じ音は最短間隔(既定70ms)をあけてから鳴らす(押した感は損なわない)
+  const t=Date.now(); if(t-(SND_LAST[name]||0)<(ms||70)) return false;
+  SND_LAST[name]=t; sndPlay(name); return true;
 }
 function sndPlay(name){
   try{
@@ -2851,7 +2879,7 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
 const APP_VER='0.34.2';
-const BUILD_ID='20260923-02';
+const BUILD_ID='20260923-03';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -4618,7 +4646,9 @@ const CH1_LESSONS={
     return [
       ch1Teach('やっほー、ボクはイソピィ！これが麻雀（マージャン）の<span class="term-chip">牌（ハイ）</span>だよ。まずはさわってみよう！',
         {tlab:'はじめまして',hand:'5m3p7s E',
-         act:{label:'牌にさわってみる',result:'カチャッ♪ いい音！これから牌ととってもなかよくなるよ🐣'}}),
+         act:{label:'牌にさわってみる',snd:'tileTouch',
+           result:'カチャッ♪ いい音！これから牌ととってもなかよくなるよ🐣',
+           resultOff:'さわれたね！これから牌ととってもなかよくなるよ🐣'}}),   // 音OFFのときは音がした前提にしない
       ch1Teach('牌にはいろんな絵や数字がかいてあるね。まずは「おなじ牌」を見つけられたらバッチリ！',
         {tlab:'おなじ牌',hands:[{label:'この2枚は「おなじ牌」',hand:'44p'}]}),
       ch1SamePick('5m',['6m','5p','E'],{exp:'絵も数字もまったくおなじ牌が「おなじ牌」だよ。'}),
@@ -7993,7 +8023,7 @@ const QFORMATS={
       if(q.panel) html+='<div class="rd-panel">'+q.panel+'</div>';   // 牌の読み方などの図(ヘルパー関数で生成)
       if(q.hands){ for(const h of q.hands){ html+=(h.label?'<div class="tc-lab">'+h.label+'</div>':'')
         +(h.g?ch1HandGrouped(h.hand):handHTML(h.hand)); } }
-      else if(q.hand) html+=handHTML(q.hand);
+      else if(q.hand) html+=(q.act&&q.act.snd)?ch1TouchHandHTML(q.hand):handHTML(q.hand);
       if(q.act) html+='<div class="ch1-actbox"><button class="btn gray" id="ch1-act" onclick="ch1Act()">'
         +q.act.label+'</button><div id="ch1-act-res" class="tc-actres"></div></div>';
       L.sel=null;
@@ -8369,11 +8399,25 @@ function ch1CandDown(ev){
 function ch1Act(){
   if(!L) return;
   const q=L.qs[L.idx]; if(!q||!q.ch1t||!q.act) return;
+  // 体験の音(q.act.snd)がある場合だけ、押した瞬間に鳴らす(ユーザー操作の中で再生=iPhoneの制限に引っかからない)。
+  // 音を指定していない体験ボタン(役ってなに？等)の挙動は従来どおり変えない
+  if(q.act.snd) sndPlayTap(q.act.snd);
   L.actDone=true;
   const b=document.getElementById('ch1-act'); if(b) b.disabled=true;
-  const r=document.getElementById('ch1-act-res'); if(r) r.innerHTML=tileTokLesson(q.act.result);
+  // サウンドOFFのときは「音が鳴った前提」の文にしない(resultOffがある場合だけ差し替え)
+  const txt=(S.sound===false&&q.act.resultOff)?q.act.resultOff:q.act.result;
+  const r=document.getElementById('ch1-act-res'); if(r) r.innerHTML=tileTokLesson(txt);
   document.querySelectorAll('#q-area .hand .tile').forEach(el=>el.classList.add('ch1-shake'));
   renderFoot();
+}
+function ch1ActTile(i){
+  // 牌そのものをさわったとき: 1枚だけ動かして音を鳴らす。はじめての1回はボタンと同じ体験完了あつかい
+  if(!L) return;
+  const q=L.qs[L.idx]; if(!q||!q.ch1t||!q.act||!q.act.snd) return;
+  if(!L.actDone){ ch1Act(); return; }
+  sndPlayTap(q.act.snd);
+  const b=document.getElementById('ch1-atw-'+i), el=b&&b.firstElementChild;
+  if(el){ el.classList.remove('ch1-shake'); void el.offsetWidth; el.classList.add('ch1-shake'); }
 }
 /* 第1章Teach: スコア外で次へ。applyOutcomeを通らないためEXP/正解率/コンボ/ハートは一切動かない。
    進捗バーと復習の間隔管理のためにseq/baseAnsweredだけ進める */
