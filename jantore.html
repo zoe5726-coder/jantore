@@ -494,6 +494,19 @@ button.tile.off:active{transform:none;}
   border:1.5px solid var(--line); text-align:center; font-weight:800; font-size:15px; color:var(--ink);}
 .ch3-seatmap .sm-cell.you{background:var(--jade); border-color:var(--jade-deep); color:#fff;}
 .ch3-seatmap .sm-you-lab{display:block; font-size:10px; font-weight:800; line-height:1.2; opacity:.92;}
+/* seatPick(R38): 卓の図で「どの人？」をタップして答える共通形式。図は上の ch3-seatmap をそのまま使う
+   (卓図の実装はこの1つだけ。向きの定義は 左=上家 / 上=対面 / 右=下家 / 下=あなた で固定) */
+.ch3-seatmap .sm-cell.hl{border-color:var(--jade); background:var(--jade-soft); color:var(--jade-deep);}
+.ch3-seatmap .sm-cell.you.hl{background:var(--jade); color:#fff;}
+.ch3-seatmap.evenmap .sm-cell{min-width:64px;}   /* 呼び方モード: 席の幅をそろえて卓を中央に保つ */
+.ch3-seatmap.pickmap .sm-cell{min-width:64px; min-height:48px; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; font-family:inherit; cursor:pointer;
+  -webkit-tap-highlight-color:transparent; transition:transform .08s;}
+.ch3-seatmap.pickmap .sm-cell:active{transform:translateY(2px);}
+.ch3-seatmap .sm-cell.sel{border-color:var(--jade); background:color-mix(in srgb, var(--jade) 12%, var(--card,#fff));}
+.ch3-seatmap .sm-cell.correct{border-color:var(--jade); background:color-mix(in srgb, var(--jade) 22%, var(--card,#fff)); color:var(--jade-deep);}
+.ch3-seatmap .sm-cell.wrong{border-color:var(--verm); background:color-mix(in srgb, var(--verm) 12%, var(--card,#fff)); color:var(--verm-deep);}
+.ch3-seatmap .sm-cell.you.sel,.ch3-seatmap .sm-cell.you.correct,.ch3-seatmap .sm-cell.you.wrong{color:#fff;}
 .yf-cands{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:10px 0 2px;}
 .yfb{font-size:13px; font-weight:800; padding:9px 14px; border-radius:12px;
   border:2px solid rgba(0,0,0,.14); background:var(--card,#fff); color:var(--ink); cursor:pointer;}
@@ -633,13 +646,7 @@ button.tile.off:active{transform:none;}
 .mt-guide-card{margin-bottom:6px;}
 .mt-guide-card .tc-bub{height:56px; overflow-y:auto;}   /* コメント量で盤面を動かさない */
 /* D2-3: 4人の卓配置ミニ図(対戦エンジンではなく「左の人」等の位置理解のための静的図) */
-.d2-table{display:grid; grid-template-columns:1fr 1fr 1fr; gap:4px; margin:10px 0 2px;
-  text-align:center; font-size:12px; font-weight:800;}
-.d2-seat{background:var(--jade-soft,#e3f6ec); border:2px solid var(--line);
-  border-radius:10px; padding:7px 2px; color:var(--ink);}
-.d2-seat.me{background:var(--gold,#f2b705); color:#5b4300; border-color:#b98a04;}
-.d2-seat.hl{border-color:var(--verm); color:var(--verm);
-  background:color-mix(in srgb, var(--verm) 10%, #fff);}
+/* (R38) 第1章の独自卓図 .d2-table/.d2-seat は廃止。卓図は ch3-seatmap に一本化 */
 .mg-btns{display:flex; gap:6px; margin-left:auto; flex:0 0 auto;}  /* ボタンは縮めない(縮むのは山の裏牌側) */
 .mg-wall .btn{white-space:nowrap;}
 .mg-decomp{display:flex; gap:2px; align-items:center; flex-wrap:nowrap;}
@@ -1936,6 +1943,7 @@ const COURSES=[
 {id:'ch1b',title:'組を作ろう',icon:'🧱',section:0,type:'ch1',desc:'メンツ・トイツ・アタマを覚えよう。',questions:[]},
 {id:'ch1c',title:'ミニ麻雀',icon:'🀄',section:0,type:'ch1',desc:'ツモって、切って、アガリをつくろう。',questions:[]},
 {id:'ch1d',title:'本物の13枚へ',icon:'🏆',section:0,type:'ch1',desc:'本物の麻雀とおなじ13枚に挑戦！',questions:[]},
+{id:'ch1s',title:'4人で打つ',icon:'🀄',section:0,type:'ch1',desc:'麻雀卓に4人。のこりの3人を、なんとよぶ？',questions:[]},
 {id:'ch1e',title:'実戦への扉',icon:'🚪',section:0,type:'ch1',desc:'役・リーチ・実戦のことばを覚えて、1局アガりきろう！',questions:[]},
 /* 第2章「アガリが見える」(待ち牌と待ちの形)。descに待ちの形の名称は書かない(名称初出はレッスン内) */
 {id:'ch2a',title:'待ちを見つけよう',icon:'🔎',section:1,type:'ch1',desc:'アガリになる牌＝待ち牌をさがそう。',questions:[]},
@@ -2096,6 +2104,23 @@ const THEMES=[
     {diff:{ch1:'d1_2'}},                       // 13枚ミニ麻雀(LEVEL3中心)
     {diff:{ch1:'d1_3'}},                       // 13枚のテンパイと待ち
     {diff:{ch1:'d1_4'}},                       // ★まとめ: 13枚マスター
+   ]},
+  ]},
+ /* 4人で打つ(R38): ロン・鳴き(D2-3)の前に「麻雀卓と4人」を理解しておくためのテーマ。
+    ・requiresは th_ch1d のまま(th_ch1e の requires は変えない)＝
+      すでに「実戦への扉」を進めている既存ユーザーが、このテーマ未クリアでロックされることはない。
+    ・THEMES配列上は th_ch1d と th_ch1e の間に置くので、新規ユーザーには
+      本物の13枚へ → 4人で打つ → 実戦への扉 の順で見える。
+    ・本編テーマ(SECTION_OPTIONAL_THEMESには入れない)。roadProgressは新しいキーが1つ増えるだけで、
+      既存テーマの進捗値の意味は変わらない */
+ {id:'th_ch1s', course:'ch1s', title:'4人で打つ', sub:'麻雀卓と、のこりの3人',
+  requires:'th_ch1d',
+  subThemes:[
+   {id:'st_s1', title:'4人の席', lessons:[
+    {diff:{ch1:'s1_1'}},                       // 4人で打つ / 上家・下家・対面
+    {diff:{ch1:'s1_2'}},                       // 東家・南家・西家・北家
+    {diff:{ch1:'s1_3'}},                       // 親と子
+    {diff:{ch1:'s1_4'}},                       // ★まとめ: 4人マスター
    ]},
   ]},
  {id:'th_ch1e', course:'ch1e', title:'実戦への扉', sub:'役・リーチ・実戦のことば',
@@ -2719,6 +2744,10 @@ const RUBY_TERMS={
   '麻雀':'マージャン','牌':'はい','萬子':'マンズ','筒子':'ピンズ','索子':'ソーズ',
   '数牌':'すうぱい','字牌':'じはい','手牌':'てはい','捨て牌':'すてはい','風牌':'かぜはい','三元牌':'さんげんぱい',
   '自風':'じかぜ','場風':'ばかぜ','役牌':'やくはい','東家':'トンチャ','南家':'ナンチャ','西家':'シャーチャ','北家':'ペーチャ',
+  // R38: 4人の席。RUBY_TERMSは「すべてルビ」の辞書の土台にもなる(rubyFullBuild)ので、
+  // 1字の「親」「子」はここに入れない——入れると 面子・順子・刻子・調子・様子 へ部分一致で誤爆する。
+  // 教材側では <ruby>親<rt>おや</rt></ruby> のように書いて、その語だけにルビを付ける(R38-RUBY方針)
+  '上家':'かみちゃ','下家':'しもちゃ','対面':'といめん',
   '東場':'トンば','南場':'ナンば','単騎':'タンキ','暗刻':'アンコ','三暗刻':'サンアンコー','役満':'ヤクマン',
   '七対子':'チートイツ','三色':'サンショク','大三元':'ダイサンゲン','四暗刻':'スーアンコー','国士無双':'コクシムソウ',
   '小四喜':'ショウスーシー','二盃口':'リャンペーコー','字一色':'ツーイーソー','緑一色':'リューイーソー',
@@ -2905,8 +2934,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.35.0';
-const BUILD_ID='20260923-08';
+const APP_VER='0.36.0';
+const BUILD_ID='20260923-09';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -2914,7 +2943,7 @@ function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_I
    開発UI・未検証Compare）を通常操作から隠す。コード・データ・機能は
    一切削除しておらず、このフラグをfalseにすれば全て復帰する。 */
 let PROTOTYPE_MODE=true;
-const PROTO_VISIBLE_COURSES=['ch1a','ch1r','ch1b','ch1c','ch1d','ch1e','ch2a','ch2b','ch2c','ch2d','ch3a','ch3b','ch3c','ch3d','ch3e','ch3f','ch3g','ch3h','ch3i','ch3j','ch3x','waits','ukeire1','nanikiru','riichi'];
+const PROTO_VISIBLE_COURSES=['ch1a','ch1r','ch1b','ch1c','ch1d','ch1s','ch1e','ch2a','ch2b','ch2c','ch2d','ch3a','ch3b','ch3c','ch3d','ch3e','ch3f','ch3g','ch3h','ch3i','ch3j','ch3x','waits','ukeire1','nanikiru','riichi'];
 function protoCourseVisible(id){ return !PROTOTYPE_MODE||PROTO_VISIBLE_COURSES.includes(id); }
 function staminaFree(){ return PROTOTYPE_MODE||S.owned.stamina; }   // プロトタイプはスタミナ消費なし
 function devUIVisible(){ return !PROTOTYPE_MODE||S.dev||location.hash==='#dev'; }
@@ -5312,6 +5341,94 @@ const CH1_LESSONS={
      正式導入語: 役(D2-1)/リーチ(D2-2)/ロン・鳴き・ポン・チー・カン(D2-3)。
      カンツ・ターツ・シャンテン・メンゼン・フリテン・翻数・点数などは第1章では扱わない */
   /* D2-1 アガリには役がいる(存在理解のみ。役一覧・翻数へ広げない) */
+  /* ===== S1 4人で打つ(R38) =====
+     ロン・鳴き(D2-3)の前に「麻雀卓と4人」を理解する。3種類の概念を同時に暗記させない:
+       S1-1 上家・下家・対面 = あなたから見た場所 / S1-2 東家〜北家 = 席についた風のよび方
+       S1-3 東家=親・ほかは子 / S1-4 その2つはべつのもの、を確認
+     図はアプリ唯一の卓図 ch3SeatMapHTML。向きは 左=上家 / 上=対面 / 右=下家 / 下=あなた で固定。
+     ルビ: 上家・下家・対面はRUBY_TERMSにあるので「上家（かみちゃ）」表記でルビになる。
+           親・子は1字で誤爆するため辞書に入れず、ここで <ruby> を直接書く(R38-RUBY方針) */
+  s1_1(){
+    const P={mode:'name',only:true};
+    return [
+      ch1Teach('本物の麻雀は<b>4人</b>でやるよ。あなたのほかに<b>3人</b>いるんだ。',
+        {tlab:'4人でやる',seatMap:'S',seatOpt:{mode:'anon'}}),
+      ch1Teach('右どなりの人は<b>下家（しもちゃ）</b>。あなたのつぎに牌をとる人だよ。',
+        {tlab:'下家',seatMap:'S',seatOpt:Object.assign({hl:'right'},P)}),
+      ch1Teach('向かいの人は<b>対面（といめん）</b>。あなたから いちばん とおい人だよ。',
+        {tlab:'対面',seatMap:'S',seatOpt:Object.assign({hl:'top'},P)}),
+      ch1Teach('左どなりの人は<b>上家（かみちゃ）</b>。あなたのひとつ前に牌をとる人だよ。',
+        {tlab:'上家',seatMap:'S',seatOpt:Object.assign({hl:'left'},P)}),
+      ch1SeatPick('S','shimo','<b>下家</b>はどの人？',{mode:'anon',exp:'右どなりの人が下家。あなたのつぎに牌をとる人だよ。'}),
+      ch1SeatPick('S','kami','<b>上家</b>はどの人？',{mode:'anon',exp:'左どなりの人が上家。あなたのひとつ前に牌をとる人だね。'}),
+      ch1SeatPick('S','toi','<b>対面</b>はどの人？',{mode:'anon',exp:'向かいの人が対面。まっすぐ前にすわっているよ。'}),
+      {q:'向かいにすわっている人の、よび方は？',choices:['対面','上家','下家'],a:0,
+        seatMap:'S',seatOpt:{mode:'anon'},
+        exp:'向かい＝対面。左どなりが上家、右どなりが下家だったね。'},
+    ];
+  },
+  s1_2(){
+    return [
+      ch1Teach('4つの席には、<b>東・南・西・北</b>の風がひとつずつつくよ。',
+        {tlab:'4つの風',seatMap:'E'}),
+      ch1Teach('東の席の人を<b>東家（トンチャ）</b>というよ。',
+        {tlab:'東家',seatMap:'E',seatOpt:{hl:'bottom'}}),
+      ch1Teach('南の席の人は<b>南家（ナンチャ）</b>。',
+        {tlab:'南家',seatMap:'E',seatOpt:{hl:'right'}}),
+      ch1Teach('西の席の人は<b>西家（シャーチャ）</b>。',
+        {tlab:'西家',seatMap:'E',seatOpt:{hl:'top'}}),
+      ch1Teach('北の席の人は<b>北家（ペーチャ）</b>。これで4つそろったね！',
+        {tlab:'北家',seatMap:'E',seatOpt:{hl:'left'}}),
+      ch1SeatPick('S','E','<b>東家</b>はどの人？',{exp:'東の席にすわっている人が東家（トンチャ）だよ。'}),
+      {q:'あなたが<b>西</b>の席にいるとき、あなたのよび方は？',seatMap:'W',
+        choices:['西家','南家','北家','東家'],a:0,
+        exp:'西の席にすわっているから西家（シャーチャ）。席の風で、よび方がきまるよ。'},
+      ch1SeatPick('W','N','<b>北家</b>はどの人？',{exp:'北の席の人が北家（ペーチャ）。あなたは西家だね。'}),
+      {q:'席の風がかわったら、よび方もかわる？',choices:['かわる','かわらない'],a:0,
+        exp:'東の席なら東家、南の席なら南家。すわった席の風で、よび方がきまるんだ。'},
+    ];
+  },
+  s1_3(){
+    const OYA='<ruby>親<rt>おや</rt></ruby>', KO='<ruby>子<rt>こ</rt></ruby>';
+    return [
+      ch1Teach('<ruby>東家<rt>トンチャ</rt></ruby>の人を<b>'+OYA+'</b>というよ。',
+        {tlab:'<ruby>親<rt>おや</rt></ruby>',seatMap:'S',seatOpt:{hl:'left'}}),
+      ch1Teach('のこりの3人、<ruby>南家<rt>ナンチャ</rt></ruby>・<ruby>西家<rt>シャーチャ</rt></ruby>・<ruby>北家<rt>ペーチャ</rt></ruby>は<b>'+KO+'</b>。',
+        {tlab:'<ruby>子<rt>こ</rt></ruby>',seatMap:'S'}),
+      ch1Teach(OYA+'はずっとおなじ人じゃないよ。ゲームがすすむと、じゅんばんにかわっていくんだ。',
+        {tlab:'<ruby>親<rt>おや</rt></ruby>はかわる'}),
+      ch1SeatPick('W','oya','<b>'+OYA+'</b>はどの人？',{exp:'東の席の人＝東家が親だよ。'}),
+      {q:'<ruby>南家<rt>ナンチャ</rt></ruby>の人は、'+OYA+'？　それとも'+KO+'？',choices:[KO,OYA],a:0,
+        exp:'親は東家だけ。南家・西家・北家の3人は子だよ。'},
+      {q:'<ruby>東家<rt>トンチャ</rt></ruby>の人は？',choices:[OYA,KO],a:0,
+        exp:'東家＝親。のこりの3人が子だね。'},
+      {q:OYA+'は、ずっとおなじ人？',choices:['ちがう。じゅんばんにかわる','ずっとおなじ人'],a:0,
+        exp:'ゲームがすすむと、親はじゅんばんにかわっていくよ。'},
+    ];
+  },
+  s1_4(){
+    const OYA='<ruby>親<rt>おや</rt></ruby>';
+    return [
+      ch1Teach('大事なこと！<b>上家・下家・対面</b>は<b>あなたから見た場所</b>のよび方。<b>東家・南家・西家・北家</b>は<b>席についた風</b>のよび方。べつのものだよ。',
+        {tlab:'2つのよび方'}),
+      {q:'<b>上家</b>と<b>東家</b>は、おなじ意味？',choices:['ちがう','おなじ'],a:0,
+        exp:'上家は「あなたの左どなり」。東家は「東の席の人」。見ているものがちがうんだ。'},
+      {q:'あなたが<b>南家</b>のとき、<b>上家</b>は どの人？',seatMap:'S',
+        choices:['東家','西家','北家','南家'],a:0,
+        exp:'あなたが南家なら、左どなりは東家。このとき上家＝東家だね。'},
+      {q:'こんどはあなたが<b>西家</b>。<b>上家</b>は どの人？',seatMap:'W',
+        choices:['南家','東家','北家','西家'],a:0,
+        exp:'こんどは上家＝南家。おなじ「上家」でも、あなたの席がかわると あいてもかわるよ。'},
+      ch1SeatPick('N','shimo','<b>下家</b>はどの人？',{mode:'anon',exp:'右どなりが下家。場所のよび方は、あなたから見てきまるよ。'}),
+      {q:'<b>'+OYA+'</b>は、どの席の人？',choices:['東家','南家','西家','北家'],a:0,
+        exp:'東家の人が親。のこりの3人は子だったね。'},
+      {q:'あなたが<b>北家</b>のとき、<b>対面</b>は どの人？',seatMap:'N',
+        choices:['南家','東家','西家','北家'],a:0,
+        exp:'あなたが北家なら、向かいは南家。対面は「向かいの人」という場所のよび方だよ。'},
+      ch1Teach('これで4人の席がわかったね！つぎは、この4人のあいだで牌をやりとりするルールを覚えよう。',
+        {tlab:'4人マスター'}),
+    ];
+  },
   d2_1(){
     return [
       ch1Teach('ここまでで<b>4メンツ＋1アタマ</b>を作れるようになったね！…じつは、本物の麻雀では<b>形がそろっただけではアガれないことがある</b>んだ。',
@@ -5346,47 +5463,46 @@ const CH1_LESSONS={
          exp:'じぶんの力でリーチ→アガリ！🎉 リーチを宣言→テンパイになる牌を切る→ツモ切り→待ち牌が来たら「アガリ！」。この流れが本物の麻雀の基本だよ。'}),
     ];
   },
-  /* D2-3 ほかの人がいる麻雀(名称と大まかな意味の「実戦への地図」。対戦エンジンは作らない) */
+  /* D2-3 ほかの人がいる麻雀(名称と大まかな意味の「実戦への地図」。対戦エンジンは作らない)
+     R38: 4人の紹介はS1へ移し、ここは1画面の復習だけ。呼び方は S1 で習った
+     上家・対面・下家 に統一し、チー=上家 でS1の学習が実戦ルールにつながるようにした */
   d2_3(){
-    const zu=(hl)=>'<div class="d2-table"><span></span><span class="d2-seat">向かいの人</span><span></span>'
-      +'<span class="d2-seat'+(hl?' hl':'')+'">左の人</span><span></span><span class="d2-seat">右の人</span>'
-      +'<span></span><span class="d2-seat me">自分</span><span></span></div>';
     return [
-      ch1Teach('本物の麻雀は<b>4人</b>で打つよ。自分から見て「左の人」「向かいの人」「右の人」がいるんだ。'+zu(false),
-        {tlab:'4人の麻雀'}),
+      ch1Teach('麻雀は<b>4人</b>。S1でおぼえたね——左どなりが<b>上家</b>、向かいが<b>対面</b>、右どなりが<b>下家</b>だよ。',
+        {tlab:'4人の麻雀',seatMap:'S',seatOpt:{mode:'name'}}),
       ch1Teach('アガリ牌を<b>自分で山から引いて</b>アガるのが、おなじみの<b>ツモ</b>。それにたいして、<b>ほかの人が捨てた牌</b>でアガることを<span class="term-chip">ロン</span>というよ。ほかの人も自分とおなじように牌を切って、捨て牌がならんでいくんだ。',
         {tlab:'ツモとロン',panel:ch3BoardHTML({hand:'234m567m88p345s678s',ctx3:{win:'ron',winTile:'8s'}})}),
       {q:'自分で山から引いた牌でアガった。これは？',choices:['ツモ','ロン'],a:0,
         exp:'自分で引いてアガる＝ツモ。ずっと練習してきたやつだね！'},
-      {q:'右の人が捨てた牌でアガった。これは？',choices:['ツモ','ロン'],a:1,
+      {q:'<b>下家</b>が捨てた牌でアガった。これは？',choices:['ツモ','ロン'],a:1,
         exp:'ほかの人の捨て牌でアガる＝ロン！自分で山から引いてアガるのがツモだったね。'},
       ch1Teach('ほかの人が捨てた牌をもらって、自分の組を作ることを<span class="term-chip">鳴き</span>というよ。鳴きには<span class="term-chip">ポン</span>・<span class="term-chip">チー</span>・<span class="term-chip">カン</span>があるんだ。ひとつだけおぼえておこう…<b>鳴いた手では、リーチはできない</b>よ！',
         {tlab:'鳴き'}),
       ch1Teach('<b>ポン</b>は、手の中の<b>おなじ牌2枚</b>＋ほかの人の捨て牌<b>1枚</b>で、おなじ牌3枚の組(コーツ)を作ること。<b>だれの捨て牌でもOK</b>！',
         {tlab:'ポン'}),
-      {q:'向かいの人が捨てた「發」をもらって、發3枚の組を作った。これは？',
+      {q:'<b>対面</b>が捨てた「發」をもらって、發3枚の組を作った。これは？',
         choices:['ポン','チー'],a:0,
         exp:'おなじ牌3枚ならポン！ポンはだれの捨て牌でもOKだよ。'},
-      ch1Teach('<b>チー</b>は、手の中の<b>2枚</b>＋捨て牌<b>1枚</b>で、ならんだ3枚の組(シュンツ)を作ること。ただし<b>チーだけは「左の人」の捨て牌しか使えない</b>よ！'+zu(true),
-        {tlab:'チー'}),
+      ch1Teach('<b>チー</b>は、手の中の<b>2枚</b>＋捨て牌<b>1枚</b>で、ならんだ3枚の組(シュンツ)を作ること。ただし<b>チーだけは「上家」の捨て牌しか使えない</b>よ！',
+        {tlab:'チー',seatMap:'S',seatOpt:{mode:'name',hl:'left'}}),
       {q:'「チー」ができるのは、だれが捨てた牌？',
-        choices:['左の人','向かいの人','右の人','だれでもOK'],a:0,
-        exp:'チーだけは「左の人」の捨て牌だけ！ポンとカンはだれの捨て牌でもOKだよ。'},
-      {q:'右の人が捨てた3ピンで、手の2ピン・4ピンとあわせてシュンツを作りたい。チーできる？',
-        choices:['できる','できない（チーは左の人からだけ）'],a:1,
-        exp:'ざんねん、チーは「左の人」の捨て牌だけ。右の人や向かいの人からはチーできないよ。'},
+        choices:['上家','対面','下家','だれでもOK'],a:0,
+        exp:'チーだけは「上家」の捨て牌だけ！ポンとカンはだれの捨て牌でもOKだよ。'},
+      {q:'<b>下家</b>が捨てた3ピンで、手の2ピン・4ピンとあわせてシュンツを作りたい。チーできる？',
+        choices:['できる','できない（チーは上家からだけ）'],a:1,
+        exp:'ざんねん、チーは「上家」の捨て牌だけ。下家や対面からはチーできないよ。'},
       ch1Teach('<b>カン</b>は、<b>おなじ牌4枚</b>を使う特別な組の作り方。くわしいルールは、またこんど！',{tlab:'カン'}),
       {q:'「カン」で使うのは、おなじ牌なん枚？',choices:['3枚','4枚'],a:1,
         exp:'おなじ牌4枚を使う特別な組の作り方がカン。くわしいルールは、またこんど！'},
       ch1Teach('鳴いたら、そろった組は<b>手牌の右に、すこしはなして</b>ならべて、みんなに見せるよ。そして、ほかの人から<b>もらった牌は横向き</b>に置くんだ。',
-        {tlab:'鳴いた組の置き方',panel:ohPanelHTML([{lab:'向かいの人の「發」をポンした手',hand:'234m678p34s55s',
+        {tlab:'鳴いた組の置き方',panel:ohPanelHTML([{lab:'対面の「發」をポンした手',hand:'234m678p34s55s',
           melds:[{type:'pon',tiles:'GGG',from:'opposite'}],legend:true}])}),
-      ch1Teach('横向きの牌の<b>位置</b>で、だれからもらったかがわかるよ。チーは「左の人」からだけだから、<b>チーの組はいつも左はしが横向き</b>。いまは「<b>横向き＝もらった牌</b>」だけ覚えればOK！',
+      ch1Teach('横向きの牌の<b>位置</b>で、だれからもらったかがわかるよ。チーは「上家」からだけだから、<b>チーの組はいつも左はしが横向き</b>。いまは「<b>横向き＝もらった牌</b>」だけ覚えればOK！',
         {tlab:'横向きの牌',panel:meldDemoHTML([
-          {lab:'チー（左の人から）',meld:{type:'chi',tiles:'345s',called:'4s',from:'left'}},
-          {lab:'ポン（左の人から）',meld:{type:'pon',tiles:'555m',from:'left'}},
-          {lab:'ポン（向かいの人から）',meld:{type:'pon',tiles:'555m',from:'opposite'}},
-          {lab:'ポン（右の人から）',meld:{type:'pon',tiles:'555m',from:'right'}}])}),
+          {lab:'チー（上家から）',meld:{type:'chi',tiles:'345s',called:'4s',from:'left'}},
+          {lab:'ポン（上家から）',meld:{type:'pon',tiles:'555m',from:'left'}},
+          {lab:'ポン（対面から）',meld:{type:'pon',tiles:'555m',from:'opposite'}},
+          {lab:'ポン（下家から）',meld:{type:'pon',tiles:'555m',from:'right'}}])}),
       ch1NakiSeeMcq('234m678p34s55s',[{type:'pon',tiles:'GGG',from:'opposite'}],
         '右にはなれた組があって、1枚が横向き。ほかの人の捨て牌をもらった＝鳴いている手だね！'),
       ch1NakiSeeMcq('234m678p34s55sGGG',[],
@@ -5868,15 +5984,56 @@ const CH3_WIND_JP={E:'東',S:'南',W:'西',N:'北'};
 /* 4人の席の図(R28): あなた(sw)を下に固定。麻雀の席は反時計回りに東→南→西→北なので、
    あなたの右どなり(下家)=つぎの風、向かい(対面)=2つ先、左どなり(上家)=3つ先。
    例: あなたが東家なら 右=南家・向かい=西家・左=北家(実際の卓と同じ正しい関係) */
-function ch3SeatMapHTML(sw){
-  const ORD=['E','S','W','N'];
-  const i=ORD.indexOf(sw); if(i<0) return '';
-  const nx=k=>CH3_WIND_JP[ORD[(i+k)%4]];
-  return '<div class="ch3-seatmap">'
-    +'<div class="sm-cell">'+nx(2)+'</div>'
-    +'<div class="sm-row"><div class="sm-cell">'+nx(3)+'</div><div class="sm-table">麻雀卓</div><div class="sm-cell">'+nx(1)+'</div></div>'
-    +'<div class="sm-cell you">'+nx(0)+'<span class="sm-you-lab">あなた</span></div>'
+/* ===== 4人の席の図(アプリ唯一の卓図・R38で共通化) =====
+   向きの定義(絶対に反転させない): 画面左=上家 / 画面上=対面 / 画面右=下家 / 画面下=あなた。
+   席順は反時計回り(東→南→西→北)＝「つぎの風の人が右どなり(下家)」。チーできるのは上家。
+   sw=あなたの風。opt.mode 'wind'(既定・従来どおり風を出す)/'name'(上家・対面・下家)/'anon'(？)
+   opt.hl=ハイライトする席('top'|'left'|'right'|'bottom') / opt.pick=true でタップして答える(seatPick) */
+const SEAT_POS=['top','left','right','bottom'];       // seatPickの選択肢インデックス順(0..3)
+const SEAT_POS_K={bottom:0,right:1,top:2,left:3};     // その席は「あなたから何人あと」か
+const SEAT_NAME={top:'対面',left:'上家',right:'下家',bottom:'あなた'};
+function seatWindAt(sw,pos){
+  const ORD=['E','S','W','N'], i=ORD.indexOf(sw);
+  if(i<0||!(pos in SEAT_POS_K)) return null;
+  return ORD[(i+SEAT_POS_K[pos])%4];
+}
+function ch3SeatMapHTML(sw,opt){
+  const o=opt||{};
+  if(['E','S','W','N'].indexOf(sw)<0) return '';
+  const label=pos=>o.mode==='name'
+      ? ((o.only&&pos!==o.hl&&pos!=='bottom')?'？':SEAT_NAME[pos])   // only=いま教えている人だけ名前を出す
+    :o.mode==='anon'?(pos==='bottom'?'あなた':'？')
+    :CH3_WIND_JP[seatWindAt(sw,pos)];
+  const cell=pos=>{
+    const i=SEAT_POS.indexOf(pos);
+    const cls='sm-cell'+(pos==='bottom'?' you':'')+(o.hl===pos?' hl':'');
+    const inner=label(pos)
+      +((!o.mode||o.mode==='wind')&&pos==='bottom'?'<span class="sm-you-lab">あなた</span>':'');
+    return o.pick
+      ? '<button class="'+cls+'" id="ch-'+i+'" onpointerdown="selChoice('+i+')">'+inner+'</button>'
+      : '<div class="'+cls+'">'+inner+'</div>';
+  };
+  const even=(o.mode==='name'||o.mode==='anon')?' evenmap':'';
+  return '<div class="ch3-seatmap'+(o.pick?' pickmap':'')+even+'">'
+    +cell('top')
+    +'<div class="sm-row">'+cell('left')+'<div class="sm-table">麻雀卓</div>'+cell('right')+'</div>'
+    +cell('bottom')
     +'</div>';
+}
+/* seatPick問題(R38): 卓の図で人をタップして答える共通形式。
+   ask: 'kami'|'shimo'|'toi'|'me'(自分から見た場所) / 'E'|'S'|'W'|'N'(その席の風) / 'oya'(親=東家)
+   正解は席の関係から必ず計算する(手で書かない)。将来の問い(チーできる相手など)は ask を足すだけ */
+const SEAT_ASK_POS={kami:'left',shimo:'right',toi:'top',me:'bottom'};
+function seatAnsPos(sw,ask){
+  if(SEAT_ASK_POS[ask]) return SEAT_ASK_POS[ask];
+  const w=(ask==='oya')?'E':ask;
+  return SEAT_POS.find(p=>seatWindAt(sw,p)===w)||null;
+}
+function ch1SeatPick(sw,ask,qtext,opt){
+  const o=opt||{}, pos=seatAnsPos(sw,ask);
+  return {sp:{sw,ask,mode:o.mode||'wind'}, q:qtext,
+    choices:SEAT_POS.map(p=>SEAT_NAME[p]), a:SEAT_POS.indexOf(pos),
+    tlab:o.tlab||'卓を見てタップ', exp:o.exp||''};
 }
 function ch3CtxHTML(c){
   if(!c) return '';
@@ -6640,10 +6797,10 @@ const CH3_LESSONS={
      親・子・局・東1局などはここでは教えない(点数計算の章で正式導入)) */
   yb1_2(){
     return [
-      ch1Teach('つぎは<b>東・南・西・北</b>のはなし…のまえに、だいじなこと。麻雀は<b>4人</b>であそぶゲームで、<b>4つの席に東・南・西・北の「風」が1つずつ</b>わりあてられているんだ。',
-        {tlab:'4人の席',seatMap:'E'}),
-      ch1Teach('席の風で、人のよびかたもきまるよ。東の席の人は<b>東家（トンチャ）</b>、南なら<b>南家（ナンチャ）</b>、西なら<b>西家（シャーチャ）</b>、北なら<b>北家（ペーチャ）</b>。',
-        {tlab:'東家・南家…',seatMap:'S'}),
+      ch1Teach('第1章でやったね！<b>4つの席</b>に東・南・西・北の<b>風</b>が1つずつつくよ。',
+        {tlab:'4人の席（ふくしゅう）',seatMap:'E'}),
+      ch1Teach('東の席なら<b>東家（トンチャ）</b>、南なら<b>南家（ナンチャ）</b>、西なら<b>西家（シャーチャ）</b>、北なら<b>北家（ペーチャ）</b>だったね。',
+        {tlab:'よび方（ふくしゅう）',seatMap:'S'}),
       ch1Teach('問題では<b>【あなた：南家】</b>のように、あなたの席を出すよ。まずは図で見つけてみよう！',
         {tlab:'問題での見かた',seatMap:'S'}),
       {q:'図を見て！<b>あなたの席の風</b>はどれ？',seatMap:'W',choices:['西','南'],a:0,
@@ -7815,6 +7972,7 @@ function quitLesson(){
 function qFormatKey(q){
   if(q.mini) return 'mini';       // 第1章C: 4枚ミニ麻雀(体験ゲーム。ch1t併用=誘導・スコア外)
   if(q.mt) return 'match';        // A1-4: 数牌マッチング(Duolingo型ペア当て。将来他教材でも再利用可)
+  if(q.sp) return 'seatpick';     // 第1章S1: 卓の図で「どの人？」をタップ(共通形式)
   if(q.yf) return 'yfind';        // 第3章: 役さがし(役名を全選択→「これで決定」。誤答は正解非開示で再挑戦)
   if(q.wf) return 'wfind';        // 第2章: 待ち牌さがし(全選択→「これで決定」。誤答は正解非開示で再挑戦)
   if(q.ch1t) return 'teach';      // 第1章: 教えるページ(スコア外・check()非経由)
@@ -8058,7 +8216,7 @@ const QFORMATS={
       // 盤面が出るときはアガリ牌チップを重複表示しない(状況は牌の位置で理解させる)
       const bd3=(q.ctx3&&typeof ch3BoardHTML==='function')?ch3BoardHTML(q):null;
       if(q.ctx3) html+=ch3CtxHTML(bd3?Object.assign({},q.ctx3,{winTile:null}):q.ctx3);
-      if(q.seatMap) html+=ch3SeatMapHTML(q.seatMap);  // R28: 席の風を学習中は4人卓の図で視覚化
+      if(q.seatMap) html+=ch3SeatMapHTML(q.seatMap,q.seatOpt);  // R28: 席の風を学習中は4人卓の図で視覚化(R38: seatOpt対応)
       if(q.situ) html+=tableHTML(legacySituToContext(q.situ),'T0');  // P3-B: situHTML→TableView（situHTMLはlegacyとして残置）
       else if(q.context) html+=tableHTML(q.context, q.context.reveal||'T0');  // v3ネイティブcontext問題（Compare variant等）
       else if(bd3) html+=bd3;
@@ -8141,7 +8299,7 @@ const QFORMATS={
       let html='<div class="q-type">'+(q.tlab||'おぼえよう')+'</div>';
       html+='<div class="teach-card"><img class="tc-iso" src="'+S1IMG+'" alt="イソピィ">'
         +'<div class="tc-bub">'+tileTokLesson(rubyize(q.text))+'</div></div>';
-      if(q.seatMap) html+=ch3SeatMapHTML(q.seatMap);  // R28: 席の風の説明は文章だけにしない
+      if(q.seatMap) html+=ch3SeatMapHTML(q.seatMap,q.seatOpt);  // R28: 席の風の説明は文章だけにしない(R38: 表示のしかたはseatOptで指定)
       if(q.panel) html+='<div class="rd-panel">'+q.panel+'</div>';   // 牌の読み方などの図(ヘルパー関数で生成)
       if(q.hands){ for(const h of q.hands){ html+=(h.label?'<div class="tc-lab">'+h.label+'</div>':'')
         +(h.g?ch1HandGrouped(h.hand):handHTML(h.hand)); } }
@@ -8154,6 +8312,30 @@ const QFORMATS={
     answer(q){ return {kind:'none'}; },
     reveal(){},
     feedback(){ return {ansText:'', expText:''}; },
+  },
+  seatpick:{
+    /* 卓の図で人をタップして答える(R38)。選択・音・即判定・採点は単一選択の共通処理(selChoice)に相乗り。
+       図は ch3SeatMapHTML の1実装だけを使う(卓図を増やさない) */
+    cat:null, scoring:'binary',
+    qid(q){ return null; },
+    render(q){
+      let html='<div class="q-type">'+(q.tlab||'卓を見てタップ')+'</div>';
+      html+='<div class="q-text">'+q.q+'</div>';
+      html+=ch3SeatMapHTML(q.sp.sw,{mode:q.sp.mode,pick:true});
+      html+='<p class="ch1-hint">図の中の人をタップしてね</p>';
+      L.sel=null;
+      return html;
+    },
+    answer(q){ return {kind:'choiceIndex', index:L.sel}; },
+    reveal(q,ans,res){
+      const el=document.getElementById('ch-'+q.a);
+      if(el){ el.classList.remove('sel'); el.classList.add('correct'); }
+      if(!res.isCorrect){ const w=document.getElementById('ch-'+ans.index);
+        if(w){ w.classList.remove('sel'); w.classList.add('wrong'); } }
+    },
+    feedback(q,res){
+      return {ansText:'正解： '+(q.a===SEAT_POS.indexOf('bottom')?'あなた':q.choices[q.a]), expText:q.exp||''};
+    },
   },
   pickone:{
     cat:null, scoring:'binary',
