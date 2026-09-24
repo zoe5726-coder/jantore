@@ -9,6 +9,20 @@
 <!-- manifestは名前・アイコンのみ(displayは指定しない=起動方法は従来どおり。起動方法を変えると
      iOSで保存領域が分かれ学習履歴が見えなくなる恐れがあるため、ここでは変えない) -->
 <link rel="manifest" href="manifest.webmanifest">
+<!-- 表示テーマ(R39): 実効テーマは <html data-theme="light|dark"> の1か所だけで表す。
+     このscriptはスタイル定義より前に走るので、最初の描画からダークで出る(白フラッシュ防止)。
+     保存値(themeMode)が無い場合は新規・既存を問わず system＝端末の設定に従う。 -->
+<meta id="meta-theme-color" name="theme-color" content="#f4f6f2">
+<script>
+(function(){try{
+  var m=null;
+  try{ var r=localStorage.getItem('jantore-v1'); if(r) m=(JSON.parse(r)||{}).themeMode; }catch(e){}
+  if(m!=='light'&&m!=='dark') m=(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';
+  document.documentElement.setAttribute('data-theme',m);
+  var mc=document.getElementById('meta-theme-color');
+  if(mc) mc.setAttribute('content', m==='dark'?'#0f1713':'#f4f6f2');
+}catch(e){}})();
+</script>
 <!-- アプリアイコン: favicon(埋め込み)。ホーム画面追加用はapple-touch-icon.png(公開リポジトリ側に配置) -->
 <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAsgUlEQVR4nHW7eZhdVZX//dn7nHPnqltjakgllco8EkgIJBBCGCOCARkVkUmxbafW7vZH+9K2oC1qKyAgziAKiBJF5jkkYAhJCGQgc1KZKqm56t668xn23u8f5yb669f31nOeOnWfqlt3rbv2Wuv7Xd8l+AcPY4y4dtW1ctW1q5REoIw+ZdPY5pWH80eXD5WHZuX9YlNRlSMlVcFVAcpoQKCMIAA8A64Kv3vK4OnwXiMItMFThkAbNAJlIDAahMAAWhvQJrw3YIxBG/C1QRuDEAIMYEACjrBIOTHqnbjXEk0NT6tp2b24uWvtVZ1nPBcX1vYKGp66xjLXPKWFEOZ/2yr+gfFSCKEBSl5p2csjb/xrd27/iqzMxsYqecquhxdotBFoBGgw1ZfRQGDAAzwlqGjwq47wDaGxWuDr0AGq+nxgNBqqhpmT37UJX9sY8JTGN9X3H3qmeq/DewEIgXAcxsVSTI80Vs4fP/vVO+dfca8txNvqf9n2Dx3wlHnKulZcq4wxtS8NrL7vg8KWW/uDXvJjBYJAKqWFCIwQRghx4i+NOfEq4aepjMEHfC3xdGhwYKrREGgCDYrQGRoIRBgJoeEGrQxBoMBAoD2U9tFGIGQcg0RrE/5PY8AI0Ap09S0obbTWRmtlQFt2TYIz6jv53PTzH7lp6tlfE0LkTth4wmb7Hxg/5ZeHf//M+5WtczMjI1orx/haWMpoS0iJESCMIQxY0EJQjdpqOIPSAp/QWE+FBgspqIlJ4hFJIiaJSEHUBoQEARVXobWmFGgKJQhUhfnxTk5tnM5oOc/TR7ayM1dEyhhShkfDVJ2GAKMNoUeMkBqkkZixilo/uk3szfXeemCs7wxjzBVCiO6njLGuFUKdjIAToWGMmfyj7ofXvju2eYLKe75S0vGqEYkAISQIceKoEJ4AUf1EDUqHeUAZcLUBIaiJ2TQkHFpSDolIaKxBo4yh4geMVcpUfB9fCaIygq/ADcp8dsJ5fKrzKshlIZWipzTAZzf8jLVDo3iuBcZgiTByTjpC6erx0aANwhgsA17g+XbMdv51/sqeHyy5frkQ4uAJm21jjBDciTGm5scHfv/86tHNE0zeD5SRjjHmRL4Jk081h5yIQI1BYVAIlIbAGFytEQjScZuO+hi1cQspJElHoIxBV5OZGyg812VxYgYdtZPozfWxZmg7JVVhYXo8n5q4kuDZpyn86neYlhYm3P1dfrToGr607dcU3QhHRxUj+QCDRvJ3TtAgqj8rX6OUBi2cwPOC+95/ZkJbtPZ5Y8xiwZ1FY4ywV7FKSnGXevLg2Q+8mN04u29ozEdLJ8zsnDQ4PPaimpRCx8SdCLawCIBAGTytaUg6NKYi1MUsamOSuC2QUmBEmMgyJZ+SqymUSnxzxtWc13IO9PbC1ItYXreTlW/ew8V1HZhsnsz9v+bVviGm7uzmjGefofNzV9NEjBxZpjUK0lFN75hFqQRShJ84Bkyg0MrQVi+oiUHZN+RLlp0dKfn3bHt+9hnNkx8QE++6ZZWZY9nVc7/kxq3fu3lgaCS4uHWyk7QjWEIQERJbhp+gQGAhoXr6fW14sfcgfW4prAJC0FTj0Jh0qE84jEvYYYgKKAeKw1mPw5ky2ZKiUClw06TTOK/pbNwH7yP3h+exFs5n4f/8kK9NWU736CBiZgrd2MD4/YdJJeOIyZPJ5MboyY5xxeQlnDl+Pq6b4al9b/Jm3xBDGYFRYejbRnHBXIdxacGxPJQVDIxBvpx0jh0+EPxsx2s3a2N+KYR4145g8dD+Z+54e2QvV7dOFp/qnI6vIWk5xC2HqLSrDpBYCASSwBjSTpTOZB2ff/9NWhMxmmts4hGb1qRDQ1xihKEcKA5mPPYNl8lWArQBKSS+9ljQOgV96AD9j6ziNVdx5ktvkr5qPYtnzOHnbzzEQHmQlnu+S90fVyFmTUecdy4Pvv4TPtp+Pt+aez1s3AjjZ7P0jHl8Zv29bHOyDAxCOedzwalRZrbZ7Bnyw37BCHoHFdoIZKpGPLNvAy9Pe/8OR1iXSdcEs9cP7754YChrjuXLVlkFaKMJqlfGK5Nxy3gqoKJ8isqlrFxyfpkd2WESEUlbOkIqajG5LkIyAsMln619BV45kGXdkRxDJT+sDtWGpqwEx8eGkeOaERPHMyufJ9rWgjV5IskS9HqKS1/5Mev8QfKf/zSls07n3ree4PnMQb65YCXFu7/Hzpv+iaO3/BONI4oLm84mWyhSU+fQ1mYxsVFyOBPQmBS0pARHjnqU82GusJyoVRgdMs/v23Cxp4PZ9ttDO67c4Q44OhDqz4cOWrsyIzTGovhKcUZTC/80/RQcYfP4oR2s7T+KYzkoBPlA0evl6KiNEnOgsy6CMYqca3j7SIHego+UEkv8LfkZIzBGg4jxyL6N3DhpKRN/eg8da95GLjmToYjggd88w78tWMZ3R9Zx3QsPwPo850yZhrswTTyexvICsm/8lQ1ln/n7DjH+0EFaJzSSPVZGpGwWz7QIhKE+CaWSZsP2Mj39AVYqEuZIoxGOozeOdDt5t3ylvTPbc8FAMUNMOsJg2JfLYRVAGUXSdjDGIIRhd26EjaMDVJTAN4KaeIRZzTXUxyRtKRs3UGQrivU9BYZKCtsSaKXxq2XEiGry1AapJQdyJS565QHumHsR81Ys5PjYcZ587AUe27qVC1OCG2Yu4A22M9JUodSQIOpE8UaOY4Si9tZPcO5DvyG9dDHWotN4861HEZaNKCm8nKbbl/QP+Bw97lKqgBW3w1KuTdgpRGJi/0gfm3r3XSCe7f5z3z69o7WRlIlKS8Qtm5hl4wiLpmgSR0qEAW0MZR3w5JFuHtq/kwVtNdQmHJoTFsYIhgoBG4+VyHsKW4qwcTAGdbJuhq0qJmwFbSPwPA/cUti/+D7p+loW+mne3NLDtYvP5Gh6hM1vHeSK6adhdwneXr+d85OzeOzfvwbZPMWI5JEP1/CVt1dBJImlQXsBJtDVrkyBJSFmISM2yDBZozHaKPHt+Vf22/lsf2Nnaw2NMiUi0iImbeKWTUzaJ42QVaAyzo5z1cQuVh3fR9QS1McsPA09GY8PjhfwykWwwRey2qNLpJ1AVh0IAln1geeVwUA6WUdHPEJzNELWr1CbsFjcl+bVd7dzyUfmskEp6tJx9gz20nu8RN18m68+/yuOBUUun3k6HdPm8uOGBr779tMMZ/NYlsRgcCKC35zdyHvDHg/tzBMEGhwLjUEKIdCaDw/ubbR78zlHphTDWiEFWEhsy8I6WfbChzIajGD1yFHcQFEbs1EYDo8EbD46CgJumb2Uj7TPJO1EGazkeeX4Lv5waBtBILBlBGEMvvLBgpVTJvLxjnYmJG1GfZcPM3n2jRWooKibVQv5AXoOjFAvUghtWPfOfr649FxUm8VPtr3BLYtX8ulx8+GPz8DyZcy89DY++vsfYQkbt2S4YVacT8yO8wmZZGqNzRf+miEiw6N4ov0eKeUcMedXnzW7nAzSDRMVovpLJ0FONXQ9TX2jg2PD5MYU7XURhgqadw+MMD5Zz9MX3EZzRPPe0IcMlLLU2vWc1jSdklJ8+p0n2TMyAgYWtTTwwwULmVMXZ1dhkM35MXK+Jq9AG4tc4FMUArShf7hEpTfg+M5RLpw2ldREhy3Zo8zTNXzzsi+Q+M5PefnBX3L2Rctpe/IBJj/x3xwbGcYxkg9W1jOjMYIUgqtfHeGZwxWcmIUSEiEEytKcqVuwfaUx0oDPyVA3Juz8pBRVoAHRqM3kxjiZoqIx5ZD3NDt7xkhZEd6+5Ct8OLKZb+55moFKiVxZMVwMECrBl2au4JWzbmDZ2oc5t7WRRxafxWBliD/17WQgsNEiipGasq6wOF1DoAXrsnkCaWhvTlJsUESabDbt6OHw3mFaG9KsP3SEK6cd5KL5s2nrGE/dGafTW8qQK+ZBSVZOjjK30QZb8L338jyzr0Q0aRN+vuYkDvZ1gC0NoEBoCJRGWJCMhxDW90JH6EDT1hxjJBfQUOMAhoERl9HhMX79kds4njvA7Rt+S2O8kZXtZzKptpOj2WF+++EGvv3aKvYcHuSl5ZcyZ5zP4UIP24uKU+svYkJ0PHEZpaQ99pWO8eLwRga9LLOTtQz7AX1lj4gSNLYmGCmWqBQt2psFK86czMODq5l43jUsP/1RBmsjfGXNKnJuBRGL8rUZDkQMaw9X+Ob7eaIJC9fTIf6OSixHnmzxbTQgDIFnqK+BCS0SbMPRQXDLBltAzBYk4tA7VmZiwqLgBhwcKtFU08SK1i4+9+aPKZST3HPGTayYfDFQBiJ8cvr5LHngTo5mjjJn3AK2Z46Rl11cNO4c4nYCTABG0wB0xNtZUDud/zm8ir3FIWrtKElHUhQG7RtmTx9HuRywrnuY2kSES+bCVzY+wmgxSl9umOO5MdAOy5oFZ7UKBjM+N28qgi1wy5oZjRb/dmqSe3ZU2JtV4ITnWwoBBIbaOCye5lCXFPge5HMaRwiCUol4yiftpFjWNoV5dR1YgUVheIBZje0MF0dYc/AQl7efxYrJF+G+9RLebV8k/41vMDlw+MkFH+eXK5ewengfY0zl7IYVxKWN0mW0CdDVLz8oUmen+fz4S1HGYixQBEYghYVtS3SgmdiRJhK1eWl7H7/fOcx1U5uw9CjHx7LEojEsC34w20EIwa3rixwpaBSCz86O8s5laW6bE+WnZySQf8vt2NIICDTTOyPEIgK/IugfMJgAfF1kadcs/ufcK5leW0+hUsLXAaodXq/fx/Fynu6RESpjmvM6T0UPHKH8nfvpH83hZXM4WFxxxyU82bObit/G5yYtx+hKlVQR1fwqqm/EJtBlJibaWFAzlbWZHdTYcZTRIdRXmmQywmmnjWffnkGOlxW/7c3wubld2DLCO71DRB2H0QB+sNXlxYMBTa0298yOcOMUJ0zkviZGGNVelV+0jQYREdQkoD+j2HMsIFsAo8p84fSLeOj8T/Jyz1v8y7rfciA7ylhRkXbqOb91Fp855UJ29fVACVzXQ3gVSvkSWyseFSvCeeM0vxnYxvpRl+/MPg8hBL5SWEIiIxHAoFwfIUXVESHcnpOayOsjH6I0+GiUDokXbQzjGmuoPSNGwS+Tdyv8tH+Az8+cwP5snqGyx0f/GlJk53c6PLw4wqQGSVASrOl3eWRvhWd7fBQSnLBfsEOUD1u7fTIFg5QSVInzJ8/joQtu4PvvP8SGkY1kXYuxisHXCbb29bJxxy5+8/5Gfn7Bx2isbeSR9W9x3T+fhX3jVUx8/XVqv3QBQ7NSrDt6iJl1U5mYHE8QVHASSUAy0teLEIKG1nZQHtp1Q0egaY7UIpEobU7ynwawhaTgVkiICNe2LaEtnuaFozt4MTPILdMm8IMte4lHI1Qqhi/PcGiLw0+2ujxx0GNDvw/KIByJFCdISYMtJWhlyJRBWgIpDIEQ3HPO1bzcvZpHd71DfaKGJa2TufyUjzCxYQLDxTwPb3wdMsd5c+0WVoxr5/f7dnLH04/x1SsuoO38aWyyDrK2r4+KkCxrmINRCisSZfeWbXzvru+y4YNtaDvCsnPP4e5v/yetbS34bgVLAkYSKPCqdLuuHoOK8mlyavjB7E/Q1TAZ3CLXtS3i61ueI+52M7U+TfdYEWkLPve+i/e+ZmwwCLvSKnEbNqR/4/mkqJIWthRIBIHv0dXYzuz6Jh7Z/VeGchZp0cZ/L/wq53aeRddQiUVBip9ffjOp0Ti/2z5M/rhh+eQO7n7tRRbf/wO2ZPrJBwEDFcOd067nnIY5IBTZ4RFu/+KXGeo9xoyZM3F9n988+ns+ccNnKZVdpB1mp1GvQNn3CTT4gSZQBqU1gdJ8Z951dDV0sm/3NlyvBLbFf868CBVp4MzmGowKgdhQRTM+Jbl5fpRbT4nyhfkxvnJqjPaUVWWVwwNni2pBNKE3wFdMrmmkEpTZPZhhNKf5zNILScTqKTz8C6wn/oLGIXvdOaw+PEpDMsr2gTJXTmikNB82/XU/iCFWHe7lSzOuYk6qC//IPuxcnrjWPPTjHzHhlHlgORzrG+Seex7gxw/8nBdfeIlrPnktlFz2uIOUIhAzGm0LHC3JFMf4RNfZtJSSnPWZ69m+dRdLT5vDo/ffTWtTC/MbZlAYO460QsJUGLhjRoTrpzkh2EJCRDL6whiP76uEIElTbfZPgrcwNMqBh9KGXEFD2WZKQztmoAcef57ugsfuvmG612yiv+CHPKklef3DLFe3t9I8oYGXNnWztGkCy1tmonsPIQ8dwhzvJTaaYYJRmNERtO/RMb6F++7/CZevvIQ317wNJDExybY9HzLjzX4WPnuYCav2EowUcGIxLm86ld+98ApXXHYllXQdH3Qf4dHH/wiOzcR4M3EnSjpi4QYK6cAX369w3rMFvrG+xLP7Kuw46rI1GyAcGSJDKbDliYZfhJFgR6LsGxlAaOiKN3M8N0B/ZhQ6WygmY3i9A+xIxylrgyq76EgEGxiuBGzYNsYljbXsG8uzvK4eU3YRWoFlgWOjAx8zMgKxGKKmFr+ksWKC+35wFwcOHqJcyPLUY79AvbSWNmEzrqOB6GCJytO76Lr9Go7v7uOZDe/xsXOXoStlEu2tVFwfPzNCfTQFwiElBRmlEcIiWzGsHdOsPe6DMNiOIAhEFRaHtL2UhDlAWhIlDIHxGB46yMN7NvDZ+UvRpTIPrXsTURMndfsXaDhtGgsvPZPjFy8mGM2DCSc5NY7k7aNjFHM1XDplCg+8sYmiW0bUNWAaGiCZgHgcEYkgHBuMwbYt8Mt0dXVy0Ucv5/677+SZx5/EjkQpxW2OZYvIphT28RzLjifY3H2INa+9zr/e9R2sVJyCLZjYPg4dhIMeBdgnh4pgGYjEJE4sJHMDH5JJydROB6vGRkuBHZYeie95iIjg2jlLuLhtCm01jXy0bQZ/WXwef3lvA5/53c/4weXX4X3z03zvqbWcVZsmZkv8ioe0Jb5vSEjDl6+9gXPnTGfLH+5lzYHtXL/oAkxHByKXA9cFx4F0HciwDiMknudhOx7aiVIaKZBK1NJTKDBSKpGKxyh5LsNbu9kZSyDrakgam0J9kprmes4+fSHRiEM2UyQIXAKtwQqHrAKD54Ftw4R2h5YGm/q0xWhJo8oaKyKxLcvCKJ8p45r544W30Zms5Q871/PE7l38yl9LWzrNojmzeGz3B/xl9za+Pms6b+weYO/wGGknYKRYJlGfolgqM29SB+fOncmo61Joc3h9eBtXj8zHbmxARWNYJ6C1lOFVLUnhU5JZ8+cytOo5PlKE3sDhuZzL7v5RRooF8l6AmpCERZOIJmrJj4uzxO5gxozp4JY5VszgKpe8r8AJWSwVQGNasGB6nFRCUnAVntL0jOhwioTBDoQhmYrxxmVfwfPyXPXCN9ndP8ZQxkDeC6ea0RpO7+qit5Bj78AQ9Y6g30yE9HjMsfcw6SToEF5ioDffz4vH9pFORBi39yW+NetSEk3j8AIPi+qIjZPlJ6w+xmP6tClsm9zBGTNnMTiSIXEsxe2bN/O1f/tnPvt/bke+s5qnr1tI3cRWnA393H72tRgCjNKsGdhLX75IzmhsyyJwFfVpycJZMTxtODrqE48IsgXN8LAHiXCybRco88V5S5kUq2PFq98j0B7t6RQz6hr5eNdZtKWb2HL0KL9dvxbfgsj4Gpwgi7LriHR2IQoZ3OEeYul6dnUfY/vhA8yZNJ1T6jrYPnqE/3G3s2FkkJ/Ov4I5E6fhGx+0qqKwKkeHQJcrTJ8+HbejnUIiwrR5Z7HzhVdYtGwJ//4fX0eqMjctPJPMLsOmA8f52ikXM19U8HfvwWrr4Nz2iTwxtgdtVYuaJWhvs+gvBZQ8QzomyZU0Bw5UIAAcGc4PT3v0NvOTS6/BHSlx46sPIUWUiXVNPHPFv9NY0wHZQZCSvqDMhfd9n0Ily5QBmw+CKaS7TgUVUN7/No4cJjU9zblnzuYnl3yOXaPHuGTNQwz4IU84O1LD11vP5qZpSyAZx9UKq1qBhJQYbbBTNaxb+zbP/+g+Lp8+lVVHevjC3d9m2tQpBOUSlm0hhA25PHTvIejtD2dVbS2oKV28NPIm/7V5I9v6cqRrLca3C1QV+eazmr4eDy8w2FGbIAoLTQsyImxqrShHsiPkC4KeYZcbJ59LY80Eci88x9DVt3Hsilupf3cbj9xwC0dLZdyYTyI7RFCpYIxGti+hY9kczr1xJsOtBb679w/MqWtm80dvZ0FNG3ZF0S99vp1dxw0bHmPH/l045RIEHhiN0RohICjmWbr8HM6/7WZe8H0+9607mDZjOkG5iJQSrTV+UCHwiwTFEtK2MVqjR0bQY3laVQOz0wmwBLYjyWcMw70Bu3dWONJdwdcgoxbGkmBbIRosFl2Ojo3SEa8jX9TgSybVNqHdLN6jq8gOZdhertD1nQeY9sj3uG7hGTyzbRNdZpjRYz2I8e1oI6ntrMctF9AaHCuCseJs7t/F/uE+fGNojyU5q7OdlbWL2N2bZcuGd5jW0MSEcc00NDRiR2JIaREU8qy47BJWrPwoKIOfH0NIGQ40qGoT4nHE+DYYHEK6LjoeRQQeZV/zTP8wdiLCyJjHSMEFS9KSjOCnBKOuClGnBGwBRiC1a3hszwcs75hGR6oeCmV29/UiIzaVcY0UMjlGAsUbaZuDo8NMqanno2cswFoSQ+e78TNjCNdj+BgoASXPZ2q8hYidYOPgYXL5LA4OhbJH2fdoiSb42Pwz+EWwm15L0dzagR2NY9l2KHERAq9YxB3L4RbzaOVjVFAdeYdyGGPbmJYW9NQuyp0d+E3j2CUGeWHsAGUgcDRT22v53ILJfHf6FK6X47iqXMes2iQmIhERG2yJkBLZGE2yatcmuouj3Hv+xzFC8+Bf1zA8MkzH7f9Mw+Xnc+6COZx32yd5xx/l7uf+wmxjeN1N8hXrKM6x3eSLoxz/QDNyTBJLSDaNHARvjH+asYSOVAv+WJbDR0d4dcsB/mv/c+TcCncv/ThHUxWEE8GyHUAghERIC8uOYDtO+Lwx5DPD5EaG8ColXLdMqVQkXy5R8HyUtNCJMt/sXcePjrzPOc213DVhAp/XzbA14NnVw/z+3RE+2F1gsh3DxGyEY4VYQAqkHbVRDqx85decO2kyD1z+aQ4MHmfp/d9nbXaQum9/lab772C4uZGRnhE+c9Yy2tobaN4zyhf2jPGnoe18/NgW/NECW5/yyO612DJ2jF8deIP2eIr1l3+VL85djkBRDAzpaJxcUGRZ/Rx6/TF2Zo4gpYM2fxshhYUhpK/taIxEbT3FfI5jB/dTGOxH5seQxSxFNcqjoxv52pGX6Iok+EFsNh1vlXj9zwP88LnDPLt7hMGyj2MLoiZgQAZgy9B4SyCkwNaOgLok+8ZGOPOlB3nk7Gt48qbbuGfNm3zstz+js6YeS0h2HutHVcpMbW/FrZ/GipXz4INDNNspctMWEks3EuQC+g5kmNym+Nmhdxkslrhj4VXEnBgiUBhP0z04yn/6z1IrE3SXh7iofkoViOkQsYkqKDkBUIwmEovR2jWFbG8PT61bx7bCMJlYwMbBYxwtZ2msifLDs6/klitW8LGBB9n8xnZa0ymM0WgNlbEK0UkOOxMGSqCtag6Q4kQ51kTTNRz0syx/+2GmdnXw4q1f5JPzF1IkoNcrUNuQID2hkR6rzOOr3+ErY0MkLj+F7sExttgJdCRGNBmneZZFJAZRy2FqXRNKa7qzw6hckWK+wuatR3n6re1sy/ThB1D0ynheoYrFTFX89DfSEiHQKlSNNXV0ct7ChRxUHi/093NUBUSbGhixA9b7OYilOGVhO9GIIHADfF9RLvk0uC59c2PkjMaxJZYtsByBZQmkCEJWWKmAVCLBeyv/nb6BLPN+9t/8ZttGDvcPEvMF01INNOoo7mCBeCrJy/uP8oWZCcZdOZ1vbH0N1d3DSK5Izxab3KjB9RXbBnqxggr3nfFRzuucSysOtpH4Cnp7sgwfyhJFc6w0iCVlNQp0tUM0f+eDcEbpBQGzZs7hwUuvpKOlkXhDAhmVrJhyGt+ZvZyjuW7e2rsPuwIKje/6BENZCuem2NMkML6PLwI8E6B8j3LgY8sg/J9BUOSuZdcx1a5h5at3Y2KSiG/zwxVXcOuZ56CKJQqlIi8fPMA3/vxnpCV46fAg+yanub7O4ms9H7KxOI4tu2rY3R+hboHPH8d20yyS3NA1lzc+dht/3L+NG9c8RTwS5dje41w2cx41UQejxEl2+MRA1lSdcFLIaAxSQKVcYmbbeM5vn8gvtvRQF4/xo3mXYKTiC2//ib2vHcECgmIZUSgz6ewGaheOY040hmkQWAikERipGd+XrDqg6GNHHG6YeCq/37keOxqQzzrcctpZfHXFNRQ3baLv7p9S9Hyu+OzVdN5yC997azXlShlRjnFofif/Ej/C7I297GlZihvYqJJNrHmMO7a9y/r+flZdeBX1yVqCXJHA9okbh8tnzkYFMK62lsB3q0PLarmrPrTRCCEwoSQVKSSqUuTjjRP4RcEnW87z3sARrmqYT9kJ6Dq/gyPPH8FUBMmWRoYPwXzL4/rPz0Vohxo7HNISEfSIMlIGQMkn7tnUWg7DxQKVsqRYCjhv4lQCE5B/7Gn8bXvYuGM/f7731/jax614lF2f9niCdifBxLxh5xHDASuFjktyh9Jk1jdhv1/PkXclhXKBC1vbeO6yG7mkpoPrZ85nXks77dFG4kh8zw3lAyY8AieFkNX6b4wJewITCiqzY2NEhc1n5izlqs7ZrO07gBKG5nkNJLtasNKNeJEk2cES6eYonpRgBL7RlJQi67qUlcIWVYFvcaxAb3aUuel2snkFnmBHXy9XCQOnTMd67a+0jlWgoZ6JsRRzx7Wyq7eP7cd7eX7bLlank9x9lua/9r/JX5wOhiMxXM8lGYmxq6K45dHNXDI5wWjW5fwJs/jkOYsw0mZcsh6FwbIstFZhWxxKQauDWo04ca8VbqVM2rbYO5rBHR3htjln8n6+lzsPrKUunSBzpIzbX8ZGo4bKdDbbTF46nkzBIyk1eR8kgtqkEzJgUkoQEl0q85PNb3PvBVcyY80r7Bjr5Rcb17Ny5hxOu/lqase30nK4F2fxfH6860N+vWYtxKPQEMOxDe8OZbi8LcVliyqceXQXRw8USNVNYnPzQowO+NO6bp5fW+GOS7v4l48swYkm0VqjVFCt+bo6KwSJjVZh26qVChWpSiEwBG6FcsXQWVNHW6KeJmmzq1IgM+xR2Zanb2uOUlkjVBmdDiicW89/7tyNLnjhayiN8BSfP/sUzrDbEZf/7HbzbP8HWL5EKo/Vn/4ynTXNLH/kQQ4dOUaqtoGvn3Me586aRcHz+NP6d/nTjq0ka2IUbUOpWMEEmohtUV+bQjpRamNxGtb0kEksottyqFUllkxI8qXzulg6fzKBE7a+UkpUEFQluCdSYFifQ+1vGAFGhxcYSsUS+C69xQIDuRKpujjfPvA+W3tG8dbbTMofYd7YAA2NEcYuaeexejDZCo5tYyuD0BpT8blt8VzOYgLihl/faR7vWUcUB7fskrAs/nj1zSxtn8ID69fx+Jb32d83AIGiviaJFXeIRG0yhRLtsRqkEQxmsqTiMdyyy7zx4xEG3t18hEvnLmBZ50Qmj0sya3wdiWQSJ5Eilogz3NeHHyiaWlpOhr0g7M7+Jn4mNL6aA7yKS6XiYkkoa5cX9vbz7Q27kLWSlFtPqVBHW2WMn63/MzMrPu9cP5srJ2kub+vgxulT8LRGGY02EI0L8t02dmOyFpSkrkky7dRadu0t8bHHf87H553G509dwsdmz6R3LMf4mjRP79zB/avfoLY2zZNXfoop8RRuLk8m7nDHa69ixXy0hnUH9qNyOea0x7ny9AkUfYUSVqgcL5X468sv8fpLr9I2dQb/fsf/wXVdlO8TKIWUspoMw9LneR6WlHieTxD4KGWorbF58O3DPLL9GGLExj4gydguMTnAgqGDpG3Buitn8M+TLUzJ54ZpU5lUkyLn+yijcQPNkF/AkSnsSQ1tPrblFIqK+toIy5fUsPdglL/s2MJf9m8jlopyxayF3HXKRfzorTcxGH5/862cGa1h4798l+7j/ZSuv5j/vuAivvH8i7y7ZzdOTRw6a3it7wifKJ+KZzQpWwKaZ/7wNK+9uhpfRlh0/gTeeukljIEpc2ZTU1tL4HkIIQiUQgcqHItpg66OtxxbUvIqPLn6ECVhSNoRmnWORdEM9XaR02a4PDBvFk+koVx0Eb7myX3dXD99CmUVEGiFpxRFPCY4ad9ePO2UkZqtidb8WM6MZpVoqoeZUyPYdiM7D/pUyjlWdM7gzUMHKFeyLJ4yh9OnTaf3V39Ebv6QvohD25/X0Lh4IceGM8h4hFRDkkwe3u09zCuH9nPNrNkcHc3wwjMvseODrZSMjSMEz656hnK5jAoCrrjm41x13ccpFYsIEZIfJ0TZAJYMh6WTmm1+vbqbwtEsibpa8lHBcKyR6wcOUFpZy02dTTBWQZQUtgEtLf605wAvdB/Bqh4t4wcmbcXFYxdeMGIv6py5Z1brxNZNIx+YI8cjoq3ZZrigaWkV9Gckg32ClliSHqeCrIkwUi5SGBsjffYCMvOmseDQceovWUZPuUwmVyDdkSYzUqAjkiRnufxowzq6mpswxwZZ984mnIhDsVAmHosycVoXk6d20dk5gWlTu8jnClXD1clJzQmtUqAVLQ0R+ody3PXsYaZHfaapvRSLTUwOyiyxA170HKyci+MZPCFCilwbpGVTUSETLBCYfNFM65gozpm9cI9tSbn64qmnL9+0c4PpG4JDxwKaxln05TWNzZKB45oNx49w49RTSSaidI8O8+2XX+Seq65hzm++x4zRMY5agm8//DtkOkbSjnD7siXMr29gdznPI5ve44bHn+DqaC2OsPBKAYvOOI0LVyxjalcniVgMIQSu56O05sQ2jhBUO0DQaNrSNolGn5tefYuRfIGY3ciEzjEOz88RuBbPjevgABqKCqUNtlDEbYUQBi8IV3eEFNhYeF7FXDxjIVEnsloYY2ZvPL5v65KHv2wLbQnhK6bPiBKtlxRdw+G9Zeplgn23/gc/3bSO/+fl56ECS7qmcfGMmWTKFZ5YtwFlDIFt+Oby87jsyBjPPfk8p934MR43JR5/668sGXKxCkUuuuUSPnPBZYgAim4FRShfFVU2SEh5svvDCBKOxYQmiz5rjC/vfps3sr3YpRilQRuT0FTqCFleX4EPtVHD1AZNYywURyNh8wHDyJjGskIqXBXy5s3P/Dg4b9Ipp9pCiF3GmNeuWnTxpX9651nlRGqt3bsrNDTbpNscauuiDPblufzF3/LnS25kak0T921Yx6bDPby7/wBN0QSfOvU0jhcLvLp/HyumTOHQz+4luesgqXyZIatC3InSVnAZmNPAKwszHBp4lrOSE5kTb6cuSBJ3EkRiEXTFR7shZR6xbGJJKCby/CpzkAcP7aC7VMISMfKOIZjgoT2BXQkVbr4ydNUbFrSEw5ayF478D/YpRoYVMhJKQYJiVl182vnWeZNOeU0IsevEztCSvfn+9bMfvCWwLMfWgUJ5GismcRIWgScJ/DIT0w186/QLOL2+nVLJxfV9eoIc02saufMvr7H2yAFevuUzdB4bpnykj81dLdz4x1XctORUDhcPcazVIJpiBL6HtAz1sQgNRYe6VVlmtnfQfuok0hPSmIhi1Cmxyx9mXaaP7mIJW0QwWFSMQWuBUSGKFUqjfMOEOjizA7KVcCUv6QhKZcU7Wzx8BDIikQj8SiF49wu/tBc3Tz1LCPGuMMZYQghljPnN/Xteu/mrT97lR+tanUAFYf8tBUKGo6tA+aA8IqkaWlM1IOFoboA75lxA3VHN11/8M3MnTubG0xbQUyzyk9dX89Ep0+lcOo7fuLtpVg6WDsXUUoSJzUtL5EvHSPz2MHpRE/5Xp1PRmqKnCSqGqLZAOFQM+JrQeM3J3TvjaaK2YflUSaai8XxFU9ICYPPWEpkcWEkbOxLFHe3zb7/iS873F13/qBDiFmOMJYwx1RENSWDDDasfmP3E+qeCaH277euA6pZMOMSRAmlJfKNC+agIt4im1jTw1MyV3PvOeh77YDMUy0RicW6ev4CJk+v5/uAmRDiyQwqD1AYsQcRVjNtfwBp2iezLY7ma0sJ6/ElJgohFoTlGJmVjtME3kqAq5DAqBHAi0CjXML1F0FQLmbKmPi6ouIZD+ypkMgqZtHHiMdzCcHDh/PPt16+4cxewGChSlU78X2tzwNrrXr9nwlPvPefb9c3OiW28EKcbhDaIE5uPvkYoCEoVTqtr484Fy1GeZrRQQFiCd4eO8fCeLZgqjtcGCHR42ZLOfRmm7hujbIFwBE5VtRGKNyFWG6Wnq4Z9XUm0JSBiYaKh0gNHYiyJNIaF4yWuUigfMqMBg70evgIr4WBFI3j5IX/ZvHOcF674Vk+NFf2/1ub+jnA5eRSmAM/817ZVc7+z5mGNlMaJpSwjwm0s46pwOzLQEBhMoBFKoD0XJEysa8QRkqPZLH65jIjEQgKiumZ7QsdvjMGqBETcAGEIo6G/RHshIBGLMGYUeWNoLSh2zaqnpzOJpQ3aEogTzohInAaHhhpJPuNTKYercpZjYUVtPL+i8Cvi1qVXy4fO/fyOGNYVQojuE7ZW+ae/PU46YdjU0sh9r/Zuv/Wu9//Au4e3gEERjQrLcYSsFmijdLippcDSoZorUAFgkEZia9C+rq6TAr7GeOFF8HedXhX4YAz1g2WmHS/T5hrWz6qlkLQQlqRS4yBsGdLakXAJgqiEiBWKoJVBgFFGGQLXoLU1c/w0/mPhNdw0Y/kjwNeEELm/N/7/44C/Pw7V+2WeVv/6xN41K54d2BJ7d2Afg6VMiNsFYFXlJpbFCSpbhAsJVEFddbM1HINrY9CeRnu6Wrv1Sb1eeBEa6GkaMh75phh+jX1Cvg62FeakExspWodbIdV1OaRFOl7Lqc1dXNp2auXmuRe+2hyrvVcI8fb/tu3/1wHVXxSAPOEpY8wpwMotQweXvzd8YNbuXG/T4eJwZLA8Rk6VcQlQaHSVzgo3bP9OeyROvjBGihO3YW4xJtw7rK7Mn1jODByJpUEGGrQOM39V+hL2N5IIFkkZoTGaYmKi0ZtW2zq8aNzU3eeNn7fWsqznhBDbAZ4yxroG/uH6/P8LX7pjOEE5qtgAAAAASUVORK5CYII=">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
@@ -30,11 +44,20 @@
 @font-face{font-family:'YujiSyukuSub';font-style:normal;font-weight:400;src:url(data:font/woff;base64,d09GRgABAAAAAAWIAA8AAAAABrgAAQABAAAAAAAAAAAAAAAAAAAAAAAAAABCQVNFAAAEqAAAAIgAAADSaUJ7QkdTVUIAAAUwAAAAKQAAACqy7bf0T1MvMgAAAcgAAABMAAAAYLtXuj1jbWFwAAACHAAAACoAAAA0AAxRwGdhc3AAAASgAAAACAAAAAgAAAALZ2x5ZgAAAlAAAAFOAAABjkYGQ7FoZWFkAAABWAAAADYAAAA2JaXYXWhoZWEAAAGQAAAAIAAAACQIcQMEaG10eAAAAhQAAAAIAAAACAXcADhsb2NhAAACSAAAAAYAAAAGAMcAAG1heHAAAAGwAAAAGAAAACAABgCEbmFtZQAAA6AAAADrAAABuCTOPhpwb3N0AAAEjAAAABMAAAAg/58AMnZoZWEAAAVcAAAAIgAAACQJ8RJvdm10eAAABYAAAAAGAAAABgSMABEAAQAAAAMAg70+HQdfDzz1AAMD6AAAAADb75dwAAAAAOa2/LkAOAACA68CzAAAAAYAAgAAAAAAAHicY2BkYGDp+PeAgYH5BYMFgyXzegagCApgAgB2WgR9eJxjYGRgYGBiaGZgZgABRgY0AAANlgCLeJxjYGE+xTiBgZWBgamLKYKBgcEbQjPGMRgxugNFudkYEIADie3tEs7A4BCYG5jLXPC/g4GBpYNRASjMCJJjUmT6CaQUGNgACmkLAQH0AAAD6AA4eJxjYGBgYmBgYAZiESDJCKZZGBSANAsQAvmBuf//Q8h1U8DyDABdKQcaAAAAAAAAAMcAAHicJY1dTsJQEIXv3N/2XlraUloJBYrQHwWqAW1JjBhNJCYmaNyCr8Y3H31xCW6EjfjoAlwJsRcmJ5OTyXfOIIKWCJMt/kFr9Iq+EAKeZmk6Orax4PygrMBZWV5eVEFZlbVSTWTaBUEYaCRLNVnOq3mW6is5hHSuJoKF5gJRi/uJTcT+hdiv87pmhSvdV8e2nZepn7dm7x9vk2avQaRwEun2+i2G2eL7aXgXA1DaKVx77HhFQoBQDJyDtNj885pTyk43t49y5IVxHPLhWNm+aXgqfo78NqcAsLs6mhaLgWhwatadtGHnVcDCkApfDFYT+I1AEEYNKbCkwIjZFFaeKSqoAa5hUo7VKFFWP7A8ADdyoBtRAoDVTHHMGJhevjsxLdF9uG9H+aRPTc5kdBaHq5m0OFN/7fXmxiJYD2FC4mQZ2eOk6fVa0kn/AT1AKyIAAHichY/NTsJQFIS/8mfcuHLlqiEsdIGCJC6EDZEdG6IGozs1UBBsSWkXvBAP4RP4VIa5t7exISSkOTlz5s7MOQVOeKOMVzkFtqoMe5xrynCJM34cLnPHr8MVGvw5XOXCqztco+71eCBixYaYOQEzEnxuaanaQs9iJuqvpHxJ4TOSMhKe8Gm1fb0kUkXi15ovbUaizDX33OgL5DOKlA+u5Yr4FjsUG1rvO1NxodBU2KSarI00+darwv4nvaQsVI+6IVBfyhXTUXbL3t1V9oAX9dz172nuuQ7l+nuasSbzb3N7pV/YdDR/B7oJRQcAeJxjYGYAg/9zGIwYsAAAKoMB0QAAAQAB//8ACnicY2BkYGDgYEhiiGNgYWBzcfMJYVBLrizKYbBIL0rNZrDISMzLZFDLTsxLZFDLSSzJY7BgYGMAASagejkGJQY1hklQEWagCA+DAIMIQwMDI4MkAyPTfQbG/x1AUTEGlszktCQgLslMSc0vys/NI9MuLQy7JIB2TWRgZA5nAPmEkaECAMG/I054nGNgZGBg4GJQY9BgYHJx8wlh4MtOzEtkkGBgAYoz/P/PAAcAa+oFSQAAAHicY2AUYGD88o+H+QXzC4YlDFXMeQwMDIwMyIARAJApBXgAAAPoABEApAAA) format('woff');unicode-range:U+516D;}
 @font-face{font-family:'YujiSyukuSub';font-style:normal;font-weight:400;src:url(data:font/woff;base64,d09GRgABAAAAAAU8AA8AAAAABkwAAQABAAAAAAAAAAAAAAAAAAAAAAAAAABCQVNFAAAEXAAAAIgAAADSaUJ7QkdTVUIAAATkAAAAKQAAACqy7bf0T1MvMgAAAcgAAABMAAAAYLftttNjbWFwAAACHAAAACoAAAA0AAxOVmdhc3AAAARUAAAACAAAAAgAAAALZ2x5ZgAAAlAAAAEBAAABJPmAJEJoZWFkAAABWAAAADYAAAA2JcHYgGhoZWEAAAGQAAAAIAAAACQIjQLtaG10eAAAAhQAAAAIAAAACAXcAD1sb2NhAAACSAAAAAYAAAAGAJIAAG1heHAAAAGwAAAAFwAAACAABABgbmFtZQAAA1QAAADrAAABuCTOPhpwb3N0AAAEQAAAABMAAAAg/58AMnZoZWEAAAUQAAAAIgAAACQJzhJtdm10eAAABTQAAAAGAAAABgRnABEAAQAAAAMAg12sbRVfDzz1AAMD6AAAAADb75dwAAAAAOa2/LkAPQAAA8YC8QAAAAYAAgAAAAAAAHicY2BkYGDp+PeAgYH5BYMtgxLzMQagCApgAgB2nwSCeJxjYGRgYGBiiGcA0QxQEgkAAAnkAGUAeJxjYGE+xTiBgZWBgamLKYKBgcEbQjPGMRgxugNFudkYEIADie3tEs7A4ODH7MfMXPC/g4GBpYNRASjMCJJjUmT6CaQUGNgA8MgKJwH0AAAD6AA9eJxjYGBgYmBgYAZiESDJCKZZGBSANAsQAvl+zP//Q8iN/8DyDABUNQatAAAAAAAAAJIAAHicJYzNToNAFIVn5s7cGQQKDDqokZLSFkxj0CI/SbXdamLixph0YYxLF9248lV8osbX8Q2EcnPyLc459xBK1oTAnv2Rd0IoYp5mU0Q5YiYypmybpm2MiRCzLB/UhQflBcuzLm1q07Oteg6d9vAhB7/seTtmsMfI4Qjb351UQCmvXks9dsxqKYvd1+ci0YyCKJ4WSltBYulZcgTdieX35rw+YwzA5SNp+3T9lupAJC9XF80pAmXA548r+uN1m4xr++b+LrqeK/ApO0nD45BqP95Wk4dUhB4objlcTS89gQAotO+iDW7sz54zN7KDiR5tivyj5kpwpJJzKeyY/ANu7SHGAAAAeJyFj81OwlAUhL/yZ9y4cuWqISx0gYIkLoQNkR0bogajOzVQEGxJaRe8EA/hE/hUhrm3t7EhJKQ5OXPmzsw5BU54o4xXOQW2qgx7nGvKcIkzfhwuc8evwxUa/Dlc5cKrO1yj7vV4IGLFhpg5ATMSfG5pqdpCz2Im6q+kfEnhM5IyEp7wabV9vSRSReLXmi9tRqLMNffc6AvkM4qUD67livgWOxQbWu87U3Gh0FTYpJqsjTT51qvC/ie9pCxUj7ohUF/KFdNRdsve3VX2gBf13PXvae65DuX6e5qxJvNvc3ulX9h0NH8HuglFBwB4nGNgZgCD/3MYjBiwAAAqgwHRAAABAAH//wAKeJxjYGRgYOBgSGKIY2BhYHNx8wlhUEuuLMphsEgvSs1msMhIzMtkUMtOzEtkUMtJLMljsGBgYwABJqB6OQYlBjWGSVARZqAID4MAgwhDAwMjgyQDI9N9Bsb/HUBRMQaWzOS0JCAuyUxJzS/Kz80j0y4tDLskgHZNZGBkDmcA+YSRoQIAwb8jTnicY2BkYGDgYlBj0GBgcnHzCWHgy07MS2SQYGABijP8/88ABwBr6gVJAAAAeJxjYBRgYPzyj4f5BfMLhnqGCuYCBgYGRgZkwAgAjNIFUwAAA+gAEQB/AAA=) format('woff');unicode-range:U+4E03;}
 :root{
-  --jade:#1fa46b; --jade-deep:#0e7a4c; --jade-soft:#e2f3ea;
+  /* ===== 表示テーマ(R39) =====
+     ライトの値は従来どおり(見た目は変えない)。ダークは下の2ブロックでトークンだけ差し替える。
+     ・-deep は「ボタンの立体影」用、-ink は「面の上に置く文字色」用に分けてある。
+       ダークでは影は暗く・文字は明るく、と逆方向になるため1つのトークンでは両立できない。
+     ・牌の色(--tile-face等)と牌の絵の色は反転しない。夜でも牌は牌のまま見せる。 */
+  color-scheme:light;
+  --jade:#1fa46b; --jade-deep:#0e7a4c; --jade-soft:#e2f3ea; --jade-ink:#0e7a4c;
   --ink:#243430; --ink-soft:#5c6f68;
   --paper:#f4f6f2; --card:#ffffff; --line:#dde5df;
   --tile-face:#fbf8ee; --tile-edge:#d8d2bd; --tile-shadow:#c9c2a8;
   --verm:#d8433b; --verm-deep:#a92e28; --gold:#e8a93c; --gold-deep:#b97f1e;
+  --verm-ink:#a92e28; --gold-ink:#b97f1e;
+  --surface-raised:#ffffff; --surface-sunken:#eaeee9; --bub:#ffffff; --on-accent:#ffffff;
+  --shadow:rgba(16,27,22,.12); --shadow-soft:rgba(16,27,22,.06);
   --blue:#2c76b8; --sgreen:#2e7d32; --mred:#b3282d;
   --locked:#c3ccc6; --overlay:rgba(16,27,22,.55);
   /* 実機レビュー第1回: 画面幅追従トークン(clamp/vwで連続追従・固定px脱却) */
@@ -45,21 +68,33 @@
   --tile-w:clamp(38px, 10.5vw, 48px);
 }
 :root:not([data-theme="light"]){}
+/* 端末の設定に合わせる(themeMode=system)ときのダーク。data-theme="light" が付いていれば無効 */
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --jade:#27b378; --jade-deep:#0c6b43; --jade-soft:#17352a;
-    --ink:#e8efe9; --ink-soft:#93a69c;
-    --paper:#0f1a15; --card:#1a2a22; --line:#2b3f34;
-    --tile-face:#f4f0e2; --tile-edge:#b5ae94; --tile-shadow:#8f8971;
-    --locked:#3a4a41; --overlay:rgba(0,0,0,.65);
+    color-scheme:dark;
+    --jade:#1d9a63; --jade-deep:#0d5c3b; --jade-soft:#16362a; --jade-ink:#5fd6a0;
+    --ink:#e7eeea; --ink-soft:#9db2a8;
+    --paper:#0f1713; --card:#1b2721; --line:#31423a;
+    --surface-raised:#24332c; --surface-sunken:#131d18; --bub:#22302a; --on-accent:#ffffff;
+    --tile-face:#f4f0e2; --tile-edge:#a9a288; --tile-shadow:#6f6a55;
+    --verm:#d84a42; --verm-deep:#8c2a23; --verm-ink:#ff9a92;
+    --gold:#b8842a; --gold-deep:#7a5412; --gold-ink:#f0c46b;
+    --locked:#7d9185; --overlay:rgba(0,0,0,.66);
+    --shadow:rgba(0,0,0,.50); --shadow-soft:rgba(0,0,0,.32);
   }
 }
+/* ユーザーがダークを選んだとき(themeMode=dark)。端末の設定より優先する */
 :root[data-theme="dark"]{
-  --jade:#27b378; --jade-deep:#0c6b43; --jade-soft:#17352a;
-  --ink:#e8efe9; --ink-soft:#93a69c;
-  --paper:#0f1a15; --card:#1a2a22; --line:#2b3f34;
-  --tile-face:#f4f0e2; --tile-edge:#b5ae94; --tile-shadow:#8f8971;
-  --locked:#3a4a41; --overlay:rgba(0,0,0,.65);
+  color-scheme:dark;
+  --jade:#1d9a63; --jade-deep:#0d5c3b; --jade-soft:#16362a; --jade-ink:#5fd6a0;
+  --ink:#e7eeea; --ink-soft:#9db2a8;
+  --paper:#0f1713; --card:#1b2721; --line:#31423a;
+  --surface-raised:#24332c; --surface-sunken:#131d18; --bub:#22302a; --on-accent:#ffffff;
+  --tile-face:#f4f0e2; --tile-edge:#a9a288; --tile-shadow:#6f6a55;
+  --verm:#d84a42; --verm-deep:#8c2a23; --verm-ink:#ff9a92;
+  --gold:#b8842a; --gold-deep:#7a5412; --gold-ink:#f0c46b;
+  --locked:#7d9185; --overlay:rgba(0,0,0,.66);
+  --shadow:rgba(0,0,0,.50); --shadow-soft:rgba(0,0,0,.32);
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 body{
@@ -110,7 +145,7 @@ html.ruby-full .mt-guide-card .tc-bub{height:86px;}
 .rd-cell{display:flex; align-items:baseline; justify-content:center; gap:8px; padding:8px 4px; border-radius:12px;
   background:var(--card); border:1.5px solid var(--line);}
 .rd-cell b{font-size:20px; font-variant-numeric:tabular-nums;}
-.rd-cell span{font-size:15px; font-weight:800; color:var(--jade-deep);}
+.rd-cell span{font-size:15px; font-weight:800; color:var(--jade-ink);}
 /* 牌の読み方の図: 3行を「同じ列」でそろえる(文字数がちがっても後ろの要素が動かない)。
    6列 = [牌][数字の読み][＋][マン/ピン/ソー][→][完成した読み] / 4列 = [牌][種類の名前][→][読み]
    1行ずつのdivを作らず、グリッドに直接ならべるので、列の位置は3行で必ず一致する */
@@ -124,12 +159,12 @@ html.ruby-full .mt-guide-card .tc-bub{height:86px;}
   background:var(--card); border:1.5px solid var(--line); min-width:4.4em; text-align:center; box-sizing:border-box;}
 .rd-grid6 .rd-read,.rd-grid4 .rd-read{min-width:5.4em; text-align:center;}
 .rd-plus,.rd-arrow{font-size:clamp(12px,3.6vw,14px); font-weight:800; color:var(--ink-soft);}
-.rd-read{font-size:clamp(14px,4.4vw,17px); color:var(--jade-deep);}
+.rd-read{font-size:clamp(14px,4.4vw,17px); color:var(--jade-ink);}
 /* ドラの図: [ドラ表示牌]→[ドラ] を同じ列でそろえる / 字牌のじゅんばんは横一列 */
 .dr-grid{display:grid; grid-template-columns:auto auto auto; column-gap:clamp(8px,4vw,18px); row-gap:12px;
   justify-content:center; align-items:center;}
 .dr-grid .tile{width:clamp(34px,10vw,44px); max-width:44px; flex:none;}
-.dr-hit b{color:var(--jade-deep);}
+.dr-hit b{color:var(--jade-ink);}
 .dr-cyc{display:flex; align-items:center; justify-content:center; gap:clamp(2px,1.4vw,6px); flex-wrap:nowrap;}
 .dr-cyc .tile{width:clamp(26px,8vw,36px); max-width:36px; flex:none;}
 /* 暗槓の実戦表示につかう「ふせ牌」: 手牌の牌とおなじ大きさ・高さにそろえる */
@@ -138,14 +173,15 @@ html.ruby-full .mt-guide-card .tc-bub{height:86px;}
 .rd-hon{display:flex; justify-content:center; gap:8px; margin-bottom:8px;}
 .rd-hcell{display:flex; flex-direction:column; align-items:center; gap:4px;}
 .rd-hcell .tile{width:40px; max-width:40px;}
-.rd-hcell b{font-size:14px; color:var(--jade-deep);}
+.rd-hcell b{font-size:14px; color:var(--jade-ink);}
 .mt-lbl{min-width:56px; padding:12px 10px; border-radius:12px; border:2px solid var(--line); background:var(--card);
   font-size:21px; font-weight:800; text-align:center; box-shadow:0 3px 0 var(--line);}
 .mt-lbl.sel{border-color:var(--jade); background:var(--jade-soft);}
-.mt-lbl.correct{border-color:var(--jade); background:color-mix(in srgb, var(--jade) 18%, #fff);}
+.mt-lbl.correct{border-color:var(--jade); background:color-mix(in srgb, var(--jade) 18%, var(--card));}
 .mt-num.mt-word{font-size:16px; padding:15px 0; max-width:128px;}
 .rb-seg{display:flex; gap:6px; flex:none;}
 .rb-seg .btn{width:auto; min-height:40px; padding:8px 14px; font-size:13px;}
+.tm-seg .btn{padding:8px 10px; font-size:12.5px; min-width:52px;}   /* R39: 表示テーマは3択なので少し詰める */
 .au-row{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:12px;
   padding-top:12px; border-top:1px solid var(--line);}
 .au-txt{display:flex; flex-direction:column; min-width:0;}
@@ -154,7 +190,7 @@ html.ruby-full .mt-guide-card .tc-bub{height:86px;}
 .btn.au-btn{display:inline-block; width:auto; flex:none; min-height:44px; padding:8px 14px; font-size:13px; white-space:nowrap;}
 .btn.au-btn:disabled{opacity:.6;}
 .au-msg{font-size:11.5px; font-weight:800; margin-top:6px; color:var(--ink-soft); min-height:0;}
-.au-msg.ok{color:var(--jade-deep);} .au-msg.ng{color:var(--verm-deep);}
+.au-msg.ok{color:var(--jade-ink);} .au-msg.ng{color:var(--verm-ink);}
 .sec-list-head{margin:14px 16px 4px;}
 .sec-list-head h2{margin:0; font-size:clamp(17px,4.6vw,20px); color:var(--ink);}
 .sec-list-head p{margin:4px 0 0; font-size:clamp(11.5px,3.2vw,13px); color:var(--ink-soft); font-weight:700;}
@@ -163,9 +199,9 @@ html.ruby-full .mt-guide-card .tc-bub{height:86px;}
   font:inherit; color:var(--ink); cursor:pointer; box-shadow:0 3px 0 var(--line);}
 .sec-card:active{transform:translateY(2px); box-shadow:0 1px 0 var(--line);}
 .sec-card .sc-top{display:flex; justify-content:space-between; align-items:center; gap:8px;}
-.sec-card .sc-no{font-size:12px; font-weight:900; letter-spacing:.08em; color:var(--jade-deep);}
+.sec-card .sc-no{font-size:12px; font-weight:900; letter-spacing:.08em; color:var(--jade-ink);}
 .sec-card .sc-badge{font-size:11.5px; font-weight:800; padding:3px 10px; border-radius:999px;
-  background:var(--jade-soft); color:var(--jade-deep); white-space:nowrap;}
+  background:var(--jade-soft); color:var(--jade-ink); white-space:nowrap;}
 .sec-card .sc-name{font-size:clamp(17px,4.8vw,20px); font-weight:900; margin-top:4px;}
 .sec-card .sc-desc{font-size:clamp(11.5px,3.2vw,13px); color:var(--ink-soft); font-weight:700; margin-top:2px;}
 .sec-card .sc-prog{display:flex; align-items:center; gap:10px; margin-top:10px;}
@@ -173,10 +209,10 @@ html.ruby-full .mt-guide-card .tc-bub{height:86px;}
 .sec-card .sc-bar i{display:block; height:100%; background:var(--jade); border-radius:999px;}
 .sec-card .sc-num{font-size:12.5px; font-weight:800; font-variant-numeric:tabular-nums; color:var(--ink-soft);}
 .sec-card .sc-opt{font-size:11px; font-weight:700; color:var(--ink-soft); margin-top:6px;}
-.sec-card .sc-here{font-size:12px; font-weight:800; color:var(--jade-deep); margin-top:8px;}
+.sec-card .sc-here{font-size:12px; font-weight:800; color:var(--jade-ink); margin-top:8px;}
 .sec-card.current{border-color:var(--jade); box-shadow:0 3px 0 var(--jade-deep);}
-.sec-card.current .sc-badge{background:var(--jade); color:#fff;}
-.sec-card.done .sc-badge{background:rgba(232,169,60,.18); color:var(--gold-deep);}
+.sec-card.current .sc-badge{background:var(--jade); color:var(--on-accent);}
+.sec-card.done .sc-badge{background:rgba(232,169,60,.18); color:var(--gold-ink);}
 .sec-card.done .sc-bar i{background:var(--gold);}
 .sec-card.locked{background:var(--paper); box-shadow:none;}
 .sec-card.locked .sc-name,.sec-card.locked .sc-desc{opacity:.6;}
@@ -184,11 +220,11 @@ html.ruby-full .mt-guide-card .tc-bub{height:86px;}
 .sec-list-foot{text-align:center; color:var(--ink-soft); font-size:12px; padding:12px 24px 0;}
 .sec-back-row{margin:10px 16px 0;}
 .sec-back{border:none; background:none; padding:10px 8px 10px 4px; min-height:44px; font:inherit; font-size:14px; font-weight:800;
-  color:var(--jade-deep); cursor:pointer;}
+  color:var(--jade-ink); cursor:pointer;}
 .sec-next{display:block; box-sizing:border-box; width:calc(100% - 32px); margin:18px 16px 0; padding:14px;
-  border:none; border-radius:14px; background:var(--jade); color:#fff; font:inherit; font-size:15px; font-weight:800;
+  border:none; border-radius:14px; background:var(--jade); color:var(--on-accent); font:inherit; font-size:15px; font-weight:800;
   box-shadow:0 3px 0 var(--jade-deep); cursor:pointer;}
-.section-band{margin:18px 16px 6px; background:var(--jade); color:#fff; border-radius:14px;
+.section-band{margin:18px 16px 6px; background:var(--jade); color:var(--on-accent); border-radius:14px;
   padding:12px 16px; box-shadow:0 4px 0 var(--jade-deep);}
 .section-band h2{margin:0; font-size:clamp(15px, 4.1vw, 18px); letter-spacing:.08em;}
 .section-band p{margin:2px 0 0; font-size:clamp(11.5px, 3.2vw, 13.5px); opacity:.92;}
@@ -208,8 +244,8 @@ html.ruby-full .mt-guide-card .tc-bub{height:86px;}
 .node.next{background:var(--jade); box-shadow:0 6px 0 var(--jade-deep);}
 .node.next .ico{font-size:clamp(22px, 6vw, 27px);}
 .node .crowns{position:absolute; bottom:-8px; background:var(--card); border:2px solid var(--line);
-  border-radius:999px; font-size:10px; font-weight:800; padding:1px 7px; color:var(--gold-deep);}
-.node.done{color:#fff; font-weight:900;}            /* クリア済み: 金地+白✓ */
+  border-radius:999px; font-size:10px; font-weight:800; padding:1px 7px; color:var(--gold-ink);}
+.node.done{color:var(--on-accent); font-weight:900;}            /* クリア済み: 金地+白✓ */
 .node.locked{background:var(--locked); box-shadow:0 6px 0 var(--line); cursor:default;}
 .node.locked .ico{font-size:clamp(16px, 4.4vw, 20px); opacity:.8;}
 .node.final{outline:2.5px solid var(--gold); outline-offset:2px;}  /* 小テーマ最終「まとめ」 */
@@ -230,7 +266,7 @@ html.ruby-full .mt-guide-card .tc-bub{height:86px;}
 .theme-band .tb-txt{flex:1; min-width:0;}
 .theme-band h3{margin:0; font-size:clamp(14.5px, 4vw, 17px);}
 .theme-band p{margin:1px 0 0; font-size:clamp(11px, 3.1vw, 13px); color:var(--ink-soft);}
-.theme-band .tb-prog{font-size:clamp(11px, 3.1vw, 13px); font-weight:800; color:var(--jade-deep);
+.theme-band .tb-prog{font-size:clamp(11px, 3.1vw, 13px); font-weight:800; color:var(--jade-ink);
   background:var(--jade-soft); border-radius:999px; padding:4px 10px; white-space:nowrap;}
 /* 小テーマ見出し: ── 4枚形 ── の区切り */
 .subtheme-head{display:flex; align-items:center; gap:10px; margin:14px 28px 0;
@@ -253,13 +289,13 @@ html.ruby-full .mt-guide-card .tc-bub{height:86px;}
 /* ---------- generic card / buttons ---------- */
 .card{background:var(--card); border:2px solid var(--line); border-radius:18px; padding:16px; margin:12px 16px;}
 .btn{display:block; width:100%; border:none; border-radius:14px; padding:clamp(13px,3.8vw,16px); font-size:clamp(15.5px, 4.3vw, 17.5px); font-weight:800;
-  background:var(--jade); color:#fff; box-shadow:0 4px 0 var(--jade-deep); transition:transform .08s;}
+  background:var(--jade); color:var(--on-accent); box-shadow:0 4px 0 var(--jade-deep); transition:transform .08s;}
 .btn:active{transform:translateY(3px); box-shadow:0 1px 0 var(--jade-deep);}
 .btn.gray{background:var(--card); color:var(--ink-soft); box-shadow:0 4px 0 var(--line); border:2px solid var(--line);}
 .btn.red{background:var(--verm); box-shadow:0 4px 0 var(--verm-deep);}
 .btn.gold{background:var(--gold); box-shadow:0 4px 0 var(--gold-deep);}
 .btn:disabled{background:var(--locked); box-shadow:0 4px 0 var(--line); color:var(--card);}
-.btn.pressing{transform:translateY(3px); box-shadow:0 1px 0 var(--jade-deep); background:var(--jade-deep); color:#fff; opacity:.95;}
+.btn.pressing{transform:translateY(3px); box-shadow:0 1px 0 var(--jade-deep); background:var(--jade-deep); color:var(--on-accent); opacity:.95;}
 
 /* ---------- training: 条件えらび(R36 枚数選択) ----------
    色はすべて既存トークン(--card/--line/--ink/--ink-soft/--paper/--jade系/--locked)を使う。
@@ -275,8 +311,8 @@ html.ruby-full .mt-guide-card .tc-bub{height:86px;}
 .tr-pick:active{transform:translateY(2px);}
 .tr-pick.lock{background:var(--paper); color:var(--locked); border-color:var(--line);}
 .tr-pick.lock small{color:var(--locked);}
-.tr-pick.tr-any{grid-column:1/-1; border-color:var(--jade); background:var(--jade-soft); color:var(--jade-deep);}
-.tr-pick.tr-any small{color:var(--jade-deep); opacity:.85;}
+.tr-pick.tr-any{grid-column:1/-1; border-color:var(--jade); background:var(--jade-soft); color:var(--jade-ink);}
+.tr-pick.tr-any small{color:var(--jade-ink); opacity:.85;}
 .tr-note{font-size:11px; color:var(--ink-soft); font-weight:700; margin:8px 0 0;}
 
 /* ---------- lesson ---------- */
@@ -365,7 +401,7 @@ button.tile.off:active{transform:none;}
 .cmp-banner{background:var(--jade-soft); border:2px solid var(--jade); border-radius:12px;
   padding:9px 12px; margin-bottom:10px; font-size:13px; display:flex; flex-direction:column; gap:6px;}
 .cmp-badges{display:flex; align-items:center; gap:6px; flex-wrap:wrap; font-size:11.5px; font-weight:800; color:var(--ink-soft);}
-.cmp-badge{background:var(--gold); color:#fff; border-radius:999px; padding:2px 10px; font-size:11px; font-weight:800;}
+.cmp-badge{background:var(--gold); color:var(--on-accent); border-radius:999px; padding:2px 10px; font-size:11px; font-weight:800;}
 
 /* ---------- TableView (P3-A) ---------- */
 .tv{display:flex; flex-direction:column; gap:8px; margin-bottom:12px;}
@@ -379,9 +415,9 @@ button.tile.off:active{transform:none;}
 .tv-opp{background:var(--card); border:2px solid var(--line); border-radius:12px; padding:7px 10px;}
 .tv-opp.focus{border-color:var(--jade); box-shadow:0 0 0 1px var(--jade);}
 .tv-opp-head{display:flex; align-items:center; gap:6px; font-size:12.5px; margin-bottom:4px;}
-.tv-badge{font-size:10px; font-weight:800; border-radius:6px; padding:1px 6px; color:#fff;}
+.tv-badge{font-size:10px; font-weight:800; border-radius:6px; padding:1px 6px; color:var(--on-accent);}
 .tv-badge.oya{background:var(--verm);} .tv-badge.ko{background:var(--ink-soft);}
-.tv-badge.riichi{background:var(--gold); color:#fff;}
+.tv-badge.riichi{background:var(--gold); color:var(--on-accent);}
 .tv-score{margin-left:auto; font-size:12px; font-weight:800; font-variant-numeric:tabular-nums; color:var(--ink-soft);}
 .tv-score b{color:var(--ink);}
 .tv-calls{display:flex; gap:8px; margin:2px 0 4px; flex-wrap:wrap;}
@@ -418,7 +454,7 @@ button.tile.off:active{transform:none;}
 .choice{border:2px solid var(--line); background:var(--card); color:var(--ink); border-radius:14px;
   padding:clamp(12px,3.6vw,15px) 14px; font-size:clamp(14.5px, 4vw, 16.5px); font-weight:700; text-align:left; box-shadow:0 3px 0 var(--line);}
 .choice.sel{border-color:var(--jade); color:var(--jade); background:var(--jade-soft); box-shadow:0 3px 0 var(--jade-deep);}
-.choice.correct{border-color:var(--jade); background:var(--jade-soft); color:var(--jade-deep);}
+.choice.correct{border-color:var(--jade); background:var(--jade-soft); color:var(--jade-ink);}
 .choice.wrong{border-color:var(--verm); background:color-mix(in srgb, var(--verm) 12%, var(--card)); color:var(--verm);}
 .tile-choices{display:flex; gap:10px; flex-wrap:wrap; justify-content:center;}
 /* 9択ピッカー: 3x3配置のまま、牌をひと回り小さく(幅追従・タップ領域は確保) */
@@ -441,33 +477,33 @@ button.tile.off:active{transform:none;}
 .lesson-foot.ok{background:var(--jade-soft); border-top-color:var(--jade);}
 .lesson-foot.ng{background:color-mix(in srgb, var(--verm) 10%, var(--card)); border-top-color:var(--verm);}
 .fb-title{font-weight:800; font-size:clamp(16.5px, 4.6vw, 19px); margin:0 0 4px;}
-.fb-title.ok{color:var(--jade-deep);} .fb-title.ng{color:var(--verm);} .fb-title.mid{color:var(--gold-deep);}
+.fb-title.ok{color:var(--jade-ink);} .fb-title.ng{color:var(--verm-ink);} .fb-title.mid{color:var(--gold-ink);}
 /* ================= 第7段階: ゲームフィール ================= */
 /* 通常コンボ: 「正解！」と同じ行の右側に常時見える(解説カード2段目から昇格) */
 .fb-head{display:flex; align-items:center; justify-content:space-between; gap:6px 10px; flex-wrap:wrap;}
 .fb-head .fb-title{margin:0;}
 .fb-combo{display:inline-block; padding:3px 11px; border-radius:999px; white-space:nowrap;
-  background:var(--jade-soft); color:var(--jade-deep); font-weight:900;
+  background:var(--jade-soft); color:var(--jade-ink); font-weight:900;
   font-size:clamp(12.5px, 3.5vw, 14.5px); animation:comboPop var(--m-answer,.26s) cubic-bezier(.34,1.56,.64,1);}
-.fb-combo.big{background:var(--gold); color:#fff; box-shadow:0 2px 0 var(--gold-deep);}
+.fb-combo.big{background:var(--gold); color:var(--on-accent); box-shadow:0 2px 0 var(--gold-deep);}
 .combo-end{margin:2px 0 4px; color:var(--ink-soft); font-size:clamp(11px, 3.1vw, 12.5px);}
 /* レッスン内復習: 「もう一度」チップ(責めないポジティブ表示)と復習クリアの小表示 */
 .rv-chip{display:inline-block; margin:0 0 8px; padding:4px 12px; border-radius:999px;
-  background:var(--jade-soft); color:var(--jade-deep); font-weight:800;
+  background:var(--jade-soft); color:var(--jade-ink); font-weight:800;
   font-size:clamp(11.5px, 3.2vw, 13px);}
-.rv-clear{margin:2px 0 4px; color:var(--jade-deep); font-weight:800;
+.rv-clear{margin:2px 0 4px; color:var(--jade-ink); font-weight:800;
   font-size:clamp(11.5px, 3.2vw, 12.5px);}
 /* ===== 第1章(ツモッピィ v1.0): Teachカード・牌タップ選択 ===== */
 .teach-card{display:flex; align-items:flex-start; gap:10px; margin:4px 0 12px;}
 .tc-iso{width:52px; height:auto; flex:none; border-radius:10px;}
-.tc-bub{position:relative; flex:1; background:#fff; border:2px solid var(--line);
+.tc-bub{position:relative; flex:1; background:var(--bub); border:2px solid var(--line);
   border-radius:14px; padding:10px 12px; font-size:clamp(13px,3.8vw,15px); font-weight:700; line-height:1.65;}
 .tc-bub::before{content:''; position:absolute; left:-8px; top:18px; width:12px; height:12px;
-  background:#fff; border-left:2px solid var(--line); border-bottom:2px solid var(--line);
+  background:var(--bub); border-left:2px solid var(--line); border-bottom:2px solid var(--line);
   transform:rotate(45deg);}
 .tc-lab{margin:10px 4px 0; font-size:12px; font-weight:800; color:var(--ink-soft);}
 .term-chip{display:inline-block; padding:1px 8px; border-radius:999px; background:var(--jade-soft,#e3f6ec);
-  color:var(--jade-deep); font-weight:900;}
+  color:var(--jade-ink); font-weight:900;}
 .ch1-cands{display:flex; flex-wrap:nowrap; justify-content:center; gap:2px; margin:14px 0 6px;
   touch-action:none; user-select:none; -webkit-user-select:none;}  /* なぞり選択(共通UI)のため */
 .ch1-cands .tile{cursor:pointer; width:100%;}
@@ -481,37 +517,37 @@ button.tile.off:active{transform:none;}
 .ch3-ctx{display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin:2px 0 10px;}
 .ch3-chip{font-size:11px; font-weight:800; padding:3px 10px; border-radius:999px;
   background:var(--jade-soft); color:var(--ink); border:1px solid rgba(0,0,0,.10);}
-.ch3-chip.warn{background:rgba(216,67,59,.10); color:var(--verm-deep);}
-.ch3-chip.riichi{background:rgba(232,169,60,.16); color:var(--gold-deep);}
+.ch3-chip.warn{background:rgba(216,67,59,.10); color:var(--verm-ink);}
+.ch3-chip.riichi{background:rgba(232,169,60,.16); color:var(--gold-ink);}
 /* 4人の席と風の図(R28): あなたを下に固定し、右=下家・向かい=対面・左=上家。
    席順は反時計回り(東→南→西→北)=「つぎの風の人が右どなり」という正しい関係で描く */
 .ch3-seatmap{display:flex; flex-direction:column; align-items:center; gap:6px; margin:10px auto 12px;}
 .ch3-seatmap .sm-row{display:flex; align-items:center; gap:8px;}
 .ch3-seatmap .sm-table{width:72px; height:56px; background:var(--jade-soft); border:2px solid var(--jade);
   border-radius:12px; display:flex; align-items:center; justify-content:center;
-  color:var(--jade-deep); font-size:11px; font-weight:800;}
+  color:var(--jade-ink); font-size:11px; font-weight:800;}
 .ch3-seatmap .sm-cell{min-width:46px; padding:6px 10px; border-radius:10px; background:var(--card,#fff);
   border:1.5px solid var(--line); text-align:center; font-weight:800; font-size:15px; color:var(--ink);}
-.ch3-seatmap .sm-cell.you{background:var(--jade); border-color:var(--jade-deep); color:#fff;}
+.ch3-seatmap .sm-cell.you{background:var(--jade); border-color:var(--jade-ink); color:var(--on-accent);}
 .ch3-seatmap .sm-you-lab{display:block; font-size:10px; font-weight:800; line-height:1.2; opacity:.92;}
 /* seatPick(R38): 卓の図で「どの人？」をタップして答える共通形式。図は上の ch3-seatmap をそのまま使う
    (卓図の実装はこの1つだけ。向きの定義は 左=上家 / 上=対面 / 右=下家 / 下=あなた で固定) */
-.ch3-seatmap .sm-cell.hl{border-color:var(--jade); background:var(--jade-soft); color:var(--jade-deep);}
-.ch3-seatmap .sm-cell.you.hl{background:var(--jade); color:#fff;}
+.ch3-seatmap .sm-cell.hl{border-color:var(--jade); background:var(--jade-soft); color:var(--jade-ink);}
+.ch3-seatmap .sm-cell.you.hl{background:var(--jade); color:var(--on-accent);}
 .ch3-seatmap.evenmap .sm-cell{min-width:64px;}   /* 呼び方モード: 席の幅をそろえて卓を中央に保つ */
 .ch3-seatmap.pickmap .sm-cell{min-width:64px; min-height:48px; display:flex; flex-direction:column;
   align-items:center; justify-content:center; font-family:inherit; cursor:pointer;
   -webkit-tap-highlight-color:transparent; transition:transform .08s;}
 .ch3-seatmap.pickmap .sm-cell:active{transform:translateY(2px);}
 .ch3-seatmap .sm-cell.sel{border-color:var(--jade); background:color-mix(in srgb, var(--jade) 12%, var(--card,#fff));}
-.ch3-seatmap .sm-cell.correct{border-color:var(--jade); background:color-mix(in srgb, var(--jade) 22%, var(--card,#fff)); color:var(--jade-deep);}
-.ch3-seatmap .sm-cell.wrong{border-color:var(--verm); background:color-mix(in srgb, var(--verm) 12%, var(--card,#fff)); color:var(--verm-deep);}
-.ch3-seatmap .sm-cell.you.sel,.ch3-seatmap .sm-cell.you.correct,.ch3-seatmap .sm-cell.you.wrong{color:#fff;}
+.ch3-seatmap .sm-cell.correct{border-color:var(--jade); background:color-mix(in srgb, var(--jade) 22%, var(--card,#fff)); color:var(--jade-ink);}
+.ch3-seatmap .sm-cell.wrong{border-color:var(--verm); background:color-mix(in srgb, var(--verm) 12%, var(--card,#fff)); color:var(--verm-ink);}
+.ch3-seatmap .sm-cell.you.sel,.ch3-seatmap .sm-cell.you.correct,.ch3-seatmap .sm-cell.you.wrong{color:var(--on-accent);}
 .yf-cands{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:10px 0 2px;}
 .yfb{font-size:13px; font-weight:800; padding:9px 14px; border-radius:12px;
-  border:2px solid rgba(0,0,0,.14); background:var(--card,#fff); color:var(--ink); cursor:pointer;}
-.yfb.sel{border-color:var(--jade-deep); background:rgba(31,164,107,.10);}
-.yfb.correct{border-color:var(--jade-deep); background:rgba(31,164,107,.22);}
+  border:2px solid var(--line); background:var(--card); color:var(--ink); cursor:pointer;}
+.yfb.sel{border-color:var(--jade-ink); background:rgba(31,164,107,.10);}
+.yfb.correct{border-color:var(--jade-ink); background:rgba(31,164,107,.22);}
 /* ================= ストリーク達成演出(StreakCelebration・2026-09-21) =================
    その日の学習条件を初めて達成した瞬間に1回だけ表示する専用オーバーレイ。
    type=personal(毎日)/milestone(節目)。将来type=friend(フレンドストリーク)を同構造で追加する */
@@ -531,7 +567,7 @@ button.tile.off:active{transform:none;}
 @keyframes sfxFlame{from{transform:scale(1) rotate(-3deg);} to{transform:scale(1.12) rotate(3deg);}}
 /* 連続学習の日数: 「5日」は必ず同じ1行(数字が大・「日」は小さく少し上寄せ)。下の行は「連続！」 */
 .sfx-num{display:flex; align-items:flex-start; justify-content:center; gap:2px; white-space:nowrap;
-  font-weight:900; line-height:1.02; color:var(--gold-deep);
+  font-weight:900; line-height:1.02; color:var(--gold-ink);
   font-variant-numeric:tabular-nums; animation:sfxPop .5s cubic-bezier(.34,1.56,.64,1);}
 .sfx-n{font-size:clamp(58px,18vw,76px); line-height:1;}
 .sfx-u{font-size:clamp(23px,7vw,30px); line-height:1; margin-top:.18em;}   /* 数字より小さく・上寄せ */
@@ -539,7 +575,7 @@ button.tile.off:active{transform:none;}
 @keyframes sfxPop{0%{transform:scale(.3); opacity:0;} 60%{transform:scale(1.15);} 100%{transform:scale(1); opacity:1;}}
 .sfx-label{font-size:clamp(19px,5.6vw,23px); font-weight:900; margin-top:2px;}
 .sfx-badge{display:inline-block; margin-top:8px; padding:4px 14px; border-radius:999px;
-  background:rgba(232,169,60,.16); color:var(--gold-deep); font-weight:900; font-size:clamp(12px,3.6vw,14px);}
+  background:rgba(232,169,60,.16); color:var(--gold-ink); font-weight:900; font-size:clamp(12px,3.6vw,14px);}
 .sfx-iso{display:flex; align-items:flex-start; gap:10px; margin:16px 0 4px; text-align:left;}
 .sfx-iso img{width:52px; height:auto; flex:none; border-radius:10px; animation:sfxHop .7s ease-in-out infinite alternate;}
 @keyframes sfxHop{from{transform:translateY(0);} to{transform:translateY(-5px);}}
@@ -587,7 +623,7 @@ button.tile.off:active{transform:none;}
 .mg-wall .mg-lab{margin:0;}
 .mg-stack{display:flex; gap:3px; align-items:center;}
 .mg-back{width:26px; height:36px; border-radius:5px; background:var(--jade-deep);
-  border:2px solid rgba(255,255,255,.5); box-shadow:0 2px 0 rgba(0,0,0,.18); display:inline-block;}
+  border:2px solid rgba(255,255,255,.5); box-shadow:0 2px 0 var(--shadow); display:inline-block;}
 .mg-draw{padding:10px 14px; font-size:14px; width:auto;}
 .mg-pulse{animation:mgPulse 1.1s ease-in-out infinite;}
 @keyframes mgPulse{0%,100%{transform:scale(1); box-shadow:0 4px 0 var(--jade-deep);}
@@ -604,13 +640,13 @@ button.tile.off:active{transform:none;}
 .tw.tw-tsumo{margin-left:8px;}
 .tw .tile.mg-tsumo{margin-left:0;}   /* 分離はtwラッパー側のmarginで行う */
 .mg-agari{padding:10px 14px; font-size:14px; width:auto; background:var(--gold,#f2b705);
-  box-shadow:0 4px 0 #b98a04; color:#5b4300;}
+  box-shadow:0 4px 0 var(--gold-deep); color:#5b4300;}
 /* リーチ！slot(D2): 局開始から常設し、disabled→有効→リーチ中と状態だけが変わる(盤面固定原則) */
 .mg-riichi{padding:10px 0; font-size:14px; width:80px; min-width:80px;
-  background:var(--verm); color:#fff; box-shadow:0 4px 0 #8f2c20;}
+  background:var(--verm); color:var(--on-accent); box-shadow:0 4px 0 var(--verm-deep);}
 /* 宣言中/リーチ中は鮮やかなまま固定slot・固定幅内で状態だけ変える(横ズレなし) */
-.mg-riichi.rc-on:disabled{background:var(--verm); color:#fff;
-  box-shadow:0 4px 0 #8f2c20; opacity:1;}
+.mg-riichi.rc-on:disabled{background:var(--verm); color:var(--on-accent);
+  box-shadow:0 4px 0 var(--verm-deep); opacity:1;}
 .mg-wall.mg-r3 .btn{padding:10px 8px; font-size:13px;}
 .mg-wall.mg-r3 .mg-riichi{width:72px; min-width:72px;}
 .mg-stack .mg-back{width:auto; flex:0 1 26px; min-width:8px;}  /* 山が多くても行内に収める */
@@ -625,8 +661,8 @@ button.tile.off:active{transform:none;}
   font-weight:900; border-radius:12px; border:2px solid var(--line); background:var(--card);
   color:var(--ink); box-shadow:0 3px 0 var(--line); cursor:pointer;
   -webkit-tap-highlight-color:transparent;}
-.mt-num.sel{border-color:var(--jade); background:var(--jade-soft); color:var(--jade-deep);}
-.mt-num.ok{border-color:var(--jade); background:color-mix(in srgb, var(--jade) 18%, #fff);}
+.mt-num.sel{border-color:var(--jade); background:var(--jade-soft); color:var(--jade-ink);}
+.mt-num.ok{border-color:var(--jade); background:color-mix(in srgb, var(--jade) 18%, var(--card));}
 /* ===== Matching Correct Feedback(共通仕様・正解した瞬間の気持ちよさ) =====
    正しいペアがそろう → correct音 → ポンッと弾んで少し浮く(mt-pop) → スッと薄くなって残る(mt-done)。
    「もう正解した」と分かるように消しきらない。動きを減らす設定では弾みだけ省き、色と薄さは残す */
@@ -667,13 +703,13 @@ button.tile.off:active{transform:none;}
 .mg-tsumo{margin-left:14px; outline:3px solid var(--gold,#f2b705); outline-offset:2px;}
 .mg-hint{animation:mgHint 1s ease-in-out infinite;}
 @keyframes mgHint{0%,100%{transform:none;} 50%{transform:translateY(-5px);
-  box-shadow:0 8px 0 rgba(0,0,0,.12),0 0 0 4px rgba(242,183,5,.45);}}
+  box-shadow:0 8px 0 var(--shadow),0 0 0 4px rgba(242,183,5,.45);}}
 .mg-disc{display:flex; gap:4px; flex-wrap:wrap; min-height:38px; padding:6px;
   background:rgba(0,0,0,.045); border-radius:10px;}
 .mg-disc .tile{width:26px; height:36px; font-size:15px; opacity:.85;}
 .mg-empty{font-size:11px; font-weight:700; color:var(--ink-soft); align-self:center;}
 .mg-banner{margin:8px 0 0; text-align:center; font-size:clamp(18px,5.5vw,24px); font-weight:900;
-  color:var(--jade-deep); animation:okPop .5s var(--m-ease,ease);}
+  color:var(--jade-ink); animation:okPop .5s var(--m-ease,ease);}
 @keyframes comboPop{from{transform:scale(.5); opacity:0;} to{transform:scale(1); opacity:1;}}
 
 /* Level1: 正解/不正解の軽い反応(0.2〜0.4秒)。牌・選択肢そのものが動く */
@@ -689,7 +725,7 @@ button.tile.off:active{transform:none;}
   z-index:60; pointer-events:none;}
 .fx.show{display:flex;}
 .fx .fx-box{display:flex; flex-direction:column; align-items:center; gap:4px; text-align:center;
-  padding:22px 34px; border-radius:22px; background:var(--overlay); color:#fff;
+  padding:22px 34px; border-radius:22px; background:var(--overlay); color:var(--on-accent);
   animation:fxIn .9s cubic-bezier(.34,1.56,.64,1) both;}
 .fx .fx-ico{font-size:clamp(40px, 12vw, 54px); line-height:1.1;}
 .fx .fx-t{font-size:clamp(19px, 5.4vw, 24px); font-weight:900; letter-spacing:.06em;}
@@ -706,7 +742,7 @@ button.tile.off:active{transform:none;}
 /* ホーム画面: カードを縦に積む構造(将来カードを追記可能) */
 .home-wrap{padding:4px 0 96px;}
 .hc-continue{display:flex; align-items:center; gap:12px; width:calc(100% - 32px); margin:10px 16px 0;
-  border:none; background:var(--jade); color:#fff; border-radius:14px; padding:13px 16px;
+  border:none; background:var(--jade); color:var(--on-accent); border-radius:14px; padding:13px 16px;
   box-shadow:0 4px 0 var(--jade-deep); text-align:left; cursor:pointer;}
 .hc-continue:active{transform:translateY(3px); box-shadow:0 1px 0 var(--jade-deep);}
 .hc-continue .hc-play{font-size:clamp(19px,5.2vw,23px); line-height:1;}
@@ -717,8 +753,8 @@ button.tile.off:active{transform:none;}
 .today-strip .ts-cal{font-size:clamp(14px,4vw,17px); opacity:.75;}
 /* コースの現在地フローティングボタン(ロードが長くなっても現在地へ一発。過去マス閲覧の邪魔をしない) */
 .loc-btn{position:fixed; right:14px; bottom:calc(78px + env(safe-area-inset-bottom)); z-index:25;
-  border:none; background:var(--jade); color:#fff; font-weight:800; border-radius:999px;
-  padding:9px 14px; font-size:clamp(11px,3.1vw,12.5px); box-shadow:0 3px 0 var(--jade-deep),0 4px 10px rgba(0,0,0,.15);}
+  border:none; background:var(--jade); color:var(--on-accent); font-weight:800; border-radius:999px;
+  padding:9px 14px; font-size:clamp(11px,3.1vw,12.5px); box-shadow:0 3px 0 var(--jade-deep),0 4px 10px var(--shadow);}
 .loc-btn:active{transform:translateY(2px); box-shadow:0 1px 0 var(--jade-deep);}
 /* マイページ: 雀力レーティング */
 .rt-row{display:flex; justify-content:space-between; align-items:center; padding:5px 2px;
@@ -727,15 +763,15 @@ button.tile.off:active{transform:none;}
 .rt-row b{font-variant-numeric:tabular-nums; font-size:clamp(14px,3.9vw,16px);}
 .rt-row i{font-style:normal; color:var(--ink-soft); font-size:clamp(11px,3.1vw,12.5px);}
 .rt-more{margin-top:4px;}
-.rt-more summary{font-size:clamp(11.5px,3.2vw,13px); font-weight:800; color:var(--jade-deep);
+.rt-more summary{font-size:clamp(11.5px,3.2vw,13px); font-weight:800; color:var(--jade-ink);
   cursor:pointer; padding:4px 0;}
 /* 今日の学習状況(ストリーク)+つづきから */
 .today-strip{margin:10px 16px 0; background:var(--card); border:2px solid var(--line); border-radius:12px;
   padding:8px 12px; display:flex; align-items:center; gap:8px; cursor:pointer;}
 .today-strip .ts-streak{font-size:clamp(12.5px,3.5vw,14px); white-space:nowrap;}
 .today-strip .ts-state{flex:1; min-width:0; font-size:clamp(10.5px,3vw,12px); color:var(--ink-soft); font-weight:700;}
-.today-strip .ts-state.done{color:var(--jade-deep);}
-.today-strip .ts-go{border:none; background:var(--jade); color:#fff; font-weight:800; border-radius:999px;
+.today-strip .ts-state.done{color:var(--jade-ink);}
+.today-strip .ts-go{border:none; background:var(--jade); color:var(--on-accent); font-weight:800; border-radius:999px;
   padding:6px 12px; font-size:clamp(11px,3.1vw,12.5px); box-shadow:0 2px 0 var(--jade-deep); white-space:nowrap;}
 .today-strip .ts-go:active{transform:translateY(2px); box-shadow:none;}
 /* 今日のミッションカード(コンパクト・ロードを圧迫しない) */
@@ -743,12 +779,12 @@ button.tile.off:active{transform:none;}
   padding:8px 12px 10px;}
 .mission-card .mc-head{display:flex; justify-content:space-between; align-items:center;
   font-weight:800; font-size:clamp(12.5px,3.5vw,14px); margin-bottom:4px;}
-.mission-card .mc-count{color:var(--jade-deep); background:var(--jade-soft); border-radius:999px;
+.mission-card .mc-count{color:var(--jade-ink); background:var(--jade-soft); border-radius:999px;
   padding:2px 10px; font-size:clamp(11px,3.1vw,12.5px);}
-.mission-card .mc-count.comp{background:var(--gold); color:#fff; box-shadow:0 2px 0 var(--gold-deep);}
+.mission-card .mc-count.comp{background:var(--gold); color:var(--on-accent); box-shadow:0 2px 0 var(--gold-deep);}
 .mission-card .mc-item{display:flex; align-items:center; gap:6px; padding:3px 0;
   font-size:clamp(11.5px,3.2vw,13px); font-weight:700; color:var(--ink);}
-.mission-card .mc-item.done{color:var(--jade-deep);}
+.mission-card .mc-item.done{color:var(--jade-ink);}
 .mission-card .mc-prog{margin-left:auto; color:var(--ink-soft); font-size:clamp(10.5px,3vw,12px);
   font-variant-numeric:tabular-nums;}
 .mission-card .mc-bar{display:block; width:64px; height:6px; border-radius:3px; background:var(--line); overflow:hidden; flex:none;}
@@ -761,7 +797,7 @@ button.tile.off:active{transform:none;}
   box-shadow:0 4px 12px rgba(0,0,0,.18); z-index:70; pointer-events:none;
   opacity:0; transition:opacity .22s ease, transform .22s ease; text-align:center;}
 .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
-.toast .toast-t{font-weight:900; color:var(--jade-deep); font-size:clamp(12.5px,3.5vw,14px);}
+.toast .toast-t{font-weight:900; color:var(--jade-ink); font-size:clamp(12.5px,3.5vw,14px);}
 .toast .toast-s{font-weight:700; color:var(--ink-soft); font-size:clamp(11px,3.1vw,12.5px);}
 /* 宝箱ノード: レッスンより少し小さく・金アクセント。available時のみ軽いpulse */
 .chest-node{width:calc(var(--node-size)*.82); height:calc(var(--node-size)*.82); border-radius:16px;
@@ -774,7 +810,7 @@ button.tile.off:active{transform:none;}
 .chest-node.available:active{transform:translateY(3px); box-shadow:0 1px 0 var(--gold-deep);}
 .chest-node.claimed{background:var(--jade-soft); animation:none;}
 .chest-node.claimed .ci{opacity:.6;}
-.chest-node .cb{position:absolute; right:-6px; top:-6px; background:var(--jade); color:#fff;
+.chest-node .cb{position:absolute; right:-6px; top:-6px; background:var(--jade); color:var(--on-accent);
   border-radius:50%; width:18px; height:18px; font-size:11px; font-weight:900;
   display:flex; align-items:center; justify-content:center; box-shadow:0 1px 0 var(--jade-deep);}
 @keyframes chestPulse{0%,100%{transform:scale(1); box-shadow:0 4px 0 var(--gold-deep);}
@@ -803,7 +839,7 @@ button.tile.off:active{transform:none;}
 }
 .lesson-foot.mid{background:color-mix(in srgb, var(--gold) 12%, var(--card)); border-top-color:var(--gold);}
 .fb-rate{margin:0 0 6px; font-size:13px; font-weight:800; font-variant-numeric:tabular-nums;}
-.fb-rate.up{color:var(--jade-deep);} .fb-rate.down{color:var(--verm);}
+.fb-rate.up{color:var(--jade-ink);} .fb-rate.down{color:var(--verm);}
 .rating-strip{display:flex; align-items:center; justify-content:center; gap:clamp(10px,3.5vw,18px); margin:12px 16px 0;
   background:var(--card); border:2px solid var(--line); border-radius:14px; padding:clamp(10px,2.8vw,13px) 14px;
   font-weight:800; font-size:clamp(12.5px, 3.6vw, 15px); font-variant-numeric:tabular-nums;}
@@ -826,10 +862,10 @@ button.tile.off:active{transform:none;}
   padding:clamp(10px,2.8vw,14px) clamp(12px,3.4vw,18px); min-width:clamp(84px,24vw,104px);}
 .res-box .v{font-size:clamp(19px,5.4vw,24px); font-weight:800; font-variant-numeric:tabular-nums;}
 .res-box .k{font-size:clamp(10.5px,3vw,12px); color:var(--ink-soft); font-weight:700; margin-top:2px;}
-.best-badge{background:var(--gold); color:#fff; font-weight:800; border-radius:999px;
+.best-badge{background:var(--gold); color:var(--on-accent); font-weight:800; border-radius:999px;
   padding:8px 20px; box-shadow:0 3px 0 var(--gold-deep); font-size:clamp(14px,4vw,16px);}
 .streak-celebrate{background:linear-gradient(180deg,var(--gold),#f0bc55); border-radius:20px;
-  padding:18px 34px; color:#fff; box-shadow:0 5px 0 var(--gold-deep); width:min(280px,80%);
+  padding:18px 34px; color:var(--on-accent); box-shadow:0 5px 0 var(--gold-deep); width:min(280px,80%);
   animation:scpop .45s cubic-bezier(.2,1.6,.4,1);}
 /* リザルト順次表示と併用時: scpopが.stagのstagInを上書きしてopacity:0のまま
    になるのを防ぐ(両アニメーションを併走・delayはインラインのanimation-delayが両方に適用) */
@@ -848,21 +884,21 @@ button.tile.off:active{transform:none;}
 .cal .dow{font-size:10.5px; font-weight:800; color:var(--ink-soft); padding:2px 0;}
 .cal-day{aspect-ratio:1; display:flex; align-items:center; justify-content:center;
   border-radius:50%; font-size:12.5px; font-weight:700; color:var(--ink);}
-.cal-day.done{background:var(--jade); color:#fff;}
-.cal-day.protected{background:var(--gold); color:#fff;}
+.cal-day.done{background:var(--jade); color:var(--on-accent);}
+.cal-day.protected{background:var(--gold); color:var(--on-accent);}
 .cal-day.today{outline:2.5px solid var(--jade-deep); outline-offset:1px;}
 .cal-legend{display:flex; gap:12px; justify-content:center; font-size:10.5px; font-weight:700;
   color:var(--ink-soft); margin-top:8px;}
 .cal-legend i{display:inline-block; width:11px; height:11px; border-radius:50%; margin-right:4px; vertical-align:-1px;}
 .big-emoji{font-size:64px;}
-.xp-chip{background:var(--gold); color:#fff; font-weight:800; border-radius:12px; padding:8px 18px; box-shadow:0 3px 0 var(--gold-deep);}
+.xp-chip{background:var(--gold); color:var(--on-accent); font-weight:800; border-radius:12px; padding:8px 18px; box-shadow:0 3px 0 var(--gold-deep);}
 .shop-item{display:flex; gap:12px; align-items:center;}
 .shop-item .ico{font-size:34px;}
 .shop-item .info{flex:1;}
 .shop-item h3{margin:0; font-size:15px;}
 .shop-item p{margin:2px 0 0; font-size:12px; color:var(--ink-soft); font-family:'Noto Sans JP',sans-serif;}
 .shop-item .buy{border:none; border-radius:12px; font-weight:800; padding:10px 14px; background:var(--jade);
-  color:#fff; box-shadow:0 3px 0 var(--jade-deep); white-space:nowrap;}
+  color:var(--on-accent); box-shadow:0 3px 0 var(--jade-deep); white-space:nowrap;}
 .shop-item .buy.owned{background:var(--locked); box-shadow:0 3px 0 var(--line);}
 .avatars{display:flex; gap:10px; flex-wrap:wrap; justify-content:center;}
 /* R34 ユーザーアバター: 正方形の枠に絵を入れ、AVATARS.fit で身長と足元をそろえる(transform-originは足元) */
@@ -890,7 +926,7 @@ button.tile.off:active{transform:none;}
 .avp-card:focus-visible{outline:3px solid var(--jade); outline-offset:2px;}
 .uav-card{width:84px; height:84px;}
 .avp-name{font-size:13.5px; font-weight:800;}
-.avp-check{position:absolute; top:6px; right:8px; width:22px; height:22px; border-radius:50%; background:var(--jade); color:#fff;
+.avp-check{position:absolute; top:6px; right:8px; width:22px; height:22px; border-radius:50%; background:var(--jade); color:var(--on-accent);
   font-size:13px; font-weight:900; line-height:22px; text-align:center;}
 .avp-actions{display:flex; flex-direction:column; gap:8px; margin-top:12px;}
 .res-av{position:relative; display:inline-block;}
@@ -918,7 +954,7 @@ button.tile.off:active{transform:none;}
 .modal p{margin:0 0 14px; font-size:13.5px; color:var(--ink-soft); line-height:1.6; font-family:'Noto Sans JP',sans-serif;}
 
 /* ---------- ad mock ---------- */
-.ad{position:fixed; inset:0; z-index:60; background:#101b16; color:#fff; display:none;
+.ad{position:fixed; inset:0; z-index:60; background:#101b16; color:var(--on-accent); display:none;
   flex-direction:column; align-items:center; justify-content:center; gap:14px; text-align:center; padding:20px;}
 .ad.show{display:flex;}
 .ad .tag{border:1px solid #ffffff55; border-radius:6px; font-size:11px; padding:2px 8px; letter-spacing:.2em;}
@@ -2435,6 +2471,7 @@ const DEFAULT_STATE={schemaVersion:1,xp:0,hearts:5,gems:120,streak:0,lastDay:nul
   ratings:{waits:30,nanikiru:30,riichi:30},ratingN:{waits:0,nanikiru:0,riichi:0},seenNk:{},seenRq:{},bestStreak:0,
   learningDays:{},trainingBest:{},roadProgress:{},daily:null,chests:{},dev:false,sound:true,
   rubyMode:'standard',   // R33: ルビ表示 'standard'(標準)|'full'(すべて)。無い旧データは標準
+  themeMode:'system',    // R39: 表示テーマ 'light'|'dark'|'system'。無い旧データ・新規ともに system(端末の設定に合わせる)
   avatarId:'human'};     // R34: ユーザーアバター(AVATARSのID。画像パスは保存しない)。無い旧データ・不明なIDは human
 let S=loadState();
 if(S.rubyMode!=='full') S.rubyMode='standard';   // R33: 未設定・不正値は標準(保存はユーザーが切り替えたときだけ)
@@ -2910,6 +2947,50 @@ function rubyObserve(){
   });
   RUBY_OBS.observe(document.body,{childList:true,subtree:true,characterData:true});
 }
+/* ================= 表示テーマ(R39) =================
+   themeMode: 'light'(いつもライト) / 'dark'(いつもダーク) / 'system'(端末の設定に合わせる)。
+   ・保存値が無いときは新規・既存を問わず system。「themeModeが無い＝system」という意味にする
+     (保存は、ユーザーが自分で選んだときだけ行う＝既存データを勝手に書き換えない)。
+   ・実効テーマは <html data-theme="light|dark"> の1か所だけ。CSSはトークンを差し替えるだけで、
+     テーマごとの個別セレクタ(例: ダーク専用クラスを足して全部書き直す)は作らない。
+   ・OSのテーマ変更に追従するのは system のときだけ。light/dark を選んでいれば変わらない。 */
+function themeMode(){ const m=S&&S.themeMode; return (m==='light'||m==='dark'||m==='system')?m:'system'; }
+function themeSystemDark(){
+  try{ return !!(window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches); }catch(e){ return false; }
+}
+function themeEffective(mode){
+  const m=mode||themeMode();
+  if(m==='light'||m==='dark') return m;
+  return themeSystemDark()?'dark':'light';
+}
+function applyTheme(){
+  const eff=themeEffective();
+  document.documentElement.setAttribute('data-theme',eff);
+  const mc=document.getElementById('meta-theme-color');
+  if(mc) mc.setAttribute('content',eff==='dark'?'#0f1713':'#f4f6f2');
+  return eff;
+}
+function setThemeMode(mode){
+  S.themeMode=(mode==='light'||mode==='dark')?mode:'system';
+  save();
+  applyTheme();
+  if(typeof renderProfile==='function') renderProfile();
+}
+/* systemのときだけOSのテーマ変更に追従する(登録は1回だけ。二重登録しない) */
+let THEME_MQ_BOUND=false;
+function themeBindSystem(){
+  if(THEME_MQ_BOUND) return;
+  try{
+    const mq=matchMedia('(prefers-color-scheme: dark)');
+    const onChange=()=>{ if(themeMode()==='system') applyTheme(); };
+    if(mq.addEventListener) mq.addEventListener('change',onChange);
+    else if(mq.addListener) mq.addListener(onChange);
+    THEME_MQ_BOUND=true;
+  }catch(e){}
+}
+applyTheme();
+themeBindSystem();
+
 function setRubyMode(mode){
   S.rubyMode=mode==='full'?'full':'standard'; save();
   document.documentElement.classList.toggle('ruby-full',rubyModeFull());
@@ -2934,8 +3015,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.36.0';
-const BUILD_ID='20260923-09';
+const APP_VER='0.37.0';
+const BUILD_ID='20260924-01';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -3580,13 +3661,13 @@ function renderTraining(){
       +'<div style="font-size:12px;color:var(--ink-soft);font-weight:700;">'+desc+'</div></div>'
       +'<div style="text-align:center;"><div style="font-size:9.5px;color:var(--ink-soft);font-weight:800;letter-spacing:.08em;">RATING</div>'
       +'<b style="font-size:22px;font-variant-numeric:tabular-nums;">'+Math.floor(S.ratings[cat])+'</b></div></div>'
-      +(best?'<p style="font-size:11.5px;color:var(--gold-deep);margin:0 0 4px;font-weight:800;">🏅 BEST '
+      +(best?'<p style="font-size:11.5px;color:var(--gold-ink);margin:0 0 4px;font-weight:800;">🏅 BEST '
         +fmtDur(best.ms,true)+(rank?'　ランク'+rank:'')+'</p>':'')
       +'<p style="font-size:11px;color:var(--ink-soft);margin:0 0 10px;font-weight:700;">'+(bandOverride||bandText(cat)+'（あなたのレーティングに合わせて自動調整）')+'</p>'
       +trainOptionsHTML(cat)                  // 種別ごとの条件選択(待ち=枚数えらび / 他は開始ボタンのまま)
       +'</div>';
   };
-  el.innerHTML='<div class="card" style="background:var(--jade);border-color:var(--jade-deep);color:#fff;">'
+  el.innerHTML='<div class="card" style="background:var(--jade);border-color:var(--jade-ink);color:var(--on-accent);">'
     +'<b>🎯 デイリートレーニング（プロト版）</b><br><span style="font-size:12px;opacity:.92;">学んだ能力の精度を上げ続ける場所。問題の難しさはレーティングに自動で追従します</span></div>'
     +card('waits','🔍','待ちトレーニング','習った枚数形から えらんで練習',
       bandText('waits')+'（おまかせは あなたのレーティングに合わせて自動調整）')
@@ -3802,7 +3883,7 @@ let L=null; // lesson state
 function openCourse(id){
   const c=COURSES.find(x=>x.id===id);
   const cr=S.crowns[id]||0;
-  let inner='<h3>'+c.icon+' '+c.title+' <small style="color:var(--gold-deep)">👑'+cr+'</small></h3><p>'+c.desc+'</p>';
+  let inner='<h3>'+c.icon+' '+c.title+' <small style="color:var(--gold-ink)">👑'+cr+'</small></h3><p>'+c.desc+'</p>';
   if(c.type==='waits'){
     inner+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
       +[4,7,10,13].map(n=>'<button class="btn'+(n>=10?' gold':'')+'" onclick="startLesson(\'waits\','+n+')">'+n+'枚形</button>').join('')
@@ -9381,7 +9462,7 @@ const SHOP=[
 ];
 function renderShop(){
   const el=document.getElementById('shop-list');
-  el.innerHTML='<div class="card" style="background:var(--jade);border-color:var(--jade-deep);color:#fff;">'
+  el.innerHTML='<div class="card" style="background:var(--jade);border-color:var(--jade-ink);color:var(--on-accent);">'
     +'<b>🛍️ ショップ</b><br><span style="font-size:12px;opacity:.9;">アプリは基本無料。応援したい人向けの買い切りアイテムです（プロトタイプでは購入はモック動作）</span></div>'
     +SHOP.map(it=>{
       const owned=it.id==='freeze'?false:S.owned[it.id];
@@ -9461,6 +9542,14 @@ function renderProfile(){
     +'<div class="rb-seg" role="group" aria-label="ルビ">'
     +'<button class="btn '+(rubyModeFull()?'gray':'')+'" id="rb-std" aria-pressed="'+!rubyModeFull()+'" onclick="setRubyMode(\'standard\')">標準</button>'
     +'<button class="btn '+(rubyModeFull()?'':'gray')+'" id="rb-full" aria-pressed="'+rubyModeFull()+'" onclick="setRubyMode(\'full\')">すべて</button>'
+    +'</div></div>'
+    +'<div class="au-row"><div class="au-txt"><span class="au-t">🌓 表示</span>'
+    +'<span class="au-d">'+({light:'いつもライト',dark:'いつもダーク'}[themeMode()]
+      ||('端末の設定に合わせる（いまは'+(themeEffective()==='dark'?'ダーク':'ライト')+'）'))+'</span></div>'
+    +'<div class="rb-seg tm-seg" role="group" aria-label="表示">'
+    +[['light','ライト'],['dark','ダーク'],['system','端末']].map(function(o){
+      return '<button class="btn '+(themeMode()===o[0]?'':'gray')+'" id="tm-'+o[0]+'"'
+        +' aria-pressed="'+(themeMode()===o[0])+'" onclick="setThemeMode(\''+o[0]+'\')">'+o[1]+'</button>'; }).join('')
     +'</div></div>'
     +'<div class="au-row"><div class="au-txt"><span class="au-t">🔄 最新版に更新</span>'
     +'<span class="au-d">アプリを最新の状態にします（学習の記録はそのまま残ります）</span></div>'
