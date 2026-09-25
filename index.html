@@ -520,23 +520,47 @@ button.tile.off:active{transform:none;}
 .ch3-chip.warn{background:rgba(216,67,59,.10); color:var(--verm-ink);}
 .ch3-chip.riichi{background:rgba(232,169,60,.16); color:var(--gold-ink);}
 /* 4人の席と風の図(R28): あなたを下に固定し、右=下家・向かい=対面・左=上家。
-   席順は反時計回り(東→南→西→北)=「つぎの風の人が右どなり」という正しい関係で描く */
-.ch3-seatmap{display:flex; flex-direction:column; align-items:center; gap:6px; margin:10px auto 12px;}
-.ch3-seatmap .sm-row{display:flex; align-items:center; gap:8px;}
-.ch3-seatmap .sm-table{width:72px; height:56px; background:var(--jade-soft); border:2px solid var(--jade);
-  border-radius:12px; display:flex; align-items:center; justify-content:center;
-  color:var(--jade-ink); font-size:11px; font-weight:800;}
-.ch3-seatmap .sm-cell{min-width:46px; padding:6px 10px; border-radius:10px; background:var(--card,#fff);
-  border:1.5px solid var(--line); text-align:center; font-weight:800; font-size:15px; color:var(--ink);}
+   席順は反時計回り(東→南→西→北)=「つぎの風の人が右どなり」という正しい関係で描く。
+
+   ---- R40: 卓図の標準寸法を共通コンポーネント側で1つだけ定義する ----
+   ねらい: Teachで見た卓図が、そのままの大きさで問題になり、同じ席を直接タップできること。
+   ・席カードの寸法は「中身」ではなく下のトークン(--sm-cw/--sm-ch)で決まる。
+     よって wind(東・南…) / name(上家・対面…) / anon(？) で文字量が違っても外形は同じ。
+   ・Teach / MCQ / seatPick / hl / only / pick のどれでも外形サイズは完全に一致する。
+     問題形式ごとの寸法上書き(旧 .evenmap / .pickmap の min-width・min-height)は撤去した。
+     .pickmap は「押せる」ことだけを足し、寸法には一切関与しない。
+   ・サイズは「320pxで横スクロールせず左右に余白が残る最大」を下限に、clampで390/430へ拡大する。
+     実測値(図全体の外形幅): 320px→278.0 / 390px→290.5 / 430px→298.6。
+   ・変えるのは「中に何を出すか・どこを強調するか」だけ。
+     位置関係(SEAT_POS / SEAT_POS_K / SEAT_NAME / seatWindAt / seatAnsPos)は一切変更しない。 */
+.ch3-seatmap{
+  --sm-cw:clamp(80px, 5.5vw + 62px, 92px);    /* 席カード幅  320→80.0 / 390→83.5 / 430→85.7 */
+  --sm-ch:clamp(54px, 3vw + 44px, 62px);      /* 席カード高  320→54.0 / 390→55.7 / 430→56.9 */
+  --sm-gap:clamp(7px, 1vw + 3.8px, 10px);     /* 席と卓のすきま(誤タップ防止も兼ねる) */
+  --sm-tw:clamp(104px, 7vw + 81px, 120px);    /* 中央卓 幅   320→104.0 / 390→108.3 / 430→111.1 */
+  --sm-th:clamp(60px, 4vw + 47px, 72px);      /* 中央卓 高   320→60.0 / 390→62.6 / 430→64.2 */
+  display:flex; flex-direction:column; align-items:center; gap:var(--sm-gap);
+  width:fit-content; margin:12px auto 14px;   /* 外形=図そのもの(中央寄せ＋寸法の自動テストのため) */
+}
+.ch3-seatmap .sm-row{display:flex; align-items:center; gap:var(--sm-gap);}
+.ch3-seatmap .sm-table{width:var(--sm-tw); height:var(--sm-th); box-sizing:border-box;
+  background:var(--jade-soft); border:2px solid var(--jade);
+  border-radius:14px; display:flex; align-items:center; justify-content:center;
+  color:var(--jade-ink); font-size:clamp(11px, .9vw + 8.2px, 13px); font-weight:800;}
+/* 席カード: 幅・高さをトークンで固定する。中身(風/よび方/？/ルビ)が変わっても外形は動かない */
+.ch3-seatmap .sm-cell{width:var(--sm-cw); height:var(--sm-ch); box-sizing:border-box; padding:2px 4px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
+  border-radius:12px; background:var(--card,#fff); border:2px solid var(--line);
+  text-align:center; font-weight:800; font-size:clamp(16px, 1.1vw + 12.5px, 19px);
+  line-height:1.15; color:var(--ink);}
 .ch3-seatmap .sm-cell.you{background:var(--jade); border-color:var(--jade-ink); color:var(--on-accent);}
-.ch3-seatmap .sm-you-lab{display:block; font-size:10px; font-weight:800; line-height:1.2; opacity:.92;}
+.ch3-seatmap .sm-you-lab{display:block; font-size:clamp(11px, .6vw + 9.1px, 12px); font-weight:800;
+  line-height:1.15; opacity:.92;}
 /* seatPick(R38): 卓の図で「どの人？」をタップして答える共通形式。図は上の ch3-seatmap をそのまま使う
    (卓図の実装はこの1つだけ。向きの定義は 左=上家 / 上=対面 / 右=下家 / 下=あなた で固定) */
 .ch3-seatmap .sm-cell.hl{border-color:var(--jade); background:var(--jade-soft); color:var(--jade-ink);}
 .ch3-seatmap .sm-cell.you.hl{background:var(--jade); color:var(--on-accent);}
-.ch3-seatmap.evenmap .sm-cell{min-width:64px;}   /* 呼び方モード: 席の幅をそろえて卓を中央に保つ */
-.ch3-seatmap.pickmap .sm-cell{min-width:64px; min-height:48px; display:flex; flex-direction:column;
-  align-items:center; justify-content:center; font-family:inherit; cursor:pointer;
+.ch3-seatmap.pickmap .sm-cell{font-family:inherit; cursor:pointer; appearance:none; -webkit-appearance:none;
   -webkit-tap-highlight-color:transparent; transition:transform .08s;}
 .ch3-seatmap.pickmap .sm-cell:active{transform:translateY(2px);}
 .ch3-seatmap .sm-cell.sel{border-color:var(--jade); background:color-mix(in srgb, var(--jade) 12%, var(--card,#fff));}
@@ -3016,7 +3040,7 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
 const APP_VER='0.37.0';
-const BUILD_ID='20260924-01';
+const BUILD_ID='20260925-01';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -6094,8 +6118,8 @@ function ch3SeatMapHTML(sw,opt){
       ? '<button class="'+cls+'" id="ch-'+i+'" onpointerdown="selChoice('+i+')">'+inner+'</button>'
       : '<div class="'+cls+'">'+inner+'</div>';
   };
-  const even=(o.mode==='name'||o.mode==='anon')?' evenmap':'';
-  return '<div class="ch3-seatmap'+(o.pick?' pickmap':'')+even+'">'
+  // R40: 旧 evenmap(呼び方モードだけ席を広げる)は廃止。席の寸法はCSSトークンで全モード共通になった
+  return '<div class="ch3-seatmap'+(o.pick?' pickmap':'')+'">'
     +cell('top')
     +'<div class="sm-row">'+cell('left')+'<div class="sm-table">麻雀卓</div>'+cell('right')+'</div>'
     +cell('bottom')
