@@ -567,6 +567,24 @@ button.tile.off:active{transform:none;}
 .ch3-seatmap .sm-cell.correct{border-color:var(--jade); background:color-mix(in srgb, var(--jade) 22%, var(--card,#fff)); color:var(--jade-ink);}
 .ch3-seatmap .sm-cell.wrong{border-color:var(--verm); background:color-mix(in srgb, var(--verm) 12%, var(--card,#fff)); color:var(--verm-ink);}
 .ch3-seatmap .sm-cell.you.sel,.ch3-seatmap .sm-cell.you.correct,.ch3-seatmap .sm-cell.you.wrong{color:var(--on-accent);}
+/* 局の帯(R41): 東1局〜南4局を「東場の4マス」「南場の4マス」の2段で見せる表示専用の図。
+   ・1列8マスにはしない。320pxで横スクロールしないよう 4列×2段 にする(実測: 320pxで1マス55px)
+   ・段を枠で囲むことで 局→場→半荘 の階層が図だけで分かるようにする
+   ・表示専用。新しい問題形式(QFORMAT)は作らず、回答は通常の choices MCQ で行う */
+.ks{display:flex; flex-direction:column; gap:4px; margin:10px auto 12px; width:100%;}
+.ks.whole{border:2px solid var(--jade); border-radius:14px; padding:7px; gap:4px;
+  background:color-mix(in srgb, var(--jade) 6%, transparent);}
+.ks-grp{border:2px solid var(--line); border-radius:12px; background:var(--surface-sunken); padding:6px 7px 7px;}
+.ks-lab{display:block; font-size:11.5px; font-weight:900; color:var(--ink-soft); margin:0 0 5px 2px;}
+.ks-row{display:grid; grid-template-columns:repeat(4,1fr); gap:5px;}
+.ks-arrow{text-align:center; font-size:13px; font-weight:900; color:var(--ink-soft); line-height:1;}
+.ks-cap{text-align:center; font-size:12px; font-weight:900; color:var(--jade-ink); margin:1px 0 0;}
+.ks-cell{display:flex; align-items:center; justify-content:center; min-height:38px; padding:4px 2px;
+  border:2px solid var(--line); border-radius:9px; background:var(--card);
+  font-size:13px; font-weight:900; color:var(--ink-soft); white-space:nowrap; box-sizing:border-box;}
+.ks-cell.done{color:var(--ink);}
+.ks-cell.now{border-color:var(--jade); background:var(--jade-soft); color:var(--jade-ink);
+  box-shadow:0 3px 0 var(--jade-deep);}
 .yf-cands{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:10px 0 2px;}
 .yfb{font-size:13px; font-weight:800; padding:9px 14px; border-radius:12px;
   border:2px solid var(--line); background:var(--card); color:var(--ink); cursor:pointer;}
@@ -2004,6 +2022,7 @@ const COURSES=[
 {id:'ch1c',title:'ミニ麻雀',icon:'🀄',section:0,type:'ch1',desc:'ツモって、切って、アガリをつくろう。',questions:[]},
 {id:'ch1d',title:'本物の13枚へ',icon:'🏆',section:0,type:'ch1',desc:'本物の麻雀とおなじ13枚に挑戦！',questions:[]},
 {id:'ch1s',title:'4人で打つ',icon:'🀄',section:0,type:'ch1',desc:'麻雀卓に4人。のこりの3人を、なんとよぶ？',questions:[]},
+{id:'ch1g',title:'ゲームの進み方',icon:'🔁',section:0,type:'ch1',desc:'1回ぶんの勝負から、1ゲームのおわりまで。',questions:[]},
 {id:'ch1e',title:'実戦への扉',icon:'🚪',section:0,type:'ch1',desc:'役・リーチ・実戦のことばを覚えて、1局アガりきろう！',questions:[]},
 /* 第2章「アガリが見える」(待ち牌と待ちの形)。descに待ちの形の名称は書かない(名称初出はレッスン内) */
 {id:'ch2a',title:'待ちを見つけよう',icon:'🔎',section:1,type:'ch1',desc:'アガリになる牌＝待ち牌をさがそう。',questions:[]},
@@ -2181,6 +2200,31 @@ const THEMES=[
     {diff:{ch1:'s1_2'}},                       // 東家・南家・西家・北家
     {diff:{ch1:'s1_3'}},                       // 親と子
     {diff:{ch1:'s1_4'}},                       // ★まとめ: 4人マスター
+   ]},
+  ]},
+ /* ゲームの進み方(R41): 「1局」から「半荘」までの時間軸を理解するテーマ。
+    ・置き場所は th_ch1s のうしろ。親・子(s1_3)・上家/下家(s1_1)・東家〜北家(s1_2)・テンパイ(d1_3)が
+      直前に全部そろっているので、局・親交代・流局をこの4つだけで説明できる。
+    ・requires は th_ch1s。th_ch1e / th_ch2a の requires は変えない＝
+      既存ユーザーがこのテーマ未クリアを理由にロードから締め出されることはない。
+    ・本編テーマ(SECTION_OPTIONAL_THEMESには入れない)。roadProgressは新しいキーが1つ増えるだけで、
+      既存テーマの進捗値の意味は変わらない。
+    ・東場・南場の正式導入がここへ繰り上がるため、第3章 yb1_4 は復習の書き方に変更した。
+    ・点数(ノーテン罰符・本場・供託・符・翻・順位点)には入らない＝将来の「点のしくみ」へ送る。 */
+ {id:'th_ch1g', course:'ch1g', title:'ゲームの進み方', sub:'はじまりから、おわりまで',
+  requires:'th_ch1s',
+  subThemes:[
+   {id:'st_g1', title:'1局のながれ', lessons:[
+    {diff:{ch1:'g1_1'}},                       // 1局ってなに？(13→14→13のループ→命名)
+    {diff:{ch1:'g1_2'}},                       // 局はどう終わる？(アガリ / 流局)
+    {diff:{ch1:'g1_3'}},                       // 流局したら？(テンパイ / ノーテン。点には入らない)
+    {diff:{ch1:'g1_4'}},                       // ★まとめ: 1局マスター
+   ]},
+   {id:'st_g2', title:'ゲームのおわり', lessons:[
+    {diff:{ch1:'g2_1'}},                       // 親はどうなる？(親交代 / 連荘。流局時はルール差)
+    {diff:{ch1:'g2_2'}},                       // 東1局〜東4局(親の位置と局名の対応)
+    {diff:{ch1:'g2_3'}},                       // 東場から南場へ(→半荘。東風戦は補足)
+    {diff:{ch1:'g2_4'}},                       // ★まとめ: オーラス / 1局のアガリと順位は別 / 点の予告
    ]},
   ]},
  {id:'th_ch1e', course:'ch1e', title:'実戦への扉', sub:'役・リーチ・実戦のことば',
@@ -2809,7 +2853,14 @@ const RUBY_TERMS={
   // 1字の「親」「子」はここに入れない——入れると 面子・順子・刻子・調子・様子 へ部分一致で誤爆する。
   // 教材側では <ruby>親<rt>おや</rt></ruby> のように書いて、その語だけにルビを付ける(R38-RUBY方針)
   '上家':'かみちゃ','下家':'しもちゃ','対面':'といめん',
-  '東場':'トンば','南場':'ナンば','単騎':'タンキ','暗刻':'アンコ','三暗刻':'サンアンコー','役満':'ヤクマン',
+  '東場':'トンば','南場':'ナンば',
+  // R41: 局名・半荘まわり。1字の「局」「場」「荘」は絶対に入れない(結局・局面・対局・会場などへ誤爆する)。
+  // 単独の「局」は教材側で <ruby>局<rt>きょく</rt></ruby> と直接書く(R38-RUBY方針)。
+  // 「1局」も入れない(「東1局」の内部に部分一致するため)。全ルビ用の 局[きょく] は RUBY_FULL_SRC 側にある
+  '東1局':'トンイーキョク','東2局':'トンニキョク','東3局':'トンサンキョク','東4局':'トンヨンキョク',
+  '南1局':'ナンイーキョク','南2局':'ナンニキョク','南3局':'ナンサンキョク','南4局':'ナンヨンキョク',
+  '流局':'りゅうきょく','半荘':'ハンチャン','連荘':'レンチャン','東風戦':'トンプウセン',
+  '単騎':'タンキ','暗刻':'アンコ','三暗刻':'サンアンコー','役満':'ヤクマン',
   '七対子':'チートイツ','三色':'サンショク','大三元':'ダイサンゲン','四暗刻':'スーアンコー','国士無双':'コクシムソウ',
   '小四喜':'ショウスーシー','二盃口':'リャンペーコー','字一色':'ツーイーソー','緑一色':'リューイーソー',
   '清老頭':'チンロウトウ','混老頭':'ホンロウトウ','九蓮宝燈':'チューレンポートー','天和':'テンホー',
@@ -2844,7 +2895,12 @@ const RUBY_FULL_SRC=`
 一度[いちど] 一気[いっき] 一生[いっしょう] 一瞬[いっしゅん] 一色[いっしょく] 一覧[いちらん] 一部[いちぶ] 一歩手前[いっぽてまえ]
 主役[しゅやく] 予告[よこく] 人気[にんき] 今回[こんかい] 今度[こんど] 今日[きょう] 今[いま]
 仕組[しく]み 以上[いじょう] 以外[いがい] 以降[いこう] 任意[にんい] 伝説[でんせつ] 位置[いち]
-何切[なにき]る 何度[なんど] 何種類[なんしゅるい] 候補[こうほ] 出会[であ] 出[で]
+何切[なにき]る 何度[なんど] 何種類[なんしゅるい] 何局[なんきょく] 候補[こうほ] 出会[であ] 出[で]
+# R41 ゲームの進み方。「局」はこのアプリでは例外なく「きょく」なので単字登録が安全
+# (局面・局収支・対局・終局・何局のいずれも きょく。読みが割れる「場」とは事情が違う)。
+# 流局・東1局〜南4局・半荘・連荘・東風戦は RUBY_TERMS 側にあり、最長一致でそちらが先に当たる
+結局[けっきょく] 局面[きょくめん] 対局[たいきょく] 終局[しゅうきょく] 局収支[きょくしゅうし] 局[きょく]
+順位[じゅんい] 勝負[しょうぶ] 席順[せきじゅん] {1位}[いちい]
 判断[はんだん] 判定中[はんていちゅう] 判定[はんてい] 反対[はんたい] 正反対[せいはんたい] 名前[なまえ] 問題[もんだい]
 基本[きほん] 基本形[きほんけい] 基本的[きほんてき] 場合[ばあい] 場所[ばしょ] 大事[だいじ] 大丈夫[だいじょうぶ] 奇跡[きせき]
 学習[がくしゅう] 学習中[がくしゅうちゅう] 安心[あんしん] 完成[かんせい] 完成形[かんせいけい] 実戦[じっせん] 実戦形[じっせんけい] 実戦編[じっせんへん] 実戦練習[じっせんれんしゅう]
@@ -3039,8 +3095,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.37.0';
-const BUILD_ID='20260925-01';
+const APP_VER='0.38.0';
+const BUILD_ID='20260925-02';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -3048,7 +3104,7 @@ function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_I
    開発UI・未検証Compare）を通常操作から隠す。コード・データ・機能は
    一切削除しておらず、このフラグをfalseにすれば全て復帰する。 */
 let PROTOTYPE_MODE=true;
-const PROTO_VISIBLE_COURSES=['ch1a','ch1r','ch1b','ch1c','ch1d','ch1s','ch1e','ch2a','ch2b','ch2c','ch2d','ch3a','ch3b','ch3c','ch3d','ch3e','ch3f','ch3g','ch3h','ch3i','ch3j','ch3x','waits','ukeire1','nanikiru','riichi'];
+const PROTO_VISIBLE_COURSES=['ch1a','ch1r','ch1b','ch1c','ch1d','ch1s','ch1g','ch1e','ch2a','ch2b','ch2c','ch2d','ch3a','ch3b','ch3c','ch3d','ch3e','ch3f','ch3g','ch3h','ch3i','ch3j','ch3x','waits','ukeire1','nanikiru','riichi'];
 function protoCourseVisible(id){ return !PROTOTYPE_MODE||PROTO_VISIBLE_COURSES.includes(id); }
 function staminaFree(){ return PROTOTYPE_MODE||S.owned.stamina; }   // プロトタイプはスタミナ消費なし
 function devUIVisible(){ return !PROTOTYPE_MODE||S.dev||location.hash==='#dev'; }
@@ -4820,6 +4876,57 @@ function ch1TenpaiMcq(handStr,exp){
   const a=ch1MiniWaits(parseHand(handStr)).length?0:1;
   return {q:'この手牌はテンパイ？',hand:handStr,choices:['テンパイしている','していない'],a,exp,ghand:true};
 }
+/* ================= G「ゲームの進み方」(R41)のビルダー =================
+   新しい問題形式(QFORMAT)は作らない。既存の choices MCQ / seatPick / ch1Teach の panel にだけ乗せる。
+   正解はすべて状態か既存の判定関数から算出し、手で書かない。 */
+const KYOKU8=['東1局','東2局','東3局','東4局','南1局','南2局','南3局','南4局'];
+/* 局の帯: 表示専用・状態を持たない純HTML。hl=いまの局(0..7、null=現在地なし) */
+function kyokuStripHTML(hl,opt){
+  const o=opt||{};
+  const cell=i=>'<span class="ks-cell'+(i===hl?' now':((hl!=null&&i<hl)?' done':''))+'">'+KYOKU8[i]+'</span>';
+  const grp=(lab,from)=>'<div class="ks-grp">'+(o.labels===false?'':'<span class="ks-lab">'+lab+'</span>')
+    +'<div class="ks-row">'+[0,1,2,3].map(k=>cell(from+k)).join('')+'</div></div>';
+  let h=grp('東場',0);
+  if(!o.half) h+='<div class="ks-arrow">↓</div>'+grp('南場',4);
+  return '<div class="ks'+(o.whole?' whole':'')+'">'+h
+    +(o.cap?'<p class="ks-cap">'+o.cap+'</p>':'')+'</div>';
+}
+/* 局の状況チップ(既存の .ch3-ctx / .ch3-chip をそのまま使う) */
+function kyokuCtxHTML(st){
+  const c=[];
+  if(st.who) c.push('<span class="ch3-chip">'+st.who+'がアガった</span>');
+  if(st.wall!=null) c.push('<span class="ch3-chip">山ののこり '+st.wall+'枚</span>');
+  if(st.noWin) c.push('<span class="ch3-chip">まだだれもアガっていない</span>');
+  return c.length?'<div class="ch3-ctx">'+c.join('')+'</div>':'';
+}
+/* 局の終わり方: 正解は状態から算出(アガった人がいない＋山0枚＝流局) */
+function g1EndMcq(st,exp,opt){
+  const s=st||{}, ryuukyoku=(!s.who && s.wall===0);
+  return Object.assign({q:'この局は、どうやって終わった？',panel:kyokuCtxHTML(s),
+    choices:['だれかがアガって終わった','流局（だれもアガれずに終わった）'],a:ryuukyoku?1:0,exp},opt||{});
+}
+/* 流局したときのテンパイ/ノーテン: 正解は ch1MiniWaits で算出(点数には一切触れない) */
+function g1NotenMcq(handStr,exp){
+  const a=ch1MiniWaits(parseHand(handStr)).length?0:1;
+  return {q:'流局したよ。この手牌は？',hand:handStr,choices:['テンパイ','ノーテン'],a,exp,ghand:true};
+}
+/* 順位MCQ: 正解は最高点から算出。点数計算はさせず、表示された点をくらべるだけ。
+   新しいUIは作らず、点の一覧は既存の .q-ctx に文字で出す */
+function g2RankMcq(list,exp){
+  const top=list.reduce((a,b)=>(b.pt>a.pt?b:a));
+  const c=shuffle(list.map(x=>x.who));
+  return {q:'オーラスが終わったよ。<b>1位</b>はだれ？',
+    ctx:list.map(x=>x.who+'　'+x.pt.toLocaleString()+'点').join('／'),
+    choices:c,a:c.indexOf(top.who),exp};
+}
+/* 帯から局をえらぶMCQ: 選択肢と正解を KYOKU8 のインデックスから作る(手書きしない) */
+function kyokuPickMcq(qtext,hl,ansIdx,cands,exp,opt){
+  const list=cands.slice();
+  if(list.indexOf(ansIdx)<0) list.push(ansIdx);
+  const c=shuffle(list.slice());
+  return Object.assign({q:qtext,panel:kyokuStripHTML(hl,(opt&&opt.strip)||{}),
+    choices:c.map(i=>KYOKU8[i]),a:c.indexOf(ansIdx),exp},(opt&&opt.q)||{});
+}
 
 /* ---- C2用ビルダー(正解は必ずch1MiniWin8/ch1MiniWaitsで算出) ---- */
 function ch1GapsOf(tiles){
@@ -5534,6 +5641,234 @@ const CH1_LESSONS={
         {tlab:'4人マスター'}),
     ];
   },
+  /* ===== G「ゲームの進み方」(R41) =====
+     1局というミクロ(G1)から、局が積み重なって1ゲームになるマクロ(G2)へカメラが引く構成。
+     用語の初出はすべて「意味を見せる → 名前をつける → 以後つかう」の順。
+     ルビ: 新出語は教材側で明示的に <ruby> を書く(R38-RUBY方針)。
+           rubyize は文字列に <ruby> があると「用語（よみ）」変換を丸ごと止めるため、
+           このテーマでは括弧形式を使わず、必ずインライン <ruby> で統一する。
+     ルール差のある事項(流局時の連荘条件・半荘/東風戦のどちらでやるか)はTeachだけに置き、
+     Quizの正解にしない。局数を問うQuizには必ず「連荘がないとき」を明示する。
+     点数(ノーテン罰符・本場・供託・符・翻)には一切踏み込まない=「点のしくみ」へ送る。 */
+  g1_1(){
+    const KYOKU='<ruby>局<rt>きょく</rt></ruby>';
+    return [
+      ch1Teach('<b>13枚</b>の手牌からスタート！ここから、どうするんだったっけ？',
+        {tlab:'はじまり',hands:[{label:'くばられた13枚',hand:'123m456p789s23s99p',g:true}]}),
+      ch1Teach('じぶんの<b>ばん</b>がきたら、山から1枚<b>ツモる</b>。手牌は<b>14枚</b>になるよ。',
+        {tlab:'ツモる',hands:[{label:'手牌 13枚',hand:'123m456p789s23s99p',g:true},{label:'ツモった牌',hand:'W'}]}),
+      ch1Teach('14枚のままだと1枚多いね。だから<b>いらない牌を1枚切る</b>。これでまた<b>13枚</b>にもどるよ。',
+        {tlab:'切る',hands:[{label:'切る牌',hand:'W'},{label:'のこり 13枚',hand:'123m456p789s23s99p',g:true}]}),
+      ch1Teach('つぎは<b>下家</b>のばん。4人が じゅんばんに、ツモって切ってをくりかえすんだ。',
+        {tlab:'順番にくりかえす',seatMap:'S',seatOpt:{mode:'name'}}),
+      {q:'ツモったとき、手牌はなん枚になる？',choices:['14枚','13枚','12枚'],a:0,
+        exp:'13枚＋ツモった1枚で14枚。だから1枚切って13枚にもどすんだ。'},
+      {q:'1枚切ったあと、手牌はなん枚？',choices:['13枚','14枚','12枚'],a:0,
+        exp:'切ったら13枚。つぎにツモるまで、ずっと13枚だよ。'},
+      {q:'どうして、ツモったあとに1枚切るの？',
+        choices:['ツモって14枚になったから','13枚だと足りないから'],a:0,
+        exp:'14枚のままにはできないきまり。だからツモったら1枚切って13枚にもどすよ。'},
+      ch1Mini(['1m','2m','3m','4p','5p','6p','7s','8s','9s','2s','3s','9p','9p'],['W','4s'],'123m456p789s234s99p',
+        {guided:true,exp:'ツモって、切って、またツモって…アガリ！これが1回ぶんの勝負だよ。'}),
+      ch1Teach('いまやったのが<b>1回ぶんの勝負</b>。これを<span class="term-chip">'+KYOKU+'</span>というよ。',
+        {tlab:KYOKU}),
+    ];
+  },
+  g1_2(){
+    const KYOKU='<ruby>局<rt>きょく</rt></ruby>';
+    return [
+      ch1Teach(KYOKU+'は、いつ終わるんだろう？　じつは終わり方は<b>2つ</b>あるんだ。',
+        {tlab:'終わり方は2つ'}),
+      ch1Teach('1つめ。<b>だれか1人がアガったら</b>、その'+KYOKU+'はそこで終わりだよ。',
+        {tlab:'①アガリで終わる',seatMap:'S',seatOpt:{mode:'name',hl:'right'}}),
+      ch1Teach('2つめ。山の牌にはかぎりがあるよね。みんなでツモっていくと、いつか<b>なくなる</b>んだ。',
+        {tlab:'山はへっていく',panel:kyokuCtxHTML({wall:4,noWin:true})}),
+      ch1Teach('だれもアガれないまま山がなくなったら、その'+KYOKU+'は<b>アガリなしで終わり</b>。',
+        {tlab:'②アガリなしで終わる',panel:kyokuCtxHTML({wall:0,noWin:true})}),
+      ch1Teach('これを<span class="term-chip"><ruby>流局<rt>りゅうきょく</rt></ruby></span>というよ。'
+        +'<b>アガリが出なくても、'+KYOKU+'は終わる</b>んだ。',{tlab:'<ruby>流局<rt>りゅうきょく</rt></ruby>'}),
+      g1EndMcq({who:'下家',wall:12},'だれかがアガったら、そこで局は終わり。山がのこっていても終わるよ。'),
+      g1EndMcq({wall:0,noWin:true},'だれもアガれないまま山がなくなった＝流局だね。'),
+      g1EndMcq({who:'あなた',wall:0},'山はなくなったけど、あなたがアガっている！アガリで終わりだよ。'),
+      {q:'流局になったら、そのあとどうなる？',choices:['つぎの'+KYOKU+'がはじまる','ゲームがおわる'],a:0,
+        exp:'流局はざんねんなことじゃないよ。つぎの局がはじまるだけ！'},
+    ];
+  },
+  g1_3(){
+    return [
+      ch1Teach('流局になったとき、みんなの手牌を見てみよう。',{tlab:'流局したあと'}),
+      ch1Teach('<b>あと1枚でアガリ</b>だった人がいるね。おぼえてる？　これが<b>テンパイ</b>だ！',
+        {tlab:'テンパイ（ふくしゅう）',hands:[{label:'あと1枚でアガリ',hand:'234m567p345s88sWW',g:true}]}),
+      ch1Teach('テンパイしていない人もいるよ。これを<span class="term-chip">ノーテン</span>というんだ。',
+        {tlab:'ノーテン',hands:[{label:'まだ あと1枚ではない',hand:'258m369p147sESWN',g:true}]}),
+      g1NotenMcq('234m567p345s88sWW','西か8ソーが来ればアガリ。あと1枚＝テンパイだね。'),
+      g1NotenMcq('258m369p147sESWN','バラバラで、あと1枚ではアガれない…これがノーテン。'),
+      g1NotenMcq('123m456p789s99s2s3s','1ソーか4ソーでアガリ。テンパイだ！'),
+      g1NotenMcq('123m456p78s99s2m5p','あと1枚ではそろわないね。ノーテンだよ。'),
+      g1NotenMcq('111m222p333s44s55s','4ソーか5ソーでアガリ。りっぱなテンパイ！'),
+      ch1Teach('流局したら、まず<b>テンパイかノーテンか</b>をたしかめる。このあと点が動くこともあるけど、'
+        +'それは<b>点のしくみ</b>のときに、じっくりやろう！',{tlab:'点のはなしは またこんど'}),
+    ];
+  },
+  g1_4(){
+    const KYOKU='<ruby>局<rt>きょく</rt></ruby>';
+    const quiz=shuffle([
+      {q:'ツモったとき、手牌はなん枚になる？',choices:['14枚','13枚'],a:0,
+        exp:'13枚＋ツモった1枚で14枚。そこから1枚切って13枚にもどすよ。'},
+      {q:'1枚切ったあと、手牌はなん枚？',choices:['13枚','14枚'],a:0,
+        exp:'切ったら13枚。これをくりかえすのが1局だったね。'},
+      g1EndMcq({who:'対面',wall:20},'だれかがアガったら、そこで終わり！'),
+      g1EndMcq({wall:0,noWin:true},'アガリが出ないまま山がなくなった＝流局。'),
+      g1NotenMcq('234m567p345s88sWW','あと1枚でアガリ＝テンパイ。'),
+      g1NotenMcq('258m369p147sESWN','あと1枚ではアガれない＝ノーテン。'),
+      {q:'だれもアガれないまま山がなくなった。これをなんという？',
+        choices:['<ruby>流局<rt>りゅうきょく</rt></ruby>','テンパイ'],a:0,
+        exp:'流局。アガリが出なくても局は終わるんだったね。'},
+      {q:'1つの'+KYOKU+'が終わるのは、どんなとき？',
+        choices:['だれかがアガるか、山がなくなったとき','10回ツモったとき'],a:0,
+        exp:'終わり方は2つ。アガリで終わるか、流局で終わるかだよ。'},
+    ]);
+    return [ch1Teach('1つの'+KYOKU+'のこと、ぜんぶ おもいだしてみよう！',{tlab:'1'+KYOKU+'マスター'})]
+      .concat(quiz).concat([
+      ch1Teach('🎉 <b>1'+KYOKU+'マスター！</b>　つぎは、この'+KYOKU+'がいくつも あつまって'
+        +'<b>1つのゲーム</b>になるところを見てみよう。',{tlab:'つぎへ！'}),
+    ]);
+  },
+  g2_1(){
+    const OYA='<ruby>親<rt>おや</rt></ruby>', KO='<ruby>子<rt>こ</rt></ruby>';
+    const KYOKU='<ruby>局<rt>きょく</rt></ruby>';
+    return [
+      ch1Teach('4人のうち1人が<b>'+OYA+'</b>、のこりの3人が<b>'+KO+'</b>だったね。',
+        {tlab:OYA+'と'+KO+'（ふくしゅう）',seatMap:'S',seatOpt:{hl:oyaPosAt('S')}}),
+      ch1Teach(KYOKU+'が終わると、'+OYA+'は<b>いまの'+OYA+'の下家</b>の人へうつるよ。',
+        {tlab:OYA+'がうつる',seatMap:'S',seatOpt:{hl:nextOyaPos('S')}}),
+      ch1SeatPick('E','nextoya','いまの<b>'+OYA+'</b>は東家。つぎの'+KYOKU+'で'+OYA+'になるのは どの人？',
+        {exp:'いまの親の下家へうつるよ。親のしるしが1つとなりへ動くんだ。'}),
+      ch1Teach('でも、<b>'+OYA+'がアガったとき</b>はちがうよ。おなじ人が<b>もう一度'+OYA+'</b>をやるんだ。',
+        {tlab:OYA+'がつづく'}),
+      ch1Teach('これを<span class="term-chip"><ruby>連荘<rt>レンチャン</rt></ruby></span>というよ。'
+        +OYA+'がアガったら、<b>おなじ'+KYOKU+'を もう一度</b>やるんだ！',
+        {tlab:'<ruby>連荘<rt>レンチャン</rt></ruby>'}),
+      {q:'<b>'+KO+'</b>がアガった。つぎの'+KYOKU+'の'+OYA+'は？',
+        choices:['つぎの人へうつる','おなじ人がもう一度'],a:0,
+        exp:'子がアガったら、親はつぎの人へ。これが基本だよ。'},
+      {q:'<b>'+OYA+'</b>がアガった。つぎの'+KYOKU+'の'+OYA+'は？',
+        choices:['おなじ人がもう一度','つぎの人へうつる'],a:0,
+        exp:'親がアガったら連荘。おなじ人がもう一度 親をやるよ。'},
+      ch1SeatPick('N','nextoya','こんどは この卓。つぎの'+KYOKU+'で<b>'+OYA+'</b>になるのは どの人？',
+        {exp:'東家の下家だよ。「あなたの下家」ではなく「いまの親の下家」だから、卓をよく見てね。'}),
+      ch1Teach('<b>流局</b>になったときに'+OYA+'が<b>つづく</b>かどうかは、<b>ルールによってちがう</b>よ。'
+        +'やるまえに かくにんしよう！',{tlab:'ここはルールしだい'}),
+      ch1Teach(OYA+'がうつると、<b>'+KYOKU+'の名前</b>もすすむんだ。つぎで見てみよう！',{tlab:'つぎへ！'}),
+    ];
+  },
+  g2_2(){
+    const OYA='<ruby>親<rt>おや</rt></ruby>', KYOKU='<ruby>局<rt>きょく</rt></ruby>';
+    const K1='<ruby>東1局<rt>トンイーキョク</rt></ruby>';
+    const w2=nextSelfWind('E'), w3=nextSelfWind(w2), w4=nextSelfWind(w3);
+    return [
+      ch1Teach('いちばんさいしょの'+KYOKU+'を<span class="term-chip">'+K1+'</span>というよ。',
+        {tlab:K1,panel:kyokuStripHTML(0,{half:true,labels:false})}),
+      ch1Teach(OYA+'がうつると<b>東2局</b>、またうつると<b>東3局</b>、そして<b>東4局</b>。',
+        {tlab:KYOKU+'がすすむ',panel:kyokuStripHTML(3,{half:true,labels:false})}),
+      ch1Teach('東4局が終わると、<b>4人ぜんぶが1回ずつ'+OYA+'</b>をやったことになるね。',
+        {tlab:'ひとまわり',seatMap:'E',seatOpt:{hl:oyaPosAt('E')}}),
+      ch1SeatPick(w2,'oya','<b>東2局</b>になったよ。'+OYA+'は どの人？',
+        {exp:'東1局の親の下家が、東2局の親。しるしが1つとなりへ動いたね。'}),
+      ch1SeatPick(w3,'oya','<b>東3局</b>。'+OYA+'は どの人？',
+        {exp:'また1つとなりへ。局がすすむたびに親が回っていくよ。'}),
+      ch1SeatPick(w4,'oya','<b>東4局</b>。'+OYA+'は どの人？',
+        {exp:'これで4人ぜんぶが1回ずつ親をやったことになるね。'}),
+      {q:'<b>連荘がないとき</b>、4人ぜんぶが1回ずつ'+OYA+'をやると、なん'+KYOKU+'すすむ？',
+        choices:['4'+KYOKU,'2'+KYOKU,'8'+KYOKU],a:0,
+        exp:'東1局・東2局・東3局・東4局の4局。親がアガって連荘すると、もっと多くなることもあるよ。'},
+      ch1Teach(OYA+'がうつると、<b>あなたの席のよび方もかわる</b>んだ。'
+        +'東1局で<b>東家</b>だったあなたは、東2局では<b>'+CH3_WIND_JP[w2]+'家</b>だよ。',
+        {tlab:'よび方もかわる',seatMap:w2}),
+      {q:'東1局で あなたは<b>東家</b>。<b>東2局</b>の あなたのよび方は？',seatMap:w2,
+        choices:SEAT_WINDS.map(w=>CH3_WIND_JP[w]+'家'),a:SEAT_WINDS.indexOf(w2),
+        exp:'親が下家へうつったぶん、あなたのよび方もずれるよ。席は動いていないのにね！'},
+      ch1Teach('東1局から東4局まで。ここまでで<b>ひとまとまり</b>なんだ。つぎで名前をつけよう！',
+        {tlab:'つぎへ！'}),
+    ];
+  },
+  g2_3(){
+    const KYOKU='<ruby>局<rt>きょく</rt></ruby>';
+    const TONBA='<ruby>東場<rt>トンば</rt></ruby>', NANBA='<ruby>南場<rt>ナンば</rt></ruby>';
+    return [
+      ch1Teach('東1局から東4局までの<b>ひとまとまり</b>を<span class="term-chip">'+TONBA+'</span>というよ。',
+        {tlab:TONBA,panel:kyokuStripHTML(null,{half:true})}),
+      ch1Teach(TONBA+'が終わると、こんどは<b>南1局・南2局・南3局・南4局</b>。これが<span class="term-chip">'+NANBA+'</span>だよ。',
+        {tlab:NANBA,panel:kyokuStripHTML(4)}),
+      kyokuPickMcq('<b>東4局</b>のつぎの'+KYOKU+'は どれ？',3,4,[0,5,7],
+        '東場が終わったら南場へ。東4局のつぎは南1局だよ。'),
+      {q:'<b>南2局</b>は、なに場？',panel:kyokuStripHTML(5),choices:[NANBA,TONBA],a:0,
+        exp:'南1局〜南4局が南場。東1局〜東4局が東場だったね。'},
+      ch1Teach('気をつけて！　<b>'+TONBA+'</b>の「東」は<b>ゲームのいまいるところ</b>。'
+        +'<b>東家</b>の「東」は<b>その'+KYOKU+'の席</b>。おなじ字だけど、べつのことをあらわしているよ。',
+        {tlab:TONBA+'と東家'}),
+      {q:TONBA+'になったら、4人ぜんぶが<b>東家</b>になる？',seatMap:'S',
+        choices:['ならない（東家は1人だけ）','なる'],a:0,
+        exp:'東家はいつも1人だけ。場の名前と、席のよび方はべつのものだよ。'},
+      {q:NANBA+'になったら、あなたは かならず<b>南家</b>？',
+        choices:['ちがう。席のよび方は'+KYOKU+'ごとにきまる','そう。ずっと南家'],a:0,
+        exp:'席のよび方は、親がどこにいるかで決まるよ。場の名前とは関係ないんだ。'},
+      ch1Teach(TONBA+'と'+NANBA+'を ぜんぶやって、<b>ひとゲーム</b>だよ。',
+        {tlab:'ぜんぶで1ゲーム',panel:kyokuStripHTML(null,{whole:true})}),
+      ch1Teach('これを<span class="term-chip"><ruby>半荘<rt>ハンチャン</rt></ruby></span>というよ。',
+        {tlab:'<ruby>半荘<rt>ハンチャン</rt></ruby>',panel:kyokuStripHTML(null,{whole:true,cap:'これで半荘ひとつ'})}),
+      ch1Teach('<b>'+TONBA+'だけ</b>で終わる<span class="term-chip"><ruby>東風戦<rt>トンプウセン</rt></ruby></span>'
+        +'というあそび方もあるよ。どちらでやるかは<b>ルールできまる</b>んだ。',
+        {tlab:'<ruby>東風戦<rt>トンプウセン</rt></ruby>もある',
+         panel:kyokuStripHTML(null,{half:true,whole:true,cap:'東風戦はここまで'})}),
+      {q:'<b><ruby>半荘<rt>ハンチャン</rt></ruby></b>のとき、'+TONBA+'のつぎは？',
+        choices:[NANBA,'もう一度'+TONBA],a:0,
+        exp:'半荘は東場＋南場。東場が終わったら南場だよ。'},
+    ];
+  },
+  g2_4(){
+    const OYA='<ruby>親<rt>おや</rt></ruby>', KO='<ruby>子<rt>こ</rt></ruby>';
+    const KYOKU='<ruby>局<rt>きょく</rt></ruby>';
+    const TONBA='<ruby>東場<rt>トンば</rt></ruby>', HAN='<ruby>半荘<rt>ハンチャン</rt></ruby>';
+    const quiz=shuffle([
+      {q:'<b>'+KO+'</b>がアガった。つぎの'+KYOKU+'の'+OYA+'は？',
+        choices:['つぎの人へうつる','おなじ人がもう一度'],a:0,
+        exp:'子がアガったら親はつぎの人へ。親がアガったら連荘だったね。'},
+      {q:'<b>'+OYA+'</b>がアガって、もう一度おなじ人が'+OYA+'になった。これをなんという？',
+        choices:['<ruby>連荘<rt>レンチャン</rt></ruby>','流局'],a:0,
+        exp:'連荘。東1局で連荘したら、もう一度 東1局だよ。'},
+      kyokuPickMcq('<b>東4局</b>のつぎの'+KYOKU+'は どれ？',3,4,[0,3,7],
+        '東場のつぎは南場。東4局のつぎは南1局だね。'),
+      {q:TONBA+'になったら、4人ぜんぶが<b>東家</b>になる？',
+        choices:['ならない（東家は1人だけ）','なる'],a:0,
+        exp:'場の名前と、席のよび方はべつのもの。東家はいつも1人だよ。'},
+    ]);
+    return [
+      ch1Teach(HAN+'のながれを、ぜんぶ見てみよう！',
+        {tlab:'ふりかえり',panel:kyokuStripHTML(null,{whole:true})}),
+    ].concat(quiz).concat([
+      ch1Teach(HAN+'は南4局で終わり。<b>南4局がさいごの'+KYOKU+'</b>なんだ。',
+        {tlab:'さいごの'+KYOKU,panel:kyokuStripHTML(7,{whole:true})}),
+      ch1Teach('この<b>さいごの'+KYOKU+'</b>を<span class="term-chip">オーラス</span>というよ。',
+        {tlab:'オーラス'}),
+      kyokuPickMcq('<b>'+HAN+'</b>のとき、<b>オーラス</b>は どれ？',null,7,[0,3,4],
+        '半荘は東場＋南場。さいごの局＝南4局がオーラスだよ。'),
+      kyokuPickMcq('<b><ruby>東風戦<rt>トンプウセン</rt></ruby></b>のとき、<b>オーラス</b>は どれ？',null,3,[0,4,7],
+        '東風戦は東場だけ。だからさいごの局は東4局。オーラスは「そのゲームのさいごの局」のことだよ。',
+        {strip:{half:true}}),
+      ch1Teach('オーラスが終わったら、ゲームはおしまい。さいごに<b>もっている点をくらべて、順位がきまる</b>よ。',
+        {tlab:'順位がきまる'}),
+      g2RankMcq([{who:'あなた',pt:24000},{who:'上家',pt:31000},{who:'対面',pt:20000},{who:'下家',pt:25000}],
+        'いちばん点が多い人が1位。アガった回数ではなく、さいごの点でくらべるよ。'),
+      {q:'Aさんは<b>3回</b>アガって<b>24,000点</b>。Bさんは<b>1回</b>だけアガって<b>36,000点</b>。'
+        +'<b>じゅんいが うえ</b> なのは どっち？',choices:['Bさん','Aさん'],a:0,
+        exp:'アガった回数が多くても、点が少なければ下。<b>アガるのは点をふやすための方法</b>なんだね。'},
+      ch1Teach('🎉 <b>ゲームの進み方マスター！</b>　'+KYOKU+'がつみかさなって'+TONBA+'になり、'
+        +'南場まで終わると'+HAN+'。さいごの'+KYOKU+'がオーラスだったね。',{tlab:'マスター！'}),
+      ch1Teach('じゃあ、その<b>点</b>はどうやって ふえたり へったりするの？　'
+        +'それは<b>点のしくみ</b>で、じっくりやろう！',{tlab:'つぎのおたのしみ'}),
+    ]);
+  },
   d2_1(){
     return [
       ch1Teach('ここまでで<b>4メンツ＋1アタマ</b>を作れるようになったね！…じつは、本物の麻雀では<b>形がそろっただけではアガれないことがある</b>んだ。',
@@ -6102,6 +6437,18 @@ function seatWindAt(sw,pos){
   if(i<0||!(pos in SEAT_POS_K)) return null;
   return ORD[(i+SEAT_POS_K[pos])%4];
 }
+/* ---- 局がすすむと親と席の風がどう動くか(R41)。手で正解を書かず、席の関係から必ず計算する ----
+   次の局の親＝いまの南家(＝いまの親の下家)。あなたは画面の下に固定なので、
+   「その席が東になるとき、あなたの風は何か」を SEAT_POS_K から逆算する。
+   実測: 親の位置は bottom→right→top→left→bottom、自分の風は E→N→W→S→E と1席ずつ回る。
+   ※「あなたの下家へうつる」ではない(それはあなたが親のときだけ)。正しくは「いまの親の下家へ」 */
+const SEAT_WINDS=['E','S','W','N'];
+function oyaPosAt(sw){ return SEAT_POS.find(p=>seatWindAt(sw,p)==='E')||null; }   // いまの親の画面位置
+function nextOyaPos(sw){ return SEAT_POS.find(p=>seatWindAt(sw,p)==='S')||null; } // 次の局の親の画面位置
+function nextSelfWind(sw){                                                        // 次の局のあなたの風
+  const p=nextOyaPos(sw); if(!p) return null;
+  return SEAT_WINDS[(4-SEAT_POS_K[p])%4];
+}
 function ch3SeatMapHTML(sw,opt){
   const o=opt||{};
   if(['E','S','W','N'].indexOf(sw)<0) return '';
@@ -6131,6 +6478,7 @@ function ch3SeatMapHTML(sw,opt){
 const SEAT_ASK_POS={kami:'left',shimo:'right',toi:'top',me:'bottom'};
 function seatAnsPos(sw,ask){
   if(SEAT_ASK_POS[ask]) return SEAT_ASK_POS[ask];
+  if(ask==='nextoya') return nextOyaPos(sw);        // R41: つぎの局で親になる人(=いまの親の下家)
   const w=(ask==='oya')?'E':ask;
   return SEAT_POS.find(p=>seatWindAt(sw,p)===w)||null;
 }
@@ -6899,7 +7247,8 @@ const CH3_LESSONS={
     ];
   },
   /* B1-2 4人の席と風牌(R28: 自風より先に「4人の席に東南西北がある」を視覚で理解する。
-     親・子・局・東1局などはここでは教えない(点数計算の章で正式導入)) */
+     R41: 親・子は第1章 th_ch1s、局・東1局・東場・南場は第1章 th_ch1g で導入済み。
+     本章ではそこへ点数(本場・供託・符・翻)を足さない) */
   yb1_2(){
     return [
       ch1Teach('第1章でやったね！<b>4つの席</b>に東・南・西・北の<b>風</b>が1つずつつくよ。',
@@ -6933,11 +7282,13 @@ const CH3_LESSONS={
        exp:'東家なら東、南家なら南。じぶんの席の風が自風だよ。'},
     ];
   },
-  /* B1-4 場の風(場風)。「場にも風がある」の意味から導入(何局あるか・南場へいつ移るか等へは広げない) */
+  /* B1-4 場の風(場風)。R41で東場・南場の正式導入が第1章 th_ch1g へ移ったので、ここは復習から入る
+     (Lesson ID・Lesson数・小テーマ構成は変更しない＝roadProgressに影響しない。R38の yb1_2 と同じ手順)。
+     何局あるか・南場へいつ移るか・半荘の長さ等へはここでは広げない(第1章で学んだ範囲にとどめる) */
   yb1_4(){
     return [
-      ch1Teach('麻雀には、じぶんの席の風とはべつに、<b>その場ぜんたいの風</b>もあるんだ。いまが東の場なら<b>東場（トンば）</b>、南の場なら<b>南場（ナンば）</b>とよぶよ。',
-        {tlab:'場にも風がある'}),
+      ch1Teach('第1章でやったね！ゲームには<b>東場（トンば）</b>と<b>南場（ナンば）</b>があって、東1局〜東4局が東場、南1局〜南4局が南場だった。こんどは、その<b>場を役の目で</b>見てみよう。',
+        {tlab:'場（ふくしゅう）'}),
       ch1Teach('場とおなじ風の牌が<span class="term-chip">場風（ばかぜ）</span>。場風の牌も、<b>3枚そろえるだけで役になる</b>！<b>東場</b>なら「東」が場風だよ。問題では<b>【東場】</b>のように表示するね。',
         {tlab:'場風も役になる',hands:[{label:'東場なら役！',hand:'EEE'}]}),
       ch3TripMcq('E',ch3Ctx({rw:'E',sw:'S'}),'東場だから、東は場風。3枚で役になる！'),
