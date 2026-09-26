@@ -547,16 +547,22 @@ button.tile.off:active{transform:none;}
   --sm-cw:clamp(80px, 5.5vw + 62px, 92px);    /* 席カード幅  320→80.0 / 390→83.5 / 430→85.7 */
   --sm-ch:clamp(54px, 3vw + 44px, 62px);      /* 席カード高  320→54.0 / 390→55.7 / 430→56.9 */
   --sm-gap:clamp(7px, 1vw + 3.8px, 10px);     /* 席と卓のすきま(誤タップ防止も兼ねる) */
-  --sm-tw:clamp(104px, 7vw + 81px, 120px);    /* 中央卓 幅   320→104.0 / 390→108.3 / 430→111.1 */
-  --sm-th:clamp(60px, 4vw + 47px, 72px);      /* 中央卓 高   320→60.0 / 390→62.6 / 430→64.2 */
+  --sm-t:clamp(98px, 6.2vw + 74px, 116px);    /* 中央卓(R43: 正方形。幅=高さ) 320→98.0 / 390→98.2 / 430→100.7 */
   display:flex; flex-direction:column; align-items:center; gap:var(--sm-gap);
   width:fit-content; margin:12px auto 14px;   /* 外形=図そのもの(中央寄せ＋寸法の自動テストのため) */
 }
 .ch3-seatmap .sm-row{display:flex; align-items:center; gap:var(--sm-gap);}
-.ch3-seatmap .sm-table{width:var(--sm-tw); height:var(--sm-th); box-sizing:border-box;
+/* 中央の麻雀卓(R43): 横長をやめて必ず正方形にする(width=height。トークン1つで両方を決める)。
+   座席表の中央ラベルではなく「卓」に見えるように、内側に山を積むぶんの枠をうっすら描き、
+   「麻雀卓」の文字は小さく控えめにして主役から外す。新しい画像は作らない(CSSのみ) */
+.ch3-seatmap .sm-table{width:var(--sm-t); height:var(--sm-t); box-sizing:border-box; position:relative;
   background:var(--jade-soft); border:2px solid var(--jade);
-  border-radius:14px; display:flex; align-items:center; justify-content:center;
-  color:var(--jade-ink); font-size:clamp(11px, .9vw + 8.2px, 13px); font-weight:800;}
+  border-radius:16px; display:flex; align-items:center; justify-content:center;
+  color:var(--jade-ink); font-size:clamp(9.5px, .6vw + 7.6px, 11px); font-weight:700;
+  letter-spacing:.04em; opacity:.8; white-space:nowrap;}
+/* 卓面(山を積むぶんの内枠)。うっすらとだけ描いて、四角そのものが卓に見えるようにする */
+.ch3-seatmap .sm-table::before{content:''; position:absolute; inset:14%;
+  border:1.5px solid var(--jade); border-radius:6px; opacity:.22; pointer-events:none;}
 /* 席カード: 幅・高さをトークンで固定する。中身(風/よび方/？/ルビ)が変わっても外形は動かない */
 .ch3-seatmap .sm-cell{width:var(--sm-cw); height:var(--sm-ch); box-sizing:border-box; padding:2px 4px;
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
@@ -2910,6 +2916,9 @@ const RUBY_FULL_SRC=`
 # (局面・局収支・対局・終局・何局のいずれも きょく。読みが割れる「場」とは事情が違う)。
 # 流局・東1局〜南4局・半荘・連荘・東風戦は RUBY_TERMS 側にあり、最長一致でそちらが先に当たる
 結局[けっきょく] 局面[きょくめん] 対局[たいきょく] 終局[しゅうきょく] 局収支[きょくしゅうし] 局[きょく]
+# R43 一般語を自然な漢字へ戻したぶんの読み。1字の「上」「下」は上手/上がる/下家/下がる に誤爆するので登録しない。
+# 「順位が上」は語句まるごとで登録し、部分一致の余地をなくす。他は送りがなでピン留めする
+順位[じゅんい]が上[うえ] 続[つづ]く 変[か]わ 変[か]え 遊[あそ]び 思[おも]い出[だ] 集[あつ]ま
 順位[じゅんい] 勝負[しょうぶ] 席順[せきじゅん] {1位}[いちい]
 判断[はんだん] 判定中[はんていちゅう] 判定[はんてい] 反対[はんたい] 正反対[せいはんたい] 名前[なまえ] 問題[もんだい]
 基本[きほん] 基本形[きほんけい] 基本的[きほんてき] 場合[ばあい] 場所[ばしょ] 大事[だいじ] 大丈夫[だいじょうぶ] 奇跡[きせき]
@@ -3105,8 +3114,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.38.1';
-const BUILD_ID='20260925-03';
+const APP_VER='0.38.2';
+const BUILD_ID='20260926-01';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -5217,7 +5226,7 @@ const CH1_LESSONS={
   /* B1-1 ならんだ3枚=シュンツ(体験→名前の順) */
   b1_1(){
     return [
-      ch1CompleteRun('3m4m',['5m','9m','2p','E'],'3・4ときたら、つぎは？ならびがつづく牌を選ぼう！',
+      ch1CompleteRun('3m4m',['5m','9m','2p','E'],'3・4ときたら、つぎは？ならびが続く牌を選ぼう！',
         {tlab:'ならべてみよう',exp:'3・4・5とつづいた！数字がじゅんばんにならぶと、きれいな形になるんだ。'}),
       ch1Teach('いまつくった「3・4・5」みたいに、おなじ種類で数字がならんだ3枚を<span class="term-chip">シュンツ</span>とよぶよ！',
         {tlab:'シュンツ',hands:[{label:'これがシュンツ',hand:'345m'}]}),
@@ -5654,7 +5663,7 @@ const CH1_LESSONS={
         choices:['西家','南家','北家','東家'],a:0,
         exp:'西の席にすわっているから西家（シャーチャ）。席の風で、よび方がきまるよ。'},
       ch1SeatPick('W','N','<b>北家</b>はどの人？',{exp:'北の席の人が北家（ペーチャ）。あなたは西家だね。'}),
-      {q:'席の風がかわったら、よび方もかわる？',choices:['かわる','かわらない'],a:0,
+      {q:'席の風が変わったら、よび方も変わる？',choices:['変わる','変わらない'],a:0,
         exp:'東の席なら東家、南の席なら南家。すわった席の風で、よび方がきまるんだ。'},
     ];
   },
@@ -5665,15 +5674,15 @@ const CH1_LESSONS={
         {tlab:'<ruby>親<rt>おや</rt></ruby>',seatMap:'S',seatOpt:{hl:'left'}}),
       ch1Teach('のこりの3人、<ruby>南家<rt>ナンチャ</rt></ruby>・<ruby>西家<rt>シャーチャ</rt></ruby>・<ruby>北家<rt>ペーチャ</rt></ruby>は<b>'+KO+'</b>。',
         {tlab:'<ruby>子<rt>こ</rt></ruby>',seatMap:'S'}),
-      ch1Teach(OYA+'はずっとおなじ人じゃないよ。ゲームがすすむと、じゅんばんにかわっていくんだ。',
-        {tlab:'<ruby>親<rt>おや</rt></ruby>はかわる'}),
+      ch1Teach(OYA+'はずっとおなじ人じゃないよ。ゲームがすすむと、じゅんばんに変わっていくんだ。',
+        {tlab:'<ruby>親<rt>おや</rt></ruby>は変わる'}),
       ch1SeatPick('W','oya','<b>'+OYA+'</b>はどの人？',{exp:'東の席の人＝東家が親だよ。'}),
       {q:'<ruby>南家<rt>ナンチャ</rt></ruby>の人は、'+OYA+'？　それとも'+KO+'？',choices:[KO,OYA],a:0,
         exp:'親は東家だけ。南家・西家・北家の3人は子だよ。'},
       {q:'<ruby>東家<rt>トンチャ</rt></ruby>の人は？',choices:[OYA,KO],a:0,
         exp:'東家＝親。のこりの3人が子だね。'},
-      {q:OYA+'は、ずっとおなじ人？',choices:['ちがう。じゅんばんにかわる','ずっとおなじ人'],a:0,
-        exp:'ゲームがすすむと、親はじゅんばんにかわっていくよ。'},
+      {q:OYA+'は、ずっとおなじ人？',choices:['ちがう。じゅんばんに変わる','ずっとおなじ人'],a:0,
+        exp:'ゲームがすすむと、親はじゅんばんに変わっていくよ。'},
     ];
   },
   s1_4(){
@@ -5688,7 +5697,7 @@ const CH1_LESSONS={
         exp:'あなたが南家なら、左どなりは東家。このとき上家＝東家だね。'},
       {q:'こんどはあなたが<b>西家</b>。<b>上家</b>は どの人？',seatMap:'W',
         choices:['南家','東家','北家','西家'],a:0,
-        exp:'こんどは上家＝南家。おなじ「上家」でも、あなたの席がかわると あいてもかわるよ。'},
+        exp:'こんどは上家＝南家。おなじ「上家」でも、あなたの席が変わると あいても変わるよ。'},
       ch1SeatPick('N','shimo','<b>下家</b>はどの人？',{mode:'anon',exp:'右どなりが下家。場所のよび方は、あなたから見てきまるよ。'}),
       {q:'<b>'+OYA+'</b>は、どの席の人？',choices:['東家','南家','西家','北家'],a:0,
         exp:'東家の人が親。のこりの3人は子だったね。'},
@@ -5786,9 +5795,9 @@ const CH1_LESSONS={
         choices:['だれかがアガるか、山がなくなったとき','10回ツモったとき'],a:0,
         exp:'終わり方は2つ。アガリで終わるか、流局で終わるかだよ。'},
     ]);
-    return [ch1Teach('1つの'+KYOKU+'のこと、ぜんぶ おもいだしてみよう！',{tlab:'1'+KYOKU+'マスター'})]
+    return [ch1Teach('1つの'+KYOKU+'のこと、ぜんぶ思い出してみよう！',{tlab:'1'+KYOKU+'マスター'})]
       .concat(quiz).concat([
-      ch1Teach('🎉 <b>1'+KYOKU+'マスター！</b>　つぎは、この'+KYOKU+'がいくつも あつまって'
+      ch1Teach('🎉 <b>1'+KYOKU+'マスター！</b>　つぎは、この'+KYOKU+'がいくつも集まって'
         +'<b>1つのゲーム</b>になるところを見てみよう。',{tlab:'つぎへ！'}),
     ]);
   },
@@ -5803,7 +5812,7 @@ const CH1_LESSONS={
       ch1SeatPick('E','nextoya','いまの<b>'+OYA+'</b>は東家。つぎの'+KYOKU+'で'+OYA+'になるのは どの人？',
         {exp:'いまの親の下家へうつるよ。親のしるしが1つとなりへ動くんだ。'}),
       ch1Teach('でも、<b>'+OYA+'がアガったとき</b>はちがうよ。おなじ人が<b>もう一度'+OYA+'</b>をやるんだ。',
-        {tlab:OYA+'がつづく'}),
+        {tlab:OYA+'が続く'}),
       ch1Teach('これを<span class="term-chip"><ruby>連荘<rt>レンチャン</rt></ruby></span>というよ。'
         +OYA+'がアガったら、<b>おなじ'+KYOKU+'を もう一度</b>やるんだ！',
         {tlab:'<ruby>連荘<rt>レンチャン</rt></ruby>'}),
@@ -5815,7 +5824,7 @@ const CH1_LESSONS={
         exp:'親がアガったら連荘。おなじ人がもう一度 親をやるよ。'},
       ch1SeatPick('N','nextoya','こんどは この卓。つぎの'+KYOKU+'で<b>'+OYA+'</b>になるのは どの人？',
         {exp:'東家の下家だよ。「あなたの下家」ではなく「いまの親の下家」だから、卓をよく見てね。'}),
-      ch1Teach('<b>流局</b>になったときに'+OYA+'が<b>つづく</b>かどうかは、<b>ルールによってちがう</b>よ。'
+      ch1Teach('<b>流局</b>になったときに'+OYA+'が<b>続く</b>かどうかは、<b>ルールによってちがう</b>よ。'
         +'やるまえに かくにんしよう！',{tlab:'ここはルールしだい'}),
       ch1Teach(OYA+'がうつると、<b>'+KYOKU+'の名前</b>もすすむんだ。つぎで見てみよう！',{tlab:'つぎへ！'}),
     ];
@@ -5840,9 +5849,9 @@ const CH1_LESSONS={
       {q:'<b>連荘がないとき</b>、4人ぜんぶが1回ずつ'+OYA+'をやると、なん'+KYOKU+'すすむ？',
         choices:['4'+KYOKU,'2'+KYOKU,'8'+KYOKU],a:0,
         exp:'東1局・東2局・東3局・東4局の4局。親がアガって連荘すると、もっと多くなることもあるよ。'},
-      ch1Teach(OYA+'がうつると、<b>あなたの席のよび方もかわる</b>んだ。'
+      ch1Teach(OYA+'がうつると、<b>あなたの席のよび方も変わる</b>んだ。'
         +'東1局で<b>東家</b>だったあなたは、東2局では<b>'+CH3_WIND_JP[w2]+'家</b>だよ。',
-        {tlab:'よび方もかわる',seatMap:w2}),
+        {tlab:'よび方も変わる',seatMap:w2}),
       {q:'東1局で あなたは<b>東家</b>。<b>東2局</b>の あなたのよび方は？',seatMap:w2,
         choices:SEAT_WINDS.map(w=>CH3_WIND_JP[w]+'家'),a:SEAT_WINDS.indexOf(w2),
         exp:'親が下家へうつったぶん、あなたのよび方もずれるよ。席は動いていないのにね！'},
@@ -5876,7 +5885,7 @@ const CH1_LESSONS={
       ch1Teach('これを<span class="term-chip"><ruby>半荘<rt>ハンチャン</rt></ruby></span>というよ。',
         {tlab:'<ruby>半荘<rt>ハンチャン</rt></ruby>',panel:kyokuStripHTML(null,{whole:true,cap:'これで半荘ひとつ'})}),
       ch1Teach('<b>'+TONBA+'だけ</b>で終わる<span class="term-chip"><ruby>東風戦<rt>トンプウセン</rt></ruby></span>'
-        +'というあそび方もあるよ。どちらでやるかは<b>ルールできまる</b>んだ。',
+        +'という遊び方もあるよ。どちらでやるかは<b>ルールできまる</b>んだ。',
         {tlab:'<ruby>東風戦<rt>トンプウセン</rt></ruby>もある',
          panel:kyokuStripHTML(null,{half:true,whole:true,cap:'東風戦はここまで'})}),
       {q:'<b><ruby>半荘<rt>ハンチャン</rt></ruby></b>のとき、'+TONBA+'のつぎは？',
@@ -5919,8 +5928,8 @@ const CH1_LESSONS={
       g2RankMcq([{who:'あなた',pt:24000},{who:'上家',pt:31000},{who:'対面',pt:20000},{who:'下家',pt:25000}],
         'いちばん点が多い人が1位。アガった回数ではなく、さいごの点でくらべるよ。'),
       {q:'Aさんは<b>3回</b>アガって<b>24,000点</b>。Bさんは<b>1回</b>だけアガって<b>36,000点</b>。'
-        +'<b>じゅんいが うえ</b> なのは どっち？',choices:['Bさん','Aさん'],a:0,
-        exp:'アガった回数が多くても、点が少なければ下。<b>アガるのは点をふやすための方法</b>なんだね。'},
+        +'<b>順位が上</b>なのは どっち？',choices:['Bさん','Aさん'],a:0,
+        exp:'アガった回数が多くても、点が少なければ順位は下。<b>アガるのは点をふやすための方法</b>なんだね。'},
       ch1Teach('🎉 <b>ゲームの進み方マスター！</b>　'+KYOKU+'がつみかさなって'+TONBA+'になり、'
         +'南場まで終わると'+HAN+'。さいごの'+KYOKU+'がオーラスだったね。',{tlab:'マスター！'}),
       ch1Teach('じゃあ、その<b>点</b>はどうやって ふえたり へったりするの？　'
@@ -7595,7 +7604,7 @@ const CH3_LESSONS={
       ch3OffSuitPick('1m2m3m4m5m6m2p3p4pEEE1m1m',
         'マンズあつめのじゃまになっている<b>べつの種類の数牌</b>をタップ！',
         '234pの3枚。これがマンズにかわれば、1種類あつめの できあがりだ！'),
-      ch3CompareMcq('<b>数牌1種類だけ(＋字牌)</b>にあつまっているのはどっち？',
+      ch3CompareMcq('<b>数牌1種類だけ(＋字牌)</b>に集まっているのはどっち？',
         [{label:'A',hand:'2p3p4p5p6p7p2p2pSSSWWW'},{label:'B',hand:'2p3p4p5p6p7p2m2mSSSWWW'}],
         (()=>{const si=ch3SuitInfo(ch3T('2p3p4p5p6p7p2p2pSSSWWW'));return si.nSuits===1;})(),
         (()=>{const si=ch3SuitInfo(ch3T('2p3p4p5p6p7p2m2mSSSWWW'));return si.nSuits===1;})(),
@@ -7976,7 +7985,7 @@ const CH3_LESSONS={
   /* I1-4 国士無双(特殊なアガリ形その2) */
   yi1_4(){
     return [
-      ch1Teach('七対子につづく、<b>特別なアガリ形その2</b>！1・9・字牌を<b>ぜんしゅるい1枚ずつ</b>＋どれか1枚。役満<span class="term-chip">国士無双</span>だ！',
+      ch1Teach('七対子に続く、<b>特別なアガリ形その2</b>！1・9・字牌を<b>ぜんしゅるい1枚ずつ</b>＋どれか1枚。役満<span class="term-chip">国士無双</span>だ！',
         {tlab:'国士無双',hands:[{label:'13種類ぜんぶ＋1マン',hand:'19m19p19sESWNBGR1m',g:true}]}),
       ch3WinAllMcq('1m9m1p9p1s9sESWNBGR1m',
         '4メンツ＋1アタマでも七対子でもないのに、これもアガリ！国士無双のとくべつな形だよ。'),
@@ -8037,7 +8046,7 @@ const CH3_LESSONS={
       ch3WhichMcq('2m3m4m4p5p6p7s8s9s2p2p3s4s5s',ch3Ctx({win:'ron',winTile:'5s',rw:'E',sw:'S'}),
         ['pinfu','tanyao','yakuhai'],'全シュンツ・2pアタマ・リャンメン。ピンフ！'),
       {q:'役をさがすとき、手牌のほかに見るものは？',choices:['そのときのようす（場・自分の風・鳴き・アガリ方）','捨て牌の数'],a:0,
-       exp:'おなじ手でも、そのときのようすで役はかわる。チップをよく見よう！'},
+       exp:'おなじ手でも、そのときのようすで役は変わる。チップをよく見よう！'},
     ];
   },
   /* J1-2 役は1つとは限らない(複数役へ) */
@@ -8103,7 +8112,7 @@ const CH3_LESSONS={
         ['riichi','tsumo','pinfu','tanyao'],'リーチ＋ツモ＋ピンフ＋タンヤオ、4役そろいぶみ！'),
       ch3YakuFind('1s2s3s4s5s6s7s8s9s2s2sGGG',ch3Ctx({rw:'E',sw:'S',win:'ron',winTile:'9s'}),
         ['yakuhai','honitsu','chinitsu','ittsu'],'發の役牌＋ソーズあつめのホンイツ＋1〜9のイッツーで3役！'),
-      {q:'おなじ手牌でも役がかわるのは、なぜ？',choices:['そのときのようす(風・鳴き・アガリ方)がちがうから','牌のならべかたがちがうから'],a:0,
+      {q:'おなじ手牌でも役が変わるのは、なぜ？',choices:['そのときのようす(風・鳴き・アガリ方)がちがうから','牌のならべかたがちがうから'],a:0,
        exp:'風・鳴き・ロンかツモか。そのときのようすこそ役のカギ！'},
     ];
   },
@@ -8156,7 +8165,7 @@ const CH3_LESSONS={
   /* K1-2 ドラ表示牌(表示牌そのものはドラではない) */
   yk1_2(){
     return [
-      ch1Teach('どの牌がドラになるかは、毎回かわるよ。卓の上で<b>1枚だけ表にしてある牌</b>で決まるんだ。この牌を<span class="term-chip">ドラ表示牌（ひょうじはい）</span>というよ。',
+      ch1Teach('どの牌がドラになるかは、毎回変わるよ。卓の上で<b>1枚だけ表にしてある牌</b>で決まるんだ。この牌を<span class="term-chip">ドラ表示牌（ひょうじはい）</span>というよ。',
         {tlab:'ドラ表示牌',panel:doraPanelHTML(['3m'])}),
       ch1Teach('気をつけて！ <b>ドラ表示牌そのものはドラじゃない</b>。ドラになるのは<b>そのつぎの牌</b>だよ。',
         {tlab:'つぎの牌がドラ',panel:doraPanelHTML(['4p','7s'])}),
