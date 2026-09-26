@@ -583,6 +583,36 @@ button.tile.off:active{transform:none;}
 .ch3-seatmap .sm-cell.correct{border-color:var(--jade); background:color-mix(in srgb, var(--jade) 22%, var(--card,#fff)); color:var(--jade-ink);}
 .ch3-seatmap .sm-cell.wrong{border-color:var(--verm); background:color-mix(in srgb, var(--verm) 12%, var(--card,#fff)); color:var(--verm-ink);}
 .ch3-seatmap .sm-cell.you.sel,.ch3-seatmap .sm-cell.you.correct,.ch3-seatmap .sm-cell.you.wrong{color:var(--on-accent);}
+/* 点の動きの目じるし(R44): 席カードの2行目に小さく出す。
+   ・席カードの寸法トークン(--sm-cw/--sm-ch)は変えない＝卓図の大きさはR40のまま(全モード共通)
+   ・「あなた」行(.sm-you-lab)と同じ大きさ・同じ書き方の2行目なので、はみ出さない
+   ・色だけで意味を運ばない: かならず文字(アガリ/はらう/すてた)も出す */
+.ch3-seatmap .sm-flag{display:inline-block; font-size:clamp(10.5px, .6vw + 8.6px, 11.5px); font-weight:900;
+  line-height:1.3; letter-spacing:.02em; white-space:nowrap;}
+.ch3-seatmap .sm-flag.win{color:var(--jade-ink);}
+.ch3-seatmap .sm-flag.pay{color:var(--verm-ink);}
+.ch3-seatmap .sm-flag.note{color:var(--ink-soft);}
+/* 「あなた」の席は下地が濃い緑。白抜きの小さい文字は読みにくいので、白い座ぶとんを敷いて
+   ふつうの席と同じ濃い色の文字にする(明るい表示/暗い表示のどちらでもコントラスト比4.5以上) */
+.ch3-seatmap .sm-cell.you .sm-flag{background:var(--card); border-radius:999px; padding:0 6px;}
+.ch3-seatmap .sm-cell.you .sm-flag.note{color:var(--ink);}
+/* 点の動きの一言(卓図の下)。「だれから だれへ」を図とセットで言い切る */
+.pf-cap{margin:-6px auto 12px; max-width:340px; text-align:center;
+  font-size:clamp(12.5px,3.6vw,14px); font-weight:800; color:var(--ink);}
+.pf-cap .pf-ar{color:var(--verm-ink); margin:0 .35em; font-weight:900;}
+/* 点棒(R44): 画像は作らず、CSSの棒＋数字ラベルだけで表す。
+   本物の点棒の模様は ルールや製品でちがうので、模様当てクイズにはしない(数字が読めることを優先) */
+.tb-row{display:flex; flex-direction:column; align-items:center; gap:7px; margin:2px auto 0; width:fit-content;}
+.tb{display:flex; align-items:center; gap:9px;}
+.tb-stick{width:clamp(96px,26vw,118px); height:15px; border-radius:8px; box-sizing:border-box;
+  background:var(--card); border:2px solid var(--ink-soft);
+  display:flex; align-items:center; justify-content:center; gap:5px; flex:none;}
+.tb-dot{width:6px; height:6px; border-radius:50%; background:var(--ink-soft); flex:none;}
+.tb-dot.r{background:var(--verm);}
+.tb-dot.g{background:var(--jade);}
+.tb-num{font-size:clamp(13px,3.9vw,15px); font-weight:900; font-variant-numeric:tabular-nums;
+  color:var(--ink); min-width:5.4em; text-align:left;}
+.tb-cap{margin:8px 0 0; text-align:center; font-size:11.5px; font-weight:700; color:var(--ink-soft);}
 /* 局の帯(R41): 東1局〜南4局を「東場の4マス」「南場の4マス」の2段で見せる表示専用の図。
    ・1列8マスにはしない。320pxで横スクロールしないよう 4列×2段 にする(実測: 320pxで1マス55px)
    ・段を枠で囲むことで 局→場→半荘 の階層が図だけで分かるようにする
@@ -2040,6 +2070,7 @@ const COURSES=[
 {id:'ch1s',title:'4人で打つ',icon:'🀄',section:0,type:'ch1',desc:'麻雀卓に4人。のこりの3人を、なんとよぶ？',questions:[]},
 {id:'ch1g',title:'ゲームの進み方',icon:'🔁',section:0,type:'ch1',desc:'1回ぶんの勝負から、1ゲームのおわりまで。',questions:[]},
 {id:'ch1e',title:'実戦への扉',icon:'🚪',section:0,type:'ch1',desc:'役・リーチ・実戦のことばを覚えて、1局アガりきろう！',questions:[]},
+{id:'ch1p',title:'点のしくみ',icon:'🪙',section:0,type:'ch1',desc:'点は、どうやって ふえたり へったりするの？',questions:[]},
 /* 第2章「アガリが見える」(待ち牌と待ちの形)。descに待ちの形の名称は書かない(名称初出はレッスン内) */
 {id:'ch2a',title:'待ちを見つけよう',icon:'🔎',section:1,type:'ch1',desc:'アガリになる牌＝待ち牌をさがそう。',questions:[]},
 {id:'ch2b',title:'待ちの形を知ろう',icon:'🧩',section:1,type:'ch1',desc:'ならんだ2枚には、待ちのひみつがあるんだ。',questions:[]},
@@ -2243,8 +2274,12 @@ const THEMES=[
     {diff:{ch1:'g2_4'}},                       // ★まとめ: オーラス / 1局のアガリと順位は別 / 点の予告
    ]},
   ]},
+ /* R44: requires を th_ch1d → th_ch1g に変更。
+    「ゲームの進み方」(局・親の移動・流局・オーラス)を飛ばしたまま第2章・第3章へ進める経路をふさぐ。
+    既存ユーザー対策は ch1ThemeUnlocked の「既得解放」(すでに1つでも進めたテーマは閉じない)で行う＝
+    保存データ(jantore-v1)には一切さわらない(migrationなし)。 */
  {id:'th_ch1e', course:'ch1e', title:'実戦への扉', sub:'役・リーチ・実戦のことば',
-  requires:'th_ch1d',                          // D1(13枚麻雀)を全クリアで解放
+  requires:'th_ch1g',                          // ゲームの進み方を全クリアで解放(R44。旧: th_ch1d)
   subThemes:[
    {id:'st_d2', title:'実戦への扉', lessons:[
     {diff:{ch1:'d2_1'}},                       // アガリには役がいる
@@ -2253,9 +2288,32 @@ const THEMES=[
     {diff:{ch1:'d2_4'}},                       // ★第1章チャレンジ: 麻雀を打てる！
    ]},
   ]},
+ /* 点のしくみ(R44): 「点がどう動くか」を理解するテーマ。点数計算(符・翻・点数表)は一切やらない。
+    ・置き場所は th_ch1e のうしろ＝SECTION0の最後。ロン(d2_3)・リーチ(d2_2)・ツモ(c1_2)・親子(s1_3)・
+      流局/テンパイ/ノーテン/順位(g1_2〜g2_4)が全部そろってからでないと、点の動きは説明できない。
+      「ゲームの進み方のすぐ後ろ」に置かなかったのは、その時点ではロンもリーチもまだ未導入だから。
+    ・requires は th_ch1e。th_ch2a の requires をここに付け替えて、SECTION0の必修の最後にする。
+    ・本編テーマ(SECTION_OPTIONAL_THEMESには入れない)。roadProgressは新しいキーが1つ増えるだけで、
+      既存テーマの進捗値の意味は変わらない。
+    ・教えない: 符・翻・点数表・満貫/跳満・親は1.5倍・供託・本場・順位点(すべて将来のサイドRoad/ドリルへ)。
+      一発・裏ドラ・赤ドラ・フリテンも入れない(別テーマ)。 */
+ {id:'th_ch1p', course:'ch1p', title:'点のしくみ', sub:'点は、どう動く？',
+  requires:'th_ch1e',
+  subThemes:[
+   {id:'st_p1', title:'アガリと点', lessons:[
+    {diff:{ch1:'p1_1'}},                       // 点棒ってなに？
+    {diff:{ch1:'p1_2'}},                       // ロンしたら だれがはらう？
+    {diff:{ch1:'p1_3'}},                       // ツモしたら だれがはらう？
+    {diff:{ch1:'p1_4'}},                       // ★親と子では点の動きがちがう
+   ]},
+   {id:'st_p2', title:'アガリ以外の点', lessons:[
+    {diff:{ch1:'p2_1'}},                       // リーチ棒と、流局のときの点
+    {diff:{ch1:'p2_2'}},                       // ★点のしくみマスター
+   ]},
+  ]},
  /* ===== 第2章「アガリが見える」v1.0 (19Lesson・待ち牌と待ちの形) ===== */
  {id:'th_ch2a', course:'ch2a', title:'待ちを見つけよう', sub:'アガリになる牌をさがす',
-  requires:'th_ch1e',                          // 第1章(実戦への扉)を全クリアで解放
+  requires:'th_ch1p',                          // 第1章(点のしくみ)まで全クリアで解放(R44。旧: th_ch1e)
   subThemes:[
    {id:'st_ch2a1', title:'待ち牌さがし', lessons:[
     {diff:{ch1:'wa1_1'}},                      // A1-1 あと1枚はどれ？
@@ -2958,6 +3016,11 @@ const RUBY_FULL_SRC=`
 秒[びょう] 枚[まい] 種[しゅ] 回[かい] 本[ほん] 個[こ] 章[しょう] 第[だい] 日[にち]
 体[からだ] 先[さき] 全[ぜん] 力[ちから] 卓[たく] 右[みぎ] 左[ひだり] 図[ず] 字[じ] 場[ば] 山[やま] 席[せき] 扉[とびら] 絵[え] 緑[みどり] 棒[ぼう]
 横[よこ] 気[き] 版[ばん] 目[め] 系[けい] 超[ちょう] 音[おと] 鳥[とり] 風[かぜ]
+# R44 点のしくみ。1字の「親」「子」はここに入れない(子=面子/順子/刻子/調子/様子 へ誤爆する)。
+# 教材側では <ruby>親<rt>おや</rt></ruby> と書く(R38-RUBY方針)。
+# 「出す」は既存の 出[で] より長い形で先に当てる。「◯人」は 人[ひと] に負けないよう数字つきで登録する
+点棒[てんぼう] 罰符[ばっぷ] 出[だ]す 出[だ]し 出[だ]さ 出[だ]そ 1人[にん] 2人[にん] 3人[にん]
+回数[かいすう] 何人[なんにん] 総[そう]まとめ
 `;
 const RUBY_KANJI_RE=/[\u3400-\u9FFF\uF900-\uFAFF々〆ヶ]/;
 let RUBY_FULL_MAP=null, RUBY_FULL_MAXLEN=0;
@@ -3114,8 +3177,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.38.2';
-const BUILD_ID='20260926-01';
+const APP_VER='0.39.0';
+const BUILD_ID='20260926-02';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -3123,7 +3186,7 @@ function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_I
    開発UI・未検証Compare）を通常操作から隠す。コード・データ・機能は
    一切削除しておらず、このフラグをfalseにすれば全て復帰する。 */
 let PROTOTYPE_MODE=true;
-const PROTO_VISIBLE_COURSES=['ch1a','ch1r','ch1b','ch1c','ch1d','ch1s','ch1g','ch1e','ch2a','ch2b','ch2c','ch2d','ch3a','ch3b','ch3c','ch3d','ch3e','ch3f','ch3g','ch3h','ch3i','ch3j','ch3x','waits','ukeire1','nanikiru','riichi'];
+const PROTO_VISIBLE_COURSES=['ch1a','ch1r','ch1b','ch1c','ch1d','ch1s','ch1g','ch1e','ch1p','ch2a','ch2b','ch2c','ch2d','ch3a','ch3b','ch3c','ch3d','ch3e','ch3f','ch3g','ch3h','ch3i','ch3j','ch3x','waits','ukeire1','nanikiru','riichi'];
 function protoCourseVisible(id){ return !PROTOTYPE_MODE||PROTO_VISIBLE_COURSES.includes(id); }
 function staminaFree(){ return PROTOTYPE_MODE||S.owned.stamina; }   // プロトタイプはスタミナ消費なし
 function devUIVisible(){ return !PROTOTYPE_MODE||S.dev||location.hash==='#dev'; }
@@ -5773,8 +5836,10 @@ const CH1_LESSONS={
       g1NotenMcq('123m456p789s99s2s3s','1ソーか4ソーでアガリ。テンパイだ！'),
       g1NotenMcq('123m456p78s99s2m5p','あと1枚ではそろわないね。ノーテンだよ。'),
       g1NotenMcq('111m222p333s44s55s','4ソーか5ソーでアガリ。りっぱなテンパイ！'),
-      ch1Teach('流局したら、まず<b>テンパイかノーテンか</b>をたしかめる。このあと点が動くこともあるけど、'
-        +'それは<b>点のしくみ</b>のときに、じっくりやろう！',{tlab:'点のはなしは またこんど'}),
+      /* R44: 「またこんど」だった予告を、実在するテーマへの案内に書きかえた(伏線の回収)。
+         テーマ名は THEMES の th_ch1p と同じ「点のしくみ」。学習者はこの先ロードで必ずそこを通る */
+      ch1Teach('流局したら、まず<b>テンパイかノーテンか</b>をたしかめる。このあと点が動くこともあるよ。'
+        +'それは第1章のさいごの<b>「点のしくみ」</b>でやろう！',{tlab:'点のはなしは そのあとで'}),
     ];
   },
   g1_4(){
@@ -5932,8 +5997,10 @@ const CH1_LESSONS={
         exp:'アガった回数が多くても、点が少なければ順位は下。<b>アガるのは点をふやすための方法</b>なんだね。'},
       ch1Teach('🎉 <b>ゲームの進み方マスター！</b>　'+KYOKU+'がつみかさなって'+TONBA+'になり、'
         +'南場まで終わると'+HAN+'。さいごの'+KYOKU+'がオーラスだったね。',{tlab:'マスター！'}),
+      /* R44: 予告の回収先を明示。ロン・リーチを覚える「実戦への扉」のあとに「点のしくみ」がある */
       ch1Teach('じゃあ、その<b>点</b>はどうやって ふえたり へったりするの？　'
-        +'それは<b>点のしくみ</b>で、じっくりやろう！',{tlab:'つぎのおたのしみ'}),
+        +'つぎの<b>「実戦への扉」</b>でロンとリーチを覚えたら、そのあとの<b>「点のしくみ」</b>でじっくりやろう！',
+        {tlab:'つぎのおたのしみ'}),
     ]);
   },
   d2_1(){
@@ -6053,7 +6120,212 @@ const CH1_LESSONS={
       ch1Mini(['3m','4m','5m','6m','7m','8m','2p','3p','4p','5p','5p','7s','W'],['8s','N','6s'],'345m678m234p678s55p',
         {level:3,riichi:true,
          exp:'第1章チャレンジ、クリア！🎉 ツモって、切って、テンパイして、リーチして、自分の力でアガれた！'}),
-      ch1Teach('🎉 <b>第1章「麻雀を打てる」クリア！</b> 麻雀の基本的な動かし方を覚えたね。13枚の手牌から、ツモって、切って、テンパイして、リーチして、アガれた！<br>つぎは第2章<b>「アガリが見える」</b>。もっとアガリが見えるようになろう！',
+      /* R44: 第1章の最後は「点のしくみ」になったので、行き先をそこへ書きかえた(第2章の案内は p2_2 の最後へ移した) */
+      ch1Teach('🎉 <b>第1章チャレンジ クリア！</b> 麻雀の基本的な動かし方を覚えたね。13枚の手牌から、ツモって、切って、テンパイして、リーチして、アガれた！<br>のこるはひとつ。アガったとき<b>点がどう動くのか</b>を、つぎの<b>「点のしくみ」</b>で覚えよう！',
+        {tlab:'チャレンジ クリア'}),
+    ]);
+  },
+  /* ===== P「点のしくみ」(R44・第1章の最後の6Lesson) =====
+     ねらい: 点数計算ではなく「点がどう動くか」。おぼえるのは だれが / 何人が はらうか。
+     ・入れない: 符・翻・点数表・満貫/跳満・親は1.5倍・供託・本場・順位点・一発・裏ドラ・赤ドラ・フリテン
+     ・数字を出すのは、ルールとして1つに決まっているものだけ(リーチ棒=1000点 / 流局で動くのは ぜんぶで3000点)
+     ・既習語だけで書く: 親・子(s1_3) / ロン・リーチ・鳴き(d2_2,d2_3) / ツモ・切る(c1_2) /
+       テンパイ・ノーテン・流局・局・順位(d1_3,g1_2〜g2_4)
+     ・親・子はR38/R41と同じ インラインruby で書く(1字の「親」「子」は全ルビ辞書に入れない＝面子・順子へ誤爆するため)
+     ・新規用語(点棒・リーチ棒・ノーテン罰符)は term-chip で正式導入する(機械検査できる目印) */
+  p1_1(){
+    const TENBO='<span class="term-chip"><ruby>点棒<rt>てんぼう</rt></ruby></span>';
+    return [
+      ch1Teach('ゲームの進み方で、<b>さいごにもっている点</b>で順位がきまると覚えたね。'
+        +'きょうは、その<b>点</b>のはなしだよ。',{tlab:'点のはなし'}),
+      ch1Teach('点は、あたまの中で数えるんじゃないよ。<b>こういう棒</b>で、目に見えるようにしてあるんだ。',
+        {tlab:'点は目に見える',panel:tenboPanelHTML(['1000'],{cap:false})}),
+      ch1Teach('この棒を'+TENBO+'というよ。よく使うのは この4しゅるい。',
+        {tlab:'点棒',panel:tenboPanelHTML(null)}),
+      {q:'点棒は、なんのためにあるの？',
+        choices:['点をやりとりするため','牌の数をかぞえるため'],a:0,
+        panel:tenboPanelHTML(null,{cap:false}),
+        exp:'点が動くとき、点棒をわたしたり もらったりするよ。'},
+      {q:'いちばん大きい点棒は どれ？',
+        choices:['10000点の点棒','5000点の点棒','100点の点棒'],a:0,
+        panel:tenboPanelHTML(null,{cap:false}),
+        exp:'棒のもようは ルールや製品でちがうけど、<b>書いてある数字</b>が読めればだいじょうぶ！'},
+      ch1Teach('ゲームがはじまるとき、4人とも<b>おなじだけ</b>点をもってスタートするよ。'
+        +'よくあるのは1人25000点。でも、ここはルールによってちがうんだ。',{tlab:'はじまりの点'}),
+      {q:'ゲームがはじまるとき、4人の点は？',
+        choices:['4人ともおなじ','<ruby>親<rt>おや</rt></ruby>だけ多い','0からスタート'],a:0,
+        exp:'おなじ点からスタートして、そこから ふえたり へったりするよ。'},
+      {q:'どの麻雀も、かならず25000点ではじまる？',
+        choices:['ルールによってちがう','かならず25000点'],a:0,
+        exp:'25000点は よくあるルールのひとつ。やるまえに かくにんしよう！'},
+      ch1Teach('点が動くのは、おもに3つのとき。<b>アガったとき</b>・<b>リーチしたとき</b>・<b>流局したとき</b>。'
+        +'ここから1つずつ見ていこう！',{tlab:'点が動くとき'}),
+      {q:'ゲームのさいごに、順位をきめるのは なに？',
+        choices:['さいごにもっている点','アガった回数'],a:0,
+        exp:'アガるのは、点をふやすための方法。ゴールは<b>さいごの点</b>だったね。'},
+    ];
+  },
+  p1_2(){
+    const RON_YOU=ptFlowPanelHTML('E',{right:'sute',bottom:'win'},null);
+    return [
+      ch1Teach('アガった人は、点をもらえるよ。…でも、その点は どこから来るんだろう？',{tlab:'その点はどこから？'}),
+      ch1Teach('思い出そう。<b>ほかの人が捨てた牌</b>でアガるのがロンだったね。',
+        {tlab:'ロン（ふくしゅう）',panel:RON_YOU}),
+      ch1Teach('ロンのときにはらうのは、<b>そのアガリ牌を捨てた1人だけ</b>。'
+        +'ほかの2人は、はらわないよ。',
+        {tlab:'はらうのは1人',panel:ptFlowPanelHTML('E',{right:'pay',bottom:'win'},ptFlowCap('下家','あなた'))}),
+      ptPayPick('E',{right:'sute',bottom:'win'},'shimo',
+        'あなたが<b>ロン</b>！　アガリ牌を捨てたのは下家だよ。点をはらうのは どの人？',
+        'ロンではらうのは、アガリ牌を捨てた人。だから下家だね。'),
+      ptPayPick('E',{left:'sute',bottom:'win'},'kami',
+        'こんどは上家の捨て牌で<b>ロン</b>！　点をはらうのは どの人？',
+        'こんども、捨てた人がはらう。上家だよ。'),
+      ch1Teach('ぎゃくもあるよ。<b>あなたが捨てた牌</b>でだれかがロンしたら、はらうのはあなただ。',
+        {tlab:'あなたがはらうとき',panel:ptFlowPanelHTML('E',{bottom:'pay',top:'win'},ptFlowCap('あなた','対面'))}),
+      ptPayPick('E',{bottom:'sute',top:'win'},'me',
+        '対面が<b>ロン</b>！　アガリ牌を捨てたのは あなただよ。点をはらうのは どの人？',
+        '捨てたのは あなた。だから、はらうのも あなた。ロンは捨てた人が1人ではらうよ。'),
+      {q:'ロンのとき、点をはらうのは なん人？',choices:['1人','3人','4人'],a:0,
+        exp:'アガリ牌を捨てた1人だけ。ほかの人は はらわないよ。'},
+      {q:'あなたがロンした。アガリ牌を捨てていない上家は、点をはらう？',
+        choices:['はらわない','はらう'],a:0,
+        exp:'捨てた人いがいは はらわない。だから「だれの捨て牌でアガったか」が大事なんだ。'},
+      ch1Teach('<b>ロン＝アガリ牌を捨てた1人だけがはらう。</b>これだけ覚えておこう！',{tlab:'ロンのまとめ'}),
+    ];
+  },
+  p1_3(){
+    return [
+      ch1Teach('つぎはツモだよ。じぶんで山から引いてアガるのがツモだったね。'
+        +'このときは、<b>牌を捨てた人がいない</b>。だれがはらうんだろう？',{tlab:'ツモ（ふくしゅう）'}),
+      ch1Teach('ツモでアガったときは、<b>アガった人いがいの3人</b>が はらうよ。',
+        {tlab:'はらうのは3人',
+         panel:ptFlowPanelHTML('E',{bottom:'win',left:'pay',top:'pay',right:'pay'},ptFlowCap('3人','あなた'))}),
+      {q:'あなたがツモでアガった。点をはらうのは なん人？',choices:['3人','1人','だれもはらわない'],a:0,
+        exp:'捨てた人がいないぶん、のこりの3人みんなが はらうんだ。'},
+      {q:'ロンのとき、点をはらうのは なん人？',choices:['1人','3人'],a:0,
+        exp:'ロンは、アガリ牌を捨てた1人だけ。'},
+      {q:'ツモのとき、点をはらうのは なん人？',choices:['3人','1人'],a:0,
+        exp:'ロンは1人、ツモは3人。ここがいちばんのちがいだよ。'},
+      ch1Teach('だから、ほかの人がツモでアガったときは、<b>あなたも はらう1人</b>になるよ。',
+        {tlab:'あなたもはらう',
+         panel:ptFlowPanelHTML('E',{top:'win',bottom:'pay',left:'pay',right:'pay'},ptFlowCap('3人','対面'))}),
+      ptPayPick('E',{left:'win',bottom:'pay',top:'pay',right:'pay'},'kami',
+        '上家が<b>ツモ</b>でアガった！　点をもらうのは どの人？',
+        'アガった人がもらう。はらうのは のこりの3人だね。'),
+      {q:'下家がツモでアガった。あなたは 点をはらう？',choices:['はらう','はらわない'],a:0,
+        exp:'ツモは、アガった人いがいの3人がはらう。あなたも その1人だよ。'},
+      {q:'ツモでアガったとき、はらわない人は だれ？',
+        choices:['アガった人だけ','だれもはらわない','4人ともはらう'],a:0,
+        exp:'アガった人はもらう側。のこりの3人がはらうよ。'},
+      ch1Teach('<b>ロンは捨てた1人。ツモは のこりの3人。</b>'
+        +'これで、点がどこから来るのか わかったね！',{tlab:'ロンとツモのまとめ'}),
+    ];
+  },
+  p1_4(){
+    const OYA='<ruby>親<rt>おや</rt></ruby>', KO='<ruby>子<rt>こ</rt></ruby>';
+    const oyaFlag=(sw)=>{ const f={}; f[oyaPosAt(sw)]='oya'; return f; };
+    return [
+      ch1Teach('4人のうち、東家の人が'+OYA+'。のこりの3人が'+KO+'だったね。',
+        {tlab:OYA+'と'+KO+'（ふくしゅう）',panel:ptFlowPanelHTML('S',oyaFlag('S'),null,{mode:'wind'})}),
+      ch1Teach('じつは点のうえでも、'+OYA+'と'+KO+'はちがうんだ。'
+        +'おなじようなアガリでも、'+OYA+'のアガリのほうが<b>点が高い</b>よ。',{tlab:OYA+'のアガリは高い'}),
+      {q:'おなじようなアガリのとき、点が高いのは どっち？',
+        choices:[OYA,KO,'おなじ'],a:0,
+        exp:OYA+'のアガリは'+KO+'より高くなるよ。'+OYA+'はそれだけ とくべつな席なんだ。'},
+      ch1Teach('高いということは、はらうほうから見ると…そう、'+OYA+'にアガられたときは'
+        +'<b>はらう点も多くなる</b>んだ。',{tlab:OYA+'にアガられると'}),
+      {q:OYA+'にロンされた。'+KO+'にロンされたときとくらべて、はらう点は？',
+        choices:['多い','少ない','おなじ'],a:0,
+        exp:OYA+'のアガリは高い＝はらうほうも多くなる。'+OYA+'のリーチは こわいんだ。'},
+      ch1Teach('ツモのときも見ておこう。'+OYA+'がツモると'+KO+'の3人がおなじだけはらう。'
+        +KO+'がツモったときは、'+OYA+'だけ少し多くはらうよ。',{tlab:'ツモのときのちがい'}),
+      {q:KO+'がツモでアガった。3人のなかで いちばん多くはらうのは？',
+        choices:[OYA,KO,'3人ともおなじ'],a:0,
+        exp:OYA+'は もらうときも はらうときも、'+KO+'とちがうんだ。'},
+      ch1Teach('なん点はらうかは、いま覚えなくてだいじょうぶ。'
+        +'<b>'+OYA+'と'+KO+'では点の動きがちがう</b>、それが分かればじゅうぶんだよ！',{tlab:'覚えるのはここまで'}),
+      {q:'点のしくみで、いま覚えることは どっち？',
+        choices:[OYA+'と'+KO+'では点の動きがちがうこと',OYA+'と'+KO+'のぜんぶの点を丸暗記すること'],a:0,
+        exp:'点のけいさんは、もっと先でゆっくりやろう。いまは<b>点の動き</b>が分かればOK！'},
+      ch1Teach('🎉 '+OYA+'と'+KO+'マスター！　つぎは、<b>アガリがなくても点が動く</b>ときを見てみよう。',
+        {tlab:'つぎへ！'}),
+    ];
+  },
+  p2_1(){
+    const RBOU='<span class="term-chip">リーチ<ruby>棒<rt>ぼう</rt></ruby></span>';
+    const BAPPU='<span class="term-chip">ノーテン<ruby>罰符<rt>ばっぷ</rt></ruby></span>';
+    return [
+      ch1Teach('第1章でリーチを覚えたね。テンパイしたら「リーチ！」と言って、牌を横向きに捨てる。'
+        +'じつは、それといっしょにやることが<b>もう1つ</b>あるんだ。',{tlab:'リーチ（ふくしゅう）'}),
+      ch1Teach('リーチするときは、<b>1000点の点棒を1本、場に出す</b>よ。',
+        {tlab:'1000点を場に出す',panel:tenboPanelHTML(['1000'],{cap:false})}),
+      ch1Teach('この場に出した点棒を'+RBOU+'というよ。',
+        {tlab:'リーチ棒',panel:tenboPanelHTML(['1000'],{cap:false})}),
+      {q:'リーチするとき、いっしょに場に出すものは？',
+        choices:['1000点の点棒を1本','5000点の点棒を1本','なにも出さない'],a:0,
+        panel:tenboPanelHTML(['1000','5000'],{cap:false}),
+        exp:'リーチ棒は1000点。だから、点が1000点より少ないとリーチできないんだ。'},
+      ch1Teach('場に出たリーチ棒は、<b>その局でアガった人がもらう</b>よ。だれもアガらなければ、つぎの局へもちこしだ。',
+        {tlab:'リーチ棒のゆくえ'}),
+      {q:'場に出たリーチ棒は、さいごに だれのもの？',
+        choices:['その局でアガった人','リーチした人','だれのものにもならない'],a:0,
+        exp:'アガった人は、じぶんのアガリの点＋場のリーチ棒をもらえるよ。'},
+      {q:'リーチしたけど、アガれなかった。出した1000点は もどってくる？',
+        choices:['もどってこない','かならずもどってくる'],a:0,
+        exp:'だから「リーチするぞ」と決めるのは、大事なえらび方なんだね。'},
+      ch1Teach('もうひとつ、アガリがなくても点が動くときがあるよ。おぼえてる？　<b>流局</b>だ。',
+        {tlab:'流局（ふくしゅう）'}),
+      ch1Teach('流局したら、まずテンパイかノーテンかをたしかめる。そして<b>ノーテンの人が、テンパイの人に点をはらう</b>んだ。',
+        {tlab:'ノーテンがはらう',
+         panel:ptFlowPanelHTML('E',{bottom:'tenpai',left:'noten',top:'noten',right:'noten'},
+           ptFlowCap('ノーテンの人','テンパイの人'))}),
+      ch1Teach('動く点は、<b>ぜんぶで3000点</b>。テンパイが何人かで1人ぶんは変わるけど、'
+        +'場ぜんたいで動くのは いつも3000点だよ。',{tlab:'ぜんぶで3000点'}),
+      {q:'流局したとき、点をはらうのは どっち？',
+        choices:['ノーテンの人','テンパイの人'],a:0,
+        exp:'あと1枚までがんばった人が もらえる。だから流局まぎわのテンパイは大事なんだ。'},
+      {q:'流局したとき、場ぜんたいで動く点は？',
+        choices:['ぜんぶで3000点','ぜんぶで1000点','きまっていない'],a:0,
+        exp:'3000点。1人ぶんがいくらになるかは、テンパイが何人かで変わるよ。'},
+      ch1Teach('この流局のときの点のやりとりを'+BAPPU+'というよ。',{tlab:'ノーテン罰符'}),
+      {q:'4人ともテンパイだった。ノーテン罰符は ある？',
+        choices:['ない','ある'],a:0,
+        exp:'はらう人がいないね。4人ともノーテンのときも、おなじで点は動かないよ。'},
+      ch1Teach('🎉 <b>アガリがなくても点は動く！</b>　リーチ棒と、ノーテン罰符。'
+        +'さあ、さいごは総まとめだ！',{tlab:'つぎへ！'}),
+    ];
+  },
+  p2_2(){
+    const OYA='<ruby>親<rt>おや</rt></ruby>', KO='<ruby>子<rt>こ</rt></ruby>';
+    const quiz=shuffle([
+      {q:'ロンのとき、点をはらうのは なん人？',choices:['1人','3人'],a:0,
+        exp:'アガリ牌を捨てた1人だけ。'},
+      {q:'ツモのとき、点をはらうのは なん人？',choices:['3人','1人'],a:0,
+        exp:'アガった人いがいの3人。'},
+      {q:'リーチするとき、場に出すものは？',
+        choices:['1000点の点棒を1本','10000点の点棒を1本','なにも出さない'],a:0,
+        exp:'リーチ棒は1000点。アガった人がもらうよ。'},
+      {q:'流局したとき、点をはらうのは どっち？',choices:['ノーテンの人','テンパイの人'],a:0,
+        exp:'ノーテン罰符。場ぜんたいで3000点が動くよ。'},
+      {q:'おなじようなアガリのとき、点が高いのは？',choices:[OYA,KO,'おなじ'],a:0,
+        exp:OYA+'は もらうときも はらうときも'+KO+'とちがう。'},
+      {q:'ゲームのさいごに、順位をきめるのは なに？',
+        choices:['さいごにもっている点','アガった回数'],a:0,
+        exp:'アガるのは、点をふやすための方法だったね。'},
+    ]);
+    return [
+      ch1Teach('さいごは総まとめ！　<b>だれから だれへ点が動くのか</b>、ぜんぶ思い出してみよう。',
+        {tlab:'点のしくみ マスターへ'}),
+      ptPayPick('E',{top:'sute',bottom:'win'},'toi',
+        'あなたが<b>ロン</b>！　アガリ牌を捨てたのは対面だよ。点をはらうのは どの人？',
+        'ロンは、アガリ牌を捨てた1人がはらう。'),
+      ptPayPick('E',{right:'win',bottom:'pay',left:'pay',top:'pay'},'shimo',
+        '下家が<b>ツモ</b>でアガった！　点をもらうのは どの人？',
+        'ツモはアガった人がもらい、のこりの3人がはらうよ。'),
+    ].concat(quiz).concat([
+      ch1Teach('🎉 <b>点のしくみマスター！</b>　ロンは捨てた1人、ツモは3人。'
+        +'リーチ棒は1000点、流局は3000点。そしてゲームのゴールは<b>さいごの点</b>。'
+        +'<br>これで第1章「麻雀を打てる」はぜんぶクリア！つぎは第2章<b>「アガリが見える」</b>だ！',
         {tlab:'第1章クリア'}),
     ]);
   },
@@ -6531,6 +6803,17 @@ function nextSelfWind(sw){                                                      
   const p=nextOyaPos(sw); if(!p) return null;
   return SEAT_WINDS[(4-SEAT_POS_K[p])%4];
 }
+/* 点の動きの目じるし(R44): 卓図の席カードに出す2行目。
+   種類は「その席がいま何をしたか」だけに限る。金額は書かない(点のしくみは金額を教えるテーマではない)。
+   win=アガった / pay=点をはらう / sute=アガリ牌を捨てた / riichi=リーチした / note=その他のひとこと */
+const SEAT_FLAG={win:['win','アガリ'],pay:['pay','はらう'],sute:['note','すてた'],
+                 riichi:['note','リーチ'],noten:['pay','ノーテン'],tenpai:['win','テンパイ'],
+                 oya:['win','おや'],ko:['note','こ']};
+function seatFlagHTML(kind){
+  if(!kind) return '';
+  const f=SEAT_FLAG[kind]; if(!f) return '';
+  return '<span class="sm-flag '+f[0]+'">'+f[1]+'</span>';
+}
 function ch3SeatMapHTML(sw,opt){
   const o=opt||{};
   if(['E','S','W','N'].indexOf(sw)<0) return '';
@@ -6542,7 +6825,8 @@ function ch3SeatMapHTML(sw,opt){
     const i=SEAT_POS.indexOf(pos);
     const cls='sm-cell'+(pos==='bottom'?' you':'')+(o.hl===pos?' hl':'');
     const inner=label(pos)
-      +((!o.mode||o.mode==='wind')&&pos==='bottom'?'<span class="sm-you-lab">あなた</span>':'');
+      +((!o.mode||o.mode==='wind')&&pos==='bottom'?'<span class="sm-you-lab">あなた</span>':'')
+      +seatFlagHTML(o.flag&&o.flag[pos]);   // R44: 点の動きの目じるし(アガリ/はらう/すてた)
     return o.pick
       ? '<button class="'+cls+'" id="ch-'+i+'" onpointerdown="selChoice('+i+')">'+inner+'</button>'
       : '<div class="'+cls+'">'+inner+'</div>';
@@ -6566,9 +6850,43 @@ function seatAnsPos(sw,ask){
 }
 function ch1SeatPick(sw,ask,qtext,opt){
   const o=opt||{}, pos=seatAnsPos(sw,ask);
-  return {sp:{sw,ask,mode:o.mode||'wind'}, q:qtext,
+  return {sp:{sw,ask,mode:o.mode||'wind',flag:o.flag||null}, q:qtext,
     choices:SEAT_POS.map(p=>SEAT_NAME[p]), a:SEAT_POS.indexOf(pos),
     tlab:o.tlab||'卓を見てタップ', exp:o.exp||''};
+}
+/* ================= 点のしくみ(R44)の図と問題 =================
+   方針: 「いくら動くか」ではなく「だれから だれへ動くか」を図で見せる。
+   ・卓図は ch3SeatMapHTML の1実装だけを使う(卓図を増やさない)。席カードに目じるしを足すだけ
+   ・新しい問題形式(QFORMAT)は作らない。teach/mcq の panel と seatpick の flag だけで作る
+   ・点棒は画像を作らず、CSSの棒＋数字ラベルで表す(模様当てクイズにはしない) */
+const TENBO_KINDS=[
+  {v:'100',    dots:'nnn',  note:'いちばん小さい'},
+  {v:'1000',   dots:'r',    note:'リーチのときに出す'},
+  {v:'5000',   dots:'rrr',  note:''},
+  {v:'10000',  dots:'grg',  note:'いちばん大きい'},
+];
+function tenboStickHTML(dots){
+  return '<span class="tb-stick">'+dots.split('').map(d=>
+    '<i class="tb-dot'+(d==='r'?' r':(d==='g'?' g':''))+'"></i>').join('')+'</span>';
+}
+function tenboPanelHTML(vals,opt){
+  const o=opt||{}, pick=v=>TENBO_KINDS.find(k=>k.v===String(v));
+  const rows=(vals||TENBO_KINDS.map(k=>k.v)).map(v=>{ const k=pick(v); if(!k) return '';
+    return '<span class="tb">'+tenboStickHTML(k.dots)+'<b class="tb-num">'+k.v+'点</b></span>'; }).join('');
+  return '<div class="tb-row">'+rows+'</div>'
+    +(o.cap===false?'':'<p class="tb-cap">'+(o.cap||'本物の点棒の見た目は、ルールや製品でちがうよ。数字が読めればOK！')+'</p>');
+}
+/* 点の動きの図: 卓図＋「だれから だれへ」の一言。teachでもmcqでも panel として同じものを出す */
+function ptFlowPanelHTML(sw,flag,cap,opt){
+  const o=opt||{};
+  return ch3SeatMapHTML(sw,{mode:o.mode||'name',flag:flag||null})
+    +(cap?'<p class="pf-cap">'+cap+'</p>':'');
+}
+function ptFlowCap(from,to){ return from+'<span class="pf-ar">→</span>'+to; }
+/* 「点をはらうのは どの人？」: 卓の図で人をタップして答える(seatpickに相乗り)。
+   正解は席の関係から計算する(ask)。図には「だれがアガったか」「だれが捨てたか」だけを出し、金額は出さない */
+function ptPayPick(sw,flag,ask,qtext,exp,opt){
+  return ch1SeatPick(sw,ask,qtext,Object.assign({mode:'name',flag:flag,tlab:'卓を見てタップ',exp:exp},opt||{}));
 }
 function ch3CtxHTML(c,q){
   if(!c) return '';
@@ -8451,6 +8769,13 @@ const CH3_LESSONS={
 function ch1ThemeUnlocked(t){
   // requires付きテーマ(D1〜)は前提テーマを全クリアするまでロック(既存テーマは常に解放)
   if(!t||!t.requires) return true;
+  /* 既得解放(R44): すでに1つでもレッスンを進めたテーマは、あとから requires を変えても閉じない。
+     R44で th_ch1e(旧 requires: th_ch1d → th_ch1g)・th_ch2a(旧 th_ch1e → th_ch1p)を付け替えたため、
+     「実戦への扉を進めているのに4人で打つ/ゲームの進み方が未クリア」という既存ユーザーが
+     アップデートした瞬間にロードから締め出されるのを防ぐ。
+     ・保存データ(jantore-v1)には一切書き込まない＝migrationなし・一方向・元に戻す必要もない
+     ・新規ユーザー(roadProgressが空)には何の影響もない＝正規の解放チェーンだけが効く */
+  if((S.roadProgress&&S.roadProgress[t.id]||0)>0) return true;
   const req=themeOf(t.requires); if(!req) return true;
   return (S.roadProgress[req.id]||0)>=themeLessons(req).length;
 }
@@ -8866,7 +9191,7 @@ const QFORMATS={
     render(q){
       let html='<div class="q-type">'+(q.tlab||'卓を見てタップ')+'</div>';
       html+='<div class="q-text">'+q.q+'</div>';
-      html+=ch3SeatMapHTML(q.sp.sw,{mode:q.sp.mode,pick:true});
+      html+=ch3SeatMapHTML(q.sp.sw,{mode:q.sp.mode,pick:true,flag:q.sp.flag});
       html+='<p class="ch1-hint">図の中の人をタップしてね</p>';
       L.sel=null;
       return html;
