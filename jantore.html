@@ -165,6 +165,16 @@ html.ruby-full .mt-guide-card .tc-bub{height:86px;}
   justify-content:center; align-items:center;}
 .dr-grid .tile{width:clamp(34px,10vw,44px); max-width:44px; flex:none;}
 .dr-hit b{color:var(--jade-ink);}
+/* リーチの河(R42): 「リーチ中」という文字ではなく、実卓とおなじ“横向きの捨て牌”でリーチを読ませる。
+   横向き牌は手牌の鳴き表示とおなじ .mld-side の箱(横1.4枚分×縦1枚分)を再利用するので、
+   となりの牌と重ならず、行の高さも崩れない。新しい牌画像は作らない */
+.rc-wrap{margin:8px auto 10px; max-width:360px;}
+.rc-lab{display:inline-block; font-size:12px; font-weight:900; color:var(--verm-ink);
+  background:color-mix(in srgb, var(--verm) 12%, transparent); border:2px solid var(--verm);
+  border-radius:999px; padding:1px 10px; margin:0 0 4px;}
+.rc-river{justify-content:flex-start; margin:0;}
+.rc-cap{font-size:11.5px; font-weight:700; color:var(--ink-soft); margin:4px 0 0;}
+.dr-now{margin:6px 0 2px;}
 .dr-cyc{display:flex; align-items:center; justify-content:center; gap:clamp(2px,1.4vw,6px); flex-wrap:nowrap;}
 .dr-cyc .tile{width:clamp(26px,8vw,36px); max-width:36px; flex:none;}
 /* 暗槓の実戦表示につかう「ふせ牌」: 手牌の牌とおなじ大きさ・高さにそろえる */
@@ -3095,8 +3105,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.38.0';
-const BUILD_ID='20260925-02';
+const APP_VER='0.38.1';
+const BUILD_ID='20260925-03';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -4515,6 +4525,47 @@ function doraPanelHTML(inds){
     doraCellHTML(cd,'ドラ表示牌')+'<span class="rd-arrow">→</span>'
     +doraCellHTML(doraFromIndicator(cd),'ドラ','dr-hit')).join('')+'</div>';
 }
+/* R42: 問題の状況表示。ドラの「枚数」を文章で答えとして与えず、どの牌がドラかだけを牌で見せる。
+   データが持っているのは ドラ表示牌(doraInd) なので、doraFromIndicator で実ドラへ変換して出す
+   (「ドラ表示牌」はK1-2で正式導入する語なので、それ以前の画面では出さない) */
+function doraNowPanelHTML(ind){
+  const cd=doraFromIndicator(ind);
+  return cd?'<div class="dr-grid dr-now">'+doraCellHTML(cd,'ドラ','dr-hit')+'</div>':'';
+}
+/* ---- リーチの河(R42) ---- */
+function ch3RiichiRiver(hand14,winTile,n){
+  // 捨て牌は決定論で選ぶ。その手の待ち牌・アガリ牌・4枚使用済みは置かない(フリテンの絵を作らない)
+  const tiles=hand14?sortTiles(parseHand(hand14)):[];
+  const hand13=tiles.slice();
+  if(winTile){ const i=hand13.indexOf(winTile); if(i>=0) hand13.splice(i,1); }
+  const cnt=tiles.length?ch3Cnt(tiles):{};
+  const waits=(typeof ch3WaitsAll==='function'&&hand13.length===13)?ch3WaitsAll(hand13):[];
+  const out=[];
+  for(const cd of ['1p','9m','2s','W','9p','1m','N','1s','5p','E','3p','7m','S','8m','4s']){
+    if(out.length>=(n||6)) break;
+    if(cd===winTile||(cnt[cd]||0)>=4) continue;
+    if(waits.indexOf(cd)>=0) continue;
+    out.push(cd);
+  }
+  return out;
+}
+function riichiRiverHTML(tiles,sideIdx,opt){
+  const o=opt||{};
+  const body=tiles.map((t,i)=>i===sideIdx
+    ? '<span class="mld-side" data-riichi="1">'+tileHTML(t,'mld-t')+'</span>'
+    : tileHTML(t)).join('');
+  return '<div class="rc-wrap">'
+    +(o.head?'<div class="tc-lab">'+o.head+'</div>':'')
+    +(o.lab===false?'':'<div class="rc-lab">'+(o.lab||'リーチ！')+'</div>')
+    +'<div class="hand rc-river">'+body+'</div>'
+    +(o.cap?'<p class="rc-cap">'+o.cap+'</p>':'')+'</div>';
+}
+function ch3RiichiRiverHTML(hand14,winTile,dbl,opt){
+  const t=ch3RiichiRiver(hand14,winTile,6);
+  // 「相手の捨て牌」を出す盤面と並ぶことがあるので、どちらの河かを必ず書く
+  return riichiRiverHTML(t, dbl?0:3,
+    Object.assign({head:'あなたの捨て牌',lab:dbl?'さいしょの捨て牌でリーチ！':'リーチ！'},opt||{}));
+}
 function doraCyclePanelHTML(cds){
   // 字牌のじゅんばん(さいごは最初にもどる)
   return '<div class="dr-cyc">'+cds.map((cd,i)=>(i?'<span class="rd-arrow">→</span>':'')+tileHTML(cd)).join('')
@@ -4871,6 +4922,13 @@ function d2RiichiMcq(handStr,exp){
   const a=ch1MiniWaits(parseHand(handStr)).length?0:1;
   return {q:'この13枚は、テンパイしている？',hand:handStr,
     choices:['テンパイしている','まだテンパイしていない'],a,exp,ghand:true};
+}
+/* D2-2(R42): 河を見て「リーチしているか」を読む。正解は横向き牌があるかどうかから算出する */
+function d2RiichiSeeMcq(tiles,sideIdx,exp){
+  const on=sideIdx>=0;
+  return {q:'この人の<b>捨て牌</b>だよ。この人は どうしている？',
+    panel:riichiRiverHTML(tiles,on?sideIdx:-1,{lab:false}),
+    choices:['リーチしている','リーチしていない'],a:on?0:1,exp};
 }
 function ch1TenpaiMcq(handStr,exp){
   const a=ch1MiniWaits(parseHand(handStr)).length?0:1;
@@ -5890,14 +5948,28 @@ const CH1_LESSONS={
         {tlab:'リーチ'}),
       ch1Teach('リーチを宣言したら、<b>テンパイになる牌を1枚切ろう</b>。それでリーチ成立！そのあとは<b>基本的にツモった牌をそのまま切って</b>待つ（これを<span class="term-chip">ツモ切り</span>というよ）。待ち牌をツモったら…もちろん自分で「アガリ！」だ！',
         {tlab:'リーチのながれ'}),
+      ch1Teach('そのとき切った牌は、<b>横向きに置く</b>よ。これが「わたしはリーチしています」の<b>しるし</b>。'
+        +'まわりの人は、この<b>横向きの牌</b>を見てリーチに気づくんだ。',
+        {tlab:'横向きがリーチのしるし',
+         panel:riichiRiverHTML(['1p','9m','2s','W','9p','1m'],3,{cap:'横向きの牌＝リーチを宣言したときに切った牌'})}),
+      d2RiichiSeeMcq(['1p','9m','2s','W','9p','1m'],3,
+        '横向きの牌があるね。この人はリーチしているよ！'),
+      d2RiichiSeeMcq(['1p','9m','2s','W','9p','1m'],-1,
+        '横向きの牌がないから、この人はまだリーチしていないよ。'),
       ch1Mini(['2m','3m','4m','5m','6m','7m','8p','8p','3s','4s','5s','6s','E'],['7s','N','8s'],'234m567m88p345s678s',
         {guided:true,riichi:true,
          exp:'はじめてのリーチ→ツモ！🎉 「リーチ！」と宣言してからテンパイになる牌を切る。あとはツモ切りで待つ。これがリーチの基本だよ。'}),
       d2RiichiMcq('234m567m88p345s67s','あと1枚(5ソーか8ソー)でアガリ＝テンパイ！テンパイなら、つぎのツモのあとに「リーチ！」を宣言できるチャンスだよ。'),
       d2RiichiMcq('123m456p789s1s5sWN','バラバラの牌がのこっていて、あと1枚ではアガれない…まだテンパイじゃないよ。'),
+      ch1Teach('そして大事なこと。<b>リーチしたあとは、手牌を組みかえられない</b>んだ。'
+        +'ツモった牌がアガリ牌でなければ、<b>その牌をそのまま切る</b>だけ（ツモ切り）。',
+        {tlab:'リーチしたら手は かえない'}),
       {q:'リーチのあと、ツモった牌がアガリ牌じゃなかったら？',
         choices:['ツモった牌をそのまま切る','手牌を組みかえて、べつの牌を切る'],a:0,
         exp:'リーチのあとは、基本的にツモった牌をそのまま切って待つよ（ツモ切り）。'},
+      {q:'リーチしたあと、手牌の牌とツモった牌を<b>入れかえてもいい</b>？',
+        choices:['入れかえない','すきに入れかえていい'],a:0,
+        exp:'リーチしたら手は そのまま。だから「リーチするぞ」と決めるのは大事な選択なんだ。'},
       ch1Mini(['1m','2m','3m','4p','5p','6p','7p','8p','9p','9s','9s','2s','W'],['3s','E','1s'],'123m456p789p123s99s',
         {riichi:true,
          exp:'じぶんの力でリーチ→アガリ！🎉 リーチを宣言→テンパイになる牌を切る→ツモ切り→待ち牌が来たら「アガリ！」。この流れが本物の麻雀の基本だよ。'}),
@@ -5934,7 +6006,8 @@ const CH1_LESSONS={
       ch1Teach('<b>カン</b>は、<b>おなじ牌4枚</b>を使う特別な組の作り方。くわしいルールは、またこんど！',{tlab:'カン'}),
       {q:'「カン」で使うのは、おなじ牌なん枚？',choices:['3枚','4枚'],a:1,
         exp:'おなじ牌4枚を使う特別な組の作り方がカン。くわしいルールは、またこんど！'},
-      ch1Teach('鳴いたら、そろった組は<b>手牌の右に、すこしはなして</b>ならべて、みんなに見せるよ。そして、ほかの人から<b>もらった牌は横向き</b>に置くんだ。',
+      ch1Teach('鳴いたら、そろった組は<b>手牌の右に、すこしはなして</b>ならべて、みんなに見せるよ。そして、ほかの人から<b>もらった牌は横向き</b>に置くんだ。'
+        +'（リーチのときは<b>捨て牌</b>を横向きにしたね。こんどは<b>鳴いた組の中</b>だよ。おなじ横向きでも、置く場所がちがうんだ。）',
         {tlab:'鳴いた組の置き方',panel:ohPanelHTML([{lab:'対面の「發」をポンした手',hand:'234m678p34s55s',
           melds:[{type:'pon',tiles:'GGG',from:'opposite'}],legend:true}])}),
       ch1Teach('横向きの牌の<b>位置</b>で、だれからもらったかがわかるよ。チーは「上家」からだけだから、<b>チーの組はいつも左はしが横向き</b>。いまは「<b>横向き＝もらった牌</b>」だけ覚えればOK！',
@@ -6488,7 +6561,7 @@ function ch1SeatPick(sw,ask,qtext,opt){
     choices:SEAT_POS.map(p=>SEAT_NAME[p]), a:SEAT_POS.indexOf(pos),
     tlab:o.tlab||'卓を見てタップ', exp:o.exp||''};
 }
-function ch3CtxHTML(c){
+function ch3CtxHTML(c,q){
   if(!c) return '';
   const chips=[];
   if(c.rw) chips.push('<span class="ch3-chip">'+CH3_WIND_JP[c.rw]+'場</span>');
@@ -6496,13 +6569,19 @@ function ch3CtxHTML(c){
   // 鳴いたかどうかはチップ(ラベル)ではなく牌の置き方で見せる(手の中＋右に鳴いた組・もらった牌は横向き)。
   // 鳴いた組データのない旧形式のmenzen:falseだけ、互換のためチップを残す(教材には残さない=テストで検出)
   if(c.menzen===false&&!(Array.isArray(c.melds)&&c.melds.length)) chips.push('<span class="ch3-chip warn">鳴きあり</span>');
-  if(c.dblRiichi) chips.push('<span class="ch3-chip riichi">さいしょの捨て牌でリーチ宣言</span>');
-  else if(c.riichi) chips.push('<span class="ch3-chip riichi">リーチ中</span>');
+  // R42: リーチも「文字チップ」から「実卓の見た目」へ。横向きの捨て牌がある河を出し、
+  //      「リーチ中」という文字表示はやめる(D2-2で横向き牌＝リーチのしるしと学んでいる)
+  let river='';
+  if(c.dblRiichi||c.riichi){
+    const hand=(q&&q.hand)||null;
+    const wt=(q&&q.ctx3&&q.ctx3.winTile)||c.winTile||null;
+    river=ch3RiichiRiverHTML(hand,wt,!!c.dblRiichi);
+  }
   if(c.win==='tsumo') chips.push('<span class="ch3-chip">ツモでアガった</span>');
   if(c.win==='ron') chips.push('<span class="ch3-chip">ロンでアガった</span>');
   if(c.winTile) chips.push('<span class="ch3-chip">アガリ牌：'+tileLabel(c.winTile)+'</span>');
   if(c.note) chips.push('<span class="ch3-chip">'+c.note+'</span>');
-  return chips.length?'<div class="ch3-ctx">'+chips.join('')+'</div>':'';
+  return river+(chips.length?'<div class="ch3-ctx">'+chips.join('')+'</div>':'');
 }
 /* ---- 第3章 ロン/ツモ盤面(UI自体を教材にする) ----
    ロン: 「相手の捨て牌」に今切られた牌(=アガリ牌)を置き、自分の手牌はロン前の13枚で見せる。
@@ -6611,10 +6690,11 @@ function doraPickQ(ind,cands,exp,opt){
     tchoices:list.map(t=>({t})),a:list.indexOf(right),exp},opt||{});
 }
 function ch3DoraAgariMcq(handStr,ctx3,exp,opt){
-  // 「ドラがあってもアガれるとは限らない」: 判定は役の有無だけ(ドラの枚数は表示用に計算)
-  const n=doraCountOf(handStr,ctx3);
-  const c=Object.assign({},ctx3,{note:'この手のドラは'+n+'枚'});
-  return ch3AgariMcq(handStr,c,exp,opt);
+  // 「ドラがあってもアガれるとは限らない」: 判定は役の有無だけ。
+  // R42: 「この手のドラは○枚」という文字チップはやめた。枚数は学習者が手牌を見て数えるもので、
+  //      問題側が答えとして先に渡してよい情報ではない。どの牌がドラかだけを牌で見せる
+  return ch3AgariMcq(handStr,ctx3,exp,
+    Object.assign({panel:doraNowPanelHTML(ctx3&&ctx3.doraInd)},opt||{}));
 }
 function ch3WhichMcq(handStr,ctx3,choiceKeys,exp,opt){
   const list=ch3ListOf(handStr,ctx3);
@@ -8671,7 +8751,7 @@ const QFORMATS={
       // 第3章: ロン/ツモは牌の配置で分かる盤面(ロン=相手の捨て牌+自分の13枚/ツモ=13枚+右端ツモ牌)。
       // 盤面が出るときはアガリ牌チップを重複表示しない(状況は牌の位置で理解させる)
       const bd3=(q.ctx3&&typeof ch3BoardHTML==='function')?ch3BoardHTML(q):null;
-      if(q.ctx3) html+=ch3CtxHTML(bd3?Object.assign({},q.ctx3,{winTile:null}):q.ctx3);
+      if(q.ctx3) html+=ch3CtxHTML(bd3?Object.assign({},q.ctx3,{winTile:null}):q.ctx3,q);
       if(q.seatMap) html+=ch3SeatMapHTML(q.seatMap,q.seatOpt);  // R28: 席の風を学習中は4人卓の図で視覚化(R38: seatOpt対応)
       if(q.situ) html+=tableHTML(legacySituToContext(q.situ),'T0');  // P3-B: situHTML→TableView（situHTMLはlegacyとして残置）
       else if(q.context) html+=tableHTML(q.context, q.context.reveal||'T0');  // v3ネイティブcontext問題（Compare variant等）
@@ -8902,7 +8982,7 @@ const QFORMATS={
       let html='<div class="q-type">'+(q.tlab||'役さがし')+'</div>';
       html+='<div class="q-text">'+q.q+'</div>';
       const bdY=(q.ctx3&&typeof ch3BoardHTML==='function')?ch3BoardHTML(q):null;
-      html+=ch3CtxHTML(bdY?Object.assign({},q.ctx3,{winTile:null}):q.ctx3);
+      html+=ch3CtxHTML(bdY?Object.assign({},q.ctx3,{winTile:null}):q.ctx3,q);
       if(bdY) html+=bdY;
       else if(ch3HandSplit(q)) html+=ch3OpenHandHTML(q);
       else if(q.hand) html+=(q.ghand?ch1HandGrouped(q.hand):handHTML(q.hand));
