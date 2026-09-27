@@ -613,6 +613,37 @@ button.tile.off:active{transform:none;}
 .tb-num{font-size:clamp(13px,3.9vw,15px); font-weight:900; font-variant-numeric:tabular-nums;
   color:var(--ink); min-width:5.4em; text-align:left;}
 .tb-cap{margin:8px 0 0; text-align:center; font-size:11.5px; font-weight:700; color:var(--ink-soft);}
+/* ロンとフリテン(R45): 「手牌 → 待ち → 自分の河 → ほかの人の捨て牌」を1画面に積む図。
+   ・新しい牌の絵は作らない。河は第3章のロン盤面と同じ .ch3-river(30px・横1列・今の牌つき)を使い回す
+   ・見る順番がそのまま上から下の順番になるように並べる(情報量を同じ強さで並べない)
+   ・自分の河の中の待ち牌は「色をつけない」= 学習者が自分でさがす(答えを渡さない) */
+.f-board{margin:6px 0 4px;}
+.f-board .tc-lab{margin-top:6px;}
+.f-board .ch3-river{min-height:auto; margin:2px 0 4px;}
+/* 待ち牌: 手牌より小さく、河より大きい(いちばん見てほしい情報を真ん中の強さにする) */
+.f-wait{display:flex; align-items:center; justify-content:center; gap:8px;
+  margin:4px auto 8px; padding:5px 10px; width:fit-content; max-width:100%;
+  border-radius:12px; background:var(--jade-soft); border:1.5px solid var(--jade);}
+.f-wlab{font-size:clamp(11.5px,3.3vw,12.5px); font-weight:900; color:var(--jade-ink); white-space:nowrap;}
+.f-wt{display:flex; gap:4px;}
+.f-wait .tile{width:32px; max-width:32px; flex:none;}
+/* だれの河かの見出し。自分の河は「見るところ」なので少しだけ強く出す */
+.f-head{display:block; font-size:clamp(11.5px,3.3vw,12.5px); font-weight:900;
+  color:var(--ink-soft); margin:8px 0 2px; text-align:center;}
+.f-head.mine{color:var(--verm-ink);}
+/* 3人が捨てた牌を横1列で見せる(縦に積むと画面が長くなり、卓を見わたす感じも出ない) */
+.f-drops{display:flex; justify-content:center; align-items:flex-start; gap:clamp(8px,3.4vw,16px);
+  margin:6px auto 4px; width:fit-content; max-width:100%;}
+.f-drop{display:flex; flex-direction:column; align-items:center; gap:3px;}
+.f-drop b{font-size:clamp(11.5px,3.3vw,12.5px); font-weight:900; color:var(--ink-soft); white-space:nowrap;}
+.f-drop .tile{width:clamp(34px,10.5vw,40px); max-width:none; flex:none;}
+/* 前提の但し書き(役はあるものとする)。小さく・1レッスンに1回だけ */
+.f-note{margin:6px 0 0; text-align:center; font-size:11px; font-weight:700; color:var(--ink-soft);}
+/* 合言葉「ロン！のまえに、河チェック」 */
+.f-motto{margin:10px auto 2px; padding:8px 12px; width:fit-content; max-width:100%;
+  border-radius:14px; background:var(--jade-soft); border:2px solid var(--jade);
+  color:var(--jade-ink); font-weight:900; text-align:center;
+  font-size:clamp(13px,3.9vw,15px); line-height:1.4;}
 /* 局の帯(R41): 東1局〜南4局を「東場の4マス」「南場の4マス」の2段で見せる表示専用の図。
    ・1列8マスにはしない。320pxで横スクロールしないよう 4列×2段 にする(実測: 320pxで1マス55px)
    ・段を枠で囲むことで 局→場→半荘 の階層が図だけで分かるようにする
@@ -2076,6 +2107,7 @@ const COURSES=[
 {id:'ch2b',title:'待ちの形を知ろう',icon:'🧩',section:1,type:'ch1',desc:'ならんだ2枚には、待ちのひみつがあるんだ。',questions:[]},
 {id:'ch2c',title:'いろいろな待ち',icon:'🎯',section:1,type:'ch1',desc:'トイツの待ちと、1枚だけの待ちを覚えよう。',questions:[]},
 {id:'ch2d',title:'実戦の待ち',icon:'👀',section:1,type:'ch1',desc:'13枚から待ち牌をぜんぶ見つけて、アガリが見える！',questions:[]},
+{id:'ch2e',title:'ロンとフリテン',icon:'🔔',section:1,type:'ch1',desc:'ほかの人の捨て牌を見て、ロンできるか決めよう。',questions:[]},
 /* 第3章「役がわかる」。descに役名を先出ししない(名称初出はレッスン内)。ch3xは任意Road(次章の前提にしない) */
 {id:'ch3a',title:'はじめての役',icon:'🎫',section:2,type:'ch1',desc:'知っている「リーチ」を、役として正式に覚えよう。',questions:[]},
 {id:'ch3b',title:'役牌',icon:'🀄',section:2,type:'ch1',desc:'3枚そろえるだけで役になる牌があるんだ。',questions:[]},
@@ -2357,13 +2389,35 @@ const THEMES=[
     {diff:{ch1:'wd1_4'}},                      // ★D1-4 第2章チャレンジ「アガリが見える！」
    ]},
   ]},
+ /* ロンとフリテン(R45): 第2章で育てた「待ちが見える目」を、実戦の判断へつなぐテーマ。
+    ・置き場所は SECTION1 の最後(実戦の待ち → ロンとフリテン → 第3章)。
+      「13枚から待ちを全部見つける」(wd1_4)の直後に、その待ちを ほかの人の捨て牌に当てにいく。
+    ・requires は th_ch2d。th_ch3a の requires をここに付け替えて、第2章の必修の最後にする。
+    ・本編テーマ(SECTION_OPTIONAL_THEMESには入れない)。roadProgressは新しいキーが1つ増えるだけ。
+    ・役はまだ第3章で習っていないので、問題では「役はあるもの」として扱う(f-noteで明示)。
+      「フリテンではないが役がないのでロンできない」という別の論点は混ぜない。
+    ・教えない: 一発・裏ドラ・赤ドラ・鳴きの判断・何切る・点数計算・リーチ後の手順の細部。 */
+ {id:'th_ch2e', course:'ch2e', title:'ロンとフリテン', sub:'ロンできる？ できない？',
+  requires:'th_ch2d',
+  subThemes:[
+   {id:'st_ch2e1', title:'ほかの人の捨て牌', lessons:[
+    {diff:{ch1:'fr1_1'}},                      // F1 他家の捨て牌を見よう(河の命名・「ロン！」の発声)
+    {diff:{ch1:'fr1_2'}},                      // F2 ロンできる？ できない？(待ち牌かどうかだけ)
+   ]},
+   {id:'st_ch2e2', title:'フリテン', lessons:[
+    {diff:{ch1:'fr1_3'}},                      // F3 フリテン(自分の河に待ち牌が1枚でもあるとロン不可)
+    {diff:{ch1:'fr1_4'}},                      // F4 フリテンでもツモならアガれる
+    {diff:{ch1:'fr1_5'}},                      // F5 見逃したらどうなる？
+    {diff:{ch1:'fr1_6'}},                      // ★F6 ロンとフリテンマスター
+   ]},
+  ]},
  /* ===== 第3章「役がわかる」v1.0 (本編50Lesson+任意Road7Lesson) =====
     役の学習順(確定): リーチ→ツモ→役牌→ピンフ→タンヤオ→ホンイツ・チンイツ→
     トイトイ・七対子・イーペーコー→チャンタ・純チャン→三色・イッツー・三暗刻→役満4種→総仕上げ。
     役牌はピンフより必ず先(ピンフのアタマ条件で役牌知識を再利用するため)。
     th_ch3x「もっと役を覚える」は任意Road: 第3章クリアで解放されるが、次章の前提には絶対にしない */
  {id:'th_ch3a', course:'ch3a', title:'はじめての役', sub:'リーチとツモを役として知る',
-  requires:'th_ch2d',
+  requires:'th_ch2e',                          // 第2章(ロンとフリテン)まで全クリアで解放(R45。旧: th_ch2d)
   subThemes:[
    {id:'st_ch3a1', title:'リーチとツモ', lessons:[
     {diff:{ch1:'ya1_1'}},                      // A1-1 役ってなんだっけ？
@@ -3021,6 +3075,9 @@ const RUBY_FULL_SRC=`
 # 「出す」は既存の 出[で] より長い形で先に当てる。「◯人」は 人[ひと] に負けないよう数字つきで登録する
 点棒[てんぼう] 罰符[ばっぷ] 出[だ]す 出[だ]し 出[だ]さ 出[だ]そ 1人[にん] 2人[にん] 3人[にん]
 回数[かいすう] 何人[なんにん] 総[そう]まとめ
+# R45 ロンとフリテン。「河」は河底撈魚[ホウテイ](RUBY_TERMS)が最長一致で先に当たるので単字で安全。
+# 「見逃」は1字の 見[み] より長いので先に当たる。「合言葉」は語句まるごとで登録する
+河[かわ] 見逃[みのが] 見[み]のが 声[こえ] 書[か] 一歩[いっぽ] 合言葉[あいことば]
 `;
 const RUBY_KANJI_RE=/[\u3400-\u9FFF\uF900-\uFAFF々〆ヶ]/;
 let RUBY_FULL_MAP=null, RUBY_FULL_MAXLEN=0;
@@ -3177,8 +3234,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.39.0';
-const BUILD_ID='20260926-02';
+const APP_VER='0.40.0';
+const BUILD_ID='20260927-01';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -3186,7 +3243,7 @@ function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_I
    開発UI・未検証Compare）を通常操作から隠す。コード・データ・機能は
    一切削除しておらず、このフラグをfalseにすれば全て復帰する。 */
 let PROTOTYPE_MODE=true;
-const PROTO_VISIBLE_COURSES=['ch1a','ch1r','ch1b','ch1c','ch1d','ch1s','ch1g','ch1e','ch1p','ch2a','ch2b','ch2c','ch2d','ch3a','ch3b','ch3c','ch3d','ch3e','ch3f','ch3g','ch3h','ch3i','ch3j','ch3x','waits','ukeire1','nanikiru','riichi'];
+const PROTO_VISIBLE_COURSES=['ch1a','ch1r','ch1b','ch1c','ch1d','ch1s','ch1g','ch1e','ch1p','ch2a','ch2b','ch2c','ch2d','ch2e','ch3a','ch3b','ch3c','ch3d','ch3e','ch3f','ch3g','ch3h','ch3i','ch3j','ch3x','waits','ukeire1','nanikiru','riichi'];
 function protoCourseVisible(id){ return !PROTOTYPE_MODE||PROTO_VISIBLE_COURSES.includes(id); }
 function staminaFree(){ return PROTOTYPE_MODE||S.owned.stamina; }   // プロトタイプはスタミナ消費なし
 function devUIVisible(){ return !PROTOTYPE_MODE||S.dev||location.hash==='#dev'; }
@@ -5999,7 +6056,7 @@ const CH1_LESSONS={
         +'南場まで終わると'+HAN+'。さいごの'+KYOKU+'がオーラスだったね。',{tlab:'マスター！'}),
       /* R44: 予告の回収先を明示。ロン・リーチを覚える「実戦への扉」のあとに「点のしくみ」がある */
       ch1Teach('じゃあ、その<b>点</b>はどうやって ふえたり へったりするの？　'
-        +'つぎの<b>「実戦への扉」</b>でロンとリーチを覚えたら、そのあとの<b>「点のしくみ」</b>でじっくりやろう！',
+        +'つぎの<b>「実戦への扉」</b>をクリアしたら、そのあとの<b>「点のしくみ」</b>でじっくりやろう！',
         {tlab:'つぎのおたのしみ'}),
     ]);
   },
@@ -6888,6 +6945,94 @@ function ptFlowCap(from,to){ return from+'<span class="pf-ar">→</span>'+to; }
 function ptPayPick(sw,flag,ask,qtext,exp,opt){
   return ch1SeatPick(sw,ask,qtext,Object.assign({mode:'name',flag:flag,tlab:'卓を見てタップ',exp:exp},opt||{}));
 }
+/* ================= ロンとフリテン(R45)の図と問題 =================
+   ねらい: 「自分の手牌だけを見る」から「ほかの人の捨て牌と、自分の河も見る」へ視野を広げる。
+   ・正解はすべて ch3WaitsAll(手牌13枚) から計算する。待ちもフリテンも手で書かない
+   ・図は積む順番＝見る順番:  手牌 → 待ち → 自分の河 → だれかが捨てた牌
+   ・自分の河の中の待ち牌に色はつけない(学習者がさがす)。ほかの人の「いま捨てた牌」だけ .ch3-now で立てる
+   ・役は「あるもの」として扱う(第2章の時点では役を習っていないため。f-note で明示する) */
+function fWaitsOf(hand13){
+  const t=sortTiles(parseHand(hand13));
+  return (t.length===13&&typeof ch3WaitsAll==='function')?ch3WaitsAll(t):[];
+}
+function fIsFuriten(hand13,river){
+  const w=fWaitsOf(hand13);
+  return (river||[]).some(t=>w.indexOf(t)>=0);
+}
+function fRiverHTML(tiles,opt){
+  const o=opt||{};
+  return (o.head?'<span class="f-head'+(o.mine?' mine':'')+'">'+o.head+'</span>':'')
+    +'<div class="ch3-river">'
+    +(tiles||[]).map(t=>tileHTML(t)).join('')
+    +(o.now?'<span class="ch3-now">'+tileHTML(o.now)
+       +'<span class="ch3-now-lab">'+(o.nowLab||'いま捨てた')+'</span></span>':'')
+    +'</div>';
+}
+function fWaitHTML(waits,lab){
+  return '<div class="f-wait"><span class="f-wlab">'+(lab||'あなたの待ち')+'</span>'
+    +'<span class="f-wt">'+waits.map(t=>tileHTML(t)).join('')+'</span></div>';
+}
+/* 合成パネル。o: {hand, showHand, showWait, myRiver, from, now, tsumo, note, myHead} */
+function fBoardHTML(o){
+  let h='<div class="f-board">';
+  if(o.showHand&&o.hand) h+='<div class="tc-lab">あなたの手牌</div>'+ch1HandGrouped(o.hand);
+  if(o.showWait!==false&&o.hand) h+=fWaitHTML(fWaitsOf(o.hand),o.waitLab);
+  if(o.myRiver) h+=fRiverHTML(o.myRiver,{head:o.myHead||'あなたの河',mine:true});
+  if(o.now) h+=fRiverHTML(o.otherRiver||[],{head:(o.from||'下家')+'が捨てた',now:o.now});
+  if(o.tsumo) h+=fRiverHTML([],{head:'あなたがツモった牌',now:o.tsumo,nowLab:'ツモ'});
+  if(o.note) h+='<p class="f-note">この手には役があるものとして考えよう</p>';
+  return h+'</div>';
+}
+/* 「ロンできる？」: 正解 = 待ち牌である かつ フリテンでない。手で書かない */
+function fRonMcq(o){
+  const waits=fWaitsOf(o.hand);
+  const can=waits.indexOf(o.now)>=0 && !fIsFuriten(o.hand,o.myRiver);
+  return {q:o.q||'この牌、<b>ロン</b>できる？',
+    panel:fBoardHTML(o), choices:['ロンできる','ロンできない'], a:can?0:1,
+    exp:o.exp, tlab:o.tlab,
+    /* fk = 自動テスト用の内部メモ(画面には出ない)。テスト側で待ち・フリテンを独立に計算し直して
+       a が本当に正しいかを検算するために置く。教材データとしては使わない */
+    fk:{kind:'ron',hand:o.hand,myRiver:o.myRiver||[],now:o.now}};
+}
+/* 「ツモならアガれる？」: フリテンでもツモアガリはできる(待ち牌なら必ずアガれる) */
+function fTsumoMcq(o){
+  const waits=fWaitsOf(o.hand);
+  const can=waits.indexOf(o.tsumo)>=0;
+  return {q:o.q||'自分で<b>ツモ</b>った！ アガれる？',
+    panel:fBoardHTML(o), choices:['アガれる','アガれない'], a:can?0:1,
+    exp:o.exp, tlab:o.tlab,
+    fk:{kind:'tsumo',hand:o.hand,myRiver:o.myRiver||[],tsumo:o.tsumo}};
+}
+/* 「ロンできる牌を捨てたのはどの人？」: 3人の捨て牌を見て人をえらぶ(卓図ではなく河を見る) */
+const F_SEATS=['上家','対面','下家'];
+function fWhoMcq(o){
+  // o:{hand, drops:{上家:'3s',対面:'B',下家:'5s'}, exp, none}
+  const waits=fWaitsOf(o.hand);
+  const hit=F_SEATS.filter(s=>waits.indexOf(o.drops[s])>=0);
+  let panel='<div class="f-board">'+fWaitHTML(waits)
+    +'<span class="f-head">3人が捨てた牌</span><div class="f-drops">'
+    +F_SEATS.map(s=>'<span class="f-drop"><b>'+s+'</b>'+tileHTML(o.drops[s])+'</span>').join('')
+    +'</div>';
+  if(o.note) panel+='<p class="f-note">この手には役があるものとして考えよう</p>';
+  panel+='</div>';
+  const choices=F_SEATS.concat(['いない']);
+  return {q:o.q||'<b>ロンできる牌</b>を捨てたのは どの人？',
+    panel, choices, a:hit.length===1?F_SEATS.indexOf(hit[0]):3,
+    exp:o.exp, tlab:o.tlab||'河を見てえらぼう',
+    fk:{kind:'who',hand:o.hand,drops:o.drops}};
+}
+/* 「ロンできる牌はどれ？」: 捨てられた牌そのものをタップする(pickoneに相乗り) */
+function fPickRon(o){
+  // o:{hand, cands:[...], exp} 正解は待ち牌ちょうど1枚
+  const waits=fWaitsOf(o.hand);
+  const idx=o.cands.findIndex(t=>waits.indexOf(t)>=0);
+  return {pick1:true, q:o.q||'この中で<b>ロンできる牌</b>はどれ？',
+    panel:'<div class="f-board">'+fWaitHTML(waits)
+      +'<span class="f-head">3人が捨てた牌</span>'
+      +(o.note?'<p class="f-note">この手には役があるものとして考えよう</p>':'')+'</div>',
+    cands:o.cands, a:idx, exp:o.exp, tlab:o.tlab||'牌をタップ',
+    fk:{kind:'pick',hand:o.hand,cands:o.cands}};
+}
 function ch3CtxHTML(c,q){
   if(!c) return '';
   const chips=[];
@@ -7527,9 +7672,214 @@ const CH2_LESSONS={
       ch1Mini(['2m','3m','4m','6p','7p','8p','5s','6s','7s','3s','3s','E','E'],['1p','3s'],'234m678p567s333sEE',
         {level:3,riichi:true,
          exp:'第2章チャレンジ、クリア！🎉 待ち牌が見えたから、まよわずアガれたね！'}),
-      ch1Teach('🎉 <b>第2章「アガリが見える」クリア！</b>13枚のテンパイから、<b>待ち牌が見える</b>ようになった！<br>つぎは、アガるために必要な<b>「役」</b>をもっと覚えていこう！',
-        {tlab:'第2章クリア'}),
+      /* R45: 第2章の最後は「ロンとフリテン」になったので、行き先をそこへ書きかえた
+         (第3章の案内は fr1_6 の最後へ移した)。画面数・Lesson数は変えていない=進捗に影響しない */
+      ch1Teach('🎉 <b>第2章チャレンジ クリア！</b>13枚のテンパイから、<b>待ち牌が見える</b>ようになった！<br>つぎは その待ちを、<b>ほかの人の捨て牌</b>に当てにいくよ。第2章のさいごのテーマへ進もう！',
+        {tlab:'チャレンジ クリア'}),
     ];
+  },
+  /* ===== F「ロンとフリテン」(R45・第2章の最後の6Lesson) =====
+     ねらい: 待ちが分かる → ほかの人の捨て牌を見てロンできると判断できる → フリテンならロンできない。
+     ・正解はすべて ch3WaitsAll(13枚) から計算する(待ちもフリテンも手で書かない)
+     ・段階: F1/F2=待ちと相手の捨て牌だけ → F3以降=自分の河を足す → F6=手牌から自分で待ちを出す
+     ・役は「あるもの」として扱う(第3章がまだなので、役の有無は論点にしない)
+     ・入れない: 一発・裏ドラ・赤ドラ・鳴きの判断・何切る・点数計算・押し引き */
+  fr1_1(){
+    const KAWA='<span class="term-chip"><ruby>河<rt>かわ</rt></ruby></span>';
+    const H='345m678m234p55s67s';          // 待ち 5ソー・8ソー
+    const H2='123s789s456p22m45m';         // 待ち 3マン・6マン
+    const H3='22m345m567m345p78p';         // 待ち 6ピン・9ピン
+    const H4='234m789m345p99s56s';         // 待ち 4ソー・7ソー
+    return [
+      ch1Teach('第2章で、13枚から<b>待ち牌</b>が見えるようになったね。じつはその待ち、'
+        +'<b>ほかの人の捨て牌を見るため</b>にも使うんだ。',{tlab:'待ちのつかいみち'}),
+      ch1Teach('自分が切った牌は、目のまえにならんでいくね。このならんだ捨て牌のことを'+KAWA+'というよ。',
+        {tlab:'河',panel:fRiverHTML(['1p','9m','W','2s','N'],{head:'あなたの河',mine:true})}),
+      ch1Teach('河は4人それぞれにあるよ。<b>ほかの人の河も見える</b>んだ。'
+        +'ほかの人が捨てた牌でアガるのが<b>ロン</b>だったね。',{tlab:'4人ぶんの河'}),
+      ch1Teach('待ち牌が出たら、だまっていてはいけないよ。'
+        +'<b>「ロン！」と声に出して</b>、はじめてアガリになるんだ。',{tlab:'「ロン！」と言う'}),
+      fWhoMcq({hand:H,drops:{'上家':'3s','対面':'B','下家':'5s'},note:true,
+        exp:'あなたの待ちは5ソーと8ソー。下家が5ソーを捨てたね。ここで「ロン！」だ。'}),
+      fWhoMcq({hand:H2,drops:{'上家':'6m','対面':'1p','下家':'9s'},
+        exp:'待ちは3マンと6マン。上家の6マンでロン！'}),
+      fWhoMcq({hand:H3,drops:{'上家':'2m','対面':'9p','下家':'4s'},
+        exp:'待ちは6ピンと9ピン。対面の9ピンでロン！'}),
+      fWhoMcq({hand:H4,drops:{'上家':'3s','対面':'2m','下家':'8p'},
+        exp:'待ちは4ソーと7ソー。どれもちがうね。だまって見ているのが正解だよ。'}),
+      fPickRon({hand:H,cands:['3m','8s','6p'],note:true,
+        exp:'8ソーは待ち牌！ここで「ロン！」と声に出そう。'}),
+      fPickRon({hand:H2,cands:['4p','1s','3m'],
+        exp:'3マンが待ち牌。待ちを覚えていれば、河を見るだけで気づけるね。'}),
+      ch1Teach('待ちが分かったら、つぎは<b>ほかの人の河</b>を見る。これが実戦の見かたの第一歩だよ！',
+        {tlab:'まとめ'}),
+    ];
+  },
+  fr1_2(){
+    const A='345m678m234p55s67s';   // 5s 8s
+    const B='123s789s456p22m45m';   // 3m 6m
+    const C='111p345s678s44m67m';   // 5m 8m
+    const D='22m345m567m345p78p';   // 6p 9p
+    const E='345s678s234m55p67p';   // 5p 8p
+    const F='123m456m789m22p56p';   // 4p 7p
+    return [
+      ch1Teach('こんどは1枚ずつ見ていこう。捨てられた牌が<b>待ち牌ならロンできる</b>。'
+        +'<b>ちがえばロンできない</b>。それだけだよ。',{tlab:'1枚ずつ見る'}),
+      fRonMcq({hand:A,from:'下家',now:'5s',note:true,
+        exp:'5ソーは待ち牌。「ロン！」でアガリだ。'}),
+      fRonMcq({hand:A,from:'対面',now:'6s',
+        exp:'6ソーは待ち牌じゃないね。ここはだまって見ているよ。'}),
+      fRonMcq({hand:B,from:'上家',now:'6m',
+        exp:'6マンは待ち牌！ロンできる。'}),
+      fRonMcq({hand:B,from:'下家',now:'7m',
+        exp:'待ちは3マンと6マン。7マンではアガれないよ。'}),
+      fRonMcq({hand:C,from:'対面',now:'8m',
+        exp:'8マンは待ち牌。ロン！'}),
+      fRonMcq({hand:D,from:'上家',now:'5p',
+        exp:'待ちは6ピンと9ピン。となりの5ピンではアガれないんだ。'}),
+      ch1Teach('つぎは、待ちを書いてあげないよ。<b>手牌から自分で待ちを見つけて</b>、'
+        +'そのあと捨て牌を見よう。',{tlab:'自分で待ちをさがす'}),
+      fRonMcq({hand:E,showHand:true,showWait:false,from:'下家',now:'8p',note:true,
+        exp:'55ピンがアタマ、のこりは67ピン。待ちは5ピンと8ピン。8ピンでロンできる！'}),
+      fRonMcq({hand:F,showHand:true,showWait:false,from:'対面',now:'5p',
+        exp:'22ピンがアタマ、のこりは56ピン。待ちは4ピンと7ピン。5ピンではアガれないよ。'}),
+    ];
+  },
+  fr1_3(){
+    const FURITEN='<span class="term-chip">フリテン</span>';
+    const A='345m678m234p55s67s';   // 5s 8s
+    const B='123s789s456p22m45m';   // 3m 6m
+    const C='111p345s678s44m67m';   // 5m 8m
+    const D='22m345m567m345p78p';   // 6p 9p
+    return [
+      ch1Teach('待ちは5ソーと8ソー。下家が<b>5ソー</b>を捨てたよ。ロンできそうだね…'
+        +'でもそのまえに、<b>自分の河</b>を見てみよう。',
+        {tlab:'そのまえに',panel:fBoardHTML({hand:A,myRiver:['1p','8s','W','2m'],from:'下家',now:'5s',note:true})}),
+      ch1Teach('自分の河に<b>8ソー</b>があるね。じつはこのとき、'
+        +'出てきた5ソーでも<b>ロンできない</b>んだ。',
+        {tlab:'河に8ソーがある',panel:fBoardHTML({hand:A,myRiver:['1p','8s','W','2m'],from:'下家',now:'5s'})}),
+      ch1Teach('きまりはこうだよ。<b>自分の河に、いまの待ち牌が1枚でもあると、ほかの人からロンできない。</b>'
+        +'これを'+FURITEN+'というよ。',{tlab:'フリテン'}),
+      ch1Teach('ここがいちばん だいじ！　捨てたのは<b>8ソー</b>、出たのは<b>5ソー</b>。'
+        +'<b>ちがう牌でもロンできない</b>んだ。待ちは1枚ずつではなく、<b>ぜんぶまとめて</b>見るんだよ。',
+        {tlab:'ちがう牌でもダメ'}),
+      fRonMcq({hand:B,myRiver:['9s','3m','W'],from:'下家',now:'6m',note:true,
+        exp:'待ちは3マンと6マン。河に<b>3マン</b>があるからフリテン。出たのが6マンでもロンできないよ。'}),
+      fRonMcq({hand:C,myRiver:['1p','5m','E'],from:'対面',now:'8m',
+        exp:'河に<b>5マン</b>。待ちのかたわれを捨てているので、8マンでもロンできない。'}),
+      fRonMcq({hand:A,myRiver:['1p','2m','W','9p'],from:'上家',now:'5s',
+        exp:'河に5ソーも8ソーもないね。フリテンじゃないから<b>ロンできる</b>！'}),
+      fRonMcq({hand:D,myRiver:['3s','9p','N'],from:'下家',now:'6p',
+        exp:'河に<b>9ピン</b>。待ちの牌が河にあるので、6ピンでもロンできないよ。'}),
+      fRonMcq({hand:D,myRiver:['3s','8p','N'],from:'下家',now:'6p',
+        exp:'河は3ソー・8ピン・北。待ちの6ピン9ピンはどちらも無いね。ロンできる！'}),
+      {q:'「フリテンになるのは、<b>自分がその牌を捨てたとき</b>だけ」。これは正しい？',
+        choices:['まちがい。待ちのどれか1枚でも河にあればフリテン','正しい'],a:0,
+        exp:'5ソー8ソー待ちで河に8ソーがあれば、<b>5ソーでも</b>ロンできない。待ちはぜんぶまとめて見よう。'},
+      ch1Teach('おぼえかたはこれ！',{tlab:'合言葉',
+        panel:'<div class="f-motto">「ロン！」のまえに、<br>自分の河をチェック</div>'}),
+    ];
+  },
+  fr1_4(){
+    const A='345m678m234p55s67s';   // 5s 8s
+    const B='123s789s456p22m45m';   // 3m 6m
+    const C='345s678s234m55p67p';   // 5p 8p
+    return [
+      ch1Teach('フリテンになっても、がっかりしなくていいよ。フリテンは'
+        +'<b>「ロンできない」だけ</b>。<b>アガれない</b>わけじゃないんだ。',{tlab:'アガれないの？'}),
+      ch1Teach('ほかの人からはもらえないけれど、<b>自分でツモれば</b>ちゃんとアガリになるよ。',
+        {tlab:'ツモならOK'}),
+      {q:'フリテンになった。もうアガれない？',
+        choices:['ロンはできないけど、ツモならアガれる','ロンもツモもできない'],a:0,
+        exp:'フリテンで止まるのは<b>ロンだけ</b>。自分でツモったらアガリだよ。'},
+      fRonMcq({hand:A,myRiver:['1p','8s','W'],from:'下家',now:'5s',note:true,
+        exp:'河に8ソー＝フリテン。ほかの人の5ソーではロンできない。'}),
+      fTsumoMcq({hand:A,myRiver:['1p','8s','W'],tsumo:'5s',
+        exp:'おなじフリテンの手でも、<b>自分でツモった</b>5ソーならアガれる！'}),
+      fRonMcq({hand:B,myRiver:['9s','3m','W'],from:'対面',now:'6m',
+        exp:'河に3マン＝フリテン。ロンはできないよ。'}),
+      fTsumoMcq({hand:B,myRiver:['9s','3m','W'],tsumo:'3m',
+        exp:'ツモならアガれる。自分で捨てた3マンでも、ツモならOKなんだ。'}),
+      fTsumoMcq({hand:C,myRiver:['1p','5p','N'],tsumo:'8p',
+        exp:'フリテンでもツモならアガリ。だからフリテンでも手をくずさなくていいよ。'}),
+      {q:'フリテンのとき、できなくなるのは どっち？',
+        choices:['ロンだけ','ツモだけ'],a:0,
+        exp:'フリテン＝<b>ロンができない</b>。ツモはいつでもアガれるよ。'},
+      ch1Teach('だからフリテンになっても、<b>ツモを目ざしてそのまま打つ</b>。これが正しい考え方だよ！',
+        {tlab:'まとめ'}),
+    ];
+  },
+  fr1_5(){
+    const A='345m678m234p55s67s';   // 5s 8s
+    const B='22m345m567m345p78p';   // 6p 9p
+    return [
+      ch1Teach('もうひとつだけ。ロンできる牌が出たのに、うっかり<b>「ロン！」と言わなかった</b>。'
+        +'これを<b>見逃し</b>というよ。',{tlab:'見逃し'}),
+      ch1Teach('見逃すと、そのあとしばらくロンできなくなるんだ。'
+        +'リーチしていないときは、<b>自分のつぎのツモまで</b>ロンできないよ。',{tlab:'つぎのツモまで'}),
+      ch1Teach('リーチしているときは、そのあと<b>ずっとロンできない</b>。'
+        +'リーチは「この待ちでまつ」とやくそくしているからね。（どちらもツモならアガれるよ）',
+        {tlab:'リーチしているとき'}),
+      {q:'下家が5ソーを捨てたのに「ロン！」と言わなかった。すぐあとに 対面も5ソーを捨てた。ロンできる？',
+        panel:fBoardHTML({hand:A,myRiver:['1p','2m','W'],from:'対面',now:'5s',note:true}),
+        choices:['ロンできない','ロンできる'],a:0,
+        exp:'さっき見逃したからだよ。<b>自分のつぎのツモがくるまで</b>は、ロンできないんだ。'},
+      {q:'見逃したあと、自分のツモがきて1枚切った。そのあと下家が5ソーを捨てた。ロンできる？',
+        panel:fBoardHTML({hand:A,myRiver:['1p','2m','W','3p'],from:'下家',now:'5s'}),
+        choices:['ロンできる','ロンできない'],a:0,
+        exp:'自分のツモをすぎたら、もうロンできるよ。（リーチしていないときの話だよ）'},
+      {q:'見逃したあと、<b>自分でツモってアガる</b>のは できる？',
+        choices:['できる','できない'],a:0,
+        exp:'ここもフリテンとおなじ。止まるのは<b>ロンだけ</b>だよ。'},
+      {q:'<b>リーチしている</b>ときに見逃した。そのあとロンできる？',
+        choices:['その局のあいだ ロンできない','つぎのツモまで待てばロンできる'],a:0,
+        exp:'リーチ中の見逃しは重いんだ。だからリーチしたら、<b>ロンを見のがさない</b>ようにしよう。'},
+      {q:'見逃しでロンできなくなるのは、どうして気をつけるの？',
+        choices:['アガリのチャンスがへるから','点が高くなるから'],a:0,
+        exp:'待ち牌が出たら、まよわず「ロン！」。声を出すのが大事なんだね。'},
+      ch1Teach('だから合言葉はこうなるよ。待ち牌が出たら…<b>まよわず「ロン！」</b>。'
+        +'そのまえに<b>河チェック</b>だ！',{tlab:'まとめ'}),
+    ];
+  },
+  fr1_6(){
+    const A='345m678m234p55s67s';   // 5s 8s
+    const B='123s789s456p22m45m';   // 3m 6m
+    const C='111p345s678s44m67m';   // 5m 8m
+    const D='22m345m567m345p78p';   // 6p 9p
+    const E='345s678s234m55p67p';   // 5p 8p
+    const F='234m789m345p99s56s';   // 4s 7s
+    const G='345m789m123p44s78s';   // 6s 9s
+    const quiz=shuffle([
+      fRonMcq({hand:A,showHand:true,showWait:false,myRiver:['1p','2m','W'],from:'下家',now:'8s',
+        exp:'待ちは5ソーと8ソー。河にはどちらも無いね。ロンできる！'}),
+      fRonMcq({hand:B,showHand:true,showWait:false,myRiver:['9s','3m','E'],from:'上家',now:'6m',
+        exp:'待ちは3マンと6マン。河に3マンがあるからフリテン。6マンでもロンできないよ。'}),
+      fRonMcq({hand:C,showHand:true,showWait:false,myRiver:['1p','9m','N'],from:'対面',now:'4m',
+        exp:'待ちは5マンと8マン。4マンは待ち牌じゃないね。'}),
+      fRonMcq({hand:D,showHand:true,showWait:false,myRiver:['3s','9p','W'],from:'下家',now:'6p',
+        exp:'河に9ピン＝フリテン。ちがう牌の6ピンでもロンできない。'}),
+      fTsumoMcq({hand:E,myRiver:['1p','5p','N'],tsumo:'8p',
+        exp:'フリテンでもツモならアガれる！'}),
+      fRonMcq({hand:F,showHand:true,showWait:false,myRiver:['2m','8p','E'],from:'上家',now:'7s',
+        exp:'待ちは4ソーと7ソー。河にはどちらも無い。ロンできる！'}),
+      fRonMcq({hand:G,showHand:true,showWait:false,myRiver:['1m','6s','W'],from:'対面',now:'9s',
+        exp:'河に6ソーがあるからフリテン。9ソーでもロンできないよ。'}),
+      {q:'フリテンのとき、できなくなるのは？',choices:['ロンだけ','ロンもツモも'],a:0,
+        exp:'止まるのはロンだけ。ツモならアガれたね。'},
+      {q:'待ち牌が出た！ さいしょにすることは？',
+        choices:['「ロン！」と声に出す','だまって手牌をたおす'],a:0,
+        exp:'声に出して はじめてアガリになるよ。'},
+    ]);
+    return [
+      ch1Teach('さいごは総まとめ！　見る順番はこれだよ。'
+        +'①自分の<b>待ち</b> → ②ほかの人の<b>捨て牌</b> → ③自分の<b>河</b>。',
+        {tlab:'見る順番',panel:'<div class="f-motto">「ロン！」のまえに、<br>自分の河をチェック</div>'}),
+    ].concat(quiz).concat([
+      ch1Teach('🎉 <b>ロンとフリテン マスター！</b>　待ちが分かるだけでなく、'
+        +'<b>ほかの人の河を見て、自分の河もたしかめて</b>、ロンできるか決められるようになったね。'
+        +'<br>これで第2章「アガリが見える」はぜんぶクリア！つぎは第3章<b>「役がわかる」</b>だ！',
+        {tlab:'第2章クリア'}),
+    ]);
   },
 };
 /* ---- 第3章 19+…50レッスンの中身(キーはTHEMESのdiff.ch1と一致) ---- */
@@ -9213,6 +9563,7 @@ const QFORMATS={
     render(q){
       let html='<div class="q-type">'+(q.tlab||'えらんでみよう')+'</div>';
       html+='<div class="q-text">'+q.q+'</div>';
+      if(q.panel) html+='<div class="rd-panel">'+q.panel+'</div>';   // R45: mcq と同じ図(待ち・河など)をpickoneでも出せるようにした
       if(q.hand) html+=(q.grouped?'<div class="tc-lab">手牌</div>'+ch1HandGrouped(q.hand):handHTML(q.hand));
       if(q.grouped) html+='<div class="tc-lab">↓ この中からえらぼう</div>';
       html+='<div class="ch1-cands">'+q.cands.map((cd,i)=>
