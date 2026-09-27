@@ -66,6 +66,8 @@
   --node-off:clamp(30px, 9vw, 42px);     /* 蛇行の左右振れもコンパクトに(旧46-66px) */
   --road-w:min(82vw, 330px);             /* ロード主線の幅。左右は将来のキャラ/装飾用の余白 */
   --tile-w:clamp(38px, 10.5vw, 48px);
+  /* 実卓UI(R47): 麻雀卓のフェルト。牌(--tile-face)は反転しないので、卓だけを明暗で変える */
+  --felt:#1a6e46; --felt-edge:#125636; --felt-ink:#f0f8f4; --felt-warn:#ffe0a0;
 }
 :root:not([data-theme="light"]){}
 /* 端末の設定に合わせる(themeMode=system)ときのダーク。data-theme="light" が付いていれば無効 */
@@ -81,6 +83,7 @@
     --gold:#b8842a; --gold-deep:#7a5412; --gold-ink:#f0c46b;
     --locked:#7d9185; --overlay:rgba(0,0,0,.66);
     --shadow:rgba(0,0,0,.50); --shadow-soft:rgba(0,0,0,.32);
+    --felt:#103525; --felt-edge:#0a2419; --felt-ink:#cfe9dc; --felt-warn:#ffe0a0;
   }
 }
 /* ユーザーがダークを選んだとき(themeMode=dark)。端末の設定より優先する */
@@ -95,6 +98,7 @@
   --gold:#b8842a; --gold-deep:#7a5412; --gold-ink:#f0c46b;
   --locked:#7d9185; --overlay:rgba(0,0,0,.66);
   --shadow:rgba(0,0,0,.50); --shadow-soft:rgba(0,0,0,.32);
+  --felt:#103525; --felt-edge:#0a2419; --felt-ink:#cfe9dc; --felt-warn:#ffe0a0;
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 body{
@@ -613,32 +617,86 @@ button.tile.off:active{transform:none;}
 .tb-num{font-size:clamp(13px,3.9vw,15px); font-weight:900; font-variant-numeric:tabular-nums;
   color:var(--ink); min-width:5.4em; text-align:left;}
 .tb-cap{margin:8px 0 0; text-align:center; font-size:11.5px; font-weight:700; color:var(--ink-soft);}
-/* ロンとフリテン(R45): 「手牌 → 待ち → 自分の河 → ほかの人の捨て牌」を1画面に積む図。
-   ・新しい牌の絵は作らない。河は第3章のロン盤面と同じ .ch3-river(30px・横1列・今の牌つき)を使い回す
-   ・見る順番がそのまま上から下の順番になるように並べる(情報量を同じ強さで並べない)
+/* ロンとフリテン(R45→R47): 待ちチップと河の見出し。盤面そのものは R47 の .mjt に移した。
+   ・新しい牌の絵は作らない。河は第3章のロン盤面と同じ .ch3-river(横1列・今の牌つき)を使い回す
    ・自分の河の中の待ち牌は「色をつけない」= 学習者が自分でさがす(答えを渡さない) */
-.f-board{margin:6px 0 4px;}
-.f-board .tc-lab{margin-top:6px;}
-.f-board .ch3-river{min-height:auto; margin:2px 0 4px;}
 /* 待ち牌: 手牌より小さく、河より大きい(いちばん見てほしい情報を真ん中の強さにする) */
 .f-wait{display:flex; align-items:center; justify-content:center; gap:8px;
-  margin:4px auto 8px; padding:5px 10px; width:fit-content; max-width:100%;
+  margin:2px auto 4px; padding:3px 9px; width:fit-content; max-width:100%;
   border-radius:12px; background:var(--jade-soft); border:1.5px solid var(--jade);}
 .f-wlab{font-size:clamp(11.5px,3.3vw,12.5px); font-weight:900; color:var(--jade-ink); white-space:nowrap;}
 .f-wt{display:flex; gap:4px;}
-.f-wait .tile{width:32px; max-width:32px; flex:none;}
+.f-wait .tile{width:clamp(28px,8vw,32px); max-width:32px; flex:none;}
 /* だれの河かの見出し。自分の河は「見るところ」なので少しだけ強く出す */
 .f-head{display:block; font-size:clamp(11.5px,3.3vw,12.5px); font-weight:900;
   color:var(--ink-soft); margin:8px 0 2px; text-align:center;}
 .f-head.mine{color:var(--verm-ink);}
-/* 3人が捨てた牌を横1列で見せる(縦に積むと画面が長くなり、卓を見わたす感じも出ない) */
-.f-drops{display:flex; justify-content:center; align-items:flex-start; gap:clamp(8px,3.4vw,16px);
-  margin:6px auto 4px; width:fit-content; max-width:100%;}
-.f-drop{display:flex; flex-direction:column; align-items:center; gap:3px;}
-.f-drop b{font-size:clamp(11.5px,3.3vw,12.5px); font-weight:900; color:var(--ink-soft); white-space:nowrap;}
-.f-drop .tile{width:clamp(34px,10.5vw,40px); max-width:none; flex:none;}
 /* 前提の但し書き(役はあるものとする)。小さく・1レッスンに1回だけ */
-.f-note{margin:6px 0 0; text-align:center; font-size:11px; font-weight:700; color:var(--ink-soft);}
+.f-note{margin:4px 0 0; text-align:center; font-size:11px; font-weight:700; color:var(--ink-soft);}
+/* ================= 実卓UI(R47) =================
+   「上家・対面・下家の名前を答える3択」をやめ、【緑の麻雀卓を上から見た盤面】そのものを見て
+   当たり牌をさがす形にする。学ばせたい視線は ①手牌 →②待ち →③他家の河 →④いま捨てた牌 →⑤自分の河。
+   ・盤面の領域ぜんたいがフェルト。中央に「麻雀卓」の文字は置かない(牌と河だけで卓に見せる)
+   ・向きは既存の卓図(ch3SeatMapHTML)と完全に同じ: 左=上家 / 上=対面 / 右=下家 / 下=あなた
+   ・牌面は回転させない(牌が読めることが最優先)。席の方向は河ブロックの位置と並ぶ向きで表す
+   ・320pxでも「手牌・4人の河・いま捨てた牌」を同時に見わたせる大きさに収める */
+.mjt{
+  --mjt-rt:clamp(20px, 5.2vw + 3.4px, 27px);   /* 河の牌   320→20.0 / 390→23.7 / 430→25.8 */
+  --mjt-nt:clamp(24px, 6.2vw + 4.2px, 32px);   /* いま捨てた牌(河の牌より少し大きい) */
+  background:var(--felt); border:2px solid var(--felt-edge); border-radius:16px;
+  padding:7px 7px 6px; margin:4px auto 4px; width:100%; max-width:430px; box-sizing:border-box;
+  box-shadow:inset 0 2px 12px rgba(0,0,0,.22), 0 3px 0 var(--felt-edge);}
+.mjt-grid{display:grid; grid-template-columns:auto minmax(28px,1fr) auto;
+  grid-template-areas:". t ." "l m r" ". b ."; gap:2px; align-items:center; justify-items:center;}
+.mjt-riv.top{grid-area:t;} .mjt-riv.left{grid-area:l;} .mjt-riv.right{grid-area:r;} .mjt-riv.bottom{grid-area:b;}
+.mjt-mid{grid-area:m; min-height:var(--mjt-rt);}
+.mjt-name{display:block; font-size:clamp(9px, 2.5vw + 1px, 11px); font-weight:800;
+  color:var(--felt-ink); text-align:center; line-height:1.2; margin:0 0 2px; white-space:nowrap;}
+/* 上下の河は「名前 → 牌」を横にならべる(縦に積むと卓が高くなり、320pxで1画面に収まらない) */
+.mjt-riv.top,.mjt-riv.bottom{display:flex; align-items:center; justify-content:center; gap:5px;}
+.mjt-riv.top .mjt-name,.mjt-riv.bottom .mjt-name{margin:0; flex:none;}
+/* 「ロンできる牌はない」は牌ではないので ふつうのボタン。ただし主役ではないので少し細く */
+.mjt-none .choice{padding:11px 14px; font-size:clamp(13.5px,4vw,15px);}
+.mjt-tiles{display:flex; gap:2px; align-items:center; justify-content:center;}
+.mjt-tiles.h{flex-direction:row;}
+/* 左右の席: ふるい牌は2列のかたまり、いま捨てた牌は卓の中央寄り(実際の河ものびる向き) */
+.mjt-tiles.side{flex-direction:row; align-items:center;}
+.mjt-riv.right .mjt-tiles.side{flex-direction:row-reverse;}
+.mjt-tiles.h .mjt-old{display:flex; gap:2px;}
+.mjt-tiles.side .mjt-old{display:grid; grid-auto-flow:column; grid-template-rows:repeat(2,auto); gap:2px;}
+.mjt .mjt-tiles .tile{width:var(--mjt-rt); max-width:var(--mjt-rt); flex:none;}
+/* いま捨てた牌: すきま＋うすい枠＋小ラベルで「最新」だけを示す。当たり牌かどうかは何も示さない
+   (3人ぶんの最新牌には まったく同じ印をつけるので、印が正解のヒントにならない) */
+.mjt-new{display:flex; flex-direction:column; align-items:center; gap:1px; flex:none;}
+.mjt-tiles.h > .mjt-new,.mjt-tiles.side > .mjt-new{margin-left:7px;}
+.mjt-riv.right .mjt-tiles.side > .mjt-new{margin-left:0; margin-right:7px;}
+.mjt .mjt-new .tile{width:var(--mjt-nt); max-width:var(--mjt-nt);
+  outline:2px solid rgba(255,255,255,.7); outline-offset:1px;}
+.mjt-nlab{font-size:clamp(8.5px,2.3vw + 1px,10px); font-weight:800; color:var(--felt-ink);
+  line-height:1.1; white-space:nowrap;}
+/* 見のがした牌(F5): フリテンの図と混ざらないよう、色も文字もはっきり分ける */
+.mjt .mjt-miss .tile{outline:2px dashed var(--felt-warn); outline-offset:1px;}
+.mjt-miss .mjt-nlab{color:var(--felt-warn);}
+/* 河の牌をそのままタップして答える。見た目の牌より広いタップ領域をとる(まわりの牌と重ならない) */
+button.mjt-pick{background:none; border:0; padding:8px 6px; margin:-8px -6px; font:inherit;
+  appearance:none; -webkit-appearance:none; cursor:pointer; transition:transform .08s;}
+button.mjt-pick:active{transform:translateY(2px);}
+.mjt-pick.sel .tile{outline:3px solid #fff; outline-offset:2px;}
+.mjt-pick.correct .tile{outline:3px solid var(--jade); outline-offset:2px;
+  box-shadow:0 0 0 5px color-mix(in srgb, var(--jade) 45%, transparent), 0 3px 0 var(--tile-shadow);}
+.mjt-pick.wrong .tile{outline:3px solid var(--verm); outline-offset:2px;}
+.mjt-pick.correct .mjt-nlab{color:#fff;}
+/* 自分の席: 卓の中央寄りが「あなたの河」、下端が「あなたの手牌」。細い線で分ける */
+.mjt-me{margin-top:5px; padding-top:5px; border-top:1.5px solid rgba(255,255,255,.22);}
+.mjt-me .mjt-name{margin-bottom:3px;}
+.mjt .hand{margin:0; gap:1px;}
+.mjt .hand .tile{flex:1 1 0; min-width:0; max-width:var(--tile-w);}
+.mjt-tsumo{display:flex; flex-direction:column; align-items:center; gap:1px; flex:none; margin-left:4px;}
+.mjt .mjt-tsumo .tile{flex:none; width:var(--mjt-rt); max-width:var(--mjt-rt);}
+/* 卓の下の一言。フェルトの外に出るので卓の文字色(--felt-ink)は使わない */
+.mjt-cap{margin:5px 0 0; text-align:center; font-size:clamp(10.5px,3vw,12px); font-weight:800;
+  color:var(--ink-soft); line-height:1.35;}
+.mjt-hint{text-align:center; color:var(--ink-soft); font-size:11.5px; font-weight:700; margin:2px 0 0;}
 /* 鳴きを使う(R46): 「あなたの手の中」と「だれかが捨てた牌」を上下に並べ、そのあと何が起きるかを帯で見せる。
    ・牌の絵は作らない。捨て牌は R45 の .ch3-river / .ch3-now、さらした組は R30 の openHandHTML を使い回す
    ・1画面に4人分の河は出さない。判断に必要な牌だけを出す */
@@ -3289,8 +3347,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.41.0';
-const BUILD_ID='20260927-02';
+const APP_VER='0.42.0';
+const BUILD_ID='20260927-03';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -7239,66 +7297,111 @@ function fWaitHTML(waits,lab){
   return '<div class="f-wait"><span class="f-wlab">'+(lab||'あなたの待ち')+'</span>'
     +'<span class="f-wt">'+waits.map(t=>tileHTML(t)).join('')+'</span></div>';
 }
-/* 合成パネル。o: {hand, showHand, showWait, myRiver, from, now, tsumo, note, myHead} */
-function fBoardHTML(o){
-  let h='<div class="f-board">';
-  if(o.showHand&&o.hand) h+='<div class="tc-lab">あなたの手牌</div>'+ch1HandGrouped(o.hand);
-  if(o.showWait!==false&&o.hand) h+=fWaitHTML(fWaitsOf(o.hand),o.waitLab);
-  if(o.myRiver) h+=fRiverHTML(o.myRiver,{head:o.myHead||'あなたの河',mine:true});
-  if(o.now) h+=fRiverHTML(o.otherRiver||[],{head:(o.from||'下家')+'が捨てた',now:o.now});
-  if(o.tsumo) h+=fRiverHTML([],{head:'あなたがツモった牌',now:o.tsumo,nowLab:'ツモ'});
-  if(o.note) h+='<p class="f-note">この手には役があるものとして考えよう</p>';
-  return h+'</div>';
+/* ================= 実卓の盤面(R47) =================
+   o = { hand(13枚) / myRiver(自分の河) / rivers(他家の河・省略時は決定論で生成) /
+         nows{left,top,right}(この巡で捨てた牌) / pick[席](タップで答えられる席) /
+         miss{seat,tile}(さっき見逃した牌) / tsumo(自分のツモ牌) / cap(卓の下の一言) }
+   ・牌面は回転しない。席の方向は「河をどこに置くか」と「どちら向きに並ぶか」で表す
+   ・いま捨てた牌の印は3人ぶん同じ。印が正解のヒントにならないようにする */
+const MJT_SEATS=[['left','上家'],['top','対面'],['right','下家']];
+function mjtTileHTML(t){ return '<div class="tile '+(t.length===2?t[1]:'z')+'">'+tileFace(t)+'</div>'; }
+/* 河のふるい牌(決定論): その手の待ち牌・いま捨てた牌・自分の河の牌は置かない。
+   席ごとに開始位置をずらすので、4人の河が同じ並びにならない */
+/* 河のダミー牌。白(B)は牌の絵が真っ白で「読めない牌」に見えるので入れない */
+const MJT_POOL=['1p','9m','2s','W','9p','1m','N','1s','5p','E','3p','7m','S','8m','4s','2p','6m','R','7p','3m'];
+function mjtJunk(hand,n,skip,off){
+  const waits=hand?fWaitsOf(hand):[], out=[], sk=skip||[];
+  for(let i=0;i<MJT_POOL.length&&out.length<n;i++){
+    const t=MJT_POOL[(i+(off||0)*5)%MJT_POOL.length];
+    if(waits.indexOf(t)>=0||sk.indexOf(t)>=0||out.indexOf(t)>=0) continue;
+    out.push(t);
+  }
+  return out;
 }
-/* 「ロンできる？」: 正解 = 待ち牌である かつ フリテンでない。手で書かない */
-function fRonMcq(o){
+function mjtRiverHTML(seat,name,tiles,opt){
+  const o=opt||{}, side=(seat==='left'||seat==='right');
+  // ふるい牌はひとかたまり。左右の席では2列に折りたたんで、卓の高さがのびないようにする
+  let body='<span class="mjt-old">'+(tiles||[]).map(t=>mjtTileHTML(t)).join('')+'</span>';
+  if(o.miss) body+='<span class="mjt-new mjt-miss">'+mjtTileHTML(o.miss)
+    +'<span class="mjt-nlab">見のがした</span></span>';
+  if(o.now){
+    const inner=mjtTileHTML(o.now)+'<span class="mjt-nlab">'+(o.nowLab||'いま')+'</span>';
+    body+= (o.pickIdx!=null)
+      ? '<button class="mjt-new mjt-pick" id="ch-'+o.pickIdx+'" onpointerdown="selChoice('+o.pickIdx+')">'+inner+'</button>'
+      : '<span class="mjt-new">'+inner+'</span>';
+  }
+  return '<div class="mjt-riv '+seat+'"><span class="mjt-name">'+name+'</span>'
+    +'<div class="mjt-tiles '+(side?'side':'h')+'">'+body+'</div></div>';
+}
+function mjtHTML(o){
+  o=o||{};
+  const nows=o.nows||{}, pick=o.pick||[];
+  const used=[].concat(Object.keys(nows).map(k=>nows[k]),o.myRiver||[],
+    o.tsumo?[o.tsumo]:[],o.miss?[o.miss.tile]:[]);
+  let riv=o.rivers;
+  if(!riv){ riv={}; MJT_SEATS.forEach((sn,i)=>{ riv[sn[0]]=mjtJunk(o.hand,o.riverN||3,used,i+1); }); }
+  let g='<div class="mjt-grid">';
+  MJT_SEATS.forEach(sn=>{
+    const seat=sn[0], i=pick.indexOf(seat);
+    g+=mjtRiverHTML(seat,sn[1],riv[seat]||[],
+      {now:nows[seat]||null, pickIdx:i>=0?i:null,
+       miss:(o.miss&&o.miss.seat===seat)?o.miss.tile:null});
+  });
+  g+='<div class="mjt-mid"></div>';
+  const mine=o.myRiver||mjtJunk(o.hand,3,used,0);
+  g+=mjtRiverHTML('bottom','あなたの河',mine,{});
+  g+='</div>';
+  let me='';
+  if(o.hand){
+    const t=sortTiles(parseHand(o.hand));
+    me='<div class="mjt-me">'+(o.handLab===false?'':'<span class="mjt-name">あなたの手牌</span>')
+      +'<div class="hand">'+t.map(x=>mjtTileHTML(x)).join('')
+      +(o.tsumo?'<span class="mjt-tsumo">'+mjtTileHTML(o.tsumo)+'<span class="mjt-nlab">ツモ</span></span>':'')
+      +'</div></div>';
+  }
+  return '<div class="mjt">'+g+me+'</div>'+(o.cap?'<p class="mjt-cap">'+o.cap+'</p>':'');
+}
+/* 盤面つきの図。待ちチップは卓の外に出す(卓の中には実物と同じものだけ置く) */
+function mjtPanelHTML(o){
+  let h='';
+  if(o.showWait&&o.hand) h+=fWaitHTML(fWaitsOf(o.hand),o.waitLab);
+  h+=mjtHTML(o);
+  if(o.note) h+='<p class="f-note">この手には役があるものとして考えよう</p>';
+  return h;
+}
+/* 盤面で「ロンできる？」(2択)。いま捨てた牌は1人ぶんだけ置く */
+function mjtRonMcq(o){
+  const nows={}; nows[o.from||'right']=o.now;
   const waits=fWaitsOf(o.hand);
   const can=waits.indexOf(o.now)>=0 && !fIsFuriten(o.hand,o.myRiver);
   return {q:o.q||'この牌、<b>ロン</b>できる？',
-    panel:fBoardHTML(o), choices:['ロンできる','ロンできない'], a:can?0:1,
-    exp:o.exp, tlab:o.tlab,
+    panel:mjtPanelHTML(Object.assign({},o,{nows,pick:[]})),
+    choices:['ロンできる','ロンできない'], a:can?0:1, exp:o.exp, tlab:o.tlab,
     /* fk = 自動テスト用の内部メモ(画面には出ない)。テスト側で待ち・フリテンを独立に計算し直して
        a が本当に正しいかを検算するために置く。教材データとしては使わない */
-    fk:{kind:'ron',hand:o.hand,myRiver:o.myRiver||[],now:o.now}};
+    fk:{kind:'ron',hand:o.hand,myRiver:o.myRiver||[],now:o.now,from:o.from||'right'}};
 }
-/* 「ツモならアガれる？」: フリテンでもツモアガリはできる(待ち牌なら必ずアガれる) */
-function fTsumoMcq(o){
+/* フリテンでもツモならアガれる。ツモ牌は手牌の右はしに「ツモ」ラベルつきで置く */
+function mjtTsumoMcq(o){
   const waits=fWaitsOf(o.hand);
   const can=waits.indexOf(o.tsumo)>=0;
   return {q:o.q||'自分で<b>ツモ</b>った！ アガれる？',
-    panel:fBoardHTML(o), choices:['アガれる','アガれない'], a:can?0:1,
-    exp:o.exp, tlab:o.tlab,
+    panel:mjtPanelHTML(Object.assign({},o,{nows:{},pick:[]})),
+    choices:['アガれる','アガれない'], a:can?0:1, exp:o.exp, tlab:o.tlab,
     fk:{kind:'tsumo',hand:o.hand,myRiver:o.myRiver||[],tsumo:o.tsumo}};
 }
-/* 「ロンできる牌を捨てたのはどの人？」: 3人の捨て牌を見て人をえらぶ(卓図ではなく河を見る) */
-const F_SEATS=['上家','対面','下家'];
-function fWhoMcq(o){
-  // o:{hand, drops:{上家:'3s',対面:'B',下家:'5s'}, exp, none}
-  const waits=fWaitsOf(o.hand);
-  const hit=F_SEATS.filter(s=>waits.indexOf(o.drops[s])>=0);
-  let panel='<div class="f-board">'+fWaitHTML(waits)
-    +'<span class="f-head">3人が捨てた牌</span><div class="f-drops">'
-    +F_SEATS.map(s=>'<span class="f-drop"><b>'+s+'</b>'+tileHTML(o.drops[s])+'</span>').join('')
-    +'</div>';
-  if(o.note) panel+='<p class="f-note">この手には役があるものとして考えよう</p>';
-  panel+='</div>';
-  const choices=F_SEATS.concat(['いない']);
-  return {q:o.q||'<b>ロンできる牌</b>を捨てたのは どの人？',
-    panel, choices, a:hit.length===1?F_SEATS.indexOf(hit[0]):3,
-    exp:o.exp, tlab:o.tlab||'河を見てえらぼう',
-    fk:{kind:'who',hand:o.hand,drops:o.drops}};
-}
-/* 「ロンできる牌はどれ？」: 捨てられた牌そのものをタップする(pickoneに相乗り) */
-function fPickRon(o){
-  // o:{hand, cands:[...], exp} 正解は待ち牌ちょうど1枚
-  const waits=fWaitsOf(o.hand);
-  const idx=o.cands.findIndex(t=>waits.indexOf(t)>=0);
-  return {pick1:true, q:o.q||'この中で<b>ロンできる牌</b>はどれ？',
-    panel:'<div class="f-board">'+fWaitHTML(waits)
-      +'<span class="f-head">3人が捨てた牌</span>'
-      +(o.note?'<p class="f-note">この手には役があるものとして考えよう</p>':'')+'</div>',
-    cands:o.cands, a:idx, exp:o.exp, tlab:o.tlab||'牌をタップ',
-    fk:{kind:'pick',hand:o.hand,cands:o.cands}};
+/* 盤面で「ロンできる牌はどれ？」: 3人の いま捨てた牌をタップして答える。
+   だれも待ち牌を捨てていない問題では「ロンできる牌はない」を最後の選択肢に置く(巨大4択には戻さない) */
+function mjtFindQ(o){
+  const waits=fWaitsOf(o.hand), fur=fIsFuriten(o.hand,o.myRiver);
+  const seats=o.pick||['left','top','right'];
+  const hit=fur?[]:seats.filter(x=>waits.indexOf(o.nows[x])>=0);
+  const a=hit.length===1?seats.indexOf(hit[0]):seats.length;
+  return {tt:{board:Object.assign({},o,{pick:seats}), none:o.none!==false},
+    q:o.q||'<b>ロンできる牌</b>は どれ？', a,
+    choices:seats.map(x=>MJT_SEATS.find(y=>y[0]===x)[1]+'の'+tileReading(o.nows[x])).concat(['ロンできる牌はない']),
+    exp:o.exp, tlab:o.tlab||'卓を見て牌をタップ',
+    fk:{kind:'find',hand:o.hand,myRiver:o.myRiver||[],nows:o.nows,seats}};
 }
 /* ================= 鳴きを使う(R46)の判定・図・問題 =================
    ねらい: 「ポン・チーという言葉を知っている」から「他家が捨てた瞬間に、鳴けるか判断して操作できる」へ。
@@ -8050,31 +8153,37 @@ const CH2_LESSONS={
      ・入れない: 一発・裏ドラ・赤ドラ・鳴きの判断・何切る・点数計算・押し引き */
   fr1_1(){
     const KAWA='<span class="term-chip"><ruby>河<rt>かわ</rt></ruby></span>';
-    const H='345m678m234p55s67s';          // 待ち 5ソー・8ソー
-    const H2='123s789s456p22m45m';         // 待ち 3マン・6マン
-    const H3='22m345m567m345p78p';         // 待ち 6ピン・9ピン
-    const H4='234m789m345p99s56s';         // 待ち 4ソー・7ソー
+    const A='345m678m234p55s67s';   // 5s 8s
+    const B='123s789s456p22m45m';   // 3m 6m
+    const C='111p345s678s44m67m';   // 5m 8m
+    const D='22m345m567m345p78p';   // 6p 9p
+    const F='234m789m345p99s56s';   // 4s 7s
+    const G='345m789m123p44s78s';   // 6s 9s
     return [
       ch1Teach('第2章で、13枚から<b>待ち牌</b>が見えるようになったね。じつはその待ち、'
         +'<b>ほかの人の捨て牌を見るため</b>にも使うんだ。',{tlab:'待ちのつかいみち'}),
-      ch1Teach('自分が切った牌は、目のまえにならんでいくね。このならんだ捨て牌のことを'+KAWA+'というよ。',
-        {tlab:'河',panel:fRiverHTML(['1p','9m','W','2s','N'],{head:'あなたの河',mine:true})}),
-      ch1Teach('河は4人それぞれにあるよ。<b>ほかの人の河も見える</b>んだ。'
-        +'ほかの人が捨てた牌でアガるのが<b>ロン</b>だったね。',{tlab:'4人ぶんの河'}),
-      ch1Teach('待ち牌が出たら、だまっていてはいけないよ。'
-        +'<b>「ロン！」と声に出して</b>、はじめてアガリになるんだ。',{tlab:'「ロン！」と言う'}),
-      fWhoMcq({hand:H,drops:{'上家':'3s','対面':'B','下家':'5s'},note:true,
+      ch1Teach('これが麻雀の卓ぜんたいだよ。自分が切った牌は、目のまえにならんでいくね。'
+        +'このならんだ捨て牌のことを'+KAWA+'というよ。',
+        {tlab:'河',panel:mjtHTML({hand:A,myRiver:['1p','9m','W','2s']})}),
+      ch1Teach('河は<b>4人それぞれにある</b>よ。左が上家、上が対面、右が下家。'
+        +'ほかの人の河も、ぜんぶ見えるんだ。',
+        {tlab:'4人ぶんの河',panel:mjtHTML({hand:A,myRiver:['1p','9m','W','2s']})}),
+      ch1Teach('ほかの人が捨てた牌でアガるのが<b>ロン</b>だったね。'
+        +'待ち牌が出たら、<b>「ロン！」と声に出して</b>、はじめてアガリになるよ。',{tlab:'「ロン！」と言う'}),
+      mjtFindQ({hand:A,showWait:true,note:true,nows:{left:'3s',top:'W',right:'5s'},
         exp:'あなたの待ちは5ソーと8ソー。下家が5ソーを捨てたね。ここで「ロン！」だ。'}),
-      fWhoMcq({hand:H2,drops:{'上家':'6m','対面':'1p','下家':'9s'},
+      mjtFindQ({hand:B,showWait:true,nows:{left:'6m',top:'1p',right:'9s'},
         exp:'待ちは3マンと6マン。上家の6マンでロン！'}),
-      fWhoMcq({hand:H3,drops:{'上家':'2m','対面':'9p','下家':'4s'},
-        exp:'待ちは6ピンと9ピン。対面の9ピンでロン！'}),
-      fWhoMcq({hand:H4,drops:{'上家':'3s','対面':'2m','下家':'8p'},
-        exp:'待ちは4ソーと7ソー。どれもちがうね。だまって見ているのが正解だよ。'}),
-      fPickRon({hand:H,cands:['3m','8s','6p'],note:true,
-        exp:'8ソーは待ち牌！ここで「ロン！」と声に出そう。'}),
-      fPickRon({hand:H2,cands:['4p','1s','3m'],
-        exp:'3マンが待ち牌。待ちを覚えていれば、河を見るだけで気づけるね。'}),
+      mjtFindQ({hand:F,showWait:true,nows:{left:'3s',top:'2m',right:'8p'},
+        exp:'待ちは4ソーと7ソー。3人とも ちがう牌だね。だまって見ているのが正解だよ。'}),
+      ch1Teach('ここからは<b>待ちを書いてあげない</b>よ。'
+        +'まず自分の手牌を見て待ちを見つけて、それから3人の河を見よう。',{tlab:'自分で待ちをさがす'}),
+      mjtFindQ({hand:D,nows:{left:'2m',top:'9p',right:'4s'},
+        exp:'22マンがアタマ、のこりは78ピン。待ちは6ピンと9ピン。対面の9ピンでロン！'}),
+      mjtFindQ({hand:C,nows:{left:'5m',top:'1s',right:'3p'},
+        exp:'44マンがアタマ、のこりは67マン。待ちは5マンと8マン。上家の5マンでロン！'}),
+      mjtFindQ({hand:G,nows:{left:'2p',top:'9s',right:'1m'},
+        exp:'44ソーがアタマ、のこりは78ソー。待ちは6ソーと9ソー。対面の9ソーだ！'}),
       ch1Teach('待ちが分かったら、つぎは<b>ほかの人の河</b>を見る。これが実戦の見かたの第一歩だよ！',
         {tlab:'まとめ'}),
     ];
@@ -8087,26 +8196,26 @@ const CH2_LESSONS={
     const E='345s678s234m55p67p';   // 5p 8p
     const F='123m456m789m22p56p';   // 4p 7p
     return [
-      ch1Teach('こんどは1枚ずつ見ていこう。捨てられた牌が<b>待ち牌ならロンできる</b>。'
+      ch1Teach('こんどは1人ずつ見ていこう。捨てられた牌が<b>待ち牌ならロンできる</b>。'
         +'<b>ちがえばロンできない</b>。それだけだよ。',{tlab:'1枚ずつ見る'}),
-      fRonMcq({hand:A,from:'下家',now:'5s',note:true,
+      mjtRonMcq({hand:A,showWait:true,note:true,from:'right',now:'5s',
         exp:'5ソーは待ち牌。「ロン！」でアガリだ。'}),
-      fRonMcq({hand:A,from:'対面',now:'6s',
+      mjtRonMcq({hand:A,showWait:true,from:'top',now:'6s',
         exp:'6ソーは待ち牌じゃないね。ここはだまって見ているよ。'}),
-      fRonMcq({hand:B,from:'上家',now:'6m',
+      mjtRonMcq({hand:B,showWait:true,from:'left',now:'6m',
         exp:'6マンは待ち牌！ロンできる。'}),
-      fRonMcq({hand:B,from:'下家',now:'7m',
+      mjtRonMcq({hand:B,showWait:true,from:'right',now:'7m',
         exp:'待ちは3マンと6マン。7マンではアガれないよ。'}),
-      fRonMcq({hand:C,from:'対面',now:'8m',
-        exp:'8マンは待ち牌。ロン！'}),
-      fRonMcq({hand:D,from:'上家',now:'5p',
-        exp:'待ちは6ピンと9ピン。となりの5ピンではアガれないんだ。'}),
-      ch1Teach('つぎは、待ちを書いてあげないよ。<b>手牌から自分で待ちを見つけて</b>、'
-        +'そのあと捨て牌を見よう。',{tlab:'自分で待ちをさがす'}),
-      fRonMcq({hand:E,showHand:true,showWait:false,from:'下家',now:'8p',note:true,
+      ch1Teach('ここからも<b>待ちは書かない</b>よ。'
+        +'<b>自分の手牌を見て</b>待ちを見つけてから、その1枚を見よう。',{tlab:'自分で待ちをさがす'}),
+      mjtRonMcq({hand:E,from:'right',now:'8p',note:true,
         exp:'55ピンがアタマ、のこりは67ピン。待ちは5ピンと8ピン。8ピンでロンできる！'}),
-      fRonMcq({hand:F,showHand:true,showWait:false,from:'対面',now:'5p',
+      mjtRonMcq({hand:F,from:'top',now:'5p',
         exp:'22ピンがアタマ、のこりは56ピン。待ちは4ピンと7ピン。5ピンではアガれないよ。'}),
+      mjtRonMcq({hand:C,from:'left',now:'8m',
+        exp:'44マンがアタマ、のこりは67マン。待ちは5マンと8マン。8マンでロン！'}),
+      mjtRonMcq({hand:D,from:'right',now:'5p',
+        exp:'待ちは6ピンと9ピン。となりの5ピンではアガれないんだ。'}),
     ];
   },
   fr1_3(){
@@ -8118,24 +8227,26 @@ const CH2_LESSONS={
     return [
       ch1Teach('待ちは5ソーと8ソー。下家が<b>5ソー</b>を捨てたよ。ロンできそうだね…'
         +'でもそのまえに、<b>自分の河</b>を見てみよう。',
-        {tlab:'そのまえに',panel:fBoardHTML({hand:A,myRiver:['1p','8s','W','2m'],from:'下家',now:'5s',note:true})}),
+        {tlab:'そのまえに',panel:mjtPanelHTML({hand:A,showWait:true,note:true,
+          myRiver:['1p','8s','W','2m'],nows:{right:'5s'}})}),
       ch1Teach('自分の河に<b>8ソー</b>があるね。じつはこのとき、'
         +'出てきた5ソーでも<b>ロンできない</b>んだ。',
-        {tlab:'河に8ソーがある',panel:fBoardHTML({hand:A,myRiver:['1p','8s','W','2m'],from:'下家',now:'5s'})}),
+        {tlab:'河に8ソーがある',panel:mjtPanelHTML({hand:A,showWait:true,
+          myRiver:['1p','8s','W','2m'],nows:{right:'5s'}})}),
       ch1Teach('きまりはこうだよ。<b>自分の河に、いまの待ち牌が1枚でもあると、ほかの人からロンできない。</b>'
         +'これを'+FURITEN+'というよ。',{tlab:'フリテン'}),
       ch1Teach('ここがいちばん だいじ！　捨てたのは<b>8ソー</b>、出たのは<b>5ソー</b>。'
         +'<b>ちがう牌でもロンできない</b>んだ。待ちは1枚ずつではなく、<b>ぜんぶまとめて</b>見るんだよ。',
         {tlab:'ちがう牌でもダメ'}),
-      fRonMcq({hand:B,myRiver:['9s','3m','W'],from:'下家',now:'6m',note:true,
+      mjtRonMcq({hand:B,showWait:true,myRiver:['9s','3m','W'],from:'left',now:'6m',note:true,
         exp:'待ちは3マンと6マン。河に<b>3マン</b>があるからフリテン。出たのが6マンでもロンできないよ。'}),
-      fRonMcq({hand:C,myRiver:['1p','5m','E'],from:'対面',now:'8m',
+      mjtRonMcq({hand:C,showWait:true,myRiver:['1p','5m','E'],from:'top',now:'8m',
         exp:'河に<b>5マン</b>。待ちのかたわれを捨てているので、8マンでもロンできない。'}),
-      fRonMcq({hand:A,myRiver:['1p','2m','W','9p'],from:'上家',now:'5s',
+      mjtRonMcq({hand:A,showWait:true,myRiver:['1p','2m','W','9p'],from:'left',now:'5s',
         exp:'河に5ソーも8ソーもないね。フリテンじゃないから<b>ロンできる</b>！'}),
-      fRonMcq({hand:D,myRiver:['3s','9p','N'],from:'下家',now:'6p',
+      mjtRonMcq({hand:D,showWait:true,myRiver:['3s','9p','N'],from:'right',now:'6p',
         exp:'河に<b>9ピン</b>。待ちの牌が河にあるので、6ピンでもロンできないよ。'}),
-      fRonMcq({hand:D,myRiver:['3s','8p','N'],from:'下家',now:'6p',
+      mjtRonMcq({hand:D,showWait:true,myRiver:['3s','8p','N'],from:'right',now:'6p',
         exp:'河は3ソー・8ピン・北。待ちの6ピン9ピンはどちらも無いね。ロンできる！'}),
       {q:'「フリテンになるのは、<b>自分がその牌を捨てたとき</b>だけ」。これは正しい？',
         choices:['まちがい。待ちのどれか1枚でも河にあればフリテン','正しい'],a:0,
@@ -8156,15 +8267,15 @@ const CH2_LESSONS={
       {q:'フリテンになった。もうアガれない？',
         choices:['ロンはできないけど、ツモならアガれる','ロンもツモもできない'],a:0,
         exp:'フリテンで止まるのは<b>ロンだけ</b>。自分でツモったらアガリだよ。'},
-      fRonMcq({hand:A,myRiver:['1p','8s','W'],from:'下家',now:'5s',note:true,
+      mjtRonMcq({hand:A,showWait:true,note:true,myRiver:['1p','8s','W'],from:'right',now:'5s',
         exp:'河に8ソー＝フリテン。ほかの人の5ソーではロンできない。'}),
-      fTsumoMcq({hand:A,myRiver:['1p','8s','W'],tsumo:'5s',
+      mjtTsumoMcq({hand:A,showWait:true,myRiver:['1p','8s','W'],tsumo:'5s',
         exp:'おなじフリテンの手でも、<b>自分でツモった</b>5ソーならアガれる！'}),
-      fRonMcq({hand:B,myRiver:['9s','3m','W'],from:'対面',now:'6m',
+      mjtRonMcq({hand:B,showWait:true,myRiver:['9s','3m','W'],from:'top',now:'6m',
         exp:'河に3マン＝フリテン。ロンはできないよ。'}),
-      fTsumoMcq({hand:B,myRiver:['9s','3m','W'],tsumo:'3m',
+      mjtTsumoMcq({hand:B,showWait:true,myRiver:['9s','3m','W'],tsumo:'3m',
         exp:'ツモならアガれる。自分で捨てた3マンでも、ツモならOKなんだ。'}),
-      fTsumoMcq({hand:C,myRiver:['1p','5p','N'],tsumo:'8p',
+      mjtTsumoMcq({hand:C,showWait:true,myRiver:['1p','5p','N'],tsumo:'8p',
         exp:'フリテンでもツモならアガリ。だからフリテンでも手をくずさなくていいよ。'}),
       {q:'フリテンのとき、できなくなるのは どっち？',
         choices:['ロンだけ','ツモだけ'],a:0,
@@ -8175,7 +8286,6 @@ const CH2_LESSONS={
   },
   fr1_5(){
     const A='345m678m234p55s67s';   // 5s 8s
-    const B='22m345m567m345p78p';   // 6p 9p
     return [
       ch1Teach('もうひとつだけ。ロンできる牌が出たのに、うっかり<b>「ロン！」と言わなかった</b>。'
         +'これを<b>見逃し</b>というよ。',{tlab:'見逃し'}),
@@ -8184,12 +8294,16 @@ const CH2_LESSONS={
       ch1Teach('リーチしているときは、そのあと<b>ずっとロンできない</b>。'
         +'リーチは「この待ちでまつ」とやくそくしているからね。（どちらもツモならアガれるよ）',
         {tlab:'リーチしているとき'}),
-      {q:'下家が5ソーを捨てたのに「ロン！」と言わなかった。すぐあとに 対面も5ソーを捨てた。ロンできる？',
-        panel:fBoardHTML({hand:A,myRiver:['1p','2m','W'],from:'対面',now:'5s',note:true}),
+      {q:'下家の5ソーを<b>見逃した</b>。すぐあとに 対面も5ソーを捨てたよ。ロンできる？',
+        panel:mjtPanelHTML({hand:A,showWait:true,note:true,myRiver:['1p','2m','W'],
+          nows:{top:'5s'},miss:{seat:'right',tile:'5s'},
+          cap:'自分の河に 待ち牌は ない ＝ フリテンではない。<br>でも さっき下家の5ソーを見のがしている'}),
         choices:['ロンできない','ロンできる'],a:0,
-        exp:'さっき見逃したからだよ。<b>自分のつぎのツモがくるまで</b>は、ロンできないんだ。'},
-      {q:'見逃したあと、自分のツモがきて1枚切った。そのあと下家が5ソーを捨てた。ロンできる？',
-        panel:fBoardHTML({hand:A,myRiver:['1p','2m','W','3p'],from:'下家',now:'5s'}),
+        exp:'自分の河に待ち牌はないのでフリテンではないよ。でも<b>さっき見逃した</b>から、'
+          +'<b>自分のつぎのツモがくるまで</b>はロンできないんだ。'},
+      {q:'見逃したあと、自分のツモがきて1枚切った。そのあと下家が5ソーを捨てたよ。ロンできる？',
+        panel:mjtPanelHTML({hand:A,showWait:true,myRiver:['1p','2m','W','3p'],nows:{right:'5s'},
+          cap:'自分のツモを すぎた（河に3ピンがふえている）'}),
         choices:['ロンできる','ロンできない'],a:0,
         exp:'自分のツモをすぎたら、もうロンできるよ。（リーチしていないときの話だよ）'},
       {q:'見逃したあと、<b>自分でツモってアガる</b>のは できる？',
@@ -8214,20 +8328,20 @@ const CH2_LESSONS={
     const F='234m789m345p99s56s';   // 4s 7s
     const G='345m789m123p44s78s';   // 6s 9s
     const quiz=shuffle([
-      fRonMcq({hand:A,showHand:true,showWait:false,myRiver:['1p','2m','W'],from:'下家',now:'8s',
-        exp:'待ちは5ソーと8ソー。河にはどちらも無いね。ロンできる！'}),
-      fRonMcq({hand:B,showHand:true,showWait:false,myRiver:['9s','3m','E'],from:'上家',now:'6m',
-        exp:'待ちは3マンと6マン。河に3マンがあるからフリテン。6マンでもロンできないよ。'}),
-      fRonMcq({hand:C,showHand:true,showWait:false,myRiver:['1p','9m','N'],from:'対面',now:'4m',
+      mjtFindQ({hand:A,myRiver:['1p','2m','W'],nows:{left:'3p',top:'8s',right:'1m'},
+        exp:'待ちは5ソーと8ソー。河にはどちらも無いね。対面の8ソーでロン！'}),
+      mjtFindQ({hand:B,myRiver:['9s','3m','E'],nows:{left:'6m',top:'1p',right:'4s'},
+        exp:'待ちは3マンと6マン。でも河に<b>3マン</b>があるからフリテン。6マンでもロンできないよ。'}),
+      mjtFindQ({hand:F,myRiver:['2m','8p','E'],nows:{left:'7s',top:'9m',right:'2p'},
+        exp:'待ちは4ソーと7ソー。河にはどちらも無い。上家の7ソーでロン！'}),
+      mjtFindQ({hand:G,myRiver:['1m','6s','W'],nows:{left:'2p',top:'9s',right:'3m'},
+        exp:'河に<b>6ソー</b>があるからフリテン。9ソーでもロンできない。'}),
+      mjtRonMcq({hand:C,myRiver:['1p','9m','N'],from:'top',now:'4m',
         exp:'待ちは5マンと8マン。4マンは待ち牌じゃないね。'}),
-      fRonMcq({hand:D,showHand:true,showWait:false,myRiver:['3s','9p','W'],from:'下家',now:'6p',
+      mjtRonMcq({hand:D,myRiver:['3s','9p','W'],from:'right',now:'6p',
         exp:'河に9ピン＝フリテン。ちがう牌の6ピンでもロンできない。'}),
-      fTsumoMcq({hand:E,myRiver:['1p','5p','N'],tsumo:'8p',
+      mjtTsumoMcq({hand:E,showWait:true,myRiver:['1p','5p','N'],tsumo:'8p',
         exp:'フリテンでもツモならアガれる！'}),
-      fRonMcq({hand:F,showHand:true,showWait:false,myRiver:['2m','8p','E'],from:'上家',now:'7s',
-        exp:'待ちは4ソーと7ソー。河にはどちらも無い。ロンできる！'}),
-      fRonMcq({hand:G,showHand:true,showWait:false,myRiver:['1m','6s','W'],from:'対面',now:'9s',
-        exp:'河に6ソーがあるからフリテン。9ソーでもロンできないよ。'}),
       {q:'フリテンのとき、できなくなるのは？',choices:['ロンだけ','ロンもツモも'],a:0,
         exp:'止まるのはロンだけ。ツモならアガれたね。'},
       {q:'待ち牌が出た！ さいしょにすることは？',
@@ -8236,7 +8350,7 @@ const CH2_LESSONS={
     ]);
     return [
       ch1Teach('さいごは総まとめ！　見る順番はこれだよ。'
-        +'①自分の<b>待ち</b> → ②ほかの人の<b>捨て牌</b> → ③自分の<b>河</b>。',
+        +'①自分の<b>手牌</b>と待ち → ②ほかの人の<b>河</b> → ③自分の<b>河</b>。',
         {tlab:'見る順番',panel:'<div class="f-motto">「ロン！」のまえに、<br>自分の河をチェック</div>'}),
     ].concat(quiz).concat([
       ch1Teach('🎉 <b>ロンとフリテン マスター！</b>　待ちが分かるだけでなく、'
@@ -9557,6 +9671,7 @@ function qFormatKey(q){
   if(q.mini) return 'mini';       // 第1章C: 4枚ミニ麻雀(体験ゲーム。ch1t併用=誘導・スコア外)
   if(q.mt) return 'match';        // A1-4: 数牌マッチング(Duolingo型ペア当て。将来他教材でも再利用可)
   if(q.sp) return 'seatpick';     // 第1章S1: 卓の図で「どの人？」をタップ(共通形式)
+  if(q.tt) return 'tabletap';     // R47: 実卓の盤面で、河の牌そのものをタップして答える
   if(q.yf) return 'yfind';        // 第3章: 役さがし(役名を全選択→「これで決定」。誤答は正解非開示で再挑戦)
   if(q.wf) return 'wfind';        // 第2章: 待ち牌さがし(全選択→「これで決定」。誤答は正解非開示で再挑戦)
   if(q.ch1t) return 'teach';      // 第1章: 教えるページ(スコア外・check()非経由)
@@ -9920,6 +10035,32 @@ const QFORMATS={
     feedback(q,res){
       return {ansText:'正解： '+(q.a===SEAT_POS.indexOf('bottom')?'あなた':q.choices[q.a]), expText:q.exp||''};
     },
+  },
+  tabletap:{
+    /* 実卓の盤面(R47): 河の牌そのものをタップして答える。選択・音・即判定・採点は
+       単一選択の共通処理(selChoice)に相乗りするので、新しい採点のしくみは作らない。
+       「ロンできる牌はない」だけは牌ではないので、最後のふつうの選択肢ボタンとして出す */
+    cat:null, scoring:'binary',
+    qid(q){ return null; },
+    render(q){
+      const n=q.tt.board.pick.length;
+      let html='<div class="q-type">'+(q.tlab||'卓を見て牌をタップ')+'</div>';
+      html+='<div class="q-text">'+q.q+'</div>';
+      html+=mjtPanelHTML(q.tt.board);
+      if(q.tt.none!==false)
+        html+='<div class="choices mjt-none"><button class="choice" id="ch-'+n+'" onpointerdown="selChoice('+n+')">'
+          +q.choices[n]+'</button></div>';
+      L.sel=null;
+      return html;
+    },
+    answer(q){ return {kind:'choiceIndex', index:L.sel}; },
+    reveal(q,ans,res){
+      const el=document.getElementById('ch-'+q.a);
+      if(el){ el.classList.remove('sel'); el.classList.add('correct'); }
+      if(!res.isCorrect){ const w=document.getElementById('ch-'+ans.index);
+        if(w){ w.classList.remove('sel'); w.classList.add('wrong'); } }
+    },
+    feedback(q,res){ return {ansText:'正解： '+q.choices[q.a], expText:q.exp||''}; },
   },
   pickone:{
     cat:null, scoring:'binary',
