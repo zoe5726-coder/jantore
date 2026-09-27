@@ -642,15 +642,22 @@ button.tile.off:active{transform:none;}
    ・320pxでも「手牌・4人の河・いま捨てた牌」を同時に見わたせる大きさに収める */
 .mjt{
   --mjt-ht:clamp(17px, 4.6vw + 2.3px, 24px);   /* 鳴いた組があるときの手牌(R48) */
+  --mjt-per:6;                                 /* 河は6枚で次の段へ(最大3段=18枚) */
   --mjt-rt:clamp(20px, 5.2vw + 3.4px, 27px);   /* 河の牌   320→20.0 / 390→23.7 / 430→25.8 */
   --mjt-nt:clamp(24px, 6.2vw + 4.2px, 32px);   /* いま捨てた牌(河の牌より少し大きい) */
   background:var(--felt); border:2px solid var(--felt-edge); border-radius:16px;
-  padding:7px 7px 6px; margin:4px auto 4px; width:100%; max-width:430px; box-sizing:border-box;
+  padding:9px 7px 8px; margin:2px auto 3px; width:100%; max-width:430px; box-sizing:border-box;
   box-shadow:inset 0 2px 12px rgba(0,0,0,.22), 0 3px 0 var(--felt-edge);}
+/* 実卓と同じ置きかた: 上家と下家の河は卓の左右を【縦にぜんぶ使う】。
+   対面の河は上、自分の河は下、中央は空き。こうすると河が3段にのびても卓が高くなりにくい */
 .mjt-grid{display:grid; grid-template-columns:auto minmax(28px,1fr) auto;
-  grid-template-areas:". t ." "l m r" ". b ."; gap:2px; align-items:center; justify-items:center;}
-.mjt-riv.top{grid-area:t;} .mjt-riv.left{grid-area:l;} .mjt-riv.right{grid-area:r;} .mjt-riv.bottom{grid-area:b;}
-.mjt-mid{grid-area:m; min-height:var(--mjt-rt);}
+  grid-template-rows:auto minmax(var(--mjt-rt),auto) auto;
+  gap:2px; align-items:center; justify-items:center;}
+.mjt-riv.top{grid-row:1; grid-column:2;}
+.mjt-riv.bottom{grid-row:3; grid-column:2;}
+.mjt-riv.left{grid-row:1 / 4; grid-column:1; align-self:center;}
+.mjt-riv.right{grid-row:1 / 4; grid-column:3; align-self:center;}
+.mjt-mid{grid-row:2; grid-column:2; min-height:var(--mjt-rt);}
 .mjt-name{display:block; font-size:clamp(9px, 2.5vw + 1px, 11px); font-weight:800;
   color:var(--felt-ink); text-align:center; line-height:1.2; margin:0 0 2px; white-space:nowrap;}
 /* 上下の河は「名前 → 牌」を横にならべる(縦に積むと卓が高くなり、320pxで1画面に収まらない) */
@@ -662,6 +669,15 @@ button.tile.off:active{transform:none;}
    1枚＝1つのセル。セルの【箱】は回したあとの実寸(横向きなら縦横が入れかわる)なので、
    gridの幅・高さもタップ判定も見た目とずれない。牌の絵だけを --rot で回す。
    席名・「いま」・「見のがした」の文字は回さない(読めなくなるため)。 */
+/* 河がのびたときは、卓が高くなりすぎないよう【河の牌だけ】を小さくする(R49)。
+   手牌はまったく縮めない。最新の捨て牌は河の牌より必ず大きいままにする。
+   .mjt-r2 = 5〜12枚(横の席が6段ぶんの高さになるところ) / .mjt-r3 = 13〜18枚(3段になるところ) */
+.mjt.mjt-r2{--mjt-rt:clamp(17.5px, 4.6vw + 2.8px, 24px); --mjt-nt:clamp(21px, 5.5vw + 3.4px, 28px);}
+.mjt.mjt-r3{--mjt-rt:clamp(14px, 3.7vw + 2.2px, 19px); --mjt-nt:clamp(19px, 4.8vw + 3.1px, 25px);}
+/* 3段になると卓の横幅がぎりぎりになる。上下の席だけ名前を牌の上へ積んで、横幅を牌にゆずる
+   (左右の席はもともと名前が上。これで4席とも同じ置きかたになる) */
+.mjt-r3 .mjt-riv.top,.mjt-r3 .mjt-riv.bottom{display:block;}
+.mjt-r3 .mjt-riv.top .mjt-name,.mjt-r3 .mjt-riv.bottom .mjt-name{margin:0 0 1px;}
 .mjt-grid2{display:grid; gap:2px; justify-items:center; align-items:center;}
 .mjt-grid2-pick{gap:18px;}         /* 自分の河をタップさせる画面。ボタンどうしが重ならない間隔 */
 .mjt-cell{position:relative; display:block; box-sizing:content-box;
@@ -675,8 +691,10 @@ button.tile.off:active{transform:none;}
 .mjt .mjt-new > .tile{outline:2px solid rgba(255,255,255,.7); outline-offset:1px;}
 .mjt-nlab{font-size:clamp(8.5px,2.3vw + 1px,10px); font-weight:800; color:var(--felt-ink);
   line-height:1.1; white-space:nowrap;}
-/* 小ラベルは卓の【中央寄り】に出す。席ごとに向きは変わるが、中央は空いているのでぶつからない */
-.mjt-cell .mjt-nlab{position:absolute; pointer-events:none;}
+/* 小ラベルは卓の【中央寄り】に出す。河が1段のうちは中央が空いているのでぶつからない。
+   河が2段・3段にのびると となりの牌にかかるので、小さな帯を敷いて牌と見まちがえないようにする */
+.mjt-cell .mjt-nlab{position:absolute; pointer-events:none; z-index:2;
+  background:color-mix(in srgb, var(--felt-edge) 88%, #000); border-radius:4px; padding:0 3px;}
 .mjt-riv.bottom .mjt-cell .mjt-nlab,.mjt-riv.top .mjt-cell .mjt-nlab{
   left:50%; top:100%; transform:translateX(-50%);}
 .mjt-riv.left .mjt-cell .mjt-nlab{left:100%; top:50%; transform:translateY(-50%); margin-left:3px;}
@@ -3379,8 +3397,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.44.0';
-const BUILD_ID='20260927-05';
+const APP_VER='0.44.1';
+const BUILD_ID='20260927-06';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -7512,7 +7530,12 @@ function mjtHTML(o){
       +(melds.length?renderOpenMelds(melds):'')
       +'</div></div>';
   }
-  return '<div class="mjt">'+g+me+'</div>'+(o.cap?'<p class="mjt-cap">'+o.cap+'</p>':'');
+  // 河は最大 6枚×3段(18枚)。河がのびると卓が高くなるので、いちばん長い河に合わせて
+  // 【古い河の牌だけ】を少しずつ小さくする。優先順位は
+  // ①自分の13枚 ②最新の捨て牌 ③だれの河か ④古い河牌 なので、先に古い河牌が縮む
+  const longest=Math.max(...['left','top','right','bottom'].map(s2=>riv[s2].tiles.length));
+  const rc=longest>=13?' mjt-r3':longest>=5?' mjt-r2':'';
+  return '<div class="mjt'+rc+'">'+g+me+'</div>'+(o.cap?'<p class="mjt-cap">'+o.cap+'</p>':'');
 }
 /* 盤面つきの図。待ちチップは卓の外に出す(卓の中には実物と同じものだけ置く) */
 function mjtPanelHTML(o){
