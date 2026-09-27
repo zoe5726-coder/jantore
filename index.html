@@ -658,30 +658,39 @@ button.tile.off:active{transform:none;}
 .mjt-riv.top .mjt-name,.mjt-riv.bottom .mjt-name{margin:0; flex:none;}
 /* 「ロンできる牌はない」は牌ではないので ふつうのボタン。ただし主役ではないので少し細く */
 .mjt-none .choice{padding:11px 14px; font-size:clamp(13.5px,4vw,15px);}
-.mjt-tiles{display:flex; gap:2px; align-items:center; justify-content:center;}
-.mjt-tiles.h{flex-direction:row;}
-/* 左右の席: ふるい牌は2列のかたまり、いま捨てた牌は卓の中央寄り(実際の河ものびる向き) */
-.mjt-tiles.side{flex-direction:row; align-items:center;}
-.mjt-riv.right .mjt-tiles.side{flex-direction:row-reverse;}
-.mjt-tiles.h .mjt-old{display:flex; gap:2px;}
-.mjt-tiles.side .mjt-old{display:grid; grid-auto-flow:column; grid-template-rows:repeat(2,auto); gap:2px;}
-.mjt .mjt-tiles .tile{width:var(--mjt-rt); max-width:var(--mjt-rt); flex:none;}
-/* いま捨てた牌: すきま＋うすい枠＋小ラベルで「最新」だけを示す。当たり牌かどうかは何も示さない
+/* ---- 河そのもの(R49) ----
+   1枚＝1つのセル。セルの【箱】は回したあとの実寸(横向きなら縦横が入れかわる)なので、
+   gridの幅・高さもタップ判定も見た目とずれない。牌の絵だけを --rot で回す。
+   席名・「いま」・「見のがした」の文字は回さない(読めなくなるため)。 */
+.mjt-grid2{display:grid; gap:2px; justify-items:center; align-items:center;}
+.mjt-grid2-pick{gap:18px;}         /* 自分の河をタップさせる画面。ボタンどうしが重ならない間隔 */
+.mjt-cell{position:relative; display:block; box-sizing:content-box;
+  width:var(--cw); height:var(--ch); padding:0; margin:0; border:0;
+  background:none; font:inherit; appearance:none; -webkit-appearance:none;}
+.mjt .mjt-cell > .tile{position:absolute; left:50%; top:50%;
+  width:var(--tw); max-width:none; min-width:0; flex:none;
+  transform:translate(-50%,-50%) rotate(var(--rot));}
+/* いま捨てた牌: 大きさ＋うすい枠＋小ラベルで「最新」だけを示す。当たり牌かどうかは何も示さない
    (3人ぶんの最新牌には まったく同じ印をつけるので、印が正解のヒントにならない) */
-.mjt-new{display:flex; flex-direction:column; align-items:center; gap:1px; flex:none;}
-.mjt-tiles.h > .mjt-new,.mjt-tiles.side > .mjt-new{margin-left:7px;}
-.mjt-riv.right .mjt-tiles.side > .mjt-new{margin-left:0; margin-right:7px;}
-.mjt .mjt-new .tile{width:var(--mjt-nt); max-width:var(--mjt-nt);
-  outline:2px solid rgba(255,255,255,.7); outline-offset:1px;}
+.mjt .mjt-new > .tile{outline:2px solid rgba(255,255,255,.7); outline-offset:1px;}
 .mjt-nlab{font-size:clamp(8.5px,2.3vw + 1px,10px); font-weight:800; color:var(--felt-ink);
   line-height:1.1; white-space:nowrap;}
+/* 小ラベルは卓の【中央寄り】に出す。席ごとに向きは変わるが、中央は空いているのでぶつからない */
+.mjt-cell .mjt-nlab{position:absolute; pointer-events:none;}
+.mjt-riv.bottom .mjt-cell .mjt-nlab,.mjt-riv.top .mjt-cell .mjt-nlab{
+  left:50%; top:100%; transform:translateX(-50%);}
+.mjt-riv.left .mjt-cell .mjt-nlab{left:100%; top:50%; transform:translateY(-50%); margin-left:3px;}
+.mjt-riv.right .mjt-cell .mjt-nlab{right:100%; top:50%; transform:translateY(-50%); margin-right:3px;}
+/* タップする牌: 牌の見た目は変えず、当たり判定だけ外へ広げる(アプリ共通の 36×44 を満たす) */
+button.mjt-cell.mjt-pick{padding:10px 8px; margin:-10px -8px; cursor:pointer;
+  transition:transform .08s;}
+button.mjt-cell.mjt-pick:active{transform:translateY(2px);}
 /* 見のがした牌(F5): フリテンの図と混ざらないよう、色も文字もはっきり分ける */
-.mjt .mjt-miss .tile{outline:2px dashed var(--felt-warn); outline-offset:1px;}
+.mjt .mjt-miss > .tile{outline:2px dashed var(--felt-warn); outline-offset:1px;}
 .mjt-miss .mjt-nlab{color:var(--felt-warn);}
 /* 河の牌をそのままタップして答える。見た目の牌より広いタップ領域をとる(まわりの牌と重ならない) */
-button.mjt-pick{background:none; border:0; padding:8px 6px; margin:-8px -6px; font:inherit;
-  appearance:none; -webkit-appearance:none; cursor:pointer; transition:transform .08s;}
-button.mjt-pick:active{transform:translateY(2px);}
+button.mjt-pick{background:none; border:0; font:inherit;
+  appearance:none; -webkit-appearance:none; cursor:pointer;}
 .mjt-pick.sel .tile{outline:3px solid #fff; outline-offset:2px;}
 .mjt-pick.correct .tile{outline:3px solid var(--jade); outline-offset:2px;
   box-shadow:0 0 0 5px color-mix(in srgb, var(--jade) 45%, transparent), 0 3px 0 var(--tile-shadow);}
@@ -691,7 +700,9 @@ button.mjt-pick:active{transform:translateY(2px);}
 .mjt-me{margin-top:5px; padding-top:5px; border-top:1.5px solid rgba(255,255,255,.22);}
 .mjt-me .mjt-name{margin-bottom:3px;}
 .mjt .hand{margin:0; gap:1px;}
-.mjt .hand .tile{flex:1 1 0; min-width:0; max-width:var(--tile-w);}
+/* 卓の中では【自分の13枚がいちばん読めること】を優先する(R49)。
+   アプリ共通の --tile-w で止めず、卓の内側の幅をめいっぱい使う */
+.mjt .hand .tile{flex:1 1 0; min-width:0; max-width:32px;}
 .mjt-tsumo{display:flex; flex-direction:column; align-items:center; gap:1px; flex:none; margin-left:4px;}
 .mjt .mjt-tsumo .tile{flex:none; width:var(--mjt-rt); max-width:var(--mjt-rt);}
 /* 卓の下の一言。フェルトの外に出るので卓の文字色(--felt-ink)は使わない */
@@ -714,11 +725,7 @@ button.mjt-pick.mjt-hp{flex:1 1 0; min-width:0; padding:10px 1px; margin:-10px -
 .mjt .mjt-hp .tile{width:100%; max-width:none; flex:none;}
 .mjt .hand-open .mjt-hp{flex:0 0 auto;}
 .mjt .hand-open .mjt-hp .tile{width:var(--mjt-ht);}
-/* 自分の河をタップさせるとき: 牌をいま捨てた牌と同じ大きさにし、間をあけて誤タップを防ぐ
-   (アプリ共通のタップ基準 幅36px×高さ44px を満たす) */
-.mjt-tiles.h .mjt-old-pick,.mjt-tiles.side .mjt-old-pick{gap:14px;}
-button.mjt-pick.mjt-po{padding:9px 6px; margin:-9px -6px;}
-.mjt .mjt-po .tile{width:var(--mjt-nt); max-width:var(--mjt-nt);}
+
 /* 正解後だけの関連づけ(§41)。正解前には絶対につけない */
 .mjt .mjt-rel{outline:3px solid var(--jade); outline-offset:2px;
   box-shadow:0 0 0 5px color-mix(in srgb, var(--jade) 38%, transparent), 0 3px 0 var(--tile-shadow);}
@@ -3372,8 +3379,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.43.0';
-const BUILD_ID='20260927-04';
+const APP_VER='0.44.0';
+const BUILD_ID='20260927-05';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -6326,10 +6333,12 @@ const CH1_LESSONS={
      ・入れない: 鳴くべきかどうか(打点・速度・牌効率・押し引き)・優先順位の競合・カンの細則・
        未導入語(大明槓/嶺上牌/門前/副露/河/フリテン)・点数計算・未導入の役名
      ・正解はすべて nkCanPon / nkCanChi / nkCanKan から計算する(手で書かない) */
-  /* R48: 【ルールを理解する】は簡単な教材図、【実際に判断する】は実卓の盤面、という使い分け。
-     13枚の手牌は H1〜H8 に固定して、どのLessonでも「同じ人の手」を見ている感じにする */
+  /* R49: 【ルールを知る】= 簡略な教材図(Teachだけ) / 【実際に判断する】= 共通実卓UI。
+     判断問題では、だれが何を捨てたかは問題文に書かない。卓を見れば分かるようにする。
+     13枚の手牌は H1〜H11 に固定して、どのLessonでも同じ人の手を見ている感じにする */
   nk1_1(){
     const H1='234m678p55s1s3s9pGG';      // 發が2枚(ポンできる)
+    const H9='234m678p55s1s2s3s9pG';     // 發が1枚だけ(ポンできない)
     const H2='456m123p77s2s8s9sEE';      // 東が2枚(ポンできる)
     return [
       ch1Teach('これまでは<b>自分のツモの番</b>を待っていたね。でも麻雀では、'
@@ -6338,60 +6347,58 @@ const CH1_LESSONS={
       ch1Teach('まずは<b>ポン</b>。<b>手の中に おなじ牌が2枚</b>あるとき、'
         +'だれかがその牌を捨てたら「ポン！」でもらえるよ。3枚の組ができるんだ。',
         {tlab:'ポン',panel:nkBoardHTML({mine:'GG',from:'right',now:'G'})}),
-      nkPonMcq({mine:'GG',from:'right',now:'G',
-        exp:'手の中に發が2枚、下家が發を1枚。これで發3枚の組ができる。ポンできるね！'}),
-      nkPonMcq({mine:'G3m7s',from:'opposite',now:'G',
-        exp:'發は手の中に1枚だけ。ポンは<b>手の中に2枚</b>いるよ。'}),
-      ch1Teach('ここまでは<b>だいじな牌だけ</b>を見てきたね。'
-        +'でも本番の卓では、<b>13枚の手牌</b>の中から自分で見つけることになるよ。さあ、卓を見てみよう！',
-        {tlab:'ここからは本物の卓'}),
-      mjtNakiPickQ({hand:H1,from:'right',now:'G',act:'pon',
-        q:'下家が<b>發</b>を捨てたよ。あなたの手牌の中で、いっしょに<b>ポン</b>につかう牌はどれ？',
-        exp:'手牌の右はしに發が2枚あったね。この2枚＋下家の發で、發3枚の組になるよ。'}),
+      ch1Teach('では、本物の卓を見てみよう。だれかが牌を捨てたら、'
+        +'<b>その牌</b>と<b>自分の13枚</b>を見くらべるんだ。',{tlab:'卓で見つけよう'}),
       mjtPonMcq({hand:H1,from:'right',now:'G',
-        exp:'手の中に發が2枚。下家が捨てた發をもらって3枚。ポンできる！'}),
-      mjtPonMcq({hand:H1,from:'right',now:'1m',
-        exp:'1マンは手の中に1枚もないね。ポンは<b>手の中に2枚</b>あるときだけだよ。'}),
+        exp:'手牌の右はしに發が2枚あったね。捨てられた發をもらって3枚。ポンできる！'}),
+      mjtPonMcq({hand:H9,from:'top',now:'G',
+        exp:'手牌をよく見ると、發は<b>1枚だけ</b>。ポンには<b>おなじ牌が2枚</b>いるよ。'}),
+      mjtPonMcq({hand:H1,from:'top',now:'1m',
+        exp:'1マンは手牌に1枚もないね。捨てられた牌と おなじ牌が2枚あるか、が見るところだよ。'}),
       ch1Teach('だいじなこと。ポンは<b>上家・対面・下家、だれの捨て牌でもOK</b>。'
         +'だれが捨てても「ポン！」と言えるんだ。',{tlab:'だれからでもOK'}),
-      mjtPonMcq({hand:H2,from:'left',now:'E',q:'<b>上家</b>（ひだりどなり）が東を捨てたよ。ポンできる？',
-        exp:'東が手の中に2枚あるから、上家からでもポンできる。'}),
-      mjtPonMcq({hand:H2,from:'top',now:'E',q:'<b>対面</b>（むかい）が東を捨てたよ。ポンできる？',
-        exp:'対面からでもポンできるよ。だれが捨ててもポンはOK！'}),
+      mjtPonMcq({hand:H2,from:'left',now:'E',
+        exp:'東が手牌に2枚。捨てたのは<b>ひだりの人＝上家</b>だけど、ポンはだれからでもOKだよ。'}),
+      mjtPonMcq({hand:H2,from:'top',now:'E',
+        exp:'こんどは<b>むかいの人＝対面</b>。やっぱりポンできる。'}),
+      mjtNakiPickQ({hand:H1,from:'right',now:'G',act:'pon',
+        q:'この牌を<b>ポン</b>するとき、いっしょにつかう牌はどれ？',
+        exp:'手牌の右はしの發2枚だね。この2枚＋捨てられた發で、發3枚の組になるよ。'}),
       {q:'ポンできるのは、だれの捨て牌？',choices:['上家・対面・下家、だれの捨て牌でも','上家の捨て牌だけ','下家の捨て牌だけ'],a:0,
         exp:'ポンは3人 だれからでもOK。これはこのあと出てくる<b>チー</b>と ちがうところだよ。'},
     ];
   },
   nk1_2(){
-    const P34='34m', P45='45m';
     const H3='34m678p55s2s3s9p1pEE';     // 3マン4マンを持つ13枚
+    const H11='45m678p22s1s3s9p1pEE';    // 4マン5マンを持つ13枚
+    const H10='234s678s1p2p34p99pE';     // マンズを1枚も持たない13枚
+    const H8='ES234m678p55s3s9p1s';      // 東・南を持つ13枚
     return [
       ch1Teach('つぎは<b>チー</b>。<b>手の中の2枚</b>と捨て牌で、'
         +'<b>数がならんだ3枚</b>を作ることだよ。',
-        {tlab:'チー',panel:nkBoardHTML({mine:P34,from:'left',now:'5m'})}),
-      nkChiMcq({mine:P34,from:'left',now:'5m',
-        exp:'3マン4マンに5マンで<b>345マン</b>。ならんだ3枚ができた！チーできるね。'}),
-      nkChiMcq({mine:P34,from:'left',now:'2m',
-        exp:'こんどは<b>234マン</b>。おなじ3マン4マンでも、2マンでも5マンでもチーできるんだ。'}),
-      nkChiMcq({mine:P34,from:'left',now:'7m',
-        exp:'3マン4マンに7マンでは ならばないね。数がつながらないとチーできないよ。'}),
-      nkChiMcq({mine:'34p',from:'left',now:'5m',
-        exp:'3ピン4ピンと5マンは<b>種類がちがう</b>。ならびは おなじ種類の牌だけだよ。'}),
-      nkChiMcq({mine:'ES',from:'left',now:'W',
-        exp:'東・南・西は字牌。<b>字牌はならべてもシュンツにならない</b>ので、チーできないんだ。'}),
-      ch1Teach('ここがチーだけの<b>特別なきまり</b>。チーができるのは、'
-        +'<b>上家（ひだりどなり）の捨て牌だけ</b>だよ。'
-        +'つぎからは13枚の手牌から、自分でならびを見つけてみよう。',{tlab:'チーは上家だけ'}),
-
-      mjtNakiPickQ({hand:H3,from:'left',now:'5m',act:'chi',
-        q:'左の人が<b>5マン</b>を捨てたよ。あなたの手牌の中で、<b>チー</b>につかう牌はどれ？',
-        exp:'手牌の左はしの3マンと4マン。これに5マンで<b>345マン</b>になるね。'}),
+        {tlab:'チー',panel:nkBoardHTML({mine:'34m',from:'left',now:'5m'})}),
+      ch1Teach('チーには、ポンにはない<b>特別なきまり</b>があるよ。'
+        +'チーができるのは<b>上家（ひだりどなり）の捨て牌だけ</b>。'
+        +'だから卓では、<b>どこに出た捨て牌か</b>をよく見てね。',{tlab:'チーは上家だけ'}),
       mjtChiMcq({hand:H3,from:'left',now:'5m',
-        exp:'捨てたのは、ひだりどなりの<b>上家</b>。345マンのならびができるから、チーできる！'}),
+        exp:'手牌の3マン4マンに5マンで<b>345マン</b>。捨てたのは<b>ひだりの人＝上家</b>。チーできる！'}),
+      mjtChiMcq({hand:H3,from:'left',now:'2m',
+        exp:'こんどは<b>234マン</b>。おなじ3マン4マンでも、2マンでも5マンでもチーできるんだ。'}),
+      mjtChiMcq({hand:H11,from:'left',now:'6m',
+        exp:'手牌は4マン5マン。6マンで<b>456マン</b>になるね。上家から出たのでチーできる！'}),
+      mjtChiMcq({hand:H3,from:'left',now:'7m',
+        exp:'手牌のマンズは3マン4マン。7マンとは数がつながらないね。ならばないとチーできないよ。'}),
+      mjtChiMcq({hand:H10,from:'left',now:'5m',
+        exp:'手牌にマンズが1枚もないよ。ならびは<b>おなじ種類の牌</b>だけ。ピンズやソーズではならべないんだ。'}),
+      mjtChiMcq({hand:H8,from:'left',now:'W',
+        exp:'西は字牌。<b>字牌はならべてもシュンツにならない</b>ので、チーできないんだ。'}),
       mjtChiMcq({hand:H3,from:'top',now:'5m',
-        exp:'形は345マンでバッチリ。でも捨てたのは<b>対面</b>。チーは上家からだけなんだ。'}),
+        exp:'345マンの形はバッチリ。でも捨てたのは<b>うえの人＝対面</b>。チーは上家からだけなんだ。'}),
       mjtChiMcq({hand:H3,from:'right',now:'5m',
-        exp:'<b>下家</b>からもチーできない。おなじ5マンでも、だれが捨てたかで変わるよ。'}),
+        exp:'<b>みぎの人＝下家</b>からもチーできない。おなじ5マンでも、だれが捨てたかで変わるよ。'}),
+      mjtNakiPickQ({hand:H3,from:'left',now:'5m',act:'chi',
+        q:'この牌を<b>チー</b>するとき、いっしょにつかう牌はどれ？',
+        exp:'手牌の左はしの3マンと4マン。これに5マンで<b>345マン</b>になるね。'}),
       ch1SeatPick('E','kami','あなたの手の中は<b>3マン4マン</b>。<b>5マン</b>を捨てたらチーできるのは どの人？',
         {mode:'name',flag:{left:'sute'},tlab:'卓を見てタップ',
          exp:'チーは上家（ひだりどなり）の捨て牌だけ。ポンとカンは3人 だれからでもOKだったね。'}),
@@ -6407,21 +6414,15 @@ const CH1_LESSONS={
         +'ここでは<b>ほかの人の捨て牌でカンする</b>場面を見てみよう。',{tlab:'カン（ふくしゅう）'}),
       ch1Teach('<b>手の中に おなじ牌が3枚</b>あるとき、だれかが4枚目を捨てたら「カン！」でもらえるよ。',
         {tlab:'3枚＋4枚目',panel:nkBoardHTML({mine:'777p',from:'opposite',now:'7p'})}),
-      nkKanMcq({mine:'777p',from:'opposite',now:'7p',
-        exp:'手の中に7ピンが3枚、対面が4枚目を捨てた。カンできる！'}),
-      nkKanMcq({mine:'77p3s',from:'right',now:'7p',
-        exp:'7ピンは2枚だけ。これは<b>ポン</b>ができる形だね。カンには3枚いるよ。'}),
-      ch1Teach('では、本物の13枚の手牌で見てみよう。'
-        +'<b>おなじ牌が3枚</b>ならんでいるところを さがしてね。',{tlab:'13枚からさがす'}),
-      mjtNakiPickQ({hand:H4,from:'top',now:'7p',act:'kan',
-        q:'対面が<b>7ピン</b>を捨てたよ。あなたの手牌の中で、<b>カン</b>につかう牌はどれ？',
-        exp:'手牌の中に7ピンが3枚あったね。これに4枚目でカンになるよ。'}),
       mjtKanMcq({hand:H4,from:'top',now:'7p',
-        exp:'7ピンが3枚＋対面の4枚目。カンできる！<b>カンもポンとおなじで、だれの捨て牌でもOK</b>だよ。'}),
-      mjtKanMcq({hand:H4,from:'right',now:'7p',q:'こんどは<b>下家</b>（みぎどなり）が7ピンを捨てたよ。カンできる？',
-        exp:'カンもポンとおなじで、<b>3人 だれの捨て牌でもOK</b>だよ。'}),
+        exp:'手牌の左はしに7ピンが3枚あったね。これに4枚目でカンできる！'}),
       mjtKanMcq({hand:H5,from:'left',now:'7p',
-        exp:'この手では7ピンは2枚だけ。ポンならできるけど、カンには3枚いるんだ。'}),
+        exp:'この手牌では7ピンは<b>2枚だけ</b>。2枚ならポンはできるけど、カンには3枚いるんだ。'}),
+      mjtKanMcq({hand:H4,from:'right',now:'7p',
+        exp:'こんども7ピンが3枚。<b>カンもポンとおなじで、3人 だれの捨て牌でもOK</b>だよ。'}),
+      mjtNakiPickQ({hand:H4,from:'top',now:'7p',act:'kan',
+        q:'この牌を<b>カン</b>するとき、いっしょにつかう牌はどれ？',
+        exp:'手牌の中の7ピン3枚だね。これに4枚目でカンになるよ。'}),
       {q:'カンできるのは、だれの捨て牌？',choices:['上家・対面・下家、だれの捨て牌でも','上家の捨て牌だけ'],a:0,
         exp:'ポンとカンは3人 だれからでも。上家だけなのはチーだったね。'},
       ch1Teach('カンには、ポンやチーと<b>ちがうところ</b>があるよ。'
@@ -6493,13 +6494,14 @@ const CH1_LESSONS={
     ];
   },
   nk1_6(){
+    const H1='234m678p55s1s3s9pGG';
     const H3='34m678p55s2s3s9p1pEE';
     const H6='2m9p2p345s678s44p1sE';
     return [
       ch1Teach('さいごに、とても大事なこと。<b>鳴ける＝鳴かなければいけない</b>、ではないよ。',
         {tlab:'鳴かなくてもいい'}),
-      nkPonMcq({mine:'GG',from:'right',now:'G',
-        exp:'發が2枚あるからポンできるね。…でも、これは「できる」というだけだよ。'}),
+      mjtPonMcq({hand:H1,from:'right',now:'G',
+        exp:'手牌に發が2枚あるからポンできるね。…でも、これは「できる」というだけだよ。'}),
       {q:'ポンできるとき、かならずポンしないといけない？',
         choices:['いいえ。しなくてもいい','はい。かならずポンする'],a:0,
         exp:'鳴くかどうかは<b>あなたがえらぶ</b>。だまって見ているのも ちゃんとした1つのえらび方だよ。'},
@@ -7377,7 +7379,8 @@ function mjtHandTiles(o){ return o.hand?sortTiles(parseHand(o.hand)):[]; }
 function mjtPicks(o){
   o=o||{}; const out=[];
   (o.pick||[]).forEach(sq=>out.push({type:'now',seat:sq,tile:(o.nows||{})[sq]}));
-  if(o.myPick) (o.myRiver||[]).forEach((t,i)=>out.push({type:'my',i,tile:t}));
+  // 描画と同じ河データを使う。ここがずれるとタップした牌と選択肢がずれる
+  if(o.myPick) mjtRivers(o).bottom.tiles.forEach((t,i)=>out.push({type:'my',i,tile:t}));
   if(o.handPick) mjtHandTiles(o).forEach((t,i)=>out.push({type:'hand',i,tile:t}));
   return out;
 }
@@ -7415,43 +7418,87 @@ function mjtJunk(hand,n,skip,off){
   }
   return out;
 }
-function mjtRiverHTML(seat,name,tiles,opt){
-  const o=opt||{}, side=(seat==='left'||seat==='right');
-  // ふるい牌はひとかたまり。左右の席では2列に折りたたんで、卓の高さがのびないようにする
-  let body='<span class="mjt-old'+(o.pickOld!=null?' mjt-old-pick':'')+'">'+(tiles||[]).map((t,i)=> (o.pickOld!=null)
-      ? mjtPickBtn(o.pickOld+i,mjtTileHTML(t),'mjt-po') : mjtTileHTML(t)).join('')+'</span>';
-  if(o.miss) body+='<span class="mjt-new mjt-miss">'+mjtTileHTML(o.miss)
-    +'<span class="mjt-nlab">見のがした</span></span>';
-  if(o.now){
-    const inner=mjtTileHTML(o.now)+'<span class="mjt-nlab">'+(o.nowLab||'いま')+'</span>';
-    body+= (o.pickIdx!=null)
-      ? '<button class="mjt-new mjt-pick" id="ch-'+o.pickIdx+'" onpointerdown="selChoice('+o.pickIdx+')">'+inner+'</button>'
-      : '<span class="mjt-new">'+inner+'</span>';
-  }
+/* ================= 河の並べ方(R49) =================
+   ここが実卓らしさの心臓部。考え方は2段階:
+   ①【その人から見た河】を作る … 本人の左から順に6枚、7枚目から次の段へ。
+     データ(tiles)は全席かならず【捨てた順(古い→新しい)】。席によって配列を並べかえない。
+     だから最新牌は全席共通で river[river.length-1]。
+   ②【できあがった河を、席の方向へ回して卓に置く】… 自分0° / 上家90° / 対面180° / 下家-90°。
+     回すのは【卓の上に置かれた牌】だけ。席名や「いま」の文字は回さない(読めなくなるため)。
+   卓ぜんたいを transform で回すことは禁止(手牌や教材UIまで回ってしまう)。
+   横向きになった牌は、見た目だけでなく【箱の縦横も入れかえる】ので、
+   grid の幅・高さ計算もタップ判定も見た目とずれない。 */
+const MJT_ROT={bottom:0,left:90,top:180,right:-90};
+const MJT_PER=6;                                  // 6枚で次の段へ(実卓の河と同じ)
+/* 河のデータを席ごとにそろえる。見た目の都合で配列を reverse しない */
+function mjtRivers(o){
+  o=o||{};
+  const nows=o.nows||{}, meldT=meldTilesAll(o.melds||[]);
+  const used=[].concat(Object.keys(nows).map(k=>nows[k]),o.myRiver||[],meldT,
+    o.tsumo?[o.tsumo]:[],o.miss?[o.miss.tile]:[]);
+  const out={};
+  MJT_SEATS.forEach((sn,i)=>{
+    const seat=sn[0];
+    const base=(o.rivers&&o.rivers[seat])?o.rivers[seat].slice()
+      :mjtJunk(o.hand,o.riverN||3,used,i+1);
+    const t=base.slice(); let missIdx=null,nowIdx=null;
+    if(o.miss&&o.miss.seat===seat){ t.push(o.miss.tile); missIdx=t.length-1; }
+    if(nows[seat]){ t.push(nows[seat]); nowIdx=t.length-1; }   // 最新牌は必ず時系列のさいご
+    out[seat]={tiles:t,nowIdx,missIdx};
+  });
+  out.bottom={tiles:(o.myRiver||mjtJunk(o.hand,3,used,0)).slice(),nowIdx:null,missIdx:null};
+  return out;
+}
+/* その人から見た(段,列) を、卓の上の(行,列)へ移す。回転の合成をそのまま式にしたもの */
+function mjtCellPos(rot,r,c,rows,cols){
+  if(rot===0)   return [r+1,      c+1];
+  if(rot===180) return [rows-r,   cols-c];
+  if(rot===90)  return [c+1,      rows-r];
+  return               [cols-c,   r+1];
+}
+function mjtRiverHTML(seat,name,riv,opt){
+  const o=opt||{}, ts=(riv&&riv.tiles)||[], rot=MJT_ROT[seat]||0;
+  const n=ts.length, rows=Math.max(1,Math.ceil(n/MJT_PER)), cols=Math.min(MJT_PER,n)||1;
+  const cells=ts.map((t,i)=>{
+    const r=Math.floor(i/MJT_PER), c=i%MJT_PER;
+    const p=mjtCellPos(rot,r,c,rows,cols);
+    const isNow=(riv.nowIdx===i), isMiss=(riv.missIdx===i), isRiichi=(o.riichiIdx===i);
+    // リーチ宣言牌は、その席の向きから【さらに90度】横向きに置く(席の向きと足し算する)
+    const deg=rot+(isRiichi?90:0), swap=Math.abs(deg%180)===90;
+    const big=isNow||isMiss||(o.pickOld!=null);
+    const tw=big?'var(--mjt-nt)':'var(--mjt-rt)';
+    const st='--tw:'+tw+';--rot:'+deg+'deg;'
+      +'--cw:'+(swap?'calc('+tw+' * 1.4)':tw)+';--ch:'+(swap?tw:'calc('+tw+' * 1.4)')+';'
+      +'grid-row:'+p[0]+';grid-column:'+p[1]+';';
+    const lab=isMiss?'<span class="mjt-nlab">見のがした</span>'
+      :isNow?'<span class="mjt-nlab">'+(o.nowLab||'いま')+'</span>':'';
+    const cls='mjt-cell '+(isNow?'mjt-new':'mjt-old')+(isMiss?' mjt-miss':'')+(isRiichi?' mjt-riichi':'');
+    const inner=mjtTileHTML(t)+lab;
+    if(isNow&&o.pickIdx!=null)
+      return '<button class="'+cls+' mjt-pick" style="'+st+'" id="ch-'+o.pickIdx
+        +'" onpointerdown="selChoice('+o.pickIdx+')">'+inner+'</button>';
+    if(!isNow&&o.pickOld!=null)
+      return '<button class="'+cls+' mjt-pick mjt-po" style="'+st+'" id="ch-'+(o.pickOld+i)
+        +'" onpointerdown="selChoice('+(o.pickOld+i)+')">'+inner+'</button>';
+    return '<span class="'+cls+'" style="'+st+'">'+inner+'</span>';
+  }).join('');
   return '<div class="mjt-riv '+seat+'"><span class="mjt-name">'+name+'</span>'
-    +'<div class="mjt-tiles '+(side?'side':'h')+'">'+body+'</div></div>';
+    +'<div class="mjt-grid2'+(o.pickOld!=null?' mjt-grid2-pick':'')+'">'+cells+'</div></div>';
 }
 function mjtHTML(o){
   o=o||{};
-  const nows=o.nows||{}, pick=o.pick||[];
-  const meldT=meldTilesAll(o.melds||[]);
-  const used=[].concat(Object.keys(nows).map(k=>nows[k]),o.myRiver||[],meldT,
-    o.tsumo?[o.tsumo]:[],o.miss?[o.miss.tile]:[]);
-  let riv=o.rivers;
-  if(!riv){ riv={}; MJT_SEATS.forEach((sn,i)=>{ riv[sn[0]]=mjtJunk(o.hand,o.riverN||3,used,i+1); }); }
-  const nPick=(o.pick||[]).length, myBase=nPick, mine=o.myRiver||mjtJunk(o.hand,3,used,0);
-  const handBase=myBase+(o.myPick?mine.length:0);
+  const riv=mjtRivers(o), pick=o.pick||[];
+  const nPick=pick.length, myBase=nPick;
+  const handBase=myBase+(o.myPick?riv.bottom.tiles.length:0);
   let g='<div class="mjt-grid">';
   MJT_SEATS.forEach(sn=>{
     const seat=sn[0], i=pick.indexOf(seat);
-    g+=mjtRiverHTML(seat,sn[1],riv[seat]||[],
-      {now:nows[seat]||null, pickIdx:i>=0?i:null,
-       miss:(o.miss&&o.miss.seat===seat)?o.miss.tile:null});
+    g+=mjtRiverHTML(seat,sn[1],riv[seat],{pickIdx:i>=0?i:null,riichiIdx:(o.riichi||{})[seat]});
   });
   g+='<div class="mjt-mid"></div>';
   // 「河」は第2章(R45)で導入する語。まだ習っていないLesson(R46など)では myLab で言いかえる
-  g+=mjtRiverHTML('bottom',o.myLab||'あなたの河',mine,
-    {pickOld:o.myPick?myBase:null});
+  g+=mjtRiverHTML('bottom',o.myLab||'あなたの河',riv.bottom,
+    {pickOld:o.myPick?myBase:null,riichiIdx:(o.riichi||{}).bottom});
   g+='</div>';
   let me='';
   if(o.hand){
