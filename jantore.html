@@ -639,6 +639,30 @@ button.tile.off:active{transform:none;}
 .f-drop .tile{width:clamp(34px,10.5vw,40px); max-width:none; flex:none;}
 /* 前提の但し書き(役はあるものとする)。小さく・1レッスンに1回だけ */
 .f-note{margin:6px 0 0; text-align:center; font-size:11px; font-weight:700; color:var(--ink-soft);}
+/* 鳴きを使う(R46): 「あなたの手の中」と「だれかが捨てた牌」を上下に並べ、そのあと何が起きるかを帯で見せる。
+   ・牌の絵は作らない。捨て牌は R45 の .ch3-river / .ch3-now、さらした組は R30 の openHandHTML を使い回す
+   ・1画面に4人分の河は出さない。判断に必要な牌だけを出す */
+.nk-board{margin:6px 0 4px;}
+.nk-board .tc-lab{margin-top:6px;}
+.nk-board .ch3-river{min-height:auto; margin:2px 0 4px;}
+/* 「あなたの手の中に」= 判断のもとになる牌。少し大きめ・緑の箱で他より強く出す */
+.nk-mine{display:flex; align-items:center; justify-content:center; gap:8px;
+  margin:4px auto 8px; padding:5px 10px; width:fit-content; max-width:100%;
+  border-radius:12px; background:var(--jade-soft); border:1.5px solid var(--jade);}
+.nk-mlab{font-size:clamp(11.5px,3.3vw,12.5px); font-weight:900; color:var(--jade-ink); white-space:nowrap;}
+.nk-mt{display:flex; gap:4px;}
+.nk-mine .tile{width:34px; max-width:34px; flex:none;}
+/* 鳴いたあとの「ながれ」: 捨てられる → 声に出す → さらす → 1枚切る。横スクロールさせない */
+.nk-flow{display:flex; flex-direction:column; gap:4px; margin:10px auto 6px; width:fit-content; max-width:100%;}
+.nk-step{display:flex; align-items:center; gap:8px; padding:6px 10px; border-radius:12px;
+  background:var(--card); border:1.5px solid var(--line); box-sizing:border-box;}
+.nk-step.on{border-color:var(--jade); background:var(--jade-soft);}
+.nk-no{flex:none; width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  background:var(--ink-soft); color:var(--on-accent); font-size:11px; font-weight:900;}
+.nk-step.on .nk-no{background:var(--jade);}
+.nk-tx{font-size:clamp(12px,3.5vw,13.5px); font-weight:800; color:var(--ink); line-height:1.35;}
+.nk-step.on .nk-tx{color:var(--jade-ink);}
+.nk-arrow{text-align:center; font-size:12px; font-weight:900; color:var(--ink-soft); line-height:1; margin:-1px 0;}
 /* 合言葉「ロン！のまえに、河チェック」 */
 .f-motto{margin:10px auto 2px; padding:8px 12px; width:fit-content; max-width:100%;
   border-radius:14px; background:var(--jade-soft); border:2px solid var(--jade);
@@ -2101,6 +2125,7 @@ const COURSES=[
 {id:'ch1s',title:'4人で打つ',icon:'🀄',section:0,type:'ch1',desc:'麻雀卓に4人。のこりの3人を、なんとよぶ？',questions:[]},
 {id:'ch1g',title:'ゲームの進み方',icon:'🔁',section:0,type:'ch1',desc:'1回ぶんの勝負から、1ゲームのおわりまで。',questions:[]},
 {id:'ch1e',title:'実戦への扉',icon:'🚪',section:0,type:'ch1',desc:'役・リーチ・実戦のことばを覚えて、1局アガりきろう！',questions:[]},
+{id:'ch1n',title:'鳴きを使う',icon:'🤝',section:0,type:'ch1',desc:'ほかの人が捨てた牌を、もらって使えるようになろう。',questions:[]},
 {id:'ch1p',title:'点のしくみ',icon:'🪙',section:0,type:'ch1',desc:'点は、どうやって ふえたり へったりするの？',questions:[]},
 /* 第2章「アガリが見える」(待ち牌と待ちの形)。descに待ちの形の名称は書かない(名称初出はレッスン内) */
 {id:'ch2a',title:'待ちを見つけよう',icon:'🔎',section:1,type:'ch1',desc:'アガリになる牌＝待ち牌をさがそう。',questions:[]},
@@ -2320,6 +2345,33 @@ const THEMES=[
     {diff:{ch1:'d2_4'}},                       // ★第1章チャレンジ: 麻雀を打てる！
    ]},
   ]},
+ /* 鳴きを使う(R46): 「ポン・チーという言葉を知っている」から「他家が捨てた瞬間に、鳴けるか判断して
+    操作できる」へ進めるテーマ。用語(鳴き・ポン・チー・カン)は d2_3 で正式導入ずみなので教え直さない。
+    ・置き場所は th_ch1e のすぐ後ろ。d2_3 で意味を覚えた直後に実戦判断へ入るのがいちばん近い。
+      SECTION0「麻雀を打てる」= 卓でやる操作、というSECTIONの意味にもそのまま合う。
+      第2章(ロンとフリテン)の後ろにしなかったのは、鳴き判断は自分の河を見る必要がなく、
+      「捨てられた1枚と自分の手を見くらべる」だけで成立するから(第2章の学習を前提にしない)。
+    ・requires は th_ch1e。th_ch1p(点のしくみ)の requires をここへ付け替える＝
+      SECTION0の必修が 実戦への扉 → 鳴きを使う → 点のしくみ の順になる。
+      「点のしくみ」は第1章のさいごのまま(g1_3 の文面もそのまま正しい)。
+    ・教えるのは【鳴けるかどうか】だけ。【鳴くべきかどうか】(打点・速度・牌効率・押し引き)は教えない。
+    ・大明槓・嶺上牌・門前 はこの時点で未導入なので名前を使わない。意味だけ教え、
+      第3章「カンを知ろう」(km1_*)で正式に命名できる形にしてある。 */
+ {id:'th_ch1n', course:'ch1n', title:'鳴きを使う', sub:'ほかの人の捨て牌をもらう',
+  requires:'th_ch1e',
+  subThemes:[
+   {id:'st_n1', title:'鳴けるかどうか', lessons:[
+    {diff:{ch1:'nk1_1'}},                      // N1 ポンできる？(だれの捨て牌でもOK)
+    {diff:{ch1:'nk1_2'}},                      // N2 チーできる？(ならび＋上家だけ)
+    {diff:{ch1:'nk1_3'}},                      // N3 カンできる？(3枚＋4枚目。カンのあとは1枚引いてから切る)
+   ]},
+   {id:'st_n2', title:'鳴いたあと', lessons:[
+    {diff:{ch1:'nk1_4'}},                      // N4 鳴いたあとはどうする？(声→さらす→1枚切る)
+    {diff:{ch1:'nk1_5'}},                      // N5 鳴くとリーチできない
+    {diff:{ch1:'nk1_6'}},                      // N6 鳴ける ≠ 鳴いた方がいい
+    {diff:{ch1:'nk1_7'}},                      // ★N7 鳴きマスター
+   ]},
+  ]},
  /* 点のしくみ(R44): 「点がどう動くか」を理解するテーマ。点数計算(符・翻・点数表)は一切やらない。
     ・置き場所は th_ch1e のうしろ＝SECTION0の最後。ロン(d2_3)・リーチ(d2_2)・ツモ(c1_2)・親子(s1_3)・
       流局/テンパイ/ノーテン/順位(g1_2〜g2_4)が全部そろってからでないと、点の動きは説明できない。
@@ -2330,7 +2382,7 @@ const THEMES=[
     ・教えない: 符・翻・点数表・満貫/跳満・親は1.5倍・供託・本場・順位点(すべて将来のサイドRoad/ドリルへ)。
       一発・裏ドラ・赤ドラ・フリテンも入れない(別テーマ)。 */
  {id:'th_ch1p', course:'ch1p', title:'点のしくみ', sub:'点は、どう動く？',
-  requires:'th_ch1e',
+  requires:'th_ch1n',                          // 鳴きを使うまで全クリアで解放(R46。旧: th_ch1e)
   subThemes:[
    {id:'st_p1', title:'アガリと点', lessons:[
     {diff:{ch1:'p1_1'}},                       // 点棒ってなに？
@@ -3078,6 +3130,9 @@ const RUBY_FULL_SRC=`
 # R45 ロンとフリテン。「河」は河底撈魚[ホウテイ](RUBY_TERMS)が最長一致で先に当たるので単字で安全。
 # 「見逃」は1字の 見[み] より長いので先に当たる。「合言葉」は語句まるごとで登録する
 河[かわ] 見逃[みのが] 見[み]のが 声[こえ] 書[か] 一歩[いっぽ] 合言葉[あいことば]
+# R46 鳴きを使う。「何」は単字だと 何回[なんかい] などへ誤爆しうるので「何を」で語句ピン留めする。
+# 「番」は順番[じゅんばん]が最長一致で先に当たるため単字で安全
+場面[ばめん] 番[ばん] 早[はや] 何[なに]を
 `;
 const RUBY_KANJI_RE=/[\u3400-\u9FFF\uF900-\uFAFF々〆ヶ]/;
 let RUBY_FULL_MAP=null, RUBY_FULL_MAXLEN=0;
@@ -3234,8 +3289,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.40.0';
-const BUILD_ID='20260927-01';
+const APP_VER='0.41.0';
+const BUILD_ID='20260927-02';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -3243,7 +3298,7 @@ function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_I
    開発UI・未検証Compare）を通常操作から隠す。コード・データ・機能は
    一切削除しておらず、このフラグをfalseにすれば全て復帰する。 */
 let PROTOTYPE_MODE=true;
-const PROTO_VISIBLE_COURSES=['ch1a','ch1r','ch1b','ch1c','ch1d','ch1s','ch1g','ch1e','ch1p','ch2a','ch2b','ch2c','ch2d','ch2e','ch3a','ch3b','ch3c','ch3d','ch3e','ch3f','ch3g','ch3h','ch3i','ch3j','ch3x','waits','ukeire1','nanikiru','riichi'];
+const PROTO_VISIBLE_COURSES=['ch1a','ch1r','ch1b','ch1c','ch1d','ch1s','ch1g','ch1e','ch1n','ch1p','ch2a','ch2b','ch2c','ch2d','ch2e','ch3a','ch3b','ch3c','ch3d','ch3e','ch3f','ch3g','ch3h','ch3i','ch3j','ch3x','waits','ukeire1','nanikiru','riichi'];
 function protoCourseVisible(id){ return !PROTOTYPE_MODE||PROTO_VISIBLE_COURSES.includes(id); }
 function staminaFree(){ return PROTOTYPE_MODE||S.owned.stamina; }   // プロトタイプはスタミナ消費なし
 function devUIVisible(){ return !PROTOTYPE_MODE||S.dev||location.hash==='#dev'; }
@@ -6182,6 +6237,218 @@ const CH1_LESSONS={
         {tlab:'チャレンジ クリア'}),
     ]);
   },
+  /* ===== N「鳴きを使う」(R46・実戦への扉のすぐ後ろ) =====
+     用語(鳴き・ポン・チー・カン)は d2_3 で正式導入ずみ。ここで教え直さない。
+     ここで作るのは【他家が牌を捨てた瞬間に、鳴けるか判断して操作できる】こと。
+     ・入れない: 鳴くべきかどうか(打点・速度・牌効率・押し引き)・優先順位の競合・カンの細則・
+       未導入語(大明槓/嶺上牌/門前/副露/河/フリテン)・点数計算・未導入の役名
+     ・正解はすべて nkCanPon / nkCanChi / nkCanKan から計算する(手で書かない) */
+  nk1_1(){
+    return [
+      ch1Teach('これまでは<b>自分のツモの番</b>を待っていたね。でも麻雀では、'
+        +'<b>ほかの人が牌を捨てたその瞬間</b>にも、あなたが動けることがあるんだ。',{tlab:'あなたの番じゃなくても'}),
+      ch1Teach('「実戦への扉」で覚えたね。ほかの人が捨てた牌をもらって組を作るのが<b>鳴き</b>。'
+        +'ここからは「いま鳴けるかどうか」を自分で見つけられるようになろう！',{tlab:'鳴き（ふくしゅう）'}),
+      ch1Teach('まずは<b>ポン</b>。<b>手の中に おなじ牌が2枚</b>あるとき、'
+        +'だれかがその牌を捨てたら「ポン！」でもらえるよ。3枚の組ができるんだ。',
+        {tlab:'ポン',panel:nkBoardHTML({mine:'GG',from:'right',now:'G'})}),
+      nkPonMcq({mine:'GG',from:'right',now:'G',
+        exp:'手の中に發が2枚、下家が發を1枚。これで發3枚の組ができる。ポンできるね！'}),
+      nkPonMcq({mine:'G3m7s',from:'opposite',now:'G',
+        exp:'發は手の中に1枚だけ。ポンは<b>手の中に2枚</b>いるよ。'}),
+      nkPonMcq({mine:'55p',from:'left',now:'5p',
+        exp:'5ピンが2枚あるからポンできる！'}),
+      nkPonMcq({mine:'55p',from:'left',now:'6p',
+        exp:'捨てられたのは6ピン。手の中の5ピン2枚とはちがう牌だね。ポンはおなじ牌3枚だよ。'}),
+      ch1Teach('だいじなこと。ポンは<b>上家・対面・下家、だれの捨て牌でもOK</b>。'
+        +'だれが捨てても「ポン！」と言えるんだ。',{tlab:'だれからでもOK'}),
+      nkPonMcq({mine:'99s',from:'left',now:'9s',q:'<b>上家</b>が捨てたよ。ポンできる？',
+        exp:'上家からでもポンできる。'}),
+      nkPonMcq({mine:'99s',from:'opposite',now:'9s',q:'<b>対面</b>が捨てたよ。ポンできる？',
+        exp:'対面からでもポンできる。'}),
+      {q:'ポンできるのは、だれの捨て牌？',choices:['上家・対面・下家、だれの捨て牌でも','上家の捨て牌だけ','下家の捨て牌だけ'],a:0,
+        exp:'ポンは3人 だれからでもOK。これはこのあと出てくる<b>チー</b>と ちがうところだよ。'},
+    ];
+  },
+  nk1_2(){
+    const P34='34m', P45='45m';
+    return [
+      ch1Teach('つぎは<b>チー</b>。<b>手の中の2枚</b>と捨て牌で、'
+        +'<b>数がならんだ3枚</b>を作ることだよ。',
+        {tlab:'チー',panel:nkBoardHTML({mine:P34,from:'left',now:'5m'})}),
+      nkChiMcq({mine:P34,from:'left',now:'5m',
+        exp:'3マン4マンに5マンで<b>345マン</b>。ならんだ3枚ができた！チーできるね。'}),
+      nkChiMcq({mine:P34,from:'left',now:'2m',
+        exp:'こんどは<b>234マン</b>。おなじ3マン4マンでも、2マンでも5マンでもチーできるんだ。'}),
+      nkChiMcq({mine:P45,from:'left',now:'3m',
+        exp:'4マン5マンなら<b>345マン</b>。3マンでも6マンでもチーできるよ。'}),
+      nkChiMcq({mine:P34,from:'left',now:'7m',
+        exp:'3マン4マンに7マンでは ならばないね。数がつながらないとチーできないよ。'}),
+      nkChiMcq({mine:'34p',from:'left',now:'5m',
+        exp:'3ピン4ピンと5マンは<b>種類がちがう</b>。ならびは おなじ種類の牌だけだよ。'}),
+      nkChiMcq({mine:'ES',from:'left',now:'W',
+        exp:'東・南・西は字牌。<b>字牌はならべてもシュンツにならない</b>ので、チーできないんだ。'}),
+      ch1Teach('ここがチーだけの<b>特別なきまり</b>。チーができるのは、'
+        +'<b>上家（左どなり）の捨て牌だけ</b>だよ。',{tlab:'チーは上家だけ'}),
+      nkChiMcq({mine:P34,from:'opposite',now:'5m',
+        exp:'形は345マンでバッチリ。でも捨てたのは<b>対面</b>。チーは上家からだけなんだ。'}),
+      nkChiMcq({mine:P34,from:'right',now:'5m',
+        exp:'<b>下家</b>からもチーできない。おなじ5マンでも、だれが捨てたかで変わるよ。'}),
+      ch1SeatPick('E','kami','あなたの手の中は<b>3マン4マン</b>。<b>5マン</b>を捨てたらチーできるのは どの人？',
+        {mode:'name',flag:{left:'sute'},tlab:'卓を見てタップ',
+         exp:'チーは上家（左どなり）の捨て牌だけ。ポンとカンは3人 だれからでもOKだったね。'}),
+      {q:'チーできるのは、だれの捨て牌？',choices:['上家の捨て牌だけ','上家・対面・下家、だれの捨て牌でも','下家の捨て牌だけ'],a:0,
+        exp:'<b>チーだけ上家</b>。ここを まちがえると卓が止まってしまうから、しっかり覚えよう！'},
+    ];
+  },
+  nk1_3(){
+    return [
+      ch1Teach('「実戦への扉」で、<b>カン</b>はおなじ牌4枚を使う組だと覚えたね。'
+        +'ここでは<b>ほかの人の捨て牌でカンする</b>場面を見てみよう。',{tlab:'カン（ふくしゅう）'}),
+      ch1Teach('<b>手の中に おなじ牌が3枚</b>あるとき、だれかが4枚目を捨てたら「カン！」でもらえるよ。',
+        {tlab:'3枚＋4枚目',panel:nkBoardHTML({mine:'777p',from:'opposite',now:'7p'})}),
+      nkKanMcq({mine:'777p',from:'opposite',now:'7p',
+        exp:'手の中に7ピンが3枚、対面が4枚目を捨てた。カンできる！'}),
+      nkKanMcq({mine:'77p3s',from:'right',now:'7p',
+        exp:'7ピンは2枚だけ。これは<b>ポン</b>ができる形だね。カンには3枚いるよ。'}),
+      nkKanMcq({mine:'999s',from:'left',now:'9s',
+        exp:'9ソーが3枚＋4枚目でカン。<b>カンもポンとおなじで、だれの捨て牌でもOK</b>だよ。'}),
+      {q:'カンできるのは、だれの捨て牌？',choices:['上家・対面・下家、だれの捨て牌でも','上家の捨て牌だけ'],a:0,
+        exp:'ポンとカンは3人 だれからでも。上家だけなのはチーだったね。'},
+      ch1Teach('カンには、ポンやチーと<b>ちがうところ</b>があるよ。'
+        +'カンをしたら、<b>もう1枚 牌を引いてから</b>、1枚切るんだ。',{tlab:'カンだけちがう'}),
+      {q:'カンをしたあと、どうする？',
+        choices:['もう1枚 引いてから、1枚切る','なにも引かずに、そのまま1枚切る'],a:0,
+        exp:'カンは牌を1枚よけいに使うから、そのぶん1枚おぎなうんだ。'},
+      ch1Teach('カンには ほかにも種類があるよ。くわしくは第3章の<b>「カンを知ろう」</b>で覚えよう。'
+        +'いまは<b>3枚持っていて4枚目が出たらカンできる</b>、これだけでOK！',{tlab:'カンのつづきは第3章で'}),
+    ];
+  },
+  nk1_4(){
+    return [
+      ch1Teach('ポンできる！…と気づいたら、つぎは どうするんだろう。'
+        +'ここでは<b>鳴いたあとの動き</b>を覚えよう。',{tlab:'鳴いたあと'}),
+      ch1Teach('まず<b>声に出す</b>。「ポン！」「チー！」「カン！」。'
+        +'だまって牌に手をのばしてはいけないよ。<b>声がさき</b>だ。',{tlab:'まず声に出す'}),
+      {q:'ポンしたいとき、さいしょにすることは？',
+        choices:['「ポン！」と声に出す','だまって捨て牌を取る'],a:0,
+        exp:'ロンのときとおなじ。<b>声に出してはじめて</b>みんなに伝わるんだ。'},
+      ch1Teach('つぎに、もらった牌を入れた<b>3枚を みんなに見えるように置く</b>よ。'
+        +'手の中にはもどさないんだ。',
+        {tlab:'見えるように置く',
+         panel:nkBoardHTML({after:'234m678p55s3s',afterMelds:[{type:'pon',tiles:'GGG',from:'right'}]})}),
+      {q:'鳴いた3枚は どうする？',
+        choices:['みんなに見えるように、手牌のよこに置く','手の中にもどして ふつうに持つ'],a:0,
+        exp:'鳴いた組は<b>見せておく</b>。だから まわりの人は「この人は鳴いた」と分かるんだったね。'},
+      ch1Teach('さいごに、<b>自分の手牌から1枚 切る</b>。'
+        +'ここがいちばん まちがえやすいところだよ。',{tlab:'そして1枚切る'}),
+      ch1Teach('ポン・チーのときは<b>牌を引かない</b>。もらった牌が「引いた牌」のかわりになるから、'
+        +'そのまま1枚切るんだ。',{tlab:'ツモは しない'}),
+      {q:'ポンしたあと、山から牌を引く？',
+        choices:['引かない。そのまま1枚切る','ふつうどおり1枚引いてから切る'],a:0,
+        exp:'もらった牌が ツモのかわり。だからポン・チーのあとは<b>切るだけ</b>だよ。'},
+      ch1Teach('ながれは この4つ。声 → さらす → 1枚切る。そしてゲームは そのままつづくよ。',
+        {tlab:'鳴きのながれ',panel:nkFlowHTML('all')}),
+      {q:'「チー！」と言って3枚さらした。つぎにすることは？',
+        choices:['自分の手牌から1枚 切る','山から1枚 引く','なにもしないで つぎの人へ'],a:0,
+        exp:'鳴いたあとは<b>かならず自分が1枚切る</b>。ここで止まると卓が止まってしまうよ。'},
+      {q:'カンしたあと、つぎにすることは？',
+        choices:['もう1枚 引いてから、1枚切る','なにも引かずに、1枚切る'],a:0,
+        exp:'<b>ポン・チーは引かない／カンだけ1枚引く</b>。ここだけ ちがうよ。'},
+    ];
+  },
+  nk1_5(){
+    return [
+      ch1Teach('鳴くと いいことばかりではないよ。<b>できなくなること</b>もあるんだ。',{tlab:'鳴くとどうなる？'}),
+      ch1Teach('いちばん大きいのはこれ。ほかの人の捨て牌をもらって<b>手をひらいた</b>ら、'
+        +'もう<b>リーチはできない</b>よ。',{tlab:'リーチできなくなる'}),
+      {q:'ポンした手で、そのあとテンパイした。リーチできる？',
+        panel:nkBoardHTML({after:'234m678p55s3s',afterMelds:[{type:'pon',tiles:'GGG',from:'right'}]}),
+        choices:['リーチできない','リーチできる'],a:0,
+        exp:'リーチは<b>鳴いていない手</b>のもの。これは「実戦への扉」でも覚えたね。'},
+      {q:'チーした手では、リーチできる？',choices:['できない','できる'],a:0,
+        exp:'ポンでもチーでも、ほかの人の牌をもらって手をひらいたらリーチはできないよ。'},
+      {q:'一度も鳴いていない手が テンパイした。リーチできる？',
+        choices:['できる','できない'],a:0,
+        exp:'鳴いていなければ、リーチできる。だから「鳴くかどうか」は大きなえらび方なんだ。'},
+      ch1Teach('もうひとつ。鳴くと<b>つかなくなる役</b>もあるんだ。'
+        +'どの役がそうなるかは、第3章<b>「役がわかる」</b>でひとつずつ覚えよう。',{tlab:'消える役もある'}),
+      ch1Teach('だいじなのはここ。<b>役がないとアガれない</b>んだったね。'
+        +'だから鳴いたあとに「役がなくてアガれない」ということも起きるんだ。',{tlab:'気をつけること'}),
+      {q:'鳴いたら、かならずアガれる？',
+        choices:['アガれないこともある（役がひつよう）','かならずアガれる'],a:0,
+        exp:'形ができても<b>役がないとアガれない</b>。鳴くまえに ちょっと考えるのが大事なんだね。'},
+      ch1Teach('まとめ。鳴くと<b>リーチができなくなる</b>／<b>つかなくなる役もある</b>。'
+        +'そのかわり<b>組が早くそろう</b>。どっちもあるんだ。',{tlab:'まとめ'}),
+    ];
+  },
+  nk1_6(){
+    return [
+      ch1Teach('さいごに、とても大事なこと。<b>鳴ける＝鳴かなければいけない</b>、ではないよ。',
+        {tlab:'鳴かなくてもいい'}),
+      nkPonMcq({mine:'GG',from:'right',now:'G',
+        exp:'發が2枚あるからポンできるね。…でも、これは「できる」というだけだよ。'}),
+      {q:'ポンできるとき、かならずポンしないといけない？',
+        choices:['いいえ。しなくてもいい','はい。かならずポンする'],a:0,
+        exp:'鳴くかどうかは<b>あなたがえらぶ</b>。だまって見ているのも ちゃんとした1つのえらび方だよ。'},
+      {q:'チーできるとき、かならずチーしないといけない？',
+        choices:['いいえ。しなくてもいい','はい。かならずチーする'],a:0,
+        exp:'チーもおなじ。「できる」と「する」は べつのことなんだ。'},
+      ch1Teach('じゃあ、どんなときに鳴くの？　それは<b>手の形</b>や<b>役</b>を見て考えるよ。'
+        +'そこは これから第3章でゆっくり練習していこう！',{tlab:'いつ鳴くかは これから'}),
+      ch1Teach('それともうひとつ。<b>なにもできない場面のほうが ずっと多い</b>よ。'
+        +'ほとんどの捨て牌は、あなたに関係ないんだ。',{tlab:'なにもできない方が多い'}),
+      nkActMcq({mine:'34m',from:'opposite',now:'5m',
+        exp:'形は345マンになるけど、捨てたのは対面。チーは上家だけだから…なにもできないね。'}),
+      nkActMcq({mine:'2m9p',from:'right',now:'5m',
+        exp:'おなじ牌も2枚なく、ならびも作れない。こういう場面がいちばん多いよ。'}),
+      ch1Teach('だから実戦では、<b>捨て牌をちらっと見て、関係なければそのまま</b>。'
+        +'たまに「あ、鳴ける」があるくらいで ちょうどいいんだ。',{tlab:'まとめ'}),
+    ];
+  },
+  nk1_7(){
+    const quiz=shuffle([
+      nkActMcq({hand:'234m678p55s3s9pGG',from:'right',now:'G',
+        exp:'發が手の中に2枚。下家からでもポンできる！'}),
+      nkActMcq({hand:'34m678p55s3s9p2sE',from:'left',now:'5m',
+        exp:'3マン4マンに上家の5マン。345マンでチーできる！'}),
+      nkActMcq({hand:'34m678p55s3s9p2sE',from:'right',now:'5m',
+        exp:'おなじ5マンでも、捨てたのが下家ならチーできない。チーは上家だけ。'}),
+      nkKanMcq({hand:'777p234m55s3s9pE',from:'opposite',now:'7p',
+        exp:'7ピンが手の中に3枚＋4枚目。対面からでもカンできる！'}),
+      nkActMcq({hand:'ES234m678p55s3s',from:'left',now:'W',
+        exp:'東・南に西では ならびにならない。字牌はチーできないよ。'}),
+      nkActMcq({hand:'2m9p345s678s44p1s',from:'opposite',now:'5m',
+        exp:'おなじ牌も2枚なく、ならびも作れない。なにもできないね。'}),
+      {q:'チーできるのは だれの捨て牌？',choices:['上家だけ','3人とも'],a:0,
+        exp:'チーだけ上家。ポンとカンは3人 だれからでもOKだったね。'},
+      {q:'ポンしたあと、山から牌を引く？',choices:['引かない。そのまま1枚切る','引いてから切る'],a:0,
+        exp:'もらった牌がツモのかわり。引くのはカンのときだけだよ。'},
+      {q:'ポンした手で、リーチできる？',choices:['できない','できる'],a:0,
+        exp:'手をひらいたらリーチはできない。'},
+      {q:'ポンできるとき、かならずポンする？',choices:['しなくてもいい','かならずする'],a:0,
+        exp:'「できる」と「する」はべつ。だまって見ているのも えらび方のひとつ。'},
+    ]);
+    return [
+      ch1Teach('総まとめ！　<b>ほかの人が牌を捨てた瞬間</b>に、あなたが何をするか。ぜんぶ思い出そう。',
+        {tlab:'鳴きマスターへ'}),
+    ].concat(quiz).concat([
+      {q:'さいごは ながれの通しだよ。上家が5マンを捨てた。あなたの手の中は3マン4マン。まず何をする？',
+        panel:nkBoardHTML({mine:'34m',from:'left',now:'5m'}),
+        choices:['「チー！」と声に出す','だまって5マンを取る','自分の牌を1枚切る'],a:0,
+        exp:'鳴きは<b>声がさき</b>。「チー！」と言ってから牌をもらうよ。'},
+      {q:'「チー！」と言った。つぎは？',
+        choices:['345マンを みんなに見えるように置く','345マンを手の中にしまう'],a:0,
+        exp:'鳴いた組は さらしておく。手の中にはもどさないよ。'},
+      {q:'345マンをさらした。さいごにすることは？',
+        panel:nkBoardHTML({after:'678p55s3s9p2sE',afterMelds:[{type:'chi',tiles:'345m',called:'5m',from:'left'}]}),
+        choices:['自分の手牌から1枚 切る','山から1枚 引く','なにもしない'],a:0,
+        exp:'これで1回ぶんの動きが おわり。つぎは下家の番だよ。'},
+      ch1Teach('🎉 <b>鳴きマスター！</b>　ほかの人の捨て牌を見て、鳴けるか決めて、'
+        +'声に出して、さらして、1枚切る。これで実戦の動きが ひととおりできるようになったね！'
+        +'<br>つぎは第1章のさいご、<b>「点のしくみ」</b>だ！',{tlab:'鳴きマスター！'}),
+    ]);
+  },
   /* ===== P「点のしくみ」(R44・第1章の最後の6Lesson) =====
      ねらい: 点数計算ではなく「点がどう動くか」。おぼえるのは だれが / 何人が はらうか。
      ・入れない: 符・翻・点数表・満貫/跳満・親は1.5倍・供託・本場・順位点・一発・裏ドラ・赤ドラ・フリテン
@@ -7032,6 +7299,103 @@ function fPickRon(o){
       +(o.note?'<p class="f-note">この手には役があるものとして考えよう</p>':'')+'</div>',
     cands:o.cands, a:idx, exp:o.exp, tlab:o.tlab||'牌をタップ',
     fk:{kind:'pick',hand:o.hand,cands:o.cands}};
+}
+/* ================= 鳴きを使う(R46)の判定・図・問題 =================
+   ねらい: 「ポン・チーという言葉を知っている」から「他家が捨てた瞬間に、鳴けるか判断して操作できる」へ。
+   ・教えるのは【鳴けるかどうか】だけ。【鳴くべきかどうか】(打点・速度・牌効率)は一切教えない
+   ・正解はすべて下の判定関数から計算する(手で書かない)。テスト側も独立に計算し直して検算する
+   ・図は既存部品の組み合わせ: 捨て牌=R45の .ch3-river/.ch3-now / さらした組=R30の openHandHTML
+   ・席の呼び方(上家・対面・下家)は既習。ここでは実戦に使わせるだけで、教え直さない */
+const NK_SEATS=[['left','上家'],['opposite','対面'],['right','下家']];
+function nkSeatName(from){ const f=NK_SEATS.find(x=>x[0]===from); return f?f[1]:from; }
+function nkCount(tiles,t){ return tiles.filter(x=>x===t).length; }
+/* ポン: 手の中に同じ牌が2枚以上 → だれの捨て牌でもポンできる */
+function nkCanPon(handStr,t){ return nkCount(sortTiles(parseHand(handStr)),t)>=2; }
+/* カン(他家の捨て牌をもらう形): 手の中に同じ牌が3枚 → だれの捨て牌でもカンできる */
+function nkCanKan(handStr,t){ return nkCount(sortTiles(parseHand(handStr)),t)>=3; }
+/* チーの「牌の形」: 字牌は不可。捨て牌と手の中の2枚で 同じ種類の3つならびになる組み合わせを全部返す */
+function nkChiPairs(handStr,t){
+  if(!t||t.length!==2) return [];                       // 字牌(1文字)はならびを作れない
+  const n=+t[0], su=t[1];
+  const h=sortTiles(parseHand(handStr));
+  const has=x=>h.indexOf(x)>=0;
+  const out=[];
+  [[-2,-1],[-1,1],[1,2]].forEach(d=>{
+    const a=n+d[0], b=n+d[1];
+    if(a<1||a>9||b<1||b>9) return;
+    if(has(a+su)&&has(b+su)) out.push([a+su,b+su]);
+  });
+  return out;
+}
+/* チー: 「牌の形ができる」かつ「捨てたのが上家」の2段階。どちらか欠けたらチーできない */
+function nkCanChi(handStr,t,from){ return from==='left' && nkChiPairs(handStr,t).length>0; }
+/* その場面でできることを全部returnする(順番は ポン→チー→カン ではなく、表示用に固定) */
+function nkActions(handStr,t,from){
+  const a=[];
+  if(nkCanPon(handStr,t)) a.push('pon');
+  if(nkCanChi(handStr,t,from)) a.push('chi');
+  if(nkCanKan(handStr,t)) a.push('kan');
+  return a;
+}
+/* ---- 図 ---- */
+function nkMineHTML(tilesStr,lab){
+  const t=sortTiles(parseHand(tilesStr));
+  return '<div class="nk-mine"><span class="nk-mlab">'+(lab||'あなたの手の中に')+'</span>'
+    +'<span class="nk-mt">'+t.map(x=>tileHTML(x)).join('')+'</span></div>';
+}
+/* o:{mine, hand, from, now, melds, note} — mine=判断に使う数枚 / hand=13枚ぜんぶ(どちらか) */
+function nkBoardHTML(o){
+  let h='<div class="nk-board">';
+  if(o.hand){ h+='<div class="tc-lab">あなたの手牌</div>'
+    +openHandHTML(sortTiles(parseHand(o.hand)),o.melds||[]); }
+  else if(o.mine) h+=nkMineHTML(o.mine,o.mineLab);
+  if(o.now) h+=fRiverHTML(o.otherRiver||[],{head:nkSeatName(o.from||'right')+'が捨てた',now:o.now});
+  if(o.after) h+='<div class="tc-lab">'+(o.afterLab||'鳴いたあとの あなたの手')+'</div>'
+    +openHandHTML(sortTiles(parseHand(o.after)),o.afterMelds||[])
+    +'<div class="oh-legend"><span>← 手の中の牌</span><span>さらした組 →</span></div>';
+  return h+'</div>';
+}
+const NK_FLOW=[['だれかが牌を捨てる',''],['「ポン！」と声に出す','声'],
+  ['もらった牌を入れて、3枚を みんなに見えるように置く','さらす'],
+  ['自分の手牌から1枚 切る','切る']];
+function nkFlowHTML(on,words){
+  const w=words||NK_FLOW.map(x=>x[0]);
+  return '<div class="nk-flow">'+w.map((tx,i)=>
+    (i?'<div class="nk-arrow">▼</div>':'')
+    +'<div class="nk-step'+((on===undefined||on===null||on===i||on==='all')?' on':'')+'">'
+    +'<span class="nk-no">'+(i+1)+'</span><span class="nk-tx">'+tx+'</span></div>').join('')+'</div>';
+}
+/* ---- 問題 ---- */
+function nkPonMcq(o){
+  const can=nkCanPon(o.hand||o.mine,o.now);
+  return {q:o.q||'この牌、<b>ポン</b>できる？', panel:nkBoardHTML(o),
+    choices:['ポンできる','ポンできない'], a:can?0:1, exp:o.exp, tlab:o.tlab,
+    /* fk = 自動テスト用の内部メモ(画面には出ない)。テスト側で独立に計算し直して a を検算する */
+    fk:{kind:'pon',hand:o.hand||o.mine,now:o.now,from:o.from||'right'}};
+}
+function nkChiMcq(o){
+  const from=o.from||'left';
+  const can=nkCanChi(o.hand||o.mine,o.now,from);
+  return {q:o.q||'この牌、<b>チー</b>できる？', panel:nkBoardHTML(Object.assign({},o,{from})),
+    choices:['チーできる','チーできない'], a:can?0:1, exp:o.exp, tlab:o.tlab,
+    fk:{kind:'chi',hand:o.hand||o.mine,now:o.now,from}};
+}
+function nkKanMcq(o){
+  const can=nkCanKan(o.hand||o.mine,o.now);
+  return {q:o.q||'この牌、<b>カン</b>できる？', panel:nkBoardHTML(o),
+    choices:['カンできる','カンできない'], a:can?0:1, exp:o.exp, tlab:o.tlab,
+    fk:{kind:'kan',hand:o.hand||o.mine,now:o.now,from:o.from||'right'}};
+}
+/* 実戦そのもの: 「いま、なにができる？」。できることが無い場面も必ず混ぜる */
+const NK_ACT_LABEL={pon:'ポン',chi:'チー',kan:'カン'};
+function nkActMcq(o){
+  const from=o.from||'right';
+  const acts=nkActions(o.hand||o.mine,o.now,from);
+  const CH=['ポンできる','チーできる','カンできる','なにもできない'];
+  const a=acts.length===1?['pon','chi','kan'].indexOf(acts[0]):(acts.length?-1:3);
+  return {q:o.q||'いま、あなたは <b>なにができる</b>？', panel:nkBoardHTML(Object.assign({},o,{from})),
+    choices:CH, a, exp:o.exp, tlab:o.tlab||'よく見てえらぼう',
+    fk:{kind:'act',hand:o.hand||o.mine,now:o.now,from}};
 }
 function ch3CtxHTML(c,q){
   if(!c) return '';
