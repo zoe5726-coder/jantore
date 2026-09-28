@@ -67,7 +67,7 @@
   --road-w:min(82vw, 330px);             /* ロード主線の幅。左右は将来のキャラ/装飾用の余白 */
   --tile-w:clamp(38px, 10.5vw, 48px);
   /* 実卓UI(R47): 麻雀卓のフェルト。牌(--tile-face)は反転しないので、卓だけを明暗で変える */
-  --felt:#1a6e46; --felt-edge:#125636; --felt-ink:#f0f8f4; --felt-warn:#ffe0a0;
+  --felt:#1a6e46; --felt-edge:#125636; --felt-ink:#f0f8f4; --felt-warn:#ffe0a0; --felt-lab:#cfe3d8;
 }
 :root:not([data-theme="light"]){}
 /* 端末の設定に合わせる(themeMode=system)ときのダーク。data-theme="light" が付いていれば無効 */
@@ -83,7 +83,7 @@
     --gold:#b8842a; --gold-deep:#7a5412; --gold-ink:#f0c46b;
     --locked:#7d9185; --overlay:rgba(0,0,0,.66);
     --shadow:rgba(0,0,0,.50); --shadow-soft:rgba(0,0,0,.32);
-    --felt:#103525; --felt-edge:#0a2419; --felt-ink:#cfe9dc; --felt-warn:#ffe0a0;
+    --felt:#103525; --felt-edge:#0a2419; --felt-ink:#cfe9dc; --felt-warn:#ffe0a0; --felt-lab:#a9c6b6;
   }
 }
 /* ユーザーがダークを選んだとき(themeMode=dark)。端末の設定より優先する */
@@ -98,7 +98,7 @@
   --gold:#b8842a; --gold-deep:#7a5412; --gold-ink:#f0c46b;
   --locked:#7d9185; --overlay:rgba(0,0,0,.66);
   --shadow:rgba(0,0,0,.50); --shadow-soft:rgba(0,0,0,.32);
-  --felt:#103525; --felt-edge:#0a2419; --felt-ink:#cfe9dc; --felt-warn:#ffe0a0;
+  --felt:#103525; --felt-edge:#0a2419; --felt-ink:#cfe9dc; --felt-warn:#ffe0a0; --felt-lab:#a9c6b6;
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 body{
@@ -652,7 +652,7 @@ button.tile.off:active{transform:none;}
    卓のはしまで広げない(1fr を使わない)。輪ぜんたいを卓の中央にまとめる。
    上家と下家の河は縦にぜんぶ使う(実卓でも横の河は中央より上下に長い)。中央には何も置かない */
 .mjt-grid{display:grid; grid-template-columns:auto auto auto; grid-template-rows:auto auto auto;
-  gap:2px; align-items:center; justify-items:center; justify-content:center; align-content:center;}
+  gap:3px; align-items:center; justify-items:center; justify-content:center; align-content:center;}
 .mjt-riv.top{grid-row:1; grid-column:2;}
 .mjt-riv.bottom{grid-row:3; grid-column:2;}
 .mjt-riv.left{grid-row:1 / 4; grid-column:1; align-self:center;}
@@ -660,9 +660,11 @@ button.tile.off:active{transform:none;}
  /* 中央の空き。ここには何も置かないが、4つの河がくっつきすぎないように広さだけ確保する
     (「いま」の小ラベルもここへ出る) */
 .mjt-mid{grid-row:2; grid-column:2;
-  min-height:calc(var(--mjt-rt) * 2.2); min-width:calc(var(--mjt-rt) * 2.2);}
-.mjt-name{display:block; font-size:clamp(9px, 2.5vw + 1px, 11px); font-weight:800;
-  color:var(--felt-ink); text-align:center; line-height:1.2; margin:0 0 2px; white-space:nowrap;}
+  min-height:calc(var(--mjt-rt) * 1.6); min-width:calc(var(--mjt-rt) * 1.6);}
+/* 席名は補助ラベル。主役は河の位置なので、牌より目立たせない(R50) */
+.mjt-name{display:block; font-size:clamp(8.5px, 2vw + 2px, 10px); font-weight:700;
+  color:var(--felt-lab);
+  text-align:center; line-height:1.2; margin:0 0 1px; white-space:nowrap; letter-spacing:.02em;}
 /* 席名は4席とも【河の外がわ・中央ぞろえ】で統一する。
    上家=河の上 / 対面=河の上 / 下家=河の上 / あなた=河の下(手牌の側) */
 .mjt-riv{display:flex; flex-direction:column; align-items:center;}
@@ -681,7 +683,8 @@ button.tile.off:active{transform:none;}
 .mjt.mjt-r2{--mjt-rt:clamp(17.5px, 4.6vw + 2.8px, 24px); --mjt-nt:clamp(21px, 5.5vw + 3.4px, 28px);}
 .mjt.mjt-r3{--mjt-rt:clamp(14px, 3.7vw + 2.2px, 19px); --mjt-nt:clamp(19px, 4.8vw + 3.1px, 25px);}
 
-.mjt-grid2{display:grid; gap:2px; justify-items:center; align-items:center;}
+/* 実際の河は捨て牌をかなり詰めて置く。同じ段も、段と段のあいだも ほぼ密着させる */
+.mjt-grid2{display:grid; gap:1px; justify-items:center; align-items:center;}
 .mjt-grid2-pick{gap:18px;}         /* 自分の河をタップさせる画面。ボタンどうしが重ならない間隔 */
 .mjt-cell{position:relative; display:block; box-sizing:content-box;
   width:var(--cw); height:var(--ch); padding:0; margin:0; border:0;
@@ -691,23 +694,32 @@ button.tile.off:active{transform:none;}
   transform:translate(-50%,-50%) rotate(var(--rot));}
 /* いま捨てた牌: 大きさ＋うすい枠＋小ラベルで「最新」だけを示す。当たり牌かどうかは何も示さない
    (3人ぶんの最新牌には まったく同じ印をつけるので、印が正解のヒントにならない) */
-.mjt .mjt-new > .tile{outline:2px solid rgba(255,255,255,.7); outline-offset:1px;}
-.mjt-nlab{font-size:clamp(8.5px,2.3vw + 1px,10px); font-weight:800; color:var(--felt-ink);
-  line-height:1.1; white-space:nowrap;}
+/* 最新の1枚: 大きさも位置も河のまま。うすい枠だけで「いま捨てられた」ことを示す(R50) */
+.mjt .mjt-new > .tile{outline:1.5px solid rgba(255,255,255,.62); outline-offset:1px;}
+.mjt-nlab{font-size:clamp(8px,1.8vw + 2px,9.5px); font-weight:700;
+  color:var(--felt-ink); line-height:1.1; white-space:nowrap;}
 /* 河が2段以上のときは「いま」の文字を置く場所がない。大きさ＋うすい枠だけで最新を示す */
 .mjt-multi .mjt-new .mjt-nlab{display:none;}
 /* 小ラベルは、上下の席は【中央寄り】、左右の席は【外がわ】へ出す。
    となりの牌にかかることがあるので、小さな帯を敷いて牌と見まちがえないようにする */
-.mjt-cell .mjt-nlab{position:absolute; pointer-events:none; z-index:2;
-  background:color-mix(in srgb, var(--felt-edge) 88%, #000); border-radius:4px; padding:0 3px;}
+.mjt-cell .mjt-nlab{position:absolute; pointer-events:none; z-index:4;
+  background:rgba(0,0,0,.45); border-radius:3px; padding:0 2px;}
 .mjt-riv.bottom .mjt-cell .mjt-nlab,.mjt-riv.top .mjt-cell .mjt-nlab{
   left:50%; top:100%; transform:translateX(-50%);}
  /* 左右の席は【卓の外がわ】へ出す。中央寄りに出すと、上下の席の河とぶつかるため */
 .mjt-riv.left .mjt-cell .mjt-nlab{right:100%; top:50%; transform:translateY(-50%); margin-right:3px;}
 .mjt-riv.right .mjt-cell .mjt-nlab{left:100%; top:50%; transform:translateY(-50%); margin-left:3px;}
 /* タップする牌: 牌の見た目は変えず、当たり判定だけ外へ広げる(アプリ共通の 36×44 を満たす) */
-button.mjt-cell.mjt-pick{padding:10px 8px; margin:-10px -8px; cursor:pointer;
-  transition:transform .08s;}
+/* 見た目は河に密着したまま、当たり判定だけ広げる(R50 §26)。
+   ボタンの箱は牌のままにして、::after の見えない当たり判定だけを外へ広げる。
+   こうすると gap も grid の寸法も変わらないので、見た目は密着のまま押しやすくなる。
+   広げる向きは席の向きに合わせる(横向きの席では 縦横が入れかわる) */
+button.mjt-cell.mjt-pick{padding:0; margin:0; cursor:pointer; transition:transform .08s; z-index:3;}
+button.mjt-cell.mjt-pick::after{content:''; position:absolute; left:50%; top:50%;
+  transform:translate(-50%,-50%);
+  width:max(calc(100% + 12px), 36px); height:max(calc(100% + 16px), 44px);}
+.mjt-riv.left button.mjt-pick::after,.mjt-riv.right button.mjt-pick::after{
+  width:max(calc(100% + 16px), 44px); height:max(calc(100% + 12px), 36px);}
 button.mjt-cell.mjt-pick:active{transform:translateY(2px);}
 /* 見のがした牌(F5): フリテンの図と混ざらないよう、色も文字もはっきり分ける */
 .mjt .mjt-miss > .tile{outline:2px dashed var(--felt-warn); outline-offset:1px;}
@@ -721,9 +733,11 @@ button.mjt-pick{background:none; border:0; font:inherit;
 .mjt-pick.wrong .tile{outline:3px solid var(--verm); outline-offset:2px;}
 .mjt-pick.correct .mjt-nlab{color:#fff;}
 /* 自分の席: 卓の中央寄りが「あなたの河」、下端が「あなたの手牌」。細い線で分ける */
-.mjt-me{margin-top:5px; padding-top:5px; border-top:1.5px solid rgba(255,255,255,.22);}
-.mjt-me .mjt-name{margin-bottom:3px;}
+/* 実卓では河と手牌のあいだに線はない。位置と余白だけで分ける(R50) */
+.mjt-me{margin-top:8px;}
+.mjt-me .mjt-name{margin-bottom:2px;}
 .mjt .hand{margin:0; gap:1px;}
+.mjt .hand-open .mjt-hp,.mjt .hand > .tile{border-radius:3px;}
 /* 卓の中では【自分の13枚がいちばん読めること】を優先する(R49)。
    アプリ共通の --tile-w で止めず、卓の内側の幅をめいっぱい使う */
 .mjt .hand .tile{flex:1 1 0; min-width:0; max-width:32px;}
@@ -755,8 +769,10 @@ button.mjt-pick.mjt-hp{flex:1 1 0; min-width:0; padding:10px 1px; margin:-10px -
   box-shadow:0 0 0 5px color-mix(in srgb, var(--jade) 38%, transparent);}
 /* ---- 上から見た図なので、牌の「厚み」の影は出さない(R49) ----
    アプリのほかの場所(立てて持っている手牌など)は今までどおり厚みを出す。
-   卓の上は寝かせて置いた牌なので、影があると上から見た図に見えない */
-.mjt .tile{box-shadow:inset 0 1px 0 #fff;}
+   卓の上は寝かせて置いた牌なので、影があると上から見た図に見えない。
+   R50: 角丸を弱めて「ボタン」ではなく「縦長の麻雀牌」に見せる。輪郭も少しだけ弱める */
+.mjt .tile{box-shadow:inset 0 1px 0 rgba(255,255,255,.55); border-radius:3px;
+  border-color:color-mix(in srgb, var(--tile-edge) 70%, var(--tile-face));}
 .mjt .mld-side > .tile{box-shadow:none;}
 .mjt .mjt-pick.correct .tile{box-shadow:0 0 0 5px color-mix(in srgb, var(--jade) 45%, transparent);}
 /* 鳴きを使う(R46): 「あなたの手の中」と「だれかが捨てた牌」を上下に並べ、そのあと何が起きるかを帯で見せる。
@@ -3409,8 +3425,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.44.1';
-const BUILD_ID='20260928-02';
+const APP_VER='0.45.0';
+const BUILD_ID='20260928-03';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -7495,8 +7511,9 @@ function mjtRiverHTML(seat,name,riv,opt){
     const isNow=(riv.nowIdx===i), isMiss=(riv.missIdx===i), isRiichi=(o.riichiIdx===i);
     // リーチ宣言牌は、その席の向きから【さらに90度】横向きに置く(席の向きと足し算する)
     const deg=rot+(isRiichi?90:0), swap=Math.abs(deg%180)===90;
-    const big=isNow||isMiss||(o.pickOld!=null);
-    const tw=big?'var(--mjt-nt)':'var(--mjt-rt)';
+    // 最新の捨て牌も 河の中の1枚。大きくしたり離したりせず、うすい枠だけで示す(R50)。
+    // 大きくしてよいのは「自分の河をタップさせる問題」のときだけ(指で押すため)
+    const tw=(o.pickOld!=null)?'var(--mjt-nt)':'var(--mjt-rt)';
     const st='--tw:'+tw+';--rot:'+deg+'deg;'
       +'--cw:'+(swap?'calc('+tw+' * 1.4)':tw)+';--ch:'+(swap?tw:'calc('+tw+' * 1.4)')+';'
       +'grid-row:'+p[0]+';grid-column:'+p[1]+';';
