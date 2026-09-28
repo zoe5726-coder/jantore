@@ -746,7 +746,13 @@ button.mjt-pick.mjt-hp{flex:1 1 0; min-width:0; padding:10px 1px; margin:-10px -
 
 /* 正解後だけの関連づけ(§41)。正解前には絶対につけない */
 .mjt .mjt-rel{outline:3px solid var(--jade); outline-offset:2px;
-  box-shadow:0 0 0 5px color-mix(in srgb, var(--jade) 38%, transparent), 0 3px 0 var(--tile-shadow);}
+  box-shadow:0 0 0 5px color-mix(in srgb, var(--jade) 38%, transparent);}
+/* ---- 上から見た図なので、牌の「厚み」の影は出さない(R49) ----
+   アプリのほかの場所(立てて持っている手牌など)は今までどおり厚みを出す。
+   卓の上は寝かせて置いた牌なので、影があると上から見た図に見えない */
+.mjt .tile{box-shadow:inset 0 1px 0 #fff;}
+.mjt .mld-side > .tile{box-shadow:none;}
+.mjt .mjt-pick.correct .tile{box-shadow:0 0 0 5px color-mix(in srgb, var(--jade) 45%, transparent);}
 /* 鳴きを使う(R46): 「あなたの手の中」と「だれかが捨てた牌」を上下に並べ、そのあと何が起きるかを帯で見せる。
    ・牌の絵は作らない。捨て牌は R45 の .ch3-river / .ch3-now、さらした組は R30 の openHandHTML を使い回す
    ・1画面に4人分の河は出さない。判断に必要な牌だけを出す */
@@ -3398,7 +3404,7 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
 const APP_VER='0.44.1';
-const BUILD_ID='20260927-06';
+const BUILD_ID='20260928-01';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
