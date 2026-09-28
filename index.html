@@ -645,19 +645,17 @@ button.tile.off:active{transform:none;}
   --mjt-per:6;                                 /* 河は6枚で次の段へ(最大3段=18枚) */
   --mjt-rows:3;                                /* 河は3段まで。スロットは常にこの大きさ(R51) */
   --mjt-gap:1px;                               /* 捨て牌どうしのすきま(実卓は密着している) */
-  /* 河の牌(R51)。6枚×3段を4席ぶん確保すると、卓は【牌のはばの14.4倍の正方形】に固定される。
-     つまり卓の高さは牌の大きさで決まってしまうので、画面の【幅だけ】で牌の大きさを決められない。
-     幅でも高さでも はみ出さない、いちばん大きい牌を選ぶ:
-       ・幅   … 4.45vw + 2.6px (最大24px)
-       ・高さ … (画面の高さ - 640px) / 14.4  ← 卓＋手牌＋問題文が縦に収まる上限
-     画面が高い端末では自動的に牌が大きくなる(iPhoneの縦長画面ほど読みやすくなる) */
-  --mjt-rt:clamp(14px, min(4.45vw + 2.6px, (100vh - 645px) / 14.4), 24px);
+  /* 河の牌(R52)。【読めることが最優先】。
+     1画面へ押しこむために牌を小さくしない。低い画面(320x568など)は、
+     ページぜんたいを自然に縦スクロールさせて吸収する(卓の中だけをスクロールさせない)。
+       320→17.0 / 390→20.0 / 430→21.7 (最小17px・最大24px) */
+  --mjt-rt:clamp(17px, 4.45vw + 2.6px, 24px);
   /* ツモ牌は【手牌の仲間】。河のスロットの都合で小さくしない(手牌と同じ大きさで読む) */
   --mjt-tt:clamp(20px, 5.2vw + 3.4px, 27px);
   --mjt-cw:var(--mjt-rt);                      /* 牌1枚の箱: たて向きのとき */
   --mjt-ch:calc(var(--mjt-rt) * 1.4);          /*           よこ向きのときは縦横が入れかわる */
   background:var(--felt); border:2px solid var(--felt-edge); border-radius:16px;
-  padding:15px 7px 15px; margin:2px auto 3px; width:100%; max-width:430px; box-sizing:border-box;
+  padding:9px 7px 8px; margin:2px auto 3px; width:100%; max-width:430px; box-sizing:border-box;
   box-shadow:inset 0 2px 12px rgba(0,0,0,.22), 0 3px 0 var(--felt-edge);}
 /* 実卓と同じ置きかた(R51): 【中央に広い四角い空間があり、その上・左・右・下に
    4つの"固定river slot"がある】という形。輪を小さく作ることを目的にしない。
@@ -679,13 +677,18 @@ button.tile.off:active{transform:none;}
 .mjt-name{display:block; font-size:clamp(8.5px, 2vw + 2px, 10px); font-weight:700;
   color:var(--felt-lab);
   text-align:center; line-height:1.2; margin:0 0 1px; white-space:nowrap; letter-spacing:.02em;}
-/* 席名は4席とも【河の外がわ・中央ぞろえ】で統一する。
-   上家=河の上 / 対面=河の上 / 下家=河の上 / あなた=河の下(手牌の側)
-   R51: 席名は【スロットの外へ絶対配置】する。こうすると .mjt-riv の箱＝スロットそのものになり、
-   4つのスロットと中央の空きが左右上下でぴったり対称になる(文字の高さが卓をゆがめない) */
+/* 席名は4席とも【河と中央空間のあいだ】へ置く(R52)。
+   対面=河の下 / 上家=河の右 / 下家=河の左 / あなたの河=河の上。
+   ・どのラベルも、自分の河のいちばん中央よりの辺に沿う(中央の一点へ集めない)
+   ・中央の まんなかには余白を残す
+   ・絶対配置なので、スロットの left/top/width/height には影響しない
+   ・河が1段しかなくても、ラベルは固定スロットの内がわの辺に出るので牌から遠ざからない */
 .mjt-riv{position:relative; display:block;}
-.mjt-riv > .mjt-name{position:absolute; left:0; right:0; bottom:100%; margin:0 0 2px;}
-.mjt-riv.bottom > .mjt-name{top:100%; bottom:auto; margin:2px 0 0;}
+.mjt-riv > .mjt-name{position:absolute; margin:0; white-space:nowrap;}
+.mjt-riv.top    > .mjt-name{top:100%;  left:0; right:0; margin-top:3px;}
+.mjt-riv.bottom > .mjt-name{bottom:100%; left:0; right:0; margin-bottom:3px;}
+.mjt-riv.left   > .mjt-name{left:100%;  top:50%; transform:translateY(-50%); margin-left:4px;}
+.mjt-riv.right  > .mjt-name{right:100%; top:50%; transform:translateY(-50%); margin-right:4px;}
 /* 「ロンできる牌はない」は牌ではないので ふつうのボタン。ただし主役ではないので少し細く */
 .mjt-none .choice{padding:11px 14px; font-size:clamp(13.5px,4vw,15px);}
 /* ---- 河そのもの(R49) ----
@@ -724,8 +727,10 @@ button.tile.off:active{transform:none;}
    となりの牌にかかることがあるので、小さな帯を敷いて牌と見まちがえないようにする */
 .mjt-cell .mjt-nlab{position:absolute; pointer-events:none; z-index:4;
   background:rgba(0,0,0,.45); border-radius:3px; padding:0 2px;}
-.mjt-riv.bottom .mjt-cell .mjt-nlab,.mjt-riv.top .mjt-cell .mjt-nlab{
-  left:50%; top:100%; transform:translateX(-50%);}
+/* R52: 席名が中央側へ来たので、「いま」の小ラベルは4席とも【卓の外がわ】へ出す。
+   対面の河は中央側の段から埋まるので、対面だけは牌の【上】が外がわになる */
+.mjt-riv.bottom .mjt-cell .mjt-nlab{left:50%; top:100%; transform:translateX(-50%);}
+.mjt-riv.top .mjt-cell .mjt-nlab{left:50%; bottom:100%; transform:translateX(-50%);}
  /* 左右の席は【卓の外がわ】へ出す。中央寄りに出すと、上下の席の河とぶつかるため */
 .mjt-riv.left .mjt-cell .mjt-nlab{right:100%; top:50%; transform:translateY(-50%); margin-right:3px;}
 .mjt-riv.right .mjt-cell .mjt-nlab{left:100%; top:50%; transform:translateY(-50%); margin-left:3px;}
@@ -761,7 +766,7 @@ button.mjt-pick{background:none; border:0; font:inherit;
 .mjt-pick.correct .mjt-nlab{color:#fff;}
 /* 自分の席: 卓の中央寄りが「あなたの河」、下端が「あなたの手牌」。細い線で分ける */
 /* 実卓では河と手牌のあいだに線はない。位置と余白だけで分ける(R50) */
-.mjt-me{margin-top:23px;}   /* R51: 「あなたの河」の席名がスロットの下に絶対配置されるぶんの余白 */
+.mjt-me{margin-top:8px;}
 .mjt-me .mjt-name{margin-bottom:2px;}
 .mjt .hand{margin:0; gap:1px;}
 .mjt .hand-open .mjt-hp,.mjt .hand > .tile{border-radius:3px;}
@@ -3452,8 +3457,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.46.0';
-const BUILD_ID='20260928-04';
+const APP_VER='0.47.0';
+const BUILD_ID='20260928-05';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
