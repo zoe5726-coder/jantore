@@ -775,8 +775,12 @@ button.mjt-pick{background:none; border:0; font:inherit;
 .mjt .hand .tile{flex:1 1 0; min-width:0; max-width:32px;}
 /* ツモ牌は手牌の右に【少しだけ】離して置く(実卓でツモ牌を手牌の右へ置くのと同じ)。
    大きくしたり光らせたりせず、このすきまだけで「いまツモってきた14枚目」と分かるようにする(R53) */
-.mjt-tsumo{display:flex; flex-direction:column; align-items:center; gap:1px; flex:none;
+/* R54: ツモ牌の【有無】で卓の高さが動かないように、手牌の行の高さとラベルの置き場所を固定する */
+.mjt .hand{min-height:calc(var(--mjt-tt) * 1.4);}
+.mjt-me{padding-bottom:13px;}
+.mjt-tsumo{position:relative; display:flex; flex-direction:column; align-items:center; gap:1px; flex:none;
   margin-left:clamp(7px, 2.4vw, 11px);}
+.mjt-tsumo > .mjt-nlab{position:absolute; top:100%; left:50%; transform:translateX(-50%); margin-top:1px;}
 .mjt .mjt-tsumo .tile{flex:none; width:var(--mjt-tt); max-width:var(--mjt-tt);}
 /* R53: 選んだ牌は【少しだけ上へ】。transform なので卓も手牌も河も1pxも動かない */
 .mjt .mjt-hp.sel > .tile,.mjt .mjt-tp.sel > .tile{transform:translateY(-6px);}
@@ -2311,6 +2315,7 @@ const COURSES=[
 {id:'ch2d',title:'実戦の待ち',icon:'👀',section:1,type:'ch1',desc:'13枚から待ち牌をぜんぶ見つけて、アガリが見える！',questions:[]},
 {id:'ch2e',title:'ロンとフリテン',icon:'🔔',section:1,type:'ch1',desc:'ほかの人の捨て牌を見て、ロンできるか決めよう。',questions:[]},
 {id:'ch2f',title:'牌を選んで切る',icon:'✋',section:1,type:'ch1',desc:'自分の番は、1枚ツモって1枚切る。えらんで切ってみよう。',questions:[]},
+{id:'ch2z',title:'★ はじめてのミニ実戦',icon:'🀄',section:1,type:'ch1',desc:'習ったことが1本につながる。3〜4巡の短い実戦をやってみよう。',questions:[]},
 /* 第3章「役がわかる」。descに役名を先出ししない(名称初出はレッスン内)。ch3xは任意Road(次章の前提にしない) */
 {id:'ch3a',title:'はじめての役',icon:'🎫',section:2,type:'ch1',desc:'知っている「リーチ」を、役として正式に覚えよう。',questions:[]},
 {id:'ch3b',title:'役牌',icon:'🀄',section:2,type:'ch1',desc:'3枚そろえるだけで役になる牌があるんだ。',questions:[]},
@@ -2659,6 +2664,20 @@ const THEMES=[
     {diff:{ch1:'tu1_4'}},                      // T4 いわれた牌を切ろう(牌の見分けの復習)
     {diff:{ch1:'tu1_5'}},                      // T5 形をくずさず切ろう(できている組は残す)
     {diff:{ch1:'tu1_6'}},                      // ★T6 捨て牌マスター
+   ]},
+  ]},
+ /* ★ はじめてのミニ実戦(R54): 特別ステージ。これまで別々に習った
+    ツモ→打牌→他家の捨て牌→ロン・ポン・チー が、1局の【時間の流れ】でつながることを体験する。
+    ・requires は th_ch2f。th_ch3a の requires は th_ch2e のまま【変えない】ので、
+      すでに第3章を進めている既存ユーザーがロックされることはない(R38/R53と同じやり方)
+    ・固定シナリオ(BATTLES)なので、出る牌も順番もいつも同じ。牌山もAIも作らない */
+ {id:'th_ch2z', course:'ch2z', title:'★ はじめてのミニ実戦', sub:'習ったことが1本につながる',
+  requires:'th_ch2f',
+  subThemes:[
+   {id:'st_ch2z1', title:'ミニ実戦', lessons:[
+    {diff:{ch1:'mb1_1'}},                      // ① 4巡打ってみよう
+    {diff:{ch1:'mb1_2'}},                      // ② 鳴きを使ってみよう
+    {diff:{ch1:'mb1_3'}},                      // ③ ロンしてみよう
    ]},
   ]},
  /* ===== 第3章「役がわかる」v1.0 (本編50Lesson+任意Road7Lesson) =====
@@ -3487,8 +3506,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.48.0';
-const BUILD_ID='20260928-06';
+const APP_VER='0.49.0';
+const BUILD_ID='20260929-01';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -7782,6 +7801,249 @@ function mjtDiscardQ(o){
     fk:{kind:'discard',mode,hand:o.hand,tsumo:o.tsumo,cut:o.cut||null,
         myRiver:(o.myRiver||[]).slice()}};
 }
+/* ================= R54 はじめてのミニ実戦 =================
+   「麻雀AIと自由対局するモード」ではなく、【シナリオ固定型の実戦チュートリアル】。
+   これまで別々に習った 自分の番/ツモ/打牌/他家の捨て牌/ロン/ポン/チー が、
+   1局の【時間の流れ】の中でどうつながるかを体験させる。
+   ・牌山は作らない。配牌・ツモ・他家の打牌はすべてシナリオデータで固定
+   ・他家AIは作らない。本格的な麻雀エンジンにもしない
+   ・シナリオ(BATTLES)と、それを順番に流すエンジン(btXxx)は分けてある。
+     シナリオを足すだけでミニ実戦を増やせる */
+/* ---- シナリオ(固定データ)。エンジンはこの下。シナリオを足すだけで本数を増やせる ----
+   event: draw(自分のツモ) / discard(自分の打牌=問題) / opp(他家の打牌=自動)
+          ask(ロン・ポン・チーの判断=問題) / call(鳴きの成立) / win(アガリ) / end(しめくくり) */
+const BATTLES={
+  /* ① 4巡打ってみよう: 判断イベントなし。1巡の時間の流れだけを体験する */
+  bt1:{ id:'bt1', hand:'123m456m789m234p5p',
+    intro:'ここからは<b>ミニ実戦</b>！　これまで習ったことを、本物の麻雀とおなじ<b>じゅんばん</b>で'
+      +'やってみよう。まずは4巡、打ってみるよ。',
+    introLab:'★ ミニ実戦①',
+    events:[
+      {t:'draw',tile:'W'},
+      {t:'discard',q:'あなたの番だよ。1枚ツモったから、<b>14枚から1枚えらんで切ろう</b>',
+       tlab:'あなたの番',exp:'切ったら、下家 → 対面 → 上家 の順に みんなも1枚ずつ切るよ。'},
+      {t:'opp',seat:'right',tile:'1p'},{t:'opp',seat:'top',tile:'9p'},{t:'opp',seat:'left',tile:'E'},
+      {t:'draw',tile:'9s'},
+      {t:'discard',q:'3人が切りおわって、<b>また あなたの番</b>。1枚切ろう',tlab:'あなたの番（2巡目）',
+       exp:'これが麻雀の1巡。自分 → 下家 → 対面 → 上家 → 自分…とまわっていくよ。'},
+      {t:'opp',seat:'right',tile:'2s'},{t:'opp',seat:'top',tile:'8p'},{t:'opp',seat:'left',tile:'S'},
+      {t:'draw',tile:'N'},
+      {t:'discard',q:'あなたの番。1枚切ろう',tlab:'あなたの番（3巡目）',
+       exp:'河がだんだん長くなってきたね。切った牌はずっと見えたままだよ。'},
+      {t:'opp',seat:'right',tile:'3s'},{t:'opp',seat:'top',tile:'7p'},{t:'opp',seat:'left',tile:'N'},
+      {t:'draw',tile:'1s'},
+      {t:'discard',q:'さいごの1枚。えらんで切ろう',tlab:'あなたの番（4巡目）',
+       exp:'おつかれさま！ これで4巡ぶん打てたね。'},
+      {t:'opp',seat:'right',tile:'4s'},{t:'opp',seat:'top',tile:'6p'},{t:'opp',seat:'left',tile:'W'},
+      {t:'end',q:'🎉 <b>4巡、打てたね！</b><br>自分 → 下家 → 対面 → 上家 → また自分。'
+        +'これが麻雀の<b>時間の進みかた</b>だよ。',tlab:'ミニ実戦① クリア'},
+    ]},
+  /* ② 鳴きを使ってみよう: ポン(対面から)とチー(上家から)を、進行の中で実際に成立させる */
+  bt2:{ id:'bt2', hand:'34m9m234s789s55pEE',
+    intro:'つぎは<b>鳴き</b>だよ。ほかの人が切った牌をもらうと、手牌と順番がどう変わるのか'
+      +'…実際にやって たしかめよう。',
+    introLab:'★ ミニ実戦②',
+    events:[
+      {t:'draw',tile:'1p'},
+      {t:'discard',cut:'1p',cutTsumo:true,q:'あなたの番。ツモってきた1ピンは使えないね。<b>ツモ切り</b>しよう',
+       tlab:'あなたの番',exp:'ツモ切り。手牌はそのままだよ。'},
+      {t:'opp',seat:'right',tile:'9p'},
+      {t:'opp',seat:'top',tile:'5p'},
+      {t:'ask',kind:'pon',seat:'top',tile:'5p',
+       q:'<b>対面が5ピンを切った！</b>　あなたの手には5ピンが2枚…<b>ポンできる？</b>',
+       choices:['ポンできる','ポンできない'],
+       call:{kind:'pon',seat:'top',tile:'5p',use:['5p','5p']},
+       exp:'同じ牌が2枚あればポン！ だれが切った牌でもポンできるよ。'},
+      {t:'discard',cut:'E',q:'ポンできた！　<b>ポンのあとはツモらずに、そのまま1枚切る</b>よ。東を切ろう',
+       tlab:'ポンのあとの打牌',
+       exp:'手牌から5ピンが2枚なくなって、3枚の組が外に出たね。ツモっていないのがポイント。'},
+      {t:'opp',seat:'right',tile:'8p'},
+      {t:'opp',seat:'top',tile:'4p'},
+      {t:'opp',seat:'left',tile:'2m'},
+      {t:'ask',kind:'chi',seat:'left',tile:'2m',
+       q:'<b>上家が2マンを切った！</b>　あなたの手には3マンと4マン…<b>チーできる？</b>',
+       choices:['チーできる','チーできない'],
+       call:{kind:'chi',seat:'left',tile:'2m',use:['3m','4m']},
+       exp:'2マン・3マン・4マンでならびの組！ チーできるのは<b>上家の捨て牌だけ</b>だったね。'},
+      {t:'discard',cut:'E',q:'チーできた！　<b>チーのあともツモらずに1枚切る</b>よ。東を切ろう',
+       tlab:'チーのあとの打牌',
+       exp:'3マンと4マンが手牌からなくなって、234マンの組が外に出たよ。'},
+      {t:'end',q:'🎉 <b>鳴けたね！</b><br>鳴くと、手牌から牌がなくなって<b>組が外に出る</b>。'
+        +'そして<b>ツモらずにすぐ1枚切る</b>。この2つがポイントだよ。',tlab:'ミニ実戦② クリア'},
+    ]},
+  /* ③ ロンしてみよう: 数巡打ったあと、他家が待ち牌を切る。フリテンにはしない(素直な成功体験) */
+  bt3:{ id:'bt3', hand:'123m456m789m234p5p',
+    intro:'さいごは<b>ロン</b>！　あなたの手は、あと1枚でアガリだよ。'
+      +'ほかの人の捨て牌を よ〜く見ていよう。',
+    introLab:'★ ミニ実戦③',
+    events:[
+      {t:'draw',tile:'W'},
+      {t:'discard',cut:'W',cutTsumo:true,q:'あなたの番。西はいらないね。<b>ツモ切り</b>しよう',
+       tlab:'あなたの番',exp:'手はこのまま。あと1枚でアガリの形だよ。'},
+      {t:'opp',seat:'right',tile:'9s'},{t:'opp',seat:'top',tile:'1s'},{t:'opp',seat:'left',tile:'3s'},
+      {t:'draw',tile:'N'},
+      {t:'discard',cut:'N',cutTsumo:true,q:'また あなたの番。北も <b>ツモ切り</b>しよう',
+       tlab:'あなたの番（2巡目）',exp:'自分の河には5ピンを捨てていないから、フリテンではないよ。'},
+      {t:'opp',seat:'right',tile:'8s'},{t:'opp',seat:'top',tile:'2s'},
+      {t:'opp',seat:'left',tile:'5p'},
+      {t:'ask',kind:'ron',seat:'left',tile:'5p',win:true,
+       q:'<b>上家が5ピンを切った！</b>　あなたの待ちは…<b>ロンできる？</b>',
+       choices:['ロンできる','ロンできない'],
+       exp:'「ロン！」と声に出して、はじめてアガリになるよ。'},
+      {t:'end',cap:'🀄 ロン！ アガリ！',
+       q:'🎉 <b>ロン！ アガリ！</b><br>ツモって、切って、ほかの人の捨て牌を見て…'
+        +'アガれたね！　これが麻雀の1局の流れだよ。',tlab:'ミニ実戦③ クリア'},
+    ]},
+};
+const BT_SEATNAME={left:'上家',top:'対面',right:'下家'};
+const BT2NK={left:'left',top:'opposite',right:'right'};   // R46の判定関数の語彙へ
+let BT_GAP=620;                       // 他家が1枚切るあいだの間(ms)。速すぎて見えない状態にしない
+                                      // (letなのはテストで早送りするため。ふだんは変えない)
+let BT_TIMERS=[];                     // 走っているタイマー。離脱・再描画で必ず止める
+function btClearTimers(){ BT_TIMERS.forEach(t=>clearTimeout(t)); BT_TIMERS=[]; }
+/* --- 状態 --- */
+function btInit(sc){
+  return {id:sc.id, hand:sortTiles(parseHand(sc.hand)), melds:[], tsumo:null,
+    rivers:{left:((sc.rivers||{}).left||[]).slice(),top:((sc.rivers||{}).top||[]).slice(),
+            right:((sc.rivers||{}).right||[]).slice()},
+    myRiver:(sc.myRiver||[]).slice(), now:null, just:false, playing:false, won:false, tok:0};
+}
+/* 盤面は【つねに いまの状態】から作る。R52/R53の共通実卓UIをそのまま使う */
+function btBoard(extra){
+  const b=L.bt;
+  return Object.assign({hand:b.hand.join(''), melds:b.melds.slice(),
+    myRiver:b.myRiver.slice(),
+    rivers:{left:b.rivers.left.slice(),top:b.rivers.top.slice(),right:b.rivers.right.slice()},
+    now:b.now, myJust:b.just, tsumo:b.tsumo}, extra||{});
+}
+/* --- イベントを1つ適用する。ここだけが状態を変える --- */
+function btApply(ev){
+  const b=L.bt;
+  if(ev.t==='draw'){ b.tsumo=ev.tile; b.now=null; b.just=false; }
+  else if(ev.t==='opp'){
+    b.rivers[ev.seat]=b.rivers[ev.seat].concat([ev.tile]);
+    b.now={seat:ev.seat,tile:ev.tile}; b.just=false;         // 「いま」はつねに この1枚だけ
+  }
+  else if(ev.t==='call'){
+    // 鳴かれた牌は その席の河から取りのぞく(河と副露に同じ牌が二重に存在しないように)
+    const r=b.rivers[ev.seat], i=r.lastIndexOf(ev.tile);
+    if(i>=0) b.rivers[ev.seat]=r.slice(0,i).concat(r.slice(i+1));
+    const rest=removeTiles(b.hand,ev.use);
+    if(!rest) throw new Error('btApply: 鳴きに使う牌が手牌にない '+ev.use.join(','));
+    b.hand=rest;
+    b.melds=b.melds.concat([{type:ev.kind,tiles:sortTiles(ev.use.concat([ev.tile])),
+      called:ev.tile,from:BT2NK[ev.seat]}]);
+    b.now=null; b.just=false;                                 // 鳴いた牌を「いま」のまま残さない
+  }
+  else if(ev.t==='win'){ b.won=true; }   // アガリ牌の「いま」はそのまま残す(その1枚でアガった)
+}
+/* --- 自分が1枚切る --- */
+function btDiscard(pick){
+  const b=L.bt;
+  if(pick.type==='tsumo'){ /* ツモ切り: 手牌は動かない */ }
+  else {
+    const rest=removeTiles(b.hand,[pick.tile]);
+    if(!rest) throw new Error('btDiscard: その牌が手牌にない '+pick.tile);
+    b.hand=b.tsumo?sortTiles(rest.concat([b.tsumo])):rest;    // ツモ牌が手牌に入る
+  }
+  b.tsumo=null;
+  b.myRiver=b.myRiver.concat([pick.tile]);
+  b.now=null; b.just=true;                                    // 自分が切った牌は「切った」(「いま」ではない)
+}
+/* --- 盤面だけ描きなおす。卓の大きさ・河の座標はR52の固定slotなので動かない --- */
+function btDraw(){
+  const host=document.getElementById('bt-board'); if(!host) return;
+  host.innerHTML=mjtPanelHTML(btBoard(L.bt.ui||{}));
+}
+/* --- 他家の自動打牌。判断が必要な牌のところで必ず止まる --- */
+function btPlay(q){
+  if(!L||!L.bt) return;
+  const b=L.bt, pre=(q.bt.pre||[]).slice();
+  btClearTimers();
+  const tok=++b.tok;
+  b.playing=pre.length>0;
+  btDraw(); renderFoot();
+  const step=()=>{
+    if(!L||!L.bt||L.bt.tok!==tok) return;                     // 古いタイマーは何もしない
+    if(!pre.length){ btReady(q); return; }
+    btApply(pre.shift());
+    if(b.now) sndPlay('discard');
+    btDraw();
+    BT_TIMERS.push(setTimeout(step,BT_GAP));
+  };
+  if(b.playing) BT_TIMERS.push(setTimeout(step,BT_GAP));
+  else btReady(q);
+}
+/* 他家の打牌が終わった。ここではじめて操作できるようにし、正解もこの盤面から作る。
+   正解の判定は R45/R46 の関数をそのまま使う(R54専用の判定関数は作らない) */
+function btReady(q){
+  const b=L.bt; b.playing=false; q.bt.pre=[];
+  const ui=document.getElementById('bt-ui');
+  if(q.bt.kind==='discard'){
+    b.ui={handPick:true,tsumoPick:true};
+    const picks=mjtPicks(btBoard(b.ui));
+    q.bt.aSet=q.bt.cut
+      ? picks.map((p,i)=>(q.bt.cutTsumo?(p.type==='tsumo'?i:-1)
+                                       :((p.type==='hand'&&p.tile===q.bt.cut)?i:-1))).filter(i=>i>=0)
+      : picks.map((p,i)=>i);                                  // 自由打牌: どれを切ってもよい
+    if(!q.bt.aSet.length) throw new Error('btReady: 切る牌が盤面にない '+(q.bt.cut||'free'));
+    q.a=q.bt.aSet[0];
+    q.choices=mjtChoiceLabels(btBoard(b.ui));
+    if(ui) ui.innerHTML='';
+  }else if(q.bt.kind==='ask'){
+    b.ui=(q.bt.ask==='ron')?{showWait:true,note:true}:{};
+    const hand=b.hand.join(''), tile=q.bt.tile;
+    const can=q.bt.ask==='pon'?nkCanPon(hand,tile)
+      :q.bt.ask==='chi'?nkCanChi(hand,tile,BT2NK[q.bt.seat])
+      :(fWaitsOf(hand).indexOf(tile)>=0&&!fIsFuriten(hand,b.myRiver));
+    q.a=can?0:1;
+    if(ui) ui.innerHTML='<div class="choices">'+q.choices.map((c,i)=>
+      '<button class="choice" id="ch-'+i+'" onpointerdown="selChoice('+i+')">'+c+'</button>').join('')+'</div>';
+  }else{ b.ui=q.bt.cap?{cap:q.bt.cap}:{}; if(ui) ui.innerHTML=''; }
+  btDraw(); renderFoot();
+}
+/* 待たずに先へ進めたいとき(「つづける」など): 残りを一気に反映する */
+function btFlush(q){
+  if(!L||!L.bt) return;
+  btClearTimers(); L.bt.tok++;
+  (q.bt.pre||[]).forEach(ev=>btApply(ev));
+  q.bt.pre=[];
+  L.bt.playing=false; btDraw(); renderFoot();
+}
+/* --- シナリオ → 問題の列。ここで「ユーザーが判断する場面」だけを問題にする --- */
+function btBuild(sc){
+  const qs=[], pre=[];
+  let turn=0;
+  sc.events.forEach(ev=>{
+    if(ev.t==='opp'||ev.t==='draw'){ pre.push(ev); return; }
+    if(ev.t==='discard'){
+      turn++;
+      qs.push({bt:{sc,kind:'discard',pre:pre.splice(0),cut:ev.cut||null,cutTsumo:!!ev.cutTsumo,turn},
+        q:ev.q||(ev.cut?('<b>'+tileReading(ev.cut)+'</b>を切ってみよう'):'1枚えらんで切ろう'),
+        tlab:ev.tlab||'あなたの番', exp:ev.exp||'', a:0,
+        choices:['切る','切らない']});
+      return;
+    }
+    if(ev.t==='ask'){
+      qs.push({bt:{sc,kind:'ask',ask:ev.kind,seat:ev.seat,tile:ev.tile,pre:pre.splice(0),
+          call:ev.call||null,win:ev.kind==='ron'},
+        q:ev.q, tlab:ev.tlab||(BT_SEATNAME[ev.seat]+'が切った'), exp:ev.exp||'',
+        choices:ev.choices, a:0});
+      return;
+    }
+    if(ev.t==='end'){
+      qs.push({bt:{sc,kind:'end',pre:pre.splice(0),cap:ev.cap||null},ch1t:true,
+        q:ev.q, tlab:ev.tlab||'おつかれさま', a:0, choices:[]});
+    }
+  });
+  return qs;
+}
+/* --- ミニ実戦1本ぶんの問題列(Teachをはさんで返す) --- */
+function btLesson(id){
+  const sc=BATTLES[id]; if(!sc) return [];
+  return [ch1Teach(sc.intro,{tlab:sc.introLab||'ミニ実戦',panel:sc.introPanel||''})]
+    .concat(btBuild(sc));
+}
 /* ================= 実卓で鳴きを判断する(R48) =================
    正解は R46 の判定関数(nkCanPon / nkCanChi / nkCanKan / nkActions)をそのまま使う。
    変えるのは盤面だけ。席の呼び名は卓(left/top/right)、判定関数は R46 の語彙(left/opposite/right) */
@@ -8927,6 +9189,15 @@ const CH2_LESSONS={
         exp:'仲間のいない牌は切る牌になりやすいよ。くわしい選びかたは、これから少しずつ覚えよう。'},
     ];
   },
+  /* ===== R54 ★はじめてのミニ実戦(th_ch2z) =====
+     中身は固定シナリオ BATTLES。ここは「どのシナリオを流すか」を指すだけ */
+  mb1_1(){ return btLesson('bt1'); },
+  mb1_2(){ return btLesson('bt2'); },
+  mb1_3(){ return btLesson('bt3').concat([
+    ch1Teach('これで<b>ミニ実戦</b>はクリア！　ツモって、切って、鳴いて、ロンする…'
+      +'べつべつに習ったことが、1本の流れにつながったね。'
+      +'<br>つぎは<b>役</b>を覚えて、アガリをもっと強くしていこう！',{tlab:'★ ミニ実戦 クリア'}),
+  ]); },
   /* ★T6 捨て牌マスター(まとめ。free/ツモ切り/指定/形 をまぜる) */
   tu1_6(){
     const A='123m456m789m22p45p', B='234s678s345p55p1m9m', C='123mEEESS56p789s',
@@ -10253,6 +10524,7 @@ function pickReview(relaxed){
 }
 function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
 function quitLesson(){
+  btClearTimers();                // R54: 裏で他家の打牌が進みつづけないように必ず止める
   document.getElementById('lesson').classList.remove('show');
   L=null; renderHUD(); renderPath();
   ROAD_FX=null;  // ✕離脱時は復帰演出を持ち越さない
@@ -10273,6 +10545,7 @@ function qFormatKey(q){
   if(q.sp) return 'seatpick';     // 第1章S1: 卓の図で「どの人？」をタップ(共通形式)
   if(q.tt) return 'tabletap';     // R47: 実卓の盤面で、河の牌そのものをタップして答える
   if(q.td) return 'tablediscard'; // R53: 実卓の盤面で、14枚から1枚えらんで切る(2段階)
+  if(q.bt) return 'battle';       // R54: ミニ実戦(1局の時間の流れ)
   if(q.yf) return 'yfind';        // 第3章: 役さがし(役名を全選択→「これで決定」。誤答は正解非開示で再挑戦)
   if(q.wf) return 'wfind';        // 第2章: 待ち牌さがし(全選択→「これで決定」。誤答は正解非開示で再挑戦)
   if(q.ch1t) return 'teach';      // 第1章: 教えるページ(スコア外・check()非経由)
@@ -10714,6 +10987,58 @@ const QFORMATS={
       return {ansText:(q.td.mode==='free'?'切った牌： ':'正解： 打')+nm, expText:q.exp||''};
     },
   },
+  battle:{
+    /* R54 ミニ実戦。1問=「ユーザーが判断する1場面」。
+       場面のまえに起きる他家の打牌は q.bt.pre に入っていて、renderのあと自動で流れる。
+       正解かどうかの判定は R45/R46 の関数(nkCanPon/nkCanChi/fWaitsOf/fIsFuriten)をそのまま使い、
+       R54側は【状態遷移】だけを受け持つ。 */
+    cat:null, scoring:'binary',
+    qid(q){ return null; },
+    render(q){
+      if(!L.bt||L.bt.id!==q.bt.sc.id||q.bt.first) L.bt=btInit(q.bt.sc);
+      let html='<div class="q-type">'+(q.tlab||'ミニ実戦')+'</div>';
+      html+='<div class="q-text">'+q.q+'</div>';
+      html+='<div id="bt-board"></div>';
+      html+='<div id="bt-ui"></div>';
+      L.sel=null;
+      L.bt.ui={};                 // 他家の打牌が終わるまでは何もタップさせない
+      // 他家の打牌 → そのあとに操作できるようにする(描画のあとで動かす)
+      setTimeout(()=>{ if(L&&L.qs&&L.qs[L.idx]===q) btPlay(q); },0);
+      return html;
+    },
+    /* 操作できる状態になったときに呼ばれる(btPlay の最後)。正解もここで作る */
+    answer(q){
+      if(q.bt.kind==='discard'){
+        const set=q.bt.aSet||[];
+        return {kind:'choiceIndex', index:(L.sel!=null&&set.indexOf(L.sel)>=0)?q.a:L.sel};
+      }
+      return {kind:'choiceIndex', index:L.sel};
+    },
+    reveal(q,ans,res){
+      const b=L.bt;
+      if(q.bt.kind==='discard'){
+        const picks=mjtPicks(btBoard({handPick:true,tsumoPick:true}));
+        const use=(res.isCorrect&&L.sel!=null)?L.sel:(q.bt.aSet&&q.bt.aSet[0]);
+        btDiscard(picks[use]);
+        sndPlay('discard');
+      }else if(q.bt.kind==='ask'){
+        if(q.bt.call) btApply(Object.assign({t:'call'},q.bt.call));
+        if(q.bt.win) btApply({t:'win'});
+      }
+      b.ui={};
+      if(q.bt.win) b.ui.cap='🀄 ロン！ アガリ！';
+      btDraw();
+    },
+    feedback(q,res){
+      const t=q.bt;
+      let ans='';
+      if(t.kind==='discard'){
+        const nm=t.cut?tileReading(t.cut):'';
+        ans=res.isCorrect?(nm?'打'+nm:'切ったね'):('ここでは 打'+nm);
+      }else ans='正解： '+q.choices[q.a];
+      return {ansText:ans, expText:q.exp||''};
+    },
+  },
   pickone:{
     cat:null, scoring:'binary',
     qid(q){ return null; },
@@ -10963,6 +11288,7 @@ function renderQ(){
     L.qs[L.idx]=L.rcat==='waits'?genWaitsAt(lv,waitsTilesFor(L,lv)):genNanikiruAt(lv);
   }
   const q=L.qs[L.idx];
+  btClearTimers();                // R54: 前の問題のタイマーを持ちこさない
   L.sel=null; L.checked=false; L.actDone=false; L.judging=false; L.autoTok=null;
   // 進捗バー: 復習ありレッスンは「基本問題の消化率」(復習問題ではバーを進めない。
   // 基本10問終了後の復習回収フェーズは満タンのまま、下の復習チップで残数を示す)
@@ -11003,13 +11329,14 @@ function ch1AutoJudge(){
 }
 function selChoice(i){
   if(!L||L.checked||L.judging) return;
+  if(L.bt&&L.bt.playing) return;      // R54: 他家が切っているあいだは操作できない
   L.sel=i;
   const q=L.qs[L.idx];
   const n=(q.tchoices||q.choices).length;
   for(let k=0;k<n;k++){ const el=document.getElementById('ch-'+k); if(el) el.classList.toggle('sel',k===i); }
   sndPlay('select');
-  // R53「牌を選んで切る」だけは即判定しない。えらび直せるようにして「この牌を切る」で確定する
-  if(q&&q.td){ renderFoot(); return; }
+  // R53「牌を選んで切る」とR54のミニ実戦の打牌は即判定しない。えらび直して「この牌を切る」で確定
+  if(q&&(q.td||(q.bt&&q.bt.kind==='discard'))){ renderFoot(); return; }
   ch1AutoJudge();               // 単一選択(mcq/tchoices/リーチ判断/Compare)は即判定
 }
 function selTile(i){
@@ -11203,6 +11530,15 @@ function renderFoot(){
     foot.innerHTML='<button class="btn" id="answer-btn" '+(ok?'':'disabled')+' onclick="teachNext()">つづける</button>';
     return;
   }
+  if(qNow&&qNow.bt&&!L.checked&&!qNow.ch1t){
+    if(L.bt&&L.bt.playing){ foot.innerHTML='<div class="foot-wait">…</div>'; return; }
+    if(qNow.bt.kind==='discard'){
+      const readyB=L.sel!=null;
+      foot.innerHTML='<button class="btn" id="answer-btn" '+(readyB?'':'disabled')
+        +' onclick="answerNow(this)">'+(readyB?'この牌を切る':'切る牌をえらぼう')+'</button>';
+    }else foot.innerHTML='<div class="foot-wait">'+(L.judging?'…':'えらんでこたえよう')+'</div>';
+    return;
+  }
   if(qNow&&qNow.td&&!L.checked){
     // R53: えらんでから「この牌を切る」で確定。未選択のあいだは押せない(誤タップ・連打の防止)
     const readyD=L.sel!=null;
@@ -11368,7 +11704,9 @@ function applyOutcome(q,cat,qid,res,elapsed){
         else if(e.attempts>=REVIEW_MAX){ e.needsReview=true; } // 上限到達: 未解決のまま記録に残す
         else { e.lastMissSeq=L.seq; }                        // 間隔を空けてキューの後ろへ
       }
-    }else if(!res.isCorrect){
+    }else if(!res.isCorrect&&!q.bt){
+      // R54のミニ実戦は【1局の時間の流れ】そのもの。途中の1問だけを後から抜き出して
+      // 出しなおすと盤面が合わなくなるので、復習キューには入れない
       L.review.push({q,no:L.seq,attempts:0,resolved:false,needsReview:false,
         lastMissSeq:L.seq,inFlight:false});
     }
