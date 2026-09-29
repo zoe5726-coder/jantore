@@ -3350,6 +3350,8 @@ const RUBY_FULL_SRC=`
 # R46 鳴きを使う。「何」は単字だと 何回[なんかい] などへ誤爆しうるので「何を」で語句ピン留めする。
 # 「番」は順番[じゅんばん]が最長一致で先に当たるため単字で安全
 場面[ばめん] 番[ばん] 早[はや] 何[なに]を
+# R53「牌を選んで切る」・R54「ミニ実戦」で使う語(全ルビ監査で未カバーだったぶん)
+行[い]く 見分[みわ]け 仲間[なかま] 習[なら] 巡[じゅん] 時間[じかん] 実際[じっさい] 外[そと] 本[ほん]の
 `;
 const RUBY_KANJI_RE=/[\u3400-\u9FFF\uF900-\uFAFF々〆ヶ]/;
 let RUBY_FULL_MAP=null, RUBY_FULL_MAXLEN=0;
@@ -3506,8 +3508,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.49.0';
-const BUILD_ID='20260929-01';
+const APP_VER='0.49.1';
+const BUILD_ID='20260929-02';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -3515,7 +3517,10 @@ function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_I
    開発UI・未検証Compare）を通常操作から隠す。コード・データ・機能は
    一切削除しておらず、このフラグをfalseにすれば全て復帰する。 */
 let PROTOTYPE_MODE=true;
-const PROTO_VISIBLE_COURSES=['ch1a','ch1r','ch1b','ch1c','ch1d','ch1s','ch1g','ch1e','ch1n','ch1p','ch2a','ch2b','ch2c','ch2d','ch2e','ch3a','ch3b','ch3c','ch3d','ch3e','ch3f','ch3g','ch3h','ch3i','ch3j','ch3x','waits','ukeire1','nanikiru','riichi'];
+/* Roadに出すコースの一覧(PROTOTYPE_MODE中の表示フィルタ)。
+   ★テーマを新しく足したら【かならずここにも足す】。入れ忘れると、THEMES/COURSESに定義があっても
+   Roadには1マスも出ない(R53のch2f・R54のch2zで実際に起きた)。r53-check/r54-checkで実DOMを見ている */
+const PROTO_VISIBLE_COURSES=['ch1a','ch1r','ch1b','ch1c','ch1d','ch1s','ch1g','ch1e','ch1n','ch1p','ch2a','ch2b','ch2c','ch2d','ch2e','ch2f','ch2z','ch3a','ch3b','ch3c','ch3d','ch3e','ch3f','ch3g','ch3h','ch3i','ch3j','ch3x','waits','ukeire1','nanikiru','riichi'];
 function protoCourseVisible(id){ return !PROTOTYPE_MODE||PROTO_VISIBLE_COURSES.includes(id); }
 function staminaFree(){ return PROTOTYPE_MODE||S.owned.stamina; }   // プロトタイプはスタミナ消費なし
 function devUIVisible(){ return !PROTOTYPE_MODE||S.dev||location.hash==='#dev'; }
@@ -8002,6 +8007,13 @@ function btReady(q){
   }else{ b.ui=q.bt.cap?{cap:q.bt.cap}:{}; if(ui) ui.innerHTML=''; }
   btDraw(); renderFoot();
 }
+/* 指定された牌とちがう牌を確定したとき: 盤面(14枚)はそのままで、同じ場面をやり直す。
+   シナリオのイベントは1つも進めない。手牌もツモ牌も河も変わらない */
+function btRetry(){
+  if(!L||!L.btRetry) return;
+  L.btRetry=false;
+  renderQ();                 // 同じ問題をもう一度。pre は空なのですぐ操作できる
+}
 /* 待たずに先へ進めたいとき(「つづける」など): 残りを一気に反映する */
 function btFlush(q){
   if(!L||!L.bt) return;
@@ -9169,7 +9181,7 @@ const CH2_LESSONS={
     const A='123mEEESS56p789s', B='123mEEESS56p78s9m', C='456pWWWNN23s789m';
     return [
       ch1Teach('ここからは<b>どれを切るか</b>をすこし考えてみよう。'
-        +'といっても むずかしい話はナシ。<b>もうできている3枚の組は のこす</b>、それだけだよ。',
+        +'といっても むずかしくないよ。<b>もうできている3枚の組は のこす</b>、それだけだよ。',
         {tlab:'できている組はのこす',panel:mjtHTML({hand:A,tsumo:'N',myRiver:['1p','9s','E']})}),
       mjtDiscardQ({hand:A,tsumo:'N',myRiver:['1p','9s','E'],mode:'shape',cut:'N',
         q:'北をツモった。<b>形をくずさず</b>に1枚切るなら、どれ？',tlab:'できている組はのこす',
@@ -9226,7 +9238,7 @@ const CH2_LESSONS={
         +'この4つだけだよ。',{tlab:'自分の番の4ステップ'}),
     ].concat(quiz).concat([
       ch1Teach('🎉 <b>捨て牌マスター！</b>　ツモって、えらんで、切る。'
-        +'これで自分の番の打ちかたが身についたね。どの牌を切ると強いかは、これから少しずつ覚えていこう！',
+        +'これで自分の番の打ちかたを おぼえたね。どの牌を切ると強いかは、これから少しずつ覚えていこう！',
         {tlab:'牌を選んで切る クリア'}),
     ]);
   },
@@ -11017,9 +11029,14 @@ const QFORMATS={
     reveal(q,ans,res){
       const b=L.bt;
       if(q.bt.kind==='discard'){
+        if(!res.isCorrect){
+          // ちがう牌をえらんだときは【切らない】。14枚の盤面をそのままにして、えらび直してもらう。
+          // 「自分はAを選んだのに、なぜかBが河へ出た」を絶対に起こさないため
+          L.btRetry=true; b.ui={handPick:true,tsumoPick:true}; btDraw(); return;
+        }
+        // ユーザーが確定した【そのinstance】だけを河へ出す。牌の文字で置きかえない
         const picks=mjtPicks(btBoard({handPick:true,tsumoPick:true}));
-        const use=(res.isCorrect&&L.sel!=null)?L.sel:(q.bt.aSet&&q.bt.aSet[0]);
-        btDiscard(picks[use]);
+        btDiscard(picks[L.sel]);
         sndPlay('discard');
       }else if(q.bt.kind==='ask'){
         if(q.bt.call) btApply(Object.assign({t:'call'},q.bt.call));
@@ -11034,7 +11051,8 @@ const QFORMATS={
       let ans='';
       if(t.kind==='discard'){
         const nm=t.cut?tileReading(t.cut):'';
-        ans=res.isCorrect?(nm?'打'+nm:'切ったね'):('ここでは 打'+nm);
+        if(!res.isCorrect) return {ansText:'', expText:'今回は <b>'+nm+'</b> を切ってみよう。もう一度えらんでね。'};
+        ans=nm?'打'+nm:'切ったね';
       }else ans='正解： '+q.choices[q.a];
       return {ansText:ans, expText:q.exp||''};
     },
@@ -11289,6 +11307,7 @@ function renderQ(){
   }
   const q=L.qs[L.idx];
   btClearTimers();                // R54: 前の問題のタイマーを持ちこさない
+  L.btRetry=false;
   L.sel=null; L.checked=false; L.actDone=false; L.judging=false; L.autoTok=null;
   // 進捗バー: 復習ありレッスンは「基本問題の消化率」(復習問題ではバーを進めない。
   // 基本10問終了後の復習回収フェーズは満タンのまま、下の復習チップで残数を示す)
@@ -11796,7 +11815,9 @@ function renderFeedback(q,cat,res,ratingRes,fb){
   foot.className='lesson-foot '+cls;
   foot.innerHTML=staminaOut
     ?'<button class="btn red" onclick="quitLesson();staminaModal()">レッスン終了</button>'
-    :'<button class="btn'+(cls==='ng'?' red':'')+'" onclick="next()">つづける</button>';
+    :(L&&L.btRetry
+      ? '<button class="btn red" onclick="btRetry()">もう一度えらぶ</button>'
+      : '<button class="btn'+(cls==='ng'?' red':'')+'" onclick="next()">つづける</button>');
   // 解説へ自動スクロール: 画面に収まる解説はカード全体をボタンの上に収め、
   // 1画面より長い解説はカード先頭から自然に読み始められる位置へ(下へスクロールで続き)
   requestAnimationFrame(()=>{
