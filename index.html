@@ -360,6 +360,19 @@ html.ruby-full .mt-guide-card .tc-bub{height:86px;}
 .fb-tiles .tile{display:inline-block; width:22px; border-radius:3px; box-shadow:0 1.5px 0 var(--tile-shadow);}
 .fb-tiles.tok{gap:1px; margin:0 1px;}
 .fb-tiles.tok .tile{width:17px; border-radius:2px; box-shadow:0 1px 0 var(--tile-shadow);}
+/* R58: 本文の中に置く小さな牌。文字より少し大きく、行の高さは大きく変えない。
+   実卓の牌(.tile)とは別のclassにして、河・手牌・副露のかぞえに混ざらないようにする */
+.itile{display:inline-block; vertical-align:-0.42em; width:1.16em; height:1.62em;
+  background:var(--tile-face); border:1px solid var(--tile-edge); border-radius:3px;
+  box-shadow:0 1px 0 var(--tile-shadow), inset 0 1px 0 rgba(255,255,255,.7);
+  overflow:hidden; line-height:0; margin:0 .1em; box-sizing:border-box;}
+.itile svg{width:100%; height:100%; display:block;}
+/* 1つの組は途中で改行させず、3枚でひとまとまりに見せる */
+.itiles{display:inline-block; white-space:nowrap; margin:0 .1em;}
+.itiles .itile{margin:0; border-radius:0;}
+.itiles .itile:first-child{border-radius:3px 0 0 3px;}
+.itiles .itile:last-child{border-radius:0 3px 3px 0;}
+.itiles .itile + .itile{border-left:0;}
 .wy{display:block; margin-top:6px;}
 .wy-row{display:flex; align-items:center; gap:6px; flex-wrap:wrap; font-size:12.5px; color:var(--ink-soft); margin:3px 0;}
 /* 鳴いた組(共通部品 renderMeld/openHandHTML): 手の中＋スキマ＋右に鳴いた組。もらった牌は横向き。
@@ -1826,6 +1839,35 @@ function tileHTML(code, extra){
   extra=extra||'';
   const cls=code.length===1?'z':code[1];
   return '<div class="tile '+cls+' '+extra+'">'+tileFace(code)+'</div>';
+}
+/* ================= 本文の中の牌(R58) =================
+   ねらい: 実戦・操作のLessonでは「9マン」という文字を読ませるのではなく、
+   【九萬の絵】を見せて、手牌の中の同じ絵をさがしてタップさせる。
+   実戦で見るのは文字ではなく牌そのものなので、そこに近づける。
+
+   使いわけ(TSUMOPPY_TERMS §39 に記録):
+     A 牌の名前そのものを教える(牌を知ろう/牌の読み方/いわれた牌をさがす) → 文字のまま
+     B 分類・ルールの説明(「マンズは1マンから9マンまで」)                → 文字のまま
+     C 特定の牌を見て操作する(「これを切ろう」「これをポン」)              → 牌の絵
+     D 牌姿・組・待ちの説明(回答後の解説をふくむ)                        → 牌の絵(並べる)
+   ただし【自分で考える問題の問題文】には、正解の牌の絵を出さない。
+
+   この牌は【説明用】。河・手牌・副露・ツモ牌の実牌とは別物なので、
+   class は .tile ではなく .itile にしてある(物理4枚にも、河の牌数にも数えない)。 */
+function inlineTile(code,opt){
+  const o=opt||{};
+  return '<span class="itile'+(o.cls?' '+o.cls:'')+'" data-it="'+code+'"'
+    +' role="img" aria-label="'+(tileReading(code)||code)+'">'+tileFace(code)+'</span>';
+}
+/* 複数牌は「ひとまとまりの形」として見せる。途中で改行させない */
+function inlineTiles(codes,opt){
+  const o=opt||{};
+  const list=Array.isArray(codes)?codes.slice():parseHand(codes);
+  if(!list.length) return '';
+  return '<span class="itiles'+(o.cls?' '+o.cls:'')+'"'
+    +' role="img" aria-label="'+list.map(c=>tileReading(c)||c).join('・')+'">'
+    +list.map(c=>'<span class="itile" data-it="'+c+'" aria-hidden="true">'+tileFace(c)+'</span>').join('')
+    +'</span>';
 }
 function parseHand(str){
   const out=[]; let nums=[];
@@ -3555,8 +3597,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.51.1';
-const BUILD_ID='20260929-06';
+const APP_VER='0.52.0';
+const BUILD_ID='20260929-07';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -7941,52 +7983,57 @@ const BATTLES={
   bt2:{ id:'bt2', hand:'349m567p5578sEEN',
     ctx:{rw:'E',sw:'E'},          // 東場・自分は東家(親)。テストはこの条件で東が役牌か検算する
     intro:'つぎは<b>鳴き</b>だよ。いまは<b>東1局</b>、あなたは<b><ruby>親<rt>おや</rt></ruby></b>（東家）。'
-      +'だから<b>東</b>を3枚そろえると、それだけで<b>役</b>になるんだ。'
+      +'だから'+inlineTile('E')+'を3枚そろえると、それだけで<b>役</b>になるんだ。'
       +'ほかの人の捨て牌をもらって、アガリまで いってみよう！',
     introLab:'★ ミニ実戦②',
     events:[
       {t:'draw',tile:'1p'},
-      {t:'discard',cut:'1p',cutTsumo:true,q:'あなたの番。ツモってきた1ピンは使えないね。<b>ツモ切り</b>しよう',
+      {t:'discard',cut:'1p',cutTsumo:true,
+       q:'あなたの番。ツモってきた'+inlineTile('1p')+'は使えないね。<b>ツモ切り</b>しよう',
        tlab:'あなたの番',exp:'ツモ切り。手牌はそのままだよ。'},
       {t:'opp',seat:'right',tile:'9p'},
       {t:'opp',seat:'top',tile:'E'},
       {t:'ask',kind:'pon',seat:'top',tile:'E',
-       q:'<b>対面が東を切った！</b>　あなたの手には東が2枚…<b>ポンできる？</b>',
+       q:'<b>対面が'+inlineTile('E')+'を切った！</b>　あなたの手にも'+inlineTile('E')+'が2枚…<b>ポンできる？</b>',
        choices:['ポンできる','ポンできない'],
        call:{kind:'pon',seat:'top',tile:'E',use:['E','E']},
        exp:'同じ牌が2枚あればポン！ だれが切った牌でもポンできるよ。'
-         +'しかも今回の東は<b>役になる牌</b>。これで鳴いてもアガれる手になったね。'},
+         +'しかも今回の'+inlineTile('E')+'は<b>役になる牌</b>。これで鳴いてもアガれる手になったね。'},
       {t:'discard',cut:'N',
-       q:'ポンできた！　東の組が手牌の<b>いちばん右</b>へ出たね。'
-         +'<b>ポンのあとはツモらずに、そのまま1枚切る</b>よ。北を切ろう',
+       // R58: 卓を見れば分かることは文章でくり返さない。切る牌だけを絵で はっきり出す
+       q:'ポンできた！　<b>ツモらずに そのまま1枚切る</b>よ。<br>'+inlineTile('N')+'を切ろう',
        tlab:'ポンのあとの打牌',
-       exp:'手牌から東が2枚なくなって、3枚の組が外に出たね。ツモっていないのがポイント。'},
+       exp:'手牌から'+inlineTile('E')+'が2枚なくなって、'+inlineTiles(['E','E','E'])
+         +'が手牌の<b>いちばん右</b>へ出たね。ツモっていないのがポイント。'},
       {t:'opp',seat:'right',tile:'8p'},
       {t:'opp',seat:'top',tile:'4p'},
       {t:'opp',seat:'left',tile:'2m'},
       {t:'ask',kind:'chi',seat:'left',tile:'2m',
-       q:'<b>上家が2マンを切った！</b>　あなたの手には3マンと4マン…<b>チーできる？</b>',
+       q:'<b>上家が'+inlineTile('2m')+'を切った！</b>　あなたの手には'+inlineTile('3m')+'と'+inlineTile('4m')
+         +'…<b>チーできる？</b>',
        choices:['チーできる','チーできない'],
        call:{kind:'chi',seat:'left',tile:'2m',use:['3m','4m']},
-       exp:'2マン・3マン・4マンでならびの組！ チーできるのは<b>上家の捨て牌だけ</b>だったね。'},
+       exp:inlineTiles(['2m','3m','4m'])+'でならびの組！ チーできるのは<b>上家の捨て牌だけ</b>だったね。'},
       {t:'discard',cut:'9m',
-       q:'チーできた！　2マンの組は<b>東の組の左</b>へならんだね。9マンを切ろう',
+       // R58: 組の並びは卓を見れば分かる。問題文は「何を切るか」に しぼる
+       q:'チーできた！　'+inlineTile('9m')+'を切ろう',
        tlab:'チーのあとの打牌',
        exp:'鳴いた組は<b>みぎはしから じゅんばんに</b>ならぶよ。'
-         +'さきに鳴いた東がいちばん右、あとから鳴いた2マンはその左だね。これでテンパイ！'},
+         +'さきに鳴いた'+inlineTiles(['E','E','E'])+'がいちばん右、'
+         +'あとから鳴いた'+inlineTiles(['2m','3m','4m'])+'はその左だね。これでテンパイ！'},
       {t:'opp',seat:'right',tile:'1s'},
       {t:'opp',seat:'top',tile:'3s'},
       {t:'opp',seat:'left',tile:'6s'},
       {t:'ask',kind:'ron',seat:'left',tile:'6s',
-       q:'<b>上家が6ソーを切った！</b>　あなたの待ちは…<b>ロンできる？</b>',
+       q:'<b>上家が'+inlineTile('6s')+'を切った！</b>　あなたの待ちは…<b>ロンできる？</b>',
        choices:['ロンできる','ロンできない'],
-       exp:'ロン！　鳴いていても、<b>東</b>という役があるからアガれるんだ。'},
+       exp:'ロン！　鳴いていても、'+inlineTile('E')+'という役があるからアガれるんだ。'},
       {t:'end',won:true,cap:'🀄 ロン！ アガリ！',
        q:'🎉 <b>ロン！ アガリ！</b><br>鳴くと 手牌から牌がなくなって<b>組が外に出る</b>。'
         +'そして<b>ツモらずにすぐ1枚切る</b>。鳴いた組は<b>みぎはしから じゅんばんに</b>ならぶよ。'
         +'<br>ただし<b>鳴いた手ではリーチができない</b>。'
         +'だから鳴くときは、<b>アガれる役がのこるか</b>が大事なんだ。'
-        +'今回は<b>東</b>が役になったから、ちゃんとアガれたね！',
+        +'今回は'+inlineTile('E')+'が役になったから、ちゃんとアガれたね！',
        tlab:'ミニ実戦② クリア'},
     ]},
   /* ③ ロンしてみよう: 数巡打ったあと、他家が待ち牌を切る。フリテンにはしない(素直な成功体験) */
@@ -7996,16 +8043,19 @@ const BATTLES={
     introLab:'★ ミニ実戦③',
     events:[
       {t:'draw',tile:'W'},
-      {t:'discard',cut:'W',cutTsumo:true,q:'あなたの番。西はいらないね。<b>ツモ切り</b>しよう',
+      {t:'discard',cut:'W',cutTsumo:true,
+       q:'あなたの番。'+inlineTile('W')+'はいらないね。<b>ツモ切り</b>しよう',
        tlab:'あなたの番',exp:'手はこのまま。あと1枚でアガリの形だよ。'},
       {t:'opp',seat:'right',tile:'9s'},{t:'opp',seat:'top',tile:'1s'},{t:'opp',seat:'left',tile:'3s'},
       {t:'draw',tile:'N'},
-      {t:'discard',cut:'N',cutTsumo:true,q:'また あなたの番。北も <b>ツモ切り</b>しよう',
-       tlab:'あなたの番（2巡目）',exp:'自分の河には5ピンを捨てていないから、フリテンではないよ。'},
+      {t:'discard',cut:'N',cutTsumo:true,
+       q:'また あなたの番。'+inlineTile('N')+'も <b>ツモ切り</b>しよう',
+       tlab:'あなたの番（2巡目）',
+       exp:'自分の河には'+inlineTile('5p')+'を捨てていないから、フリテンではないよ。'},
       {t:'opp',seat:'right',tile:'8s'},{t:'opp',seat:'top',tile:'2s'},
       {t:'opp',seat:'left',tile:'5p'},
       {t:'ask',kind:'ron',seat:'left',tile:'5p',win:true,note:true,
-       q:'<b>上家が5ピンを切った！</b>　あなたの待ちは…<b>ロンできる？</b>',
+       q:'<b>上家が'+inlineTile('5p')+'を切った！</b>　あなたの待ちは…<b>ロンできる？</b>',
        choices:['ロンできる','ロンできない'],
        exp:'「ロン！」と声に出して、はじめてアガリになるよ。'},
       {t:'end',cap:'🀄 ロン！ アガリ！',
@@ -8035,18 +8085,22 @@ const BATTLES={
       {t:'opp',seat:'right',tile:'9p'},{t:'opp',seat:'top',tile:'2s'},{t:'opp',seat:'left',tile:'3m'},
       {t:'draw',tile:'7s'},
       {t:'discard',ok:['W','N','E','S','9m'],
-       q:'また あなたの番。7ソーをツモったよ。<b>いらない牌</b>を1枚切ろう',
-       tlab:'2巡目',exp:'7ソーはのこしておこう。つながりそうな牌には仲間が来るかもしれないよ。'},
+       q:'また あなたの番。'+inlineTile('7s')+'をツモったよ。<b>いらない牌</b>を1枚切ろう',
+       tlab:'2巡目',
+       exp:inlineTile('7s')+'はのこしておこう。つながりそうな牌には仲間が来るかもしれないよ。'},
       {t:'opp',seat:'right',tile:'8p'},{t:'opp',seat:'top',tile:'4s'},{t:'opp',seat:'left',tile:'2m'},
       {t:'draw',tile:'8s'},
       {t:'discard',ok:['W','N','E','S','9m'],
-       q:'8ソーが来た！　7ソーとならんだね。<b>いらない牌</b>を1枚切ろう',
-       tlab:'3巡目',exp:'78ソーは ならびの組のたね。ここに6ソーか9ソーが来れば組になるよ。'},
+       q:inlineTile('8s')+'が来た！　'+inlineTile('7s')+'とならんだね。<b>いらない牌</b>を1枚切ろう',
+       tlab:'3巡目',
+       exp:inlineTiles(['7s','8s'])+'は ならびの組のたね。'
+         +'ここに'+inlineTile('6s')+'か'+inlineTile('9s')+'が来れば組になるよ。'},
       {t:'opp',seat:'right',tile:'7p'},{t:'opp',seat:'top',tile:'5s'},{t:'opp',seat:'left',tile:'1m'},
       {t:'draw',tile:'5m'},
       {t:'discard',ok:['W','N','E','S','9m'],
-       q:'5マンが3枚になった！　<b>いらない牌</b>を1枚切ろう',
-       tlab:'4巡目',exp:'555マンで組がひとつ できあがり。手がどんどん形になってきたね。'},
+       q:inlineTile('5m')+'が3枚になった！　<b>いらない牌</b>を1枚切ろう',
+       tlab:'4巡目',
+       exp:inlineTiles(['5m','5m','5m'])+'で組がひとつ できあがり。手がどんどん形になってきたね。'},
       {t:'opp',seat:'right',tile:'6p'},{t:'opp',seat:'top',tile:'1s'},{t:'opp',seat:'left',tile:'2s'},
       {t:'draw',tile:'1s'},
       {t:'discard',ok:['W','N','E','S','9m','1s'],
@@ -8056,7 +8110,8 @@ const BATTLES={
       {t:'draw',tile:'8m'},
       /* ここでテンパイ。R57からは テンパイで終わらせず、リーチ → ツモ切り → ツモアガリ まで進む */
       {t:'ask',kind:'riichi',
-       q:'8マンが来て678マンがそろった！　のこりの1枚を切ると<b>テンパイ</b>だよ。'
+       q:inlineTile('8m')+'が来て'+inlineTiles(['6m','7m','8m'])+'がそろった！　'
+        +'のこりの1枚を切ると<b>テンパイ</b>だよ。'
         +'あなたは まだ<b>鳴いていない</b>から、<b>リーチ</b>できる。まずはリーチしてみよう！',
        tlab:'テンパイ！ リーチしよう', choices:['リーチ！'],
        exp:'リーチ！　<b>1000点の点棒</b>を1本、場に出したよ。河の上に見えるかな。'},
@@ -8073,7 +8128,7 @@ const BATTLES={
       {t:'opp',seat:'right',tile:'3p'},{t:'opp',seat:'top',tile:'7m'},{t:'opp',seat:'left',tile:'N'},
       {t:'draw',tile:'6s'},
       {t:'ask',kind:'tsumo',
-       q:'<b>6ソーをツモった！</b>　待っていた牌だ…これで<b>ツモ</b>アガリできる？',
+       q:'<b>'+inlineTile('6s')+'をツモった！</b>　待っていた牌だ…これで<b>ツモ</b>アガリできる？',
        tlab:'8巡目 ツモ', choices:['ツモ！ アガリ','まだアガれない'],
        exp:'自分で引いた牌でアガるのが<b>ツモ</b>。リーチもしているから、役もちゃんとあるよ。'},
       {t:'end',won:true,cap:'🀄 ツモ！ アガリ！',
@@ -8276,7 +8331,8 @@ function btBuild(sc){
       turn++;
       qs.push({bt:{sc,kind:'discard',pre:pre.splice(0),cut:ev.cut||null,cutTsumo:!!ev.cutTsumo,
           ok:ev.ok?ev.ok.slice():null,okExp:ev.okExp||'',riichi:!!ev.riichi,turn},
-        q:ev.q||(ev.cut?('<b>'+tileReading(ev.cut)+'</b>を切ってみよう'):'1枚えらんで切ろう'),
+        // R58: 指定打牌は【牌の絵】で示す(文字を読んで牌に変換させない)
+        q:ev.q||(ev.cut?(inlineTile(ev.cut)+'を切ってみよう'):'1枚えらんで切ろう'),
         tlab:ev.tlab||'あなたの番', exp:ev.exp||'', a:0,
         choices:['切る','切らない']});
       return;
@@ -9360,17 +9416,17 @@ const CH2_LESSONS={
         +'これを<span class="term-chip">ツモ切り</span>というんだったね。',
         {tlab:'ツモ切り',panel:mjtHTML({hand:A,tsumo:'W',myRiver:['1p','9s','E']})}),
       mjtDiscardQ({hand:A,tsumo:'W',myRiver:['1p','9s','E'],mode:'tsumogiri',
-        q:'ツモってきた牌は、手牌のどこにも使えないね。<b>ツモ切り</b>してみよう',
+        q:'ツモってきた'+inlineTile('W')+'は、手牌のどこにも使えないね。<b>ツモ切り</b>してみよう',
         tlab:'ツモ牌をえらぶ',
-        exp:'ツモ切り！ ツモった西がそのまま河へ。もとの13枚は1枚も動いていないよ。'}),
+        exp:'ツモ切り！ ツモった'+inlineTile('W')+'がそのまま河へ。もとの13枚は1枚も動いていないよ。'}),
       {q:'「ツモ切り」って、どういうこと？',
         choices:['ツモった牌をそのまま切る','手牌から1枚えらんで切る'],a:0,
         exp:'ツモった牌をそのまま河へ。手牌はまったく変わらないよ。'},
       mjtDiscardQ({hand:B,tsumo:'N',myRiver:['2p','7s','E','4m','9p'],mode:'tsumogiri',
-        q:'この北も使えないね。<b>ツモ切り</b>しよう',tlab:'ツモ牌をえらぶ',
+        q:'この'+inlineTile('N')+'も使えないね。<b>ツモ切り</b>しよう',tlab:'ツモ牌をえらぶ',
         exp:'手牌はそのまま。ツモった1枚だけが河へ行ったね。'}),
       mjtDiscardQ({hand:C,tsumo:'S',myRiver:['3m','8p','W','1s','6p','4s'],mode:'tsumogiri',
-        q:'南をツモった。<b>ツモ切り</b>しよう',tlab:'ツモ牌をえらぶ',
+        q:inlineTile('S')+'をツモった。<b>ツモ切り</b>しよう',tlab:'ツモ牌をえらぶ',
         exp:'河が7枚目になったから、2段目のさきあたまに置かれたね。'}),
       {q:'ツモ切りをしたあと、手牌の13枚はどうなる？',choices:['まったく変わらない','1枚へる'],a:0,
         exp:'ツモった牌をそのまま切るので、もとの13枚はそのままだよ。'},
@@ -9384,16 +9440,16 @@ const CH2_LESSONS={
         +'かわりに<b>手牌の中の1枚</b>が出ていくよ。それでもやっぱり13枚だ。',
         {tlab:'手牌から切る',panel:mjtHTML({hand:A,tsumo:'3p',myRiver:['1s','8m','E']})}),
       mjtDiscardQ({hand:A,tsumo:'3p',myRiver:['1s','8m','E'],mode:'named',cut:'9s',
-        q:'3ピンをツモった。手牌の中の<b>9ソー</b>を切ろう',tlab:'手牌からえらぶ',
-        exp:'3ピンが手牌に入って、9ソーが河へ。手牌はちゃんと13枚だね。'}),
+        q:inlineTile('3p')+'をツモった。手牌の中の'+inlineTile('9s')+'を切ろう',tlab:'手牌からえらぶ',
+        exp:inlineTile('3p')+'が手牌に入って、'+inlineTile('9s')+'が河へ。手牌はちゃんと13枚だね。'}),
       {q:'手牌から1枚切ったとき、ツモってきた牌はどうなる？',
         choices:['手牌の中に入る','いっしょに河へ行く'],a:0,
         exp:'ツモ牌は手牌に入るよ。だから切るのは いつも1枚だけ。'},
       mjtDiscardQ({hand:B,tsumo:'6p',myRiver:['9s','2m','W','5s'],mode:'named',cut:'1m',
-        q:'6ピンをツモった。手牌の<b>1マン</b>を切ろう',tlab:'手牌からえらぶ',
-        exp:'1マンが河へ。ツモった6ピンは手牌の中だよ。'}),
+        q:inlineTile('6p')+'をツモった。手牌の'+inlineTile('1m')+'を切ろう',tlab:'手牌からえらぶ',
+        exp:inlineTile('1m')+'が河へ。ツモった'+inlineTile('6p')+'は手牌の中だよ。'}),
       mjtDiscardQ({hand:C,tsumo:'4s',myRiver:['1p','7m','N','3p','9s','2s'],mode:'named',cut:'8m',
-        q:'4ソーをツモった。手牌の<b>8マン</b>を切ろう',tlab:'手牌からえらぶ',
+        q:inlineTile('4s')+'をツモった。手牌の'+inlineTile('8m')+'を切ろう',tlab:'手牌からえらぶ',
         exp:'切った牌は河の7枚目。2段目のさきあたまに置かれたね。'}),
       {q:'14枚から1枚切ったあと、手牌は何枚？',choices:['13枚','14枚'],a:0,
         exp:'いつも13枚にもどるよ。これが自分の番のきほん。'},
@@ -9433,17 +9489,20 @@ const CH2_LESSONS={
         {tlab:'できている組はのこす',panel:mjtHTML({hand:A,tsumo:'N',myRiver:['1p','9s','E']})}),
       mjtDiscardQ({hand:A,tsumo:'N',myRiver:['1p','9s','E'],mode:'shape',cut:'N',
         q:'北をツモった。<b>形をくずさず</b>に1枚切るなら、どれ？',tlab:'できている組はのこす',
-        exp:'123マンも東東東も、もうできている組。北は1枚だけで仲間がいないね。'}),
+        exp:inlineTiles(['1m','2m','3m'])+'も'+inlineTiles(['E','E','E'])+'も、もうできている組。'
+          +inlineTile('N')+'は1枚だけで仲間がいないね。'}),
       mjtDiscardQ({hand:B,tsumo:'6s',myRiver:['2p','7m','W','5s'],mode:'shape',cut:'9m',
         q:'6ソーをツモって678ソーがそろった！ <b>形をくずさず</b>切るなら、どれ？',
         tlab:'できている組はのこす',
-        exp:'9マンは1枚だけ。123マン・東東東・678ソーは のこしておこう。'}),
+        exp:inlineTile('9m')+'は1枚だけ。'+inlineTiles(['1m','2m','3m'])+'・'+inlineTiles(['E','E','E'])
+          +'・'+inlineTiles(['6s','7s','8s'])+'は のこしておこう。'}),
       {q:'「もうできている3枚の組」は、どうするのがよさそう？',
         choices:['のこす','くずして切る'],a:0,
         exp:'そろっている組をくずすと、また作り直しになっちゃうよ。'},
       mjtDiscardQ({hand:C,tsumo:'1m',myRiver:['3p','8s','E','2m','9p','4s'],mode:'shape',cut:'1m',
         q:'1マンをツモった。<b>形をくずさず</b>切るなら、どれ？',tlab:'できている組はのこす',
-        exp:'456ピンも西西西も できている組。ツモった1マンは仲間がいないから ツモ切りだね。'}),
+        exp:inlineTiles(['4p','5p','6p'])+'も'+inlineTiles(['W','W','W'])+'も できている組。'
+          +'ツモった'+inlineTile('1m')+'は仲間がいないから ツモ切りだね。'}),
       {q:'1枚だけで仲間がいない牌は、どうなりやすい？',
         choices:['切る牌になりやすい','ぜったいに切らない'],a:0,
         exp:'仲間のいない牌は切る牌になりやすいよ。くわしい選びかたは、これから少しずつ覚えよう。'},
@@ -11228,8 +11287,9 @@ const QFORMATS={
           ? 'その牌は のこしておきたいね。1枚だけで仲間がいない牌をさがしてタップしてみよう。'
           : 'その牌じゃないよ。もう一度さがしてタップしてみよう。'};
       }
+      // R58: 回答のあとなので、切った牌を【絵】で見せる(文字→牌の変換をさせない)
       const pk=mjtPicks(q.td.board)[L.sel!=null?L.sel:set[0]];
-      const nm=pk?tileReading(pk.tile):'';
+      const nm=pk?inlineTile(pk.tile):'';
       return {ansText:(q.td.mode==='free'?'切った牌： ':'正解： 打')+nm, expText:q.exp||''};
     },
   },
@@ -11289,14 +11349,15 @@ const QFORMATS={
       const t=q.bt;
       let ans='';
       if(t.kind==='discard'){
-        const rec=t.rec||t.cut, nm=rec?tileReading(rec):'';
+        // R58: 感想は回答のあとなので、対象の牌を【絵】で見せてよい
+        const rec=t.rec||t.cut, nm=rec?inlineTile(rec):'';
         if(!res.isCorrect) return {ansText:'',
           expText: t.ok
-            ? 'その牌は のこしておきたいね。<b>'+nm+'</b>のような、いらない牌を切ってみよう。'
-            : '今回は <b>'+nm+'</b> を切ってみよう。もう一度えらんでね。'};
+            ? 'その牌は のこしておきたいね。'+nm+'のような、いらない牌を切ってみよう。'
+            : '今回は '+nm+' を切ってみよう。もう一度タップしてね。'};
         // R56 連続打牌: おすすめは◎、ほかの正解は○。どちらも「正解あつかい」は変えない
         if(t.ok){
-          const pnm=t.picked?tileReading(t.picked):'';
+          const pnm=t.picked?inlineTile(t.picked):'';
           if(t.picked&&t.picked!==rec)
             return {ansText:'○ 打'+pnm+'　これでもOK！',
               expText:(t.okExp||('いちばんのおすすめは 打'+nm+'だよ。'))+(q.exp?'<br>'+q.exp:'')};
