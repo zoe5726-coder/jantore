@@ -693,6 +693,18 @@ button.tile.off:active{transform:none;}
 .mjt-riv.bottom > .mjt-name{bottom:100%; left:0; right:0; margin-bottom:3px;}
 .mjt-riv.left   > .mjt-name{left:100%;  top:50%; transform:translateY(-50%); margin-left:4px;}
 .mjt-riv.right  > .mjt-name{right:100%; top:50%; transform:translateY(-50%); margin-right:4px;}
+/* R57: リーチ棒。自分の河の【上】＝中央空間がわに、実物と同じ【横向き】で1本だけ置く。
+   第1章で習った点棒(.tb-stick)と同じ作りかた(棒＋色の点＋数字)にして、
+   「これは点棒だ」と分かるようにする。絶対配置なので卓の大きさには影響しない */
+.mjt-rbou{position:absolute; bottom:100%; left:50%; transform:translateX(-50%);
+  margin-bottom:15px; display:flex; align-items:center; gap:4px; pointer-events:none; z-index:3;}
+.mjt-rbou-stick{width:clamp(44px,13vw,58px); height:9px; border-radius:5px; box-sizing:border-box;
+  background:var(--tile-face); border:1.5px solid var(--felt-edge);
+  display:flex; align-items:center; justify-content:center; gap:3px; flex:none;
+  box-shadow:0 1px 2px rgba(0,0,0,.35);}
+.mjt-rbou-stick > i{width:3px; height:3px; border-radius:50%; background:var(--verm); flex:none;}
+.mjt-rbou-num{font-size:clamp(8.5px,2.2vw,10px); font-weight:900; color:var(--felt-ink);
+  font-variant-numeric:tabular-nums; line-height:1;}
 /* 「ロンできる牌はない」は牌ではないので ふつうのボタン。ただし主役ではないので少し細く */
 .mjt-none .choice{padding:11px 14px; font-size:clamp(13.5px,4vw,15px);}
 /* ---- 河そのもの(R49) ----
@@ -807,6 +819,10 @@ button.mjt-pick{background:none; border:0; font:inherit;
 .mjt .mjt-hp.sel > .tile,.mjt .mjt-tp.sel > .tile{transform:translateY(-6px);}
 .mjt .mjt-hp.correct > .tile,.mjt .mjt-tp.correct > .tile{transform:translateY(-6px);}
 .mjt-tsumo .mjt-tp{padding:10px 4px; margin:-10px -4px; background:none; border:0; line-height:0;}
+/* R57: ツモ牌がないときの14枚目の空きスロット。大きさだけ確保して、場所が動かないようにする。
+   「ここにツモ牌が来る」と分かるよう、うすい点線の枠だけ置く(牌には見せない) */
+.mjt-tslot{display:block; width:var(--mjt-tt); height:calc(var(--mjt-tt) * 1.4);
+  border-radius:3px; border:1px dashed rgba(255,255,255,.22); box-sizing:border-box;}
 /* 自分がいま切った牌。他家の「いま」(mjt-new)とは別のしるしにする */
 .mjt .mjt-just > .tile{outline:1.5px solid rgba(255,255,255,.62); outline-offset:1px;}
 /* 卓の下の一言。フェルトの外に出るので卓の文字色(--felt-ink)は使わない */
@@ -822,6 +838,10 @@ button.mjt-pick{background:none; border:0; font:inherit;
 .mjt .hand-open > .mjt-hp > .tile{flex:0 0 auto; width:var(--mjt-ht); max-width:none;}
 .mjt .hand-open .mld-side{flex:0 0 auto; width:calc(var(--mjt-ht) * 1.4); max-width:none;}
 .mjt .hand-open .mld-gap{flex:0 0 clamp(5px,2vw,10px);}
+/* R57: 鳴いた組があるときは手牌の牌が固定幅(--mjt-ht)なので、14枚目の置き場所を足すと
+   320px幅でわずかにはみ出す。牌は小さくせず【すきまだけ】を詰めて卓の中に収める */
+.mjt .hand-open .mjt-tsumo{margin-left:clamp(2px, 1vw, 7px);}
+.mjt .hand-open .mld-gap{flex:0 0 clamp(3px, 1.4vw, 8px);}
 /* 手牌をタップさせるとき: 牌の見た目は変えず、当たり判定だけ上下へ広げる */
 button.mjt-pick.mjt-hp{flex:1 1 0; min-width:0; padding:10px 1px; margin:-10px -1px;}
 /* 手牌をタップさせる画面では、卓の余白ぶんまで手牌を広げて1枚あたりを大きくする */
@@ -3320,7 +3340,7 @@ const RUBY_FULL_SRC=`
 結局[けっきょく] 局面[きょくめん] 対局[たいきょく] 終局[しゅうきょく] 局収支[きょくしゅうし] 局[きょく]
 # R43 一般語を自然な漢字へ戻したぶんの読み。1字の「上」「下」は上手/上がる/下家/下がる に誤爆するので登録しない。
 # 「順位が上」は語句まるごとで登録し、部分一致の余地をなくす。他は送りがなでピン留めする
-順位[じゅんい]が上[うえ] 続[つづ]く 変[か]わ 変[か]え 遊[あそ]び 思[おも]い出[だ] 集[あつ]ま 近[ちか]づ
+順位[じゅんい]が上[うえ] 続[つづ]く 変[か]わ 変[か]え 遊[あそ]び 思[おも]い出[だ] 集[あつ]ま 近[ちか]づ 整[ととの]え
 順位[じゅんい] 勝負[しょうぶ] 席順[せきじゅん] {1位}[いちい]
 判断[はんだん] 判定中[はんていちゅう] 判定[はんてい] 反対[はんたい] 正反対[せいはんたい] 名前[なまえ] 問題[もんだい]
 基本[きほん] 基本形[きほんけい] 基本的[きほんてき] 場合[ばあい] 場所[ばしょ] 大事[だいじ] 大丈夫[だいじょうぶ] 奇跡[きせき]
@@ -3529,8 +3549,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.50.1';
-const BUILD_ID='20260929-04';
+const APP_VER='0.51.0';
+const BUILD_ID='20260929-05';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -7540,7 +7560,8 @@ function mjtPicks(o){
   if(o.handPick) mjtHandTiles(o).forEach((t,i)=>out.push({type:'hand',i,tile:t}));
   // R53: いまツモってきた14枚目もタップ対象。手牌と【同じ牌】でも別のものとして区別できるよう、
   // 牌の文字ではなく この順番(index)で見分ける
-  if(o.handPick&&o.tsumoPick&&o.tsumo) out.push({type:'tsumo',tile:o.tsumo});
+  // R57: handPick とは切りはなす。リーチのあとは【ツモ牌だけ】タップできる盤面にするため
+  if(o.tsumoPick&&o.tsumo) out.push({type:'tsumo',tile:o.tsumo});
   return out;
 }
 function mjtPickBtn(idx,inner,cls){
@@ -7687,7 +7708,13 @@ function mjtRiverHTML(seat,name,riv,opt){
         +'" onpointerdown="selChoice('+(o.pickOld+i)+')">'+inner+'</button>';
     return '<span class="'+cls+'" style="'+st+'">'+inner+'</span>';
   }).join('');
-  return '<div class="mjt-riv '+seat+'"><span class="mjt-name">'+name+'</span>'
+  /* R57: リーチ棒(1000点)。河の【上がわ】＝中央空間のほうへ、横向きに1本だけ置く。
+     絶対配置なので固定スロットの位置も卓の大きさも1pxも動かない。
+     牌ではないので河の牌数には数えない(1 discard = 1 牌DOM を崩さない) */
+  const rbou=o.rbou?'<span class="mjt-rbou" aria-label="リーチ棒 1000点">'
+    +'<span class="mjt-rbou-stick"><i></i><i></i><i></i></span>'
+    +'<b class="mjt-rbou-num">1000</b></span>':'';
+  return '<div class="mjt-riv '+seat+'"><span class="mjt-name">'+name+'</span>'+rbou
     +'<div class="mjt-slot'+(side?' side':'')+(o.pickOld!=null?' mjt-slot-pick':'')+'">'
     +cells+'</div></div>';
 }
@@ -7705,7 +7732,7 @@ function mjtHTML(o){
   g+='<div class="mjt-mid"></div>';
   // 「河」は第2章(R45)で導入する語。まだ習っていないLesson(R46など)では myLab で言いかえる
   g+=mjtRiverHTML('bottom',o.myLab||'あなたの河',riv.bottom,
-    {pickOld:o.myPick?myBase:null,riichiIdx:(o.riichi||{}).bottom});
+    {pickOld:o.myPick?myBase:null,riichiIdx:(o.riichi||{}).bottom,rbou:!!o.rbou});
   g+='</div>';
   let me='';
   if(o.hand){
@@ -7715,11 +7742,17 @@ function mjtHTML(o){
       +(o.handLab===false?'':'<span class="mjt-name">あなたの手牌</span>')
       +'<div class="hand'+(melds.length?' hand-open':'')+'">'
       +t.map((x,i)=> o.handPick?mjtPickBtn(handBase+i,mjtTileHTML(x),'mjt-hp'):mjtTileHTML(x)).join('')
+      /* 14枚目の置き場所(R57)。tsumoSlot を立てた盤面では、ツモ牌が無いときも
+         【同じ大きさの空きスロット】を残す。こうすると 13枚⇔14枚 で
+         手牌の大きさも位置も1pxも動かない(実機で牌がふくらんで見えた問題の直し)。
+         教材の図(R45〜R51)は tsumoSlot を立てないので、見た目はこれまでどおり */
       +(o.tsumo?'<span class="mjt-tsumo">'
-          +(o.tsumoPick&&o.handPick
-            ? mjtPickBtn(handBase+t.length,mjtTileHTML(o.tsumo),'mjt-tp')   // R53: ツモ牌も切れる
+          +(o.tsumoPick
+            ? mjtPickBtn(handBase+(o.handPick?t.length:0),mjtTileHTML(o.tsumo),'mjt-tp')  // R53: ツモ牌も切れる
             : mjtTileHTML(o.tsumo))
-          +(o.tsumoLab===false?'':'<span class="mjt-nlab">ツモ</span>')+'</span>':'')
+          +(o.tsumoLab===false?'':'<span class="mjt-nlab">ツモ</span>')+'</span>'
+        :(o.tsumoSlot?'<span class="mjt-tsumo mjt-tsumo-empty">'
+          +'<span class="mjt-tslot" aria-hidden="true"></span></span>':''))
       +(melds.length?renderOpenMelds(melds):'')
       +'</div></div>';
   }
@@ -7732,7 +7765,14 @@ function mjtHTML(o){
 /* 盤面つきの図。待ちチップは卓の外に出す(卓の中には実物と同じものだけ置く) */
 function mjtPanelHTML(o){
   let h='';
-  if(o.showWait&&o.hand) h+=fWaitHTML(fWaitsOf(o.hand),o.waitLab);
+  /* 鳴いた組は もう動かせない完成メンツ。待ちは【手の中＋鳴いた組】をならべた13枚で数える(R57)。
+     門前(鳴きなし)のときは これまでとまったく同じ */
+  if(o.showWait&&o.hand){
+    const h13=(o.melds&&o.melds.length)
+      ? sortTiles(mjtHandTiles(o).concat(meldTilesAll(o.melds))).join('')
+      : o.hand;
+    h+=fWaitHTML(fWaitsOf(h13),o.waitLab);
+  }
   h+=mjtHTML(o);
   if(o.note) h+='<p class="f-note">この手には役があるものとして考えよう</p>';
   return h;
@@ -7803,7 +7843,8 @@ function mjtFuritenPickQ(o){
      (牌の文字で見分けると「ツモ切り」かどうかを取りちがえる)
    ・正解は、画面に出している14枚からその場で作る。手書きの正解indexは持たない */
 function mjtDiscardPicks(o){
-  const board=Object.assign({myLab:'あなたの河'},o,{pick:[],handPick:true,tsumoPick:true});
+  // R57: tsumoSlot=14枚目の置き場所をつねに確保する(切って13枚になっても手牌がふくらまない)
+  const board=Object.assign({myLab:'あなたの河'},o,{pick:[],handPick:true,tsumoPick:true,tsumoSlot:true});
   return {board,picks:mjtPicks(board)};
 }
 /* 切ったあとの盤面。えらんだ1枚が河へ行き、のこりが13枚になる。
@@ -7882,25 +7923,37 @@ const BATTLES={
       {t:'end',q:'🎉 <b>4巡、打てたね！</b><br>自分 → 下家 → 対面 → 上家 → また自分。'
         +'これが麻雀の<b>時間の進みかた</b>だよ。',tlab:'ミニ実戦① クリア'},
     ]},
-  /* ② 鳴きを使ってみよう: ポン(対面から)とチー(上家から)を、進行の中で実際に成立させる */
-  bt2:{ id:'bt2', hand:'34m9m234s789s55pEE',
-    intro:'つぎは<b>鳴き</b>だよ。ほかの人が切った牌をもらうと、手牌と順番がどう変わるのか'
-      +'…実際にやって たしかめよう。',
+  /* ② 鳴いてアガろう(R57で作りなおし):
+     旧版は 5ピンをポン → 234マンをチー → 東を2枚とも切る、という進行だった。
+     アガリ形には近づくのに【役がひとつも残らない】ので、初心者教材として不自然だった
+     (「鳴いたらアガれる」を体験させた直後に、実はアガれない形になっていた)。
+     新版は【東をポンして役を確保する】。東は場風(東場)でも自風(親=東家)でも東なので、
+     3枚そろえるだけで役になり、鳴いてもアガれる。そのあと上家の2マンをチーしてテンパイ→ロン。
+     ・鳴いた組は【鳴いた順に ひだりから】ならぶ(東ポン → 2マンチー)
+     ・チーは上家の捨て牌だけ、というR46のきまりも崩さない
+     ・牌はすべて4枚以内(東=3枚, 5ソー=2枚, ほかは1枚) */
+  bt2:{ id:'bt2', hand:'349m567p5578sEEN',
+    ctx:{rw:'E',sw:'E'},          // 東場・自分は東家(親)。テストはこの条件で東が役牌か検算する
+    intro:'つぎは<b>鳴き</b>だよ。いまは<b>東1局</b>、あなたは<b><ruby>親<rt>おや</rt></ruby></b>（東家）。'
+      +'だから<b>東</b>を3枚そろえると、それだけで<b>役</b>になるんだ。'
+      +'ほかの人の捨て牌をもらって、アガリまで いってみよう！',
     introLab:'★ ミニ実戦②',
     events:[
       {t:'draw',tile:'1p'},
       {t:'discard',cut:'1p',cutTsumo:true,q:'あなたの番。ツモってきた1ピンは使えないね。<b>ツモ切り</b>しよう',
        tlab:'あなたの番',exp:'ツモ切り。手牌はそのままだよ。'},
       {t:'opp',seat:'right',tile:'9p'},
-      {t:'opp',seat:'top',tile:'5p'},
-      {t:'ask',kind:'pon',seat:'top',tile:'5p',
-       q:'<b>対面が5ピンを切った！</b>　あなたの手には5ピンが2枚…<b>ポンできる？</b>',
+      {t:'opp',seat:'top',tile:'E'},
+      {t:'ask',kind:'pon',seat:'top',tile:'E',
+       q:'<b>対面が東を切った！</b>　あなたの手には東が2枚…<b>ポンできる？</b>',
        choices:['ポンできる','ポンできない'],
-       call:{kind:'pon',seat:'top',tile:'5p',use:['5p','5p']},
-       exp:'同じ牌が2枚あればポン！ だれが切った牌でもポンできるよ。'},
-      {t:'discard',cut:'E',q:'ポンできた！　<b>ポンのあとはツモらずに、そのまま1枚切る</b>よ。東を切ろう',
+       call:{kind:'pon',seat:'top',tile:'E',use:['E','E']},
+       exp:'同じ牌が2枚あればポン！ だれが切った牌でもポンできるよ。'
+         +'しかも今回の東は<b>役になる牌</b>。これで鳴いてもアガれる手になったね。'},
+      {t:'discard',cut:'N',
+       q:'ポンできた！　東の組が手牌の右へ出たね。<b>ポンのあとはツモらずに、そのまま1枚切る</b>よ。北を切ろう',
        tlab:'ポンのあとの打牌',
-       exp:'手牌から5ピンが2枚なくなって、3枚の組が外に出たね。ツモっていないのがポイント。'},
+       exp:'手牌から東が2枚なくなって、3枚の組が外に出たね。ツモっていないのがポイント。'},
       {t:'opp',seat:'right',tile:'8p'},
       {t:'opp',seat:'top',tile:'4p'},
       {t:'opp',seat:'left',tile:'2m'},
@@ -7909,11 +7962,24 @@ const BATTLES={
        choices:['チーできる','チーできない'],
        call:{kind:'chi',seat:'left',tile:'2m',use:['3m','4m']},
        exp:'2マン・3マン・4マンでならびの組！ チーできるのは<b>上家の捨て牌だけ</b>だったね。'},
-      {t:'discard',cut:'E',q:'チーできた！　<b>チーのあともツモらずに1枚切る</b>よ。東を切ろう',
+      {t:'discard',cut:'9m',
+       q:'チーできた！　2マンの組は<b>東の組の右</b>へならんだね。9マンを切ろう',
        tlab:'チーのあとの打牌',
-       exp:'3マンと4マンが手牌からなくなって、234マンの組が外に出たよ。'},
-      {t:'end',q:'🎉 <b>鳴けたね！</b><br>鳴くと、手牌から牌がなくなって<b>組が外に出る</b>。'
-        +'そして<b>ツモらずにすぐ1枚切る</b>。この2つがポイントだよ。',tlab:'ミニ実戦② クリア'},
+       exp:'鳴いた組は<b>鳴いた じゅんばんに ひだりから</b>ならぶよ。これでテンパイ！'},
+      {t:'opp',seat:'right',tile:'1s'},
+      {t:'opp',seat:'top',tile:'3s'},
+      {t:'opp',seat:'left',tile:'6s'},
+      {t:'ask',kind:'ron',seat:'left',tile:'6s',
+       q:'<b>上家が6ソーを切った！</b>　あなたの待ちは…<b>ロンできる？</b>',
+       choices:['ロンできる','ロンできない'],
+       exp:'ロン！　鳴いていても、<b>東</b>という役があるからアガれるんだ。'},
+      {t:'end',won:true,cap:'🀄 ロン！ アガリ！',
+       q:'🎉 <b>ロン！ アガリ！</b><br>鳴くと 手牌から牌がなくなって<b>組が外に出る</b>。'
+        +'そして<b>ツモらずにすぐ1枚切る</b>。鳴いた組は<b>鳴いた じゅんばんに ひだりから</b>ならぶよ。'
+        +'<br>ただし<b>鳴いた手ではリーチができない</b>。'
+        +'だから鳴くときは、<b>アガれる役がのこるか</b>が大事なんだ。'
+        +'今回は<b>東</b>が役になったから、ちゃんとアガれたね！',
+       tlab:'ミニ実戦② クリア'},
     ]},
   /* ③ ロンしてみよう: 数巡打ったあと、他家が待ち牌を切る。フリテンにはしない(素直な成功体験) */
   bt3:{ id:'bt3', hand:'123m456m789m234p5p',
@@ -7930,7 +7996,7 @@ const BATTLES={
        tlab:'あなたの番（2巡目）',exp:'自分の河には5ピンを捨てていないから、フリテンではないよ。'},
       {t:'opp',seat:'right',tile:'8s'},{t:'opp',seat:'top',tile:'2s'},
       {t:'opp',seat:'left',tile:'5p'},
-      {t:'ask',kind:'ron',seat:'left',tile:'5p',win:true,
+      {t:'ask',kind:'ron',seat:'left',tile:'5p',win:true,note:true,
        q:'<b>上家が5ピンを切った！</b>　あなたの待ちは…<b>ロンできる？</b>',
        choices:['ロンできる','ロンできない'],
        exp:'「ロン！」と声に出して、はじめてアガリになるよ。'},
@@ -7980,14 +8046,33 @@ const BATTLES={
        tlab:'5巡目',exp:'ツモった牌をそのまま切ってもいいし、手の中の牌を切ってもいいよ。'},
       {t:'opp',seat:'right',tile:'5p'},{t:'opp',seat:'top',tile:'3s'},{t:'opp',seat:'left',tile:'4m'},
       {t:'draw',tile:'8m'},
-      {t:'discard',ok:['W','N','E','S','9m','1s'],
-       q:'8マンが来て678マンがそろった！　<b>さいごの1枚</b>を切ろう',
-       tlab:'6巡目（さいご）',exp:'これで手牌ぜんぶが 組とアタマになったよ。'},
-      {t:'end',tenpai:true,cap:'🎉 テンパイ！ あと1枚でアガリ',
-       q:'🎉 <b>テンパイ！</b>　あと1枚でアガリの形だよ。'
-        +'あなたの<b>待ち</b>は 6ソーと9ソー。この2つのどちらかが来れば アガリだよ。'
-        +'<br>ツモって、いらない牌を切る。これを何回もくりかえすうちに、手はアガリに近づいていくんだ。',
-       tlab:'6巡 打ちきった！'},
+      /* ここでテンパイ。R57からは テンパイで終わらせず、リーチ → ツモ切り → ツモアガリ まで進む */
+      {t:'ask',kind:'riichi',
+       q:'8マンが来て678マンがそろった！　のこりの1枚を切ると<b>テンパイ</b>だよ。'
+        +'あなたは まだ<b>鳴いていない</b>から、<b>リーチ</b>できる。まずはリーチしてみよう！',
+       tlab:'テンパイ！ リーチしよう', choices:['リーチ！'],
+       exp:'リーチ！　<b>1000点の点棒</b>を1本、場に出したよ。河の上に見えるかな。'},
+      {t:'discard',ok:['W','N','E','S','9m','1s'],riichi:true,
+       q:'リーチ！　宣言した牌は<b>横向き</b>にして切るよ。のこっている いらない牌をタップしよう',
+       tlab:'リーチ宣言の1枚',
+       exp:'河の中の その1枚だけが横向きになったね。「ここでリーチした」という しるしだよ。'},
+      {t:'opp',seat:'right',tile:'2p'},{t:'opp',seat:'top',tile:'6m'},{t:'opp',seat:'left',tile:'S'},
+      {t:'draw',tile:'4p'},
+      {t:'discard',cut:'4p',cutTsumo:true,
+       q:'リーチしたあとは<b>手牌を変えられない</b>。ツモった牌をそのまま切ろう（<b>ツモ切り</b>）',
+       tlab:'7巡目（ツモ切り）',
+       exp:'ツモ切り。手牌はテンパイのまま、待ちも変わらないよ。'},
+      {t:'opp',seat:'right',tile:'3p'},{t:'opp',seat:'top',tile:'7m'},{t:'opp',seat:'left',tile:'N'},
+      {t:'draw',tile:'6s'},
+      {t:'ask',kind:'tsumo',
+       q:'<b>6ソーをツモった！</b>　待っていた牌だ…これで<b>ツモ</b>アガリできる？',
+       tlab:'8巡目 ツモ', choices:['ツモ！ アガリ','まだアガれない'],
+       exp:'自分で引いた牌でアガるのが<b>ツモ</b>。リーチもしているから、役もちゃんとあるよ。'},
+      {t:'end',won:true,cap:'🀄 ツモ！ アガリ！',
+       q:'🎉 <b>アガリ！</b>　ツモって、いらない牌を切って、手を整えて…'
+        +'テンパイしたら<b>リーチ</b>。そして さいごは自分で<b>ツモ</b>！'
+        +'<br>これが1局の流れだよ。自分の手で アガりきれたね！',
+       tlab:'★ 捨て牌マスター クリア'},
     ]},
 };
 const BT_SEATNAME={left:'上家',top:'対面',right:'下家'};
@@ -8001,7 +8086,8 @@ function btInit(sc){
   return {id:sc.id, hand:sortTiles(parseHand(sc.hand)), melds:[], tsumo:null,
     rivers:{left:((sc.rivers||{}).left||[]).slice(),top:((sc.rivers||{}).top||[]).slice(),
             right:((sc.rivers||{}).right||[]).slice()},
-    myRiver:(sc.myRiver||[]).slice(), now:null, just:false, playing:false, won:false, tok:0};
+    myRiver:(sc.myRiver||[]).slice(), now:null, just:false, playing:false, won:false, tok:0,
+    riichi:false, riichiIdx:null};   // R57: リーチ宣言したか / 宣言牌は自分の河の何番目か
 }
 /* 盤面は【つねに いまの状態】から作る。R52/R53の共通実卓UIをそのまま使う。
    btApply は捨て牌を b.rivers[席] に入れてから b.now を立てる。つまり
@@ -8013,7 +8099,11 @@ function btBoard(extra){
   return Object.assign({hand:b.hand.join(''), melds:b.melds.slice(),
     myRiver:b.myRiver.slice(),
     rivers:{left:b.rivers.left.slice(),top:b.rivers.top.slice(),right:b.rivers.right.slice()},
-    now:b.now, nowInRiver:!!b.now, myJust:b.just, tsumo:b.tsumo}, extra||{});
+    now:b.now, nowInRiver:!!b.now, myJust:b.just, tsumo:b.tsumo,
+    // R57: 14枚目の置き場所はつねに確保する(13枚でも手牌がふくらまない)
+    tsumoSlot:true,
+    // R57: リーチ宣言牌は【河にあるその1枚】を横向きにする。別の場所へ写さない(R56bと同じ原則)
+    riichi:(b.riichiIdx!=null?{bottom:b.riichiIdx}:null), rbou:!!b.riichi}, extra||{});
 }
 /* --- イベントを1つ適用する。ここだけが状態を変える --- */
 function btApply(ev){
@@ -8034,10 +8124,11 @@ function btApply(ev){
       called:ev.tile,from:BT2NK[ev.seat]}]);
     b.now=null; b.just=false;                                 // 鳴いた牌を「いま」のまま残さない
   }
+  else if(ev.t==='riichi'){ b.riichi=true; }  // R57: 宣言だけ。リーチ棒がこの時点で場に出る
   else if(ev.t==='win'){ b.won=true; }   // アガリ牌の「いま」はそのまま残す(その1枚でアガった)
 }
 /* --- 自分が1枚切る --- */
-function btDiscard(pick){
+function btDiscard(pick,opt){
   const b=L.bt;
   if(pick.type==='tsumo'){ /* ツモ切り: 手牌は動かない */ }
   else {
@@ -8047,7 +8138,17 @@ function btDiscard(pick){
   }
   b.tsumo=null;
   b.myRiver=b.myRiver.concat([pick.tile]);
+  // R57: リーチ宣言牌は【いま河へ入れたその1枚】。番号で覚えるので、牌をもう1枚作らない
+  if(opt&&opt.riichi) b.riichiIdx=b.myRiver.length-1;
   b.now=null; b.just=true;                                    // 自分が切った牌は「切った」(「いま」ではない)
+}
+/* R57: リーチ宣言牌を切ったあとかどうか。ここから先は手牌を変えられない＝ツモ切りだけ */
+function btLocked(){ const b=L&&L.bt; return !!(b&&b.riichi&&b.riichiIdx!=null); }
+/* 待ちを数えるための13枚。鳴いた組は もう動かせない完成メンツなので、
+   手の中の牌とならべて13枚にすれば、実際の待ちと一致する(R57。門前ならこれまでと同じ) */
+function btHand13(){
+  const b=L.bt;
+  return sortTiles(b.hand.concat(meldTilesAll(b.melds))).join('');
 }
 /* --- 盤面だけ描きなおす。卓の大きさ・河の座標はR52の固定slotなので動かない --- */
 function btDraw(){
@@ -8079,7 +8180,10 @@ function btReady(q){
   const b=L.bt; b.playing=false; q.bt.pre=[];
   const ui=document.getElementById('bt-ui');
   if(q.bt.kind==='discard'){
-    b.ui={handPick:true,tsumoPick:true};
+    /* R57: リーチしたあとは手牌を変えられない。だからタップできるのは【ツモ牌だけ】にする。
+       (手牌をタップして「ちがうよ」と言われる のではなく、そもそも押せない形にする)
+       宣言そのものの1枚は手牌から切るので、しばりがかかるのは【宣言牌を切ったあと】から */
+    b.ui=btLocked()?{handPick:false,tsumoPick:true}:{handPick:true,tsumoPick:true};
     const picks=mjtPicks(btBoard(b.ui));
     if(q.bt.ok&&q.bt.ok.length){
       /* R56 連続打牌: ok は【切ってよい牌】を おすすめ順にならべたもの。
@@ -8105,12 +8209,20 @@ function btReady(q){
     q.choices=mjtChoiceLabels(btBoard(b.ui));
     if(ui) ui.innerHTML='';
   }else if(q.bt.kind==='ask'){
-    b.ui=(q.bt.ask==='ron')?{showWait:true,note:true}:{};
-    const hand=b.hand.join(''), tile=q.bt.tile;
+    /* R57: 「この手には役があるものとして考えよう」の note は、役をまだ説明していない場面だけ。
+       bt2(東ポン)や tb1(リーチ)は 本当に役があるので出さない */
+    b.ui=(q.bt.ask==='ron'||q.bt.ask==='tsumo')?{showWait:true,note:!!q.bt.note}:{};
+    // 鳴いていても待ちが数えられるように、手の中＋鳴いた組をならべた13枚で見る(R57)
+    const hand=b.hand.join(''), h13=btHand13(), tile=q.bt.tile;
     const can=q.bt.ask==='pon'?nkCanPon(hand,tile)
       :q.bt.ask==='chi'?nkCanChi(hand,tile,BT2NK[q.bt.seat])
-      :(fWaitsOf(hand).indexOf(tile)>=0&&!fIsFuriten(hand,b.myRiver));
+      // R57: ツモアガリ。フリテンでもツモならアガれる(第2章で習ったとおり)
+      :q.bt.ask==='tsumo'?(fWaitsOf(h13).indexOf(b.tsumo)>=0)
+      :q.bt.ask==='riichi'?true
+      :(fWaitsOf(h13).indexOf(tile)>=0&&!fIsFuriten(h13,b.myRiver));
     q.a=can?0:1;
+    if(q.bt.ask==='riichi') q.a=0;      // 「リーチ！」は1つだけの体験ボタン(正解あてではない)
+    if(q.bt.ask==='tsumo') b.ui.tsumoSlot=true;
     if(ui) ui.innerHTML='<div class="choices">'+q.choices.map((c,i)=>
       '<button class="choice" id="ch-'+i+'" onpointerdown="selChoice('+i+')">'+c+'</button>').join('')+'</div>';
   }else{
@@ -8121,12 +8233,22 @@ function btReady(q){
   }
   btDraw(); renderFoot();
 }
-/* 指定された牌とちがう牌を確定したとき: 盤面(14枚)はそのままで、同じ場面をやり直す。
-   シナリオのイベントは1つも進めない。手牌もツモ牌も河も変わらない */
+/* 指定された牌とちがう牌をタップしたとき: 盤面(14枚)はそのままで、同じ場面をやり直す。
+   シナリオのイベントは1つも進めない。手牌もツモ牌も河も変わらない。
+   R57からは、この「やり直し」に ボタンを押させない(ヒントを出したまま そのまま次のタップを受ける)。
+   btRetry() は問題ごと描きなおす強いやり直し。テストや将来の呼び出し用に残してある */
 function btRetry(){
-  if(!L||!L.btRetry) return;
+  if(!L||!L.bt) return;
   L.btRetry=false;
   renderQ();                 // 同じ問題をもう一度。pre は空なのですぐ操作できる
+}
+/* R57: 打牌をやり直せる状態へ盤面だけをもどす。実戦(bt)でも教材の実卓(td)でも使う。
+   問題を描きなおさないので、上に出したヒント(感想カード)は残ったまま */
+function discardRearm(){
+  const q=(L&&L.qs)?L.qs[L.idx]:null; if(!q) return;
+  if(q.bt&&L.bt){ btDraw(); return; }
+  if(q.td){ const host=document.getElementById('td-board');
+    if(host) host.innerHTML=mjtPanelHTML(q.td.board); }
 }
 /* 待たずに先へ進めたいとき(「つづける」など): 残りを一気に反映する */
 function btFlush(q){
@@ -8145,7 +8267,7 @@ function btBuild(sc){
     if(ev.t==='discard'){
       turn++;
       qs.push({bt:{sc,kind:'discard',pre:pre.splice(0),cut:ev.cut||null,cutTsumo:!!ev.cutTsumo,
-          ok:ev.ok?ev.ok.slice():null,okExp:ev.okExp||'',turn},
+          ok:ev.ok?ev.ok.slice():null,okExp:ev.okExp||'',riichi:!!ev.riichi,turn},
         q:ev.q||(ev.cut?('<b>'+tileReading(ev.cut)+'</b>を切ってみよう'):'1枚えらんで切ろう'),
         tlab:ev.tlab||'あなたの番', exp:ev.exp||'', a:0,
         choices:['切る','切らない']});
@@ -8153,13 +8275,15 @@ function btBuild(sc){
     }
     if(ev.t==='ask'){
       qs.push({bt:{sc,kind:'ask',ask:ev.kind,seat:ev.seat,tile:ev.tile,pre:pre.splice(0),
-          call:ev.call||null,win:ev.kind==='ron'},
-        q:ev.q, tlab:ev.tlab||(BT_SEATNAME[ev.seat]+'が切った'), exp:ev.exp||'',
+          call:ev.call||null,win:(ev.kind==='ron'||ev.kind==='tsumo'),note:!!ev.note,
+          // R57: 「リーチ！」はえらび直す問題ではなく、1つだけの体験ボタン
+          declare:(ev.kind==='riichi')},
+        q:ev.q, tlab:ev.tlab||(ev.seat?(BT_SEATNAME[ev.seat]+'が切った'):'あなたの番'), exp:ev.exp||'',
         choices:ev.choices, a:0});
       return;
     }
     if(ev.t==='end'){
-      qs.push({bt:{sc,kind:'end',pre:pre.splice(0),cap:ev.cap||null,tenpai:!!ev.tenpai},ch1t:true,
+      qs.push({bt:{sc,kind:'end',pre:pre.splice(0),cap:ev.cap||null,tenpai:!!ev.tenpai,won:!!ev.won},ch1t:true,
         q:ev.q, tlab:ev.tlab||'おつかれさま', a:0, choices:[]});
     }
   });
@@ -9286,9 +9410,10 @@ const CH2_LESSONS={
       mjtDiscardQ({hand:D,tsumo:'E',myRiver:['2s','9p','W','6m','1p','8s'],mode:'named',cut:'3s',
         q:'手牌の中の<b>3ソー</b>を1枚えらんで切ろう',tlab:'ソーズをさがす',
         exp:'竹のような絵がソーズ。同じ牌が2枚あるときは どちらをえらんでも正解だよ。'}),
-      {q:'切る牌をえらんだあと、どうすれば切れる？',
-        choices:['「この牌を切る」をおす','もう一度おなじ牌をおす'],a:0,
-        exp:'えらんでから「この牌を切る」。えらび直したいときは、別の牌をおせばいいよ。'},
+      // R57: 打牌は1タップになったので、この問題も操作のとおりに直した
+      {q:'切りたい牌が見つかったら、どうする？',
+        choices:['その牌を1回タップする','2回タップする'],a:0,
+        exp:'タップした その牌が、そのまま自分の河へ行くよ。ちがう牌をタップしても切れないから、安心してさがしてね。'},
     ];
   },
   /* T5 形をくずさず切ろう(受け入れ枚数やシャンテン数は出さない。「できている組は残す」だけ) */
@@ -9335,12 +9460,9 @@ const CH2_LESSONS={
        この6巡の中に ぜんぶ出てくるので、まとめレッスンとしての役目は変わらない。
      ここは牌効率のコースにはしない(受け入れ・何切るは SECTION 4 のトレーニングが受けもつ)。 */
   tu1_6(){
-    return btLesson('tb1').concat([
-      ch1Teach('🎉 <b>捨て牌マスター！</b>　ツモって、手牌を見て、いらない牌を切る。'
-        +'これを何回もくりかえすと、手はアガリに近づいていくんだったね。'
-        +'<br>どの牌を切ると強いかは、これから少しずつ覚えていこう！',
-        {tlab:'牌を選んで切る クリア'}),
-    ]);
+    // R57: しめくくりの1枚(end)が そのままテーマのクリア画面をかねる。
+    // アガったあとに もう1枚「よみもの」をはさむと、アガった手ごたえが薄れるため
+    return btLesson('tb1');
   },
 };
 /* ---- 第3章 19+…50レッスンの中身(キーはTHEMESのdiff.ch1と一致) ---- */
@@ -11059,7 +11181,8 @@ const QFORMATS={
   },
   tablediscard:{
     /* R53: 実卓の盤面で「14枚から1枚えらんで切る」。
-       えらぶ→「この牌を切る」で確定 の2段階(誤タップ防止＋自分が何をえらんだか確認できる)。
+       R57からは【1タップで切る】(確定ボタンは出さない)。何巡も打つのでテンポを優先した。
+       のこしたい牌をタップしたときは 切らずにヒントを出し、そのまま別の牌をタップできる。
        採点は共通の binary に相乗りする(新しい採点のしくみは作らない) */
     cat:null, scoring:'binary',
     qid(q){ return null; },
@@ -11085,16 +11208,19 @@ const QFORMATS={
         if(after&&host) host.innerHTML=mjtPanelHTML(after);
         sndPlay('discard');
       }else{
-        const set=(q.td.aSet&&q.td.aSet.length)?q.td.aSet:[q.a];
-        set.forEach(i=>{ const el=document.getElementById('ch-'+i);
-          if(el){ el.classList.remove('sel'); el.classList.add('correct'); } });
-        const w=document.getElementById('ch-'+L.sel);
-        if(w){ w.classList.remove('sel'); w.classList.add('wrong'); }
+        /* R57: ちがう牌をタップしたときは【切らない】。正解も開示しない。
+           盤面を14枚のままにもどして、そのまま別の牌をタップできるようにする(R55の約束と同じ) */
+        L.btRetry=true;
       }
     },
     feedback(q,res){
       const set=(q.td.aSet&&q.td.aSet.length)?q.td.aSet:[q.a];
-      const pk=mjtPicks(q.td.board)[res.isCorrect?(L.sel!=null?L.sel:set[0]):set[0]];
+      if(!res.isCorrect){
+        return {ansText:'', expText: (q.td.mode==='shape')
+          ? 'その牌は のこしておきたいね。1枚だけで仲間がいない牌をさがしてタップしてみよう。'
+          : 'その牌じゃないよ。もう一度さがしてタップしてみよう。'};
+      }
+      const pk=mjtPicks(q.td.board)[L.sel!=null?L.sel:set[0]];
       const nm=pk?tileReading(pk.tile):'';
       return {ansText:(q.td.mode==='free'?'切った牌： ':'正解： 打')+nm, expText:q.exp||''};
     },
@@ -11128,23 +11254,27 @@ const QFORMATS={
     },
     reveal(q,ans,res){
       const b=L.bt;
+      const pickUI=btLocked()?{handPick:false,tsumoPick:true}:{handPick:true,tsumoPick:true};
       if(q.bt.kind==='discard'){
         if(!res.isCorrect){
           // ちがう牌をえらんだときは【切らない】。14枚の盤面をそのままにして、えらび直してもらう。
           // 「自分はAを選んだのに、なぜかBが河へ出た」を絶対に起こさないため
-          L.btRetry=true; b.ui={handPick:true,tsumoPick:true}; btDraw(); return;
+          L.btRetry=true; b.ui=pickUI; btDraw(); return;
         }
         // ユーザーが確定した【そのinstance】だけを河へ出す。牌の文字で置きかえない
-        const picks=mjtPicks(btBoard({handPick:true,tsumoPick:true}));
+        const picks=mjtPicks(btBoard(pickUI));
         q.bt.picked=picks[L.sel]?picks[L.sel].tile:null;      // R56: 感想で「◎/○」を出すため
-        btDiscard(picks[L.sel]);
+        // R57: リーチ宣言の打牌は、河へ入れたその1枚の番号を覚えて横向きにする
+        btDiscard(picks[L.sel],{riichi:q.bt.riichi});
         sndPlay('discard');
       }else if(q.bt.kind==='ask'){
+        if(q.bt.declare) btApply({t:'riichi'});               // R57: リーチ宣言(リーチ棒が場に出る)
         if(q.bt.call) btApply(Object.assign({t:'call'},q.bt.call));
-        if(q.bt.win) btApply({t:'win'});
+        if(q.bt.win&&res.isCorrect) btApply({t:'win'});
       }
       b.ui={};
-      if(q.bt.win) b.ui.cap='🀄 ロン！ アガリ！';
+      if(q.bt.win&&res.isCorrect) b.ui.cap=(q.bt.ask==='tsumo')?'🀄 ツモ！ アガリ！':'🀄 ロン！ アガリ！';
+      if(q.bt.ask==='tsumo') b.ui.tsumoSlot=true;
       btDraw();
     },
     feedback(q,res){
@@ -11165,7 +11295,8 @@ const QFORMATS={
           return {ansText:'◎ 打'+nm+'　おすすめ！', expText:q.exp||''};
         }
         ans=nm?'打'+nm:'切ったね';
-      }else ans='正解： '+q.choices[q.a];
+      }else if(t.declare) ans='リーチ！';                      // R57: 正解あてではないので「正解：」を出さない
+      else ans='正解： '+q.choices[q.a];
       return {ansText:ans, expText:q.exp||''};
     },
   },
@@ -11466,9 +11597,10 @@ function selChoice(i){
   const n=(q.tchoices||q.choices).length;
   for(let k=0;k<n;k++){ const el=document.getElementById('ch-'+k); if(el) el.classList.toggle('sel',k===i); }
   sndPlay('select');
-  // R53「牌を選んで切る」とR54のミニ実戦の打牌は即判定しない。えらび直して「この牌を切る」で確定
-  if(q&&(q.td||(q.bt&&q.bt.kind==='discard'))){ renderFoot(); return; }
-  ch1AutoJudge();               // 単一選択(mcq/tchoices/リーチ判断/Compare)は即判定
+  /* R57: 実卓の打牌は【1タップで切る】。R53〜R56の「えらぶ→この牌を切るで確定」は
+     何巡も打つ実戦ではテンポが悪いのでやめた(確定ボタンそのものも出さない)。
+     連打で2枚切れないように、ch1AutoJudge が L.judging を立てて 以降のタップを止める */
+  ch1AutoJudge();               // 単一選択(mcq/tchoices/リーチ判断/Compare)も打牌も即判定
 }
 function selTile(i){
   if(!L||L.checked||L.judging) return;
@@ -11663,18 +11795,15 @@ function renderFoot(){
   }
   if(qNow&&qNow.bt&&!L.checked&&!qNow.ch1t){
     if(L.bt&&L.bt.playing){ foot.innerHTML='<div class="foot-wait">…</div>'; return; }
-    if(qNow.bt.kind==='discard'){
-      const readyB=L.sel!=null;
-      foot.innerHTML='<button class="btn" id="answer-btn" '+(readyB?'':'disabled')
-        +' onclick="answerNow(this)">'+(readyB?'この牌を切る':'切る牌をえらぼう')+'</button>';
-    }else foot.innerHTML='<div class="foot-wait">'+(L.judging?'…':'えらんでこたえよう')+'</div>';
+    // R57: 打牌は1タップ。確定ボタンは出さない(下の固定ボタン領域も使わない)
+    if(qNow.bt.kind==='discard')
+      foot.innerHTML='<div class="foot-wait">'+(L.judging?'…':'切る牌をタップしよう')+'</div>';
+    else foot.innerHTML='<div class="foot-wait">'+(L.judging?'…':'えらんでこたえよう')+'</div>';
     return;
   }
   if(qNow&&qNow.td&&!L.checked){
-    // R53: えらんでから「この牌を切る」で確定。未選択のあいだは押せない(誤タップ・連打の防止)
-    const readyD=L.sel!=null;
-    foot.innerHTML='<button class="btn" id="answer-btn" '+(readyD?'':'disabled')
-      +' onclick="answerNow(this)">'+(readyD?'この牌を切る':'切る牌をえらぼう')+'</button>';
+    // R57: R53の実卓打牌も1タップ。タップしたその牌がそのまま河へ行く
+    foot.innerHTML='<div class="foot-wait">'+(L.judging?'…':'切る牌をタップしよう')+'</div>';
     return;
   }
   // 回答UX(2026-09-21): 単一選択はタップ=回答確定なのでボタンを出さない(下端タップ自体を廃止)。
@@ -11923,13 +12052,23 @@ function renderFeedback(q,cat,res,ratingRes,fb){
     +'<p class="fb-exp">'+tileTokLesson(fb.expText)+'</p>'
     +'</div>';
   const area=document.getElementById('q-area');
+  area.querySelectorAll('.fb-card').forEach(e=>e.remove());   // R57: やり直しでカードを積み上げない
   area.insertAdjacentHTML('beforeend',card);
+  /* R57: のこしたい牌をタップしたとき。
+     ・その牌は切らない(R55の約束)。盤面は14枚のまま、河も巡もツモ牌も動かない
+     ・「もう一度えらぶ」は押させない。ヒントを出したまま、そのまま別の牌をタップできる形にもどす */
+  if(!staminaOut&&L&&L.btRetry){
+    L.btRetry=false;
+    L.checked=false; L.judging=false; L.autoTok=null; L.sel=null;
+    foot.className='lesson-foot '+cls;
+    foot.innerHTML='<div class="foot-wait">べつの牌をタップしよう</div>';
+    discardRearm();
+    return;
+  }
   foot.className='lesson-foot '+cls;
   foot.innerHTML=staminaOut
     ?'<button class="btn red" onclick="quitLesson();staminaModal()">レッスン終了</button>'
-    :(L&&L.btRetry
-      ? '<button class="btn red" onclick="btRetry()">もう一度えらぶ</button>'
-      : '<button class="btn'+(cls==='ng'?' red':'')+'" onclick="next()">つづける</button>');
+    :'<button class="btn'+(cls==='ng'?' red':'')+'" onclick="next()">つづける</button>';
   // 解説へ自動スクロール: 画面に収まる解説はカード全体をボタンの上に収め、
   // 1画面より長い解説はカード先頭から自然に読み始められる位置へ(下へスクロールで続き)
   requestAnimationFrame(()=>{
