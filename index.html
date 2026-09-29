@@ -1918,10 +1918,16 @@ function renderMeld(m){
     ?'<span class="mld-side" data-called="'+t+'">'+tileHTML(t,'mld-t')+'</span>'
     :tileHTML(t,'mld-t')).join('');
 }
+/* 鳴いた組の置き場所(R57b)。実卓では【自分の右はしから順に、左へ】積んでいく。
+   だから melds の先頭(いちばん最初に鳴いた組)が【いちばん右】に来る。
+   state(melds配列)は 鳴いた順のまま。ここで描くときだけ 逆順にならべる。
+   ・左→右 = 新しい組 … 古い組
+   ・手牌との境目(.mld-gap)は変えない */
 function renderOpenMelds(melds){
   if(!melds||!melds.length) return '';
   return '<span class="mld-gap" aria-hidden="true"></span>'
-    +melds.map(m=>renderMeld(m)).join('<span class="mld-sep" aria-hidden="true"></span>');
+    +melds.slice().reverse().map(m=>renderMeld(m))
+      .join('<span class="mld-sep" aria-hidden="true"></span>');
 }
 function openHandHTML(concealed,melds,opt){
   // concealed=手の中の牌(配列・並べ替え済みで渡す) / melds=鳴いた組 / opt.drawHTML=ツモ牌などを手の中の右に
@@ -3549,8 +3555,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.51.0';
-const BUILD_ID='20260929-05';
+const APP_VER='0.51.1';
+const BUILD_ID='20260929-06';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -7929,7 +7935,7 @@ const BATTLES={
      (「鳴いたらアガれる」を体験させた直後に、実はアガれない形になっていた)。
      新版は【東をポンして役を確保する】。東は場風(東場)でも自風(親=東家)でも東なので、
      3枚そろえるだけで役になり、鳴いてもアガれる。そのあと上家の2マンをチーしてテンパイ→ロン。
-     ・鳴いた組は【鳴いた順に ひだりから】ならぶ(東ポン → 2マンチー)
+     ・鳴いた組は【みぎはしから順に】ならぶ(東ポンがいちばん右、2マンチーはその左)
      ・チーは上家の捨て牌だけ、というR46のきまりも崩さない
      ・牌はすべて4枚以内(東=3枚, 5ソー=2枚, ほかは1枚) */
   bt2:{ id:'bt2', hand:'349m567p5578sEEN',
@@ -7951,7 +7957,8 @@ const BATTLES={
        exp:'同じ牌が2枚あればポン！ だれが切った牌でもポンできるよ。'
          +'しかも今回の東は<b>役になる牌</b>。これで鳴いてもアガれる手になったね。'},
       {t:'discard',cut:'N',
-       q:'ポンできた！　東の組が手牌の右へ出たね。<b>ポンのあとはツモらずに、そのまま1枚切る</b>よ。北を切ろう',
+       q:'ポンできた！　東の組が手牌の<b>いちばん右</b>へ出たね。'
+         +'<b>ポンのあとはツモらずに、そのまま1枚切る</b>よ。北を切ろう',
        tlab:'ポンのあとの打牌',
        exp:'手牌から東が2枚なくなって、3枚の組が外に出たね。ツモっていないのがポイント。'},
       {t:'opp',seat:'right',tile:'8p'},
@@ -7963,9 +7970,10 @@ const BATTLES={
        call:{kind:'chi',seat:'left',tile:'2m',use:['3m','4m']},
        exp:'2マン・3マン・4マンでならびの組！ チーできるのは<b>上家の捨て牌だけ</b>だったね。'},
       {t:'discard',cut:'9m',
-       q:'チーできた！　2マンの組は<b>東の組の右</b>へならんだね。9マンを切ろう',
+       q:'チーできた！　2マンの組は<b>東の組の左</b>へならんだね。9マンを切ろう',
        tlab:'チーのあとの打牌',
-       exp:'鳴いた組は<b>鳴いた じゅんばんに ひだりから</b>ならぶよ。これでテンパイ！'},
+       exp:'鳴いた組は<b>みぎはしから じゅんばんに</b>ならぶよ。'
+         +'さきに鳴いた東がいちばん右、あとから鳴いた2マンはその左だね。これでテンパイ！'},
       {t:'opp',seat:'right',tile:'1s'},
       {t:'opp',seat:'top',tile:'3s'},
       {t:'opp',seat:'left',tile:'6s'},
@@ -7975,7 +7983,7 @@ const BATTLES={
        exp:'ロン！　鳴いていても、<b>東</b>という役があるからアガれるんだ。'},
       {t:'end',won:true,cap:'🀄 ロン！ アガリ！',
        q:'🎉 <b>ロン！ アガリ！</b><br>鳴くと 手牌から牌がなくなって<b>組が外に出る</b>。'
-        +'そして<b>ツモらずにすぐ1枚切る</b>。鳴いた組は<b>鳴いた じゅんばんに ひだりから</b>ならぶよ。'
+        +'そして<b>ツモらずにすぐ1枚切る</b>。鳴いた組は<b>みぎはしから じゅんばんに</b>ならぶよ。'
         +'<br>ただし<b>鳴いた手ではリーチができない</b>。'
         +'だから鳴くときは、<b>アガれる役がのこるか</b>が大事なんだ。'
         +'今回は<b>東</b>が役になったから、ちゃんとアガれたね！',
