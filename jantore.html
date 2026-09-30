@@ -815,7 +815,7 @@ button.mjt-pick{background:none; border:0; font:inherit;
 .mjt-me{margin-top:8px;}
 .mjt-me .mjt-name{margin-bottom:2px;}
 .mjt .hand{margin:0; gap:1px;}
-.mjt .hand-open .mjt-hp,.mjt .hand > .tile{border-radius:3px;}
+.mjt .hand-open .mjt-hp,.mjt .hand > .tile,.mjt .hand > .mjt-hs > .tile{border-radius:3px;}
 /* 卓の中では【自分の13枚がいちばん読めること】を優先する(R49)。
    アプリ共通の --tile-w で止めず、卓の内側の幅をめいっぱい使う */
 .mjt .hand .tile{flex:1 1 0; min-width:0; max-width:32px;}
@@ -848,6 +848,7 @@ button.mjt-pick{background:none; border:0; font:inherit;
 .mjt .hand-open{flex-wrap:nowrap;}
 /* 立てた牌だけを --mjt-ht にそろえる。横向き牌(.mld-side>.tile)は箱の中で位置を決めているので触らない */
 .mjt .hand-open > .tile,
+.mjt .hand-open > .mjt-hs > .tile,
 .mjt .hand-open > .mjt-hp > .tile{flex:0 0 auto; width:var(--mjt-ht); max-width:none;}
 .mjt .hand-open .mld-side{flex:0 0 auto; width:calc(var(--mjt-ht) * 1.4); max-width:none;}
 .mjt .hand-open .mld-gap{flex:0 0 clamp(5px,2vw,10px);}
@@ -856,12 +857,21 @@ button.mjt-pick{background:none; border:0; font:inherit;
 .mjt .hand-open .mjt-tsumo{margin-left:clamp(2px, 1vw, 7px);}
 .mjt .hand-open .mld-gap{flex:0 0 clamp(3px, 1.4vw, 8px);}
 /* 手牌をタップさせるとき: 牌の見た目は変えず、当たり判定だけ上下へ広げる */
-button.mjt-pick.mjt-hp{flex:1 1 0; min-width:0; padding:10px 1px; margin:-10px -1px;}
-/* 手牌をタップさせる画面では、卓の余白ぶんまで手牌を広げて1枚あたりを大きくする */
-.mjt-me-pick{margin-left:-5px; margin-right:-5px;}
-.mjt .mjt-hp .tile{width:100%; max-width:none; flex:none;}
-.mjt .hand-open .mjt-hp{flex:0 0 auto;}
-.mjt .hand-open .mjt-hp .tile{width:var(--mjt-ht);}
+/* R59: タップできない場面の .mjt-hs と【完全に同じ箱】にする。
+   flex / padding / margin のどれか1つでも違うと 13枚⇔14枚で牌の大きさと位置が動く */
+button.mjt-pick.mjt-hp,
+.mjt .mjt-hs{flex:1 1 0; min-width:0; padding:10px 1px; margin:-10px -1px;
+  display:block; background:none; border:0; line-height:0; box-sizing:content-box;}
+/* R59: 卓の余白ぶんまで手牌を広げて1枚あたりを大きくするのは【つねに】行う。
+   タップできるときだけ広げると、打牌の前後で手牌13枚が左右に動いてしまう(実機で見えた不具合)。
+   .mjt-me-pick は「いま手牌をタップさせている画面」の目印としては残すが、幅は動かさない */
+.mjt-me{margin-left:-5px; margin-right:-5px;}
+.mjt .mjt-hp .tile,
+.mjt .mjt-hs .tile{width:100%; max-width:none; flex:none; height:auto;}
+.mjt .hand-open .mjt-hp,
+.mjt .hand-open .mjt-hs{flex:0 0 auto;}
+.mjt .hand-open .mjt-hp .tile,
+.mjt .hand-open .mjt-hs .tile{width:var(--mjt-ht);}
 
 /* 正解後だけの関連づけ(§41)。正解前には絶対につけない */
 .mjt .mjt-rel{outline:3px solid var(--jade); outline-offset:2px;
@@ -2764,9 +2774,11 @@ const THEMES=[
   requires:'th_ch2f',
   subThemes:[
    {id:'st_ch2z1', title:'ミニ実戦', lessons:[
-    {diff:{ch1:'mb1_1'}},                      // ① 4巡打ってみよう
-    {diff:{ch1:'mb1_2'}},                      // ② 鳴きを使ってみよう
-    {diff:{ch1:'mb1_3'}},                      // ③ ロンしてみよう
+    /* R59: Lesson ID・Lesson数・小テーマ構成は変えない(roadProgressに影響させない)。
+       中身のシナリオだけ 本来の学習設計へ合わせた */
+    {diff:{ch1:'mb1_1'}},                      // ① 手を育ててロンしてみよう(2シャンテン→5巡→ロン)
+    {diff:{ch1:'mb1_2'}},                      // ② 鳴きを使ってみよう(東ポン→2マンチー→ロン)
+    {diff:{ch1:'mb1_3'}},                      // ★③ 門前で育てて リーチ→ツモアガリ
    ]},
   ]},
  /* ===== 第3章「役がわかる」v1.0 (本編50Lesson+任意Road7Lesson) =====
@@ -3597,8 +3609,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.52.0';
-const BUILD_ID='20260929-07';
+const APP_VER='0.53.0';
+const BUILD_ID='20260930-01';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -7789,7 +7801,14 @@ function mjtHTML(o){
     me='<div class="mjt-me'+(o.handPick?' mjt-me-pick':'')+'">'
       +(o.handLab===false?'':'<span class="mjt-name">あなたの手牌</span>')
       +'<div class="hand'+(melds.length?' hand-open':'')+'">'
-      +t.map((x,i)=> o.handPick?mjtPickBtn(handBase+i,mjtTileHTML(x),'mjt-hp'):mjtTileHTML(x)).join('')
+      /* R59: 手牌13枚は【タップできる/できない】で1pxも動かしてはいけない。
+         そのために、タップできない場面でも まったく同じ箱(.mjt-hs)で牌を包む。
+         ボタン(.mjt-hp)と .mjt-hs は padding/margin/flex をCSSで完全にそろえてあるので、
+         中の牌のwidth・height・x座標は どちらの場面でも同じ値になる。
+         (R57は .hand-open(=鳴いた組があるとき)だけを固定していたので、
+          門前の実戦シナリオでは 13枚⇔14枚で牌がふくらんで見えていた) */
+      +t.map((x,i)=> o.handPick?mjtPickBtn(handBase+i,mjtTileHTML(x),'mjt-hp')
+        :('<span class="mjt-hs">'+mjtTileHTML(x)+'</span>')).join('')
       /* 14枚目の置き場所(R57)。tsumoSlot を立てた盤面では、ツモ牌が無いときも
          【同じ大きさの空きスロット】を残す。こうすると 13枚⇔14枚 で
          手牌の大きさも位置も1pxも動かない(実機で牌がふくらんで見えた問題の直し)。
@@ -7946,30 +7965,67 @@ function mjtDiscardQ(o){
    event: draw(自分のツモ) / discard(自分の打牌=問題) / opp(他家の打牌=自動)
           ask(ロン・ポン・チーの判断=問題) / call(鳴きの成立) / win(アガリ) / end(しめくくり) */
 const BATTLES={
-  /* ① 4巡打ってみよう: 判断イベントなし。1巡の時間の流れだけを体験する */
-  bt1:{ id:'bt1', hand:'123m456m789m234p5p',
+  /* ① 手を育ててアガろう(R59で作りなおし):
+     旧版は 開始手牌が 123m456m789m234p5p = 【開始時点でテンパイ】だった。
+     4巡どれを切ってもシャンテン数は 0→0→0→0 のままで手はまったく育たず、
+     さいごは「4巡打てたね」でアガらずに終わっていた。
+     実機では「教材用にならべた不自然な手牌」「手が育つ体験になっていない」という問題になった。
+     新版は【2シャンテンから5巡育てて、さいごは上家の9ソーでロン】。
+     ・開始手牌は 完成メンツ1つ(456s)・ターツ2つ(68m/22p)・孤立牌2つ(3m〜5mの外と7s)・字牌2枚。
+       配牌でありそうな形にして、123456789mのような教材都合のならびにはしない
+     ・1〜2巡目は 孤立した字牌という【明確な不要牌】。3巡目は「どちらも1枚だけ余っている」軽い選択
+     ・ok は切ってよい牌を おすすめ順にならべたもの。どれをえらんでも のこる13枚が同じになる
+       (捨てる候補は 字牌E・B・Nと孤立の1sだけで、のこす牌には手をつけない)
+     ・自分の河に 3s/6s/9s(さいごの待ち)を1枚も入れない = フリテンにしない
+     ・他家の河にも ロン牌より前に 3s/6s/9s を1枚も入れない
+     ・牌はすべて4枚以内 */
+  bt1:{ id:'bt1', hand:'34568m22p4567sEB',
     intro:'ここからは<b>ミニ実戦</b>！　これまで習ったことを、本物の麻雀とおなじ<b>じゅんばん</b>で'
-      +'やってみよう。まずは4巡、打ってみるよ。',
+      +'やってみよう。ツモって、いらない牌を切って…<b>アガリまで</b>いってみよう！',
     introLab:'★ ミニ実戦①',
     events:[
-      {t:'draw',tile:'W'},
-      {t:'discard',q:'あなたの番だよ。1枚ツモったから、<b>14枚から1枚えらんで切ろう</b>',
-       tlab:'あなたの番',exp:'切ったら、下家 → 対面 → 上家 の順に みんなも1枚ずつ切るよ。'},
-      {t:'opp',seat:'right',tile:'1p'},{t:'opp',seat:'top',tile:'9p'},{t:'opp',seat:'left',tile:'E'},
-      {t:'draw',tile:'9s'},
-      {t:'discard',q:'3人が切りおわって、<b>また あなたの番</b>。1枚切ろう',tlab:'あなたの番（2巡目）',
-       exp:'これが麻雀の1巡。自分 → 下家 → 対面 → 上家 → 自分…とまわっていくよ。'},
-      {t:'opp',seat:'right',tile:'2s'},{t:'opp',seat:'top',tile:'8p'},{t:'opp',seat:'left',tile:'S'},
       {t:'draw',tile:'N'},
-      {t:'discard',q:'あなたの番。1枚切ろう',tlab:'あなたの番（3巡目）',
-       exp:'河がだんだん長くなってきたね。切った牌はずっと見えたままだよ。'},
-      {t:'opp',seat:'right',tile:'3s'},{t:'opp',seat:'top',tile:'7p'},{t:'opp',seat:'left',tile:'N'},
+      {t:'discard',ok:['E','B','N','1s'],
+       q:'あなたの番だよ。1枚ツモったから、<b>14枚から1枚えらんで切ろう</b>',
+       tlab:'1巡目',
+       exp:'字牌は1枚だけだと 組になりにくいね。切ったら 下家 → 対面 → 上家 の順に'
+         +'みんなも1枚ずつ切るよ。'},
+      {t:'opp',seat:'right',tile:'1p'},{t:'opp',seat:'top',tile:'9m'},{t:'opp',seat:'left',tile:'1m'},
+      {t:'draw',tile:'7m'},
+      {t:'discard',ok:['B','N','E','1s'],
+       q:inlineTile('7m')+'が来た！　<b>いらない牌</b>を1枚切ろう',
+       tlab:'2巡目',
+       exp:inlineTiles(['6m','7m','8m'])+'で組がひとつ できあがり。手が形になってきたね。'},
+      {t:'opp',seat:'right',tile:'R'},{t:'opp',seat:'top',tile:'9p'},{t:'opp',seat:'left',tile:'1m'},
       {t:'draw',tile:'1s'},
-      {t:'discard',q:'さいごの1枚。えらんで切ろう',tlab:'あなたの番（4巡目）',
-       exp:'おつかれさま！ これで4巡ぶん打てたね。'},
-      {t:'opp',seat:'right',tile:'4s'},{t:'opp',seat:'top',tile:'6p'},{t:'opp',seat:'left',tile:'W'},
-      {t:'end',q:'🎉 <b>4巡、打てたね！</b><br>自分 → 下家 → 対面 → 上家 → また自分。'
-        +'これが麻雀の<b>時間の進みかた</b>だよ。',tlab:'ミニ実戦① クリア'},
+      {t:'discard',ok:['N','1s','E','B'],
+       q:'あなたの番。のこっている<b>いらない牌</b>を1枚切ろう',
+       tlab:'3巡目',
+       exp:'どちらも1枚だけ余っている牌。どっちを切ってもだいじょうぶだよ。'},
+      {t:'opp',seat:'right',tile:'G'},{t:'opp',seat:'top',tile:'1p'},{t:'opp',seat:'left',tile:'2m'},
+      {t:'draw',tile:'8s'},
+      {t:'discard',ok:['1s','N','E','B'],
+       q:inlineTile('8s')+'が来た！　<b>いらない牌</b>を1枚切ろう',
+       tlab:'4巡目',
+       exp:inlineTiles(['7s','8s'])+'がならんだ。これで<b>テンパイ</b>…あと1枚でアガリだよ！'},
+      {t:'opp',seat:'right',tile:'R'},{t:'opp',seat:'top',tile:'9m'},{t:'opp',seat:'left',tile:'2m'},
+      {t:'draw',tile:'9p'},
+      {t:'discard',cut:'9p',cutTsumo:true,
+       q:'テンパイしたから、もう手牌は変えなくていいね。ツモった'+inlineTile('9p')
+         +'は<b>ツモ切り</b>しよう',
+       tlab:'5巡目（ツモ切り）',
+       exp:'自分の河に 待っている牌は1枚もないから、フリテンではないよ。'},
+      {t:'opp',seat:'right',tile:'G'},{t:'opp',seat:'top',tile:'1p'},
+      {t:'opp',seat:'left',tile:'9s'},
+      {t:'ask',kind:'ron',seat:'left',tile:'9s',win:true,note:true,
+       q:'<b>上家が'+inlineTile('9s')+'を切った！</b>　あなたの待ちは…<b>ロンできる？</b>',
+       choices:['ロンできる','ロンできない'],
+       exp:'ロン！　「ロン！」と声に出して、はじめてアガリになるよ。'},
+      {t:'end',won:true,cap:'🀄 ロン！ アガリ！',
+       q:'🎉 <b>ロン！ アガリ！</b><br>2シャンテンの手が、5巡ツモって切るあいだに'
+        +'テンパイまで育ったね。<b>ツモって、いらない牌を切る</b>——これをくりかえすだけで'
+        +'手はちゃんと近づいていくんだ。<br>これが麻雀の<b>時間の進みかた</b>だよ。',
+       tlab:'ミニ実戦① クリア'},
     ]},
   /* ② 鳴いてアガろう(R57で作りなおし):
      旧版は 5ピンをポン → 234マンをチー → 東を2枚とも切る、という進行だった。
@@ -8036,31 +8092,96 @@ const BATTLES={
         +'今回は'+inlineTile('E')+'が役になったから、ちゃんとアガれたね！',
        tlab:'ミニ実戦② クリア'},
     ]},
-  /* ③ ロンしてみよう: 数巡打ったあと、他家が待ち牌を切る。フリテンにはしない(素直な成功体験) */
-  bt3:{ id:'bt3', hand:'123m456m789m234p5p',
-    intro:'さいごは<b>ロン</b>！　あなたの手は、あと1枚でアガリだよ。'
-      +'ほかの人の捨て牌を よ〜く見ていよう。',
+  /* ③ 門前で育てて、リーチしてツモアガろう(R59で作りなおし):
+     旧版は 開始手牌が 123m456m789m234p5p = 【開始時点でテンパイ】で、2巡ツモ切りして
+     上家の5ピンでロンするだけだった。手は1枚も育たず(シャンテン 0→0→0)、
+     ロンは②(bt2)でも体験するので、この★まとめでしか出せないものが1つも無かった。
+
+     いちばん困っていたのは【リーチ体験に通常Roadから到達できない】ことだった。
+     リーチは R57 で tb1(=tu1_6「牌を選んで切る」のまとめ)に入れたが、
+     th_ch2f をすでにクリア済みの既存ユーザーは tu1_6 を二度と再生しないので到達できず、
+     その人が次に進む「★はじめてのミニ実戦」(bt1/bt2/bt3)には リーチが1つも無かった。
+     そこで この★まとめを【門前で手を育てて → テンパイ → リーチ → ツモアガリ】にする。
+     これで tu1_6 と mb1_3 の2か所でリーチに出会うので、新規ユーザーも既存ユーザーも必ず通る。
+
+     ・開始3シャンテン。完成メンツ1つ(567p)・ターツ3つ(67m/24p/88p)・孤立牌2つ(9m/3s)・字牌2枚(W/N)
+     ・シャンテン推移 3→3→2→1→1→0。毎巡さがるのではなく、
+       字牌を切るだけの巡・形が良くなる巡・変わらない巡が混ざる(作業に見せない)
+     ・5巡目は「どちらも1枚だけ余っている」2択。6巡目の ok は その両方を入れてあるので、
+       ユーザーがどちらを切っても のこる13枚は同じ(67m 23456788p 345s)に収束する
+     ・テンパイしたら リーチ → 宣言牌が横向き → リーチ棒 → リーチ後はツモ切り → さいごはツモアガリ
+     ・他家の河に 5マン・8マン(さいごの待ち)を1枚も入れない
+     ・牌はすべて4枚以内(8p=2, ほかは3枚以下) */
+  bt3:{ id:'bt3', hand:'679m2456788p3sWN',
+    /* 「門前」は第3章(ya1_2)でも まだ名前を出していない未導入語なので ここでは使わない。
+       「鳴かないで」という既習のことばだけで言う(用語導入順をくずさない) */
+    intro:'さいごは<b>鳴かないで</b>、自分だけで手を育ててみよう！'
+      +'ツモって、いらない牌を切って…テンパイしたら<b>リーチ</b>だ。'
+      +'そして さいごは自分の手でアガりきるよ！',
     introLab:'★ ミニ実戦③',
     events:[
-      {t:'draw',tile:'W'},
-      {t:'discard',cut:'W',cutTsumo:true,
-       q:'あなたの番。'+inlineTile('W')+'はいらないね。<b>ツモ切り</b>しよう',
-       tlab:'あなたの番',exp:'手はこのまま。あと1枚でアガリの形だよ。'},
-      {t:'opp',seat:'right',tile:'9s'},{t:'opp',seat:'top',tile:'1s'},{t:'opp',seat:'left',tile:'3s'},
-      {t:'draw',tile:'N'},
-      {t:'discard',cut:'N',cutTsumo:true,
-       q:'また あなたの番。'+inlineTile('N')+'も <b>ツモ切り</b>しよう',
-       tlab:'あなたの番（2巡目）',
-       exp:'自分の河には'+inlineTile('5p')+'を捨てていないから、フリテンではないよ。'},
-      {t:'opp',seat:'right',tile:'8s'},{t:'opp',seat:'top',tile:'2s'},
-      {t:'opp',seat:'left',tile:'5p'},
-      {t:'ask',kind:'ron',seat:'left',tile:'5p',win:true,note:true,
-       q:'<b>上家が'+inlineTile('5p')+'を切った！</b>　あなたの待ちは…<b>ロンできる？</b>',
-       choices:['ロンできる','ロンできない'],
-       exp:'「ロン！」と声に出して、はじめてアガリになるよ。'},
-      {t:'end',cap:'🀄 ロン！ アガリ！',
-       q:'🎉 <b>ロン！ アガリ！</b><br>ツモって、切って、ほかの人の捨て牌を見て…'
-        +'アガれたね！　これが麻雀の1局の流れだよ。',tlab:'ミニ実戦③ クリア'},
+      {t:'draw',tile:'S'},
+      {t:'discard',ok:['W','N','S','E','9m','1m'],
+       q:'あなたの番。手牌をよく見て、<b>いらない牌</b>を1枚えらんで切ろう',
+       tlab:'1巡目',
+       exp:'1枚だけの字牌は、組になりにくいから先に切っていくよ。'},
+      {t:'opp',seat:'right',tile:'1p'},{t:'opp',seat:'top',tile:'9p'},{t:'opp',seat:'left',tile:'1s'},
+      {t:'draw',tile:'E'},
+      {t:'discard',ok:['N','S','E','W','9m','1m'],
+       q:'また あなたの番。<b>いらない牌</b>を1枚切ろう',
+       tlab:'2巡目',
+       exp:inlineTiles(['5p','6p','7p'])+'はできている組。'+inlineTiles(['6m','7m'])+'と'
+         +inlineTiles(['2p','4p'])+'と'+inlineTiles(['8p','8p'])+'は組のたねだから のこそう。'},
+      {t:'opp',seat:'right',tile:'R'},{t:'opp',seat:'top',tile:'9s'},{t:'opp',seat:'left',tile:'1s'},
+      {t:'draw',tile:'4s'},
+      {t:'discard',ok:['N','S','E','W','9m','1m'],
+       q:inlineTile('4s')+'が来た！　'+inlineTile('3s')+'とならんだね。<b>いらない牌</b>を1枚切ろう',
+       tlab:'3巡目',
+       exp:inlineTiles(['3s','4s'])+'も組のたねになった。'
+         +'ここに'+inlineTile('2s')+'か'+inlineTile('5s')+'が来れば組になるよ。'},
+      {t:'opp',seat:'right',tile:'B'},{t:'opp',seat:'top',tile:'9s'},{t:'opp',seat:'left',tile:'2s'},
+      {t:'draw',tile:'3p'},
+      {t:'discard',ok:['N','S','E','W','9m','1m'],
+       q:inlineTile('3p')+'が来た！　<b>いらない牌</b>を1枚切ろう',
+       tlab:'4巡目',
+       exp:inlineTiles(['2p','3p','4p'])+'で組がもうひとつ できあがり！　'
+         +'アガリまで あと少しだね。'},
+      {t:'opp',seat:'right',tile:'G'},{t:'opp',seat:'top',tile:'1m'},{t:'opp',seat:'left',tile:'2s'},
+      {t:'draw',tile:'1m'},
+      {t:'discard',ok:['9m','1m','W','N','S','E'],
+       q:'あなたの番。のこっている<b>いらない牌</b>を1枚切ろう',
+       tlab:'5巡目',
+       exp:'どちらも1枚だけ余っている牌。どっちを切ってもだいじょうぶだよ。'},
+      {t:'opp',seat:'right',tile:'R'},{t:'opp',seat:'top',tile:'1m'},{t:'opp',seat:'left',tile:'9m'},
+      {t:'draw',tile:'5s'},
+      /* ここでテンパイ。テンパイで終わらせず、リーチ → ツモ切り → ツモアガリ まで進む */
+      {t:'ask',kind:'riichi',
+       q:inlineTile('5s')+'が来て'+inlineTiles(['3s','4s','5s'])+'がそろった！　'
+        +'のこりの1枚を切ると<b>テンパイ</b>だよ。'
+        +'あなたは まだ<b>鳴いていない</b>から、<b>リーチ</b>できる。まずはリーチしてみよう！',
+       tlab:'テンパイ！ リーチしよう', choices:['リーチ！'],
+       exp:'リーチ！　<b>1000点の点棒</b>を1本、場に出したよ。河の上に見えるかな。'},
+      {t:'discard',ok:['1m','9m','W','N','S','E'],riichi:true,
+       q:'リーチ！　宣言した牌は<b>横向き</b>にして切るよ。のこっている いらない牌をタップしよう',
+       tlab:'リーチ宣言の1枚',
+       exp:'河の中の その1枚だけが横向きになったね。「ここでリーチした」という しるしだよ。'},
+      {t:'opp',seat:'right',tile:'B'},{t:'opp',seat:'top',tile:'1p'},{t:'opp',seat:'left',tile:'9p'},
+      {t:'draw',tile:'R'},
+      {t:'discard',cut:'R',cutTsumo:true,
+       q:'リーチしたあとは<b>手牌を変えられない</b>。ツモった牌をそのまま切ろう（<b>ツモ切り</b>）',
+       tlab:'7巡目（ツモ切り）',
+       exp:'ツモ切り。手牌はテンパイのまま、待ちも変わらないよ。'},
+      {t:'opp',seat:'right',tile:'G'},{t:'opp',seat:'top',tile:'6s'},{t:'opp',seat:'left',tile:'W'},
+      {t:'draw',tile:'5m'},
+      {t:'ask',kind:'tsumo',
+       q:'<b>'+inlineTile('5m')+'をツモった！</b>　待っていた牌だ…これで<b>ツモ</b>アガリできる？',
+       tlab:'8巡目 ツモ', choices:['ツモ！ アガリ','まだアガれない'],
+       exp:'自分で引いた牌でアガるのが<b>ツモ</b>。リーチもしているから、役もちゃんとあるよ。'},
+      {t:'end',won:true,cap:'🀄 ツモ！ アガリ！',
+       q:'🎉 <b>ツモ！ アガリ！</b><br>3シャンテンの手を、ツモって切って 少しずつ育てて…'
+        +'テンパイしたら<b>リーチ</b>。そして さいごは自分で<b>ツモ</b>！'
+        +'<br>これが1局の流れだよ。自分の手で アガりきれたね！',
+       tlab:'ミニ実戦③ クリア'},
     ]},
   /* ④ 6巡つづけて打つ(R56): 判断イベント(ask)も鳴きもロンもなし。
      【ツモる → 手牌を見る → いらない牌を1枚切る】を6回くりかえして、さいごにテンパイまで行く。
@@ -8290,6 +8411,9 @@ function btReady(q){
       '<button class="choice" id="ch-'+i+'" onpointerdown="selChoice('+i+')">'+c+'</button>').join('')+'</div>';
   }else{
     b.ui=q.bt.cap?{cap:q.bt.cap}:{};
+    // R59: アガリでしめくくる回は状態にも残す(シナリオのクリア条件が【アガった】であることを
+    // 画面だけでなく状態から確かめられるようにする)
+    if(q.bt.won) b.won=true;
     // R56: テンパイでしめくくる回は、卓の上に【待ち】を出す(第2章で習った言葉のつながり)
     if(q.bt.tenpai) b.ui.showWait=true;
     if(ui) ui.innerHTML='';
@@ -9513,8 +9637,10 @@ const CH2_LESSONS={
   mb1_1(){ return btLesson('bt1'); },
   mb1_2(){ return btLesson('bt2'); },
   mb1_3(){ return btLesson('bt3').concat([
-    ch1Teach('これで<b>ミニ実戦</b>はクリア！　ツモって、切って、鳴いて、ロンする…'
-      +'べつべつに習ったことが、1本の流れにつながったね。'
+    /* R59: ①手を育ててロン ②鳴いてロン ③門前で育ててリーチ→ツモ の3本を通したところ。
+       「鳴くとリーチできない」は②の中で言っているので、ここでは くりかえさない */
+    ch1Teach('これで<b>ミニ実戦</b>はクリア！　ツモって、切って、手を育てて、鳴いて、'
+      +'リーチして、ロンとツモでアガる…べつべつに習ったことが、1本の流れにつながったね。'
       +'<br>つぎは<b>役</b>を覚えて、アガリをもっと強くしていこう！',{tlab:'★ ミニ実戦 クリア'}),
   ]); },
   /* ★T6 捨て牌マスター(R56で中身を入れかえ)
