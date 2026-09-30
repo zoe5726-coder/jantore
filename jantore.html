@@ -1109,6 +1109,65 @@ button.mjt-pick.mjt-hp,
 @keyframes cardIn{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;}}
 
 /* Level3〜6: 中央オーバーレイ演出(#fx)。pointer-events:noneで進行を一切ブロックしない */
+/* ================= R60: 卓と操作エリアのあいだの余白 =================
+   実戦Lessonの視覚構造: 状況説明 → 卓(いまの麻雀の状態) → 余白 → 選択肢(次に自分がすること)。
+   ・間隔は【--tbl-gap の1か所】だけで決める。卓側の margin-bottom と選択肢側の margin-top を
+     両方足して二重余白(40pxなど)にしない。だから卓側は margin-bottom:0 にしてある
+   ・基準は390px幅で約20px。「卓と操作を区別できる」程度でよく、大きな空白は作らない
+   ・画面が低いときは、選択肢が画面の外へ追いやられないよう少し詰める(320x568対策) */
+:root{ --tbl-gap:clamp(14px, 5.2vw, 22px); }
+@media (max-height:620px){ :root{ --tbl-gap:13px; } }
+#bt-board .mjt{margin-bottom:0;}
+#bt-ui:not(:empty){margin-top:var(--tbl-gap);}
+/* 卓を出しているmcq(R46/R48の鳴き判断など)も同じ区切りにする。
+   .rd-panel の下marginは0にして、間隔は選択肢側の1か所だけで持つ */
+.rd-panel-table{margin-bottom:0;}
+.rd-panel-table .mjt{margin-bottom:0;}
+.rd-panel-table + .choices{margin-top:var(--tbl-gap);}
+
+/* ================= R60: 麻雀イベント演出 =================
+   卓の上にだけかぶせるレイヤー。pointer-events:none なので操作は塞がない。
+   卓の中央は R51 の設計でもともと空いているので、ここに出しても
+   河・手牌・副露・アガリ牌のどれも隠れない(何が起きたかは卓を見れば分かる) */
+.bt-stage{position:relative;}
+.bt-fx{position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  pointer-events:none; z-index:5;}
+.bt-fx:empty{display:none;}
+.mjfx{display:flex; flex-direction:column; align-items:center; gap:1px; text-align:center;
+  color:var(--on-accent); font-weight:900; letter-spacing:.06em; white-space:nowrap; max-width:94%;}
+/* ポン/チー/カン: 「お、鳴いた」と分かる程度。画面全体は覆わない */
+/* うすい縁を1本足して、同じ緑系のフェルトの上でも文字が沈まないようにする(light/dark両方) */
+.mjfx-call{background:var(--jade); box-shadow:0 0 0 2.5px rgba(255,255,255,.4), 0 4px 0 var(--jade-deep);
+  border-radius:999px; padding:7px 18px; font-size:clamp(20px,6.4vw,28px);
+  animation:mjfxPop .42s cubic-bezier(.34,1.56,.64,1) both;}
+/* ロン/ツモ: 鳴きより明確に大きく、特別に見せる。色は既存トークンだけで作る */
+/* 卓の中央の空きに収める大きさにする。大きくしすぎると 上家/下家の河にかぶって
+   「どの牌でアガったのか」が見えなくなるので、ここは広げない */
+.mjfx-win{background:linear-gradient(160deg,var(--gold),var(--verm));
+  box-shadow:0 5px 0 var(--gold-deep); border-radius:18px; padding:7px 15px;
+  font-size:clamp(22px,6.8vw,31px); animation:mjfxPop .46s cubic-bezier(.34,1.56,.64,1) both;}
+.mjfx-agari{font-size:clamp(13.5px,4.2vw,18px); letter-spacing:.12em;
+  animation:mjfxUp .34s cubic-bezier(.34,1.56,.64,1) both;}
+.bt-fx.fade .mjfx{animation:mjfxOut .2s ease-in both;}
+@keyframes mjfxPop{0%{transform:scale(.5); opacity:0;} 55%{transform:scale(1.08); opacity:1;}
+  100%{transform:scale(1); opacity:1;}}
+@keyframes mjfxUp{0%{transform:translateY(7px); opacity:0;} 100%{transform:translateY(0); opacity:1;}}
+@keyframes mjfxOut{from{opacity:1;} to{transform:scale(.94); opacity:0;}}
+@keyframes mjfxFade{from{opacity:0;} to{opacity:1;}}
+/* アガリ牌(ロン=相手が切ったその1枚 / ツモ=右はしのツモ牌)を一瞬だけ強調する。
+   点滅はしない。「どの牌でアガったのか」が分かることを優先する */
+.mjt.mjt-win .mjt-new > .tile,
+.mjt.mjt-win .mjt-tsumo .tile{outline:2.5px solid var(--gold); outline-offset:1px;
+  animation:mjHit 1.05s ease-out both;}
+@keyframes mjHit{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--gold) 65%,transparent);}
+  55%{box-shadow:0 0 0 7px color-mix(in srgb,var(--gold) 0%,transparent);}
+  100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--gold) 0%,transparent);}}
+/* 動きを減らす設定のときは、大きな拡大・移動をやめて短いフェードだけにする */
+@media (prefers-reduced-motion: reduce){
+  .mjfx-call,.mjfx-win,.mjfx-agari,.bt-fx.fade .mjfx{animation:mjfxFade .16s linear both;}
+  .mjt.mjt-win .mjt-new > .tile,.mjt.mjt-win .mjt-tsumo .tile{animation:none;}
+}
+
 .fx{position:fixed; inset:0; display:none; align-items:center; justify-content:center;
   z-index:60; pointer-events:none;}
 .fx.show{display:flex;}
@@ -3609,8 +3668,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.53.0';
-const BUILD_ID='20260930-01';
+const APP_VER='0.54.0';
+const BUILD_ID='20260930-02';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -3665,6 +3724,93 @@ function playFx(inner,cls,dur,done){
     el.classList.add('fade');
     FX_TIMER=setTimeout(()=>{ el.className='fx'; el.innerHTML=''; FX_TIMER=null; if(done)done(); },220);
   },dur);
+}
+
+/* ================= R60: 麻雀イベント演出(ポン/チー/カン/ロン/ツモ) =================
+   役割をはっきり分ける。
+     「せいかい！」          … 学習問題に正しく答えられた、という【問題へのフィードバック】
+     「ポン！」「ロン！」など … 麻雀卓の中でいま起きたこと、という【卓のイベント】
+   同じUIにしない。だから通常の中央オーバーレイ(playFx)ではなく、卓の上だけにかぶせる。
+
+   ・卓のDOM(#bt-board)は作り直さない。かぶせたレイヤー(#bt-fx)だけを書きかえる。
+     演出を足しても 手牌・河・副露・ツモ牌の physical tile identity は1枚も動かない
+   ・卓の中央は R51 の設計で もともと空けてあるので、中央に出しても
+     河・手牌・副露・アガリ牌のどれも隠さない(何が起きたのかは卓を見れば分かる)
+   ・強さ: 本文 < せいかい < ポン/チー/カン < ロン/ツモ
+   ・タイマーは BT_TIMERS に入れる。Lesson終了・戻る・やり直し・シナリオ切替で
+     btClearTimers() が必ず止めるので、次の画面に「ロン！」が残らない
+   ・音は SoundManager の既存スロット(pon/chi/kan/ron/tsumo)を鳴らすだけ。
+     新しい音源ファイルは作らない。未設定なら何も鳴らず、通常の正解音がそのまま鳴る */
+const MJFX={
+  pon:  {t:'ポン！', cls:'mjfx-call', kind:'call'},
+  chi:  {t:'チー！', cls:'mjfx-call', kind:'call'},
+  kan:  {t:'カン！', cls:'mjfx-call', kind:'call'},   // シナリオは未使用。helperは3種とも扱える
+  ron:  {t:'ロン！', cls:'mjfx-win',  kind:'win'},
+  tsumo:{t:'ツモ！', cls:'mjfx-win',  kind:'win'},
+};
+/* 長さ(ms)。鳴きは短く、アガリは少し長く。毎回2〜3秒止めない。
+   reduced-motion のときは大きく縮めて、動きではなく短いフェードだけにする */
+const MJFX_MS={ call:700, win:1250, agariAt:400, fade:200,
+                callR:240, winR:460, agariAtR:150 };
+/* R60: 小さい画面(320x568など)では、卓の下に置いた選択肢が画面の外へ はみ出すことがある。
+   はみ出しているときだけ、見える位置まで そっと送る。
+   ・卓の上端が画面から消えるほどは送らない(いま何が起きているのか分からなくならないように)
+   ・はみ出していない画面では1pxも動かさない */
+function btRevealUI(){
+  const area=document.getElementById('q-area'), ui=document.getElementById('bt-ui');
+  if(!area||!ui||!ui.firstElementChild) return;
+  const ar=area.getBoundingClientRect(), ur=ui.getBoundingClientRect();
+  const over=ur.bottom-(ar.bottom-8);
+  if(over<=0) return;
+  const mjt=document.querySelector('#bt-board .mjt');
+  const room=mjt?Math.max(0,mjt.getBoundingClientRect().top-ar.top-8):over;
+  const by=Math.min(over,room);
+  if(by>0) area.scrollTo({top:area.scrollTop+by, behavior:reducedMotion()?'auto':'smooth'});
+}
+function mjfxLayer(){ return document.getElementById('bt-fx'); }
+function mjfxClear(){ const el=mjfxLayer(); if(el){ el.className='bt-fx'; el.innerHTML=''; } }
+/* 鳴った音があれば true。true のときだけ通常の正誤音を止める(二重に鳴らさない) */
+function mjfxSound(name){
+  if(!name) return false;
+  sndPlay(name);
+  const l=SoundManager.last;
+  return !!(l&&l.name===name&&l.via!=='none'&&l.via!=='off');
+}
+function mjfxShow(html,cls){
+  const el=mjfxLayer(); if(!el) return false;
+  el.className='bt-fx';
+  el.innerHTML='<div class="mjfx '+cls+'">'+html+'</div>';
+  return true;
+}
+function mjfxSchedule(dur){
+  BT_TIMERS.push(setTimeout(()=>{ const e=mjfxLayer(); if(e&&e.innerHTML) e.classList.add('fade'); },
+    Math.max(0,dur-MJFX_MS.fade)));
+  BT_TIMERS.push(setTimeout(mjfxClear,dur));
+}
+/* ポン・チー・カン。戻り値=この演出にかける長さ(ms)。呼び出し側はこのぶん結果カードを待つ */
+function showCallEffect(kind){
+  const d=MJFX[kind]; if(!d||d.kind!=='call') return 0;
+  const dur=reducedMotion()?MJFX_MS.callR:MJFX_MS.call;
+  if(mjfxShow('<span class="mjfx-t">'+d.t+'</span>',d.cls)) mjfxSchedule(dur);
+  if(mjfxSound(kind)&&L) L.fxSnd=true;
+  return dur;
+}
+/* ロン・ツモ。まず「ロン！」だけを出し、少し遅れて「アガリ！」を足す。
+   最初から1行で「ロン！ アガリ！」と出さない(アガった、というリズムを作るため) */
+function showWinEffect(kind){
+  const d=MJFX[kind]; if(!d||d.kind!=='win') return 0;
+  const red=reducedMotion();
+  const dur=red?MJFX_MS.winR:MJFX_MS.win, at=red?MJFX_MS.agariAtR:MJFX_MS.agariAt;
+  if(mjfxShow('<span class="mjfx-t">'+d.t+'</span>',d.cls)){
+    BT_TIMERS.push(setTimeout(()=>{
+      const el=mjfxLayer(), box=el&&el.querySelector('.mjfx');
+      if(box&&!box.querySelector('.mjfx-agari'))
+        box.insertAdjacentHTML('beforeend','<span class="mjfx-agari">アガリ！</span>');
+    },at));
+    mjfxSchedule(Math.max(dur,at+MJFX_MS.fade+120));
+  }
+  if(mjfxSound(kind)&&L) L.fxSnd=true;
+  return dur;
 }
 
 /* ================= Daily Engagement（第8段階） ================= */
@@ -7826,7 +7972,8 @@ function mjtHTML(o){
   // R51: スロットは常に6×3なので、牌の枚数で卓の大きさも中央の空きも変わらない。
   // 「いま」の小ラベルは、河が2段以上に育つと置き場所が無くなるので そのときは出さない
   const longest=Math.max(...['left','top','right','bottom'].map(s2=>riv[s2].tiles.length));
-  const rc=(longest>MJT_PER?' mjt-multi':'');
+  // R60: winHit はアガった瞬間だけ立つ表示フラグ。牌の枚数・位置・identityには一切さわらない
+  const rc=(longest>MJT_PER?' mjt-multi':'')+(o.winHit?' mjt-win':'');
   return '<div class="mjt'+rc+'">'+g+me+'</div>'+(o.cap?'<p class="mjt-cap">'+o.cap+'</p>':'');
 }
 /* 盤面つきの図。待ちチップは卓の外に出す(卓の中には実物と同じものだけ置く) */
@@ -8407,8 +8554,10 @@ function btReady(q){
     q.a=can?0:1;
     if(q.bt.ask==='riichi') q.a=0;      // 「リーチ！」は1つだけの体験ボタン(正解あてではない)
     if(q.bt.ask==='tsumo') b.ui.tsumoSlot=true;
-    if(ui) ui.innerHTML='<div class="choices">'+q.choices.map((c,i)=>
+    if(ui){ ui.innerHTML='<div class="choices">'+q.choices.map((c,i)=>
       '<button class="choice" id="ch-'+i+'" onpointerdown="selChoice('+i+')">'+c+'</button>').join('')+'</div>';
+      requestAnimationFrame(btRevealUI);   // R60: 画面からはみ出したときだけ見える位置へ送る
+    }
   }else{
     b.ui=q.bt.cap?{cap:q.bt.cap}:{};
     // R59: アガリでしめくくる回は状態にも残す(シナリオのクリア条件が【アガった】であることを
@@ -10952,6 +11101,7 @@ function pickReview(relaxed){
 function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
 function quitLesson(){
   btClearTimers();                // R54: 裏で他家の打牌が進みつづけないように必ず止める
+  mjfxClear();                    // R60: 「ポン！」「ロン！」などの演出を画面に残さない
   document.getElementById('lesson').classList.remove('show');
   L=null; renderHUD(); renderPath();
   ROAD_FX=null;  // ✕離脱時は復帰演出を持ち越さない
@@ -11211,7 +11361,10 @@ const QFORMATS={
       html+='<div class="q-type">'+L.course.title+'</div>';
       html+='<div class="q-text">'+q.q+'</div>';
       if(q.ctx) html+='<div class="q-ctx">'+q.ctx+'</div>';
-      if(q.panel) html+='<div class="rd-panel">'+q.panel+'</div>';   // 図(ヘルパー関数で生成。ドラ・カンなど)
+      // 図(ヘルパー関数で生成。ドラ・カンなど)。
+      // R60: 図が【実卓】のときは、卓と選択肢のあいだを --tbl-gap で区切る目印を付ける
+      if(q.panel) html+='<div class="rd-panel'+(/class="mjt[ "]/.test(q.panel)?' rd-panel-table':'')
+        +'">'+q.panel+'</div>';
       // 第3章: ロン/ツモは牌の配置で分かる盤面(ロン=相手の捨て牌+自分の13枚/ツモ=13枚+右端ツモ牌)。
       // 盤面が出るときはアガリ牌チップを重複表示しない(状況は牌の位置で理解させる)
       const bd3=(q.ctx3&&typeof ch3BoardHTML==='function')?ch3BoardHTML(q):null;
@@ -11430,9 +11583,14 @@ const QFORMATS={
       if(!L.bt||L.bt.id!==q.bt.sc.id||q.bt.first) L.bt=btInit(q.bt.sc);
       let html='<div class="q-type">'+(q.tlab||'ミニ実戦')+'</div>';
       html+='<div class="q-text">'+q.q+'</div>';
-      html+='<div id="bt-board"></div>';
+      /* R60: 卓(#bt-board)と、その上にかぶせる演出レイヤー(#bt-fx)を1つの舞台にまとめる。
+         btDraw() が書きかえるのは #bt-board だけなので、演出レイヤーは描きなおしで消えない
+         ＝麻雀state(手牌/河/副露/ツモ)と演出stateが完全に分かれている */
+      html+='<div class="bt-stage"><div id="bt-board"></div>'
+        +'<div class="bt-fx" id="bt-fx" aria-hidden="true"></div></div>';
       html+='<div id="bt-ui"></div>';
       L.sel=null;
+      L.fxDefer=0; L.fxSnd=false;   // R60: 前の問題の演出待ち・演出音のフラグを持ちこさない
       L.bt.ui={};                 // 他家の打牌が終わるまでは何もタップさせない
       // 他家の打牌 → そのあとに操作できるようにする(描画のあとで動かす)
       setTimeout(()=>{ if(L&&L.qs&&L.qs[L.idx]===q) btPlay(q); },0);
@@ -11463,11 +11621,27 @@ const QFORMATS={
         sndPlay('discard');
       }else if(q.bt.kind==='ask'){
         if(q.bt.declare) btApply({t:'riichi'});               // R57: リーチ宣言(リーチ棒が場に出る)
-        if(q.bt.call) btApply(Object.assign({t:'call'},q.bt.call));
-        if(q.bt.win&&res.isCorrect) btApply({t:'win'});
+        /* R60: 鳴き・アガリは【卓のイベント】として演出を出す。
+           state の適用(btApply)と同じタイミングで出すので、
+           「河から牌が消えて副露ができた」という因果が演出といっしょに見える。
+           戻り値は演出の長さで、check() はこのあいだ結果カードを出さずに待つ */
+        if(q.bt.call){
+          btApply(Object.assign({t:'call'},q.bt.call));
+          L.fxDefer=showCallEffect(q.bt.call.kind);
+        }
+        if(q.bt.win&&res.isCorrect){
+          btApply({t:'win'});
+          L.fxDefer=showWinEffect(q.bt.ask);
+        }
       }
       b.ui={};
-      if(q.bt.win&&res.isCorrect) b.ui.cap=(q.bt.ask==='tsumo')?'🀄 ツモ！ アガリ！':'🀄 ロン！ アガリ！';
+      if(q.bt.win&&res.isCorrect){
+        /* R60: アガリは卓の上の演出(ロン！→アガリ！)で見せる。
+           同じことを卓の下の見出しでもう一度言うと「ロン！→アガリ！→せいかい！」と重なるので、
+           演出が出るときは見出しを出さない。動きを減らす設定で演出がほぼ出ない場合だけ残す */
+        if(reducedMotion()) b.ui.cap=(q.bt.ask==='tsumo')?'🀄 ツモ！ アガリ！':'🀄 ロン！ アガリ！';
+        b.ui.winHit=true;    // R60: アガリ牌(ロン=相手が切った1枚 / ツモ=右はしのツモ牌)を一瞬強調
+      }
       if(q.bt.ask==='tsumo') b.ui.tsumoSlot=true;
       btDraw();
     },
@@ -12200,7 +12374,11 @@ function applyOutcome(q,cat,qid,res,elapsed){
 
 /* ================= フィードバック描画 ================= */
 function renderFeedback(q,cat,res,ratingRes,fb){
-  sndPlay(res.isCorrect?'correct':'wrong');   // 正誤音は正誤表示とこの場で同期(タップ時ではない)
+  /* 正誤音は正誤表示とこの場で同期(タップ時ではない)。
+     R60: 直前に麻雀イベントの音(ポン/ロン等)が【実際に鳴った】ときだけ、正誤音を重ねない。
+     音源が未設定のスロットでは何も鳴っていないので、これまでどおり正誤音を鳴らす */
+  if(L&&L.fxSnd){ L.fxSnd=false; }
+  else sndPlay(res.isCorrect?'correct':'wrong');
   document.getElementById('lesson-hearts').textContent='❤️'+(staminaFree()?'∞':S.hearts);
   let ratingLine='';
   if(ratingRes){
@@ -12298,7 +12476,24 @@ function check(){
     logCompare({compareId:q.compareId,variantId:q.variantId,changedCategories:q.changedCategories,
       S:res.S,isCorrect:res.isCorrect,answeredAt:new Date().toISOString()});
   }
-  renderFeedback(q,cat,res,ratingRes,fmt.feedback(q,res));
+  const fb=fmt.feedback(q,res);
+  /* R60: 麻雀イベント演出(ポン！/ロン！など)が出ているあいだは、学習の結果カードを重ねない。
+     演出が終わってから結果へ進める。
+     ・applyOutcome で L.checked はすでに true なので、この待ち時間に もう一度タップしても
+       selChoice / ch1AutoJudge / next のどれも通らない(二重適用・二重完了が起きない)
+     ・タイマーは BT_TIMERS。戻る/終了/シナリオ切替では btClearTimers() が止め、
+       さらに下のガードで「別のレッスンになっていたら出さない」も見る */
+  const wait=L.fxDefer||0; L.fxDefer=0;
+  if(wait>0){
+    const lref=L, tok=(L.bt?L.bt.tok:0), idx=L.idx;
+    BT_TIMERS.push(setTimeout(()=>{
+      if(L!==lref||!L||L.done||L.idx!==idx) return;
+      if(L.bt&&L.bt.tok!==tok) return;
+      renderFeedback(q,cat,res,ratingRes,fb);
+    },wait));
+    return;
+  }
+  renderFeedback(q,cat,res,ratingRes,fb);
 }
 function next(){
   // 二重実行防止(第7段階): 未回答時・終了処理後の「つづける」連打では進まない
