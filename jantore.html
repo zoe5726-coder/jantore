@@ -538,7 +538,11 @@ button.tile.off:active{transform:none;}
 .tc-lab{margin:10px 4px 0; font-size:12px; font-weight:800; color:var(--ink-soft);}
 .term-chip{display:inline-block; padding:1px 8px; border-radius:999px; background:var(--jade-soft,#e3f6ec);
   color:var(--jade-ink); font-weight:900;}
-/* ===== 役の基本情報バッジ(R61) =====
+/* ===== 役の基本情報バッジ(R61 / R63で形を見直し) =====
+   R63: 実機で「1翻」「鳴きNG」がほぼカプセル(border-radius:999px)に見えて、
+   押せるボタンのように感じられた。これは【情報ラベル】なので角丸は浅くする。
+   色による意味の区別(緑=鳴いてOK / 金=食い下がり / 赤=鳴きNG)はそのまま。
+   高さ・文字サイズも変えない。役一覧の表と同じ"情報として整然と並ぶ"見た目にそろえる。 =====
    「役名／何翻／鳴いて成立するか・鳴いたら何翻」を1行で、Lessonの命名Teachでも役一覧でも
    おなじ見た目で出す。文章を長くせずに目で拾えることを優先する(R61 §3)。
    翻を強く、鳴きを色で区別: 鳴きNG=赤系 / 鳴きOKそのまま=緑系 / 食い下がり=金系 */
@@ -548,11 +552,11 @@ button.tile.off:active{transform:none;}
 .yaku-badge .yb-name{font-weight:900; font-size:clamp(14px,4.1vw,16px); color:var(--ink);
   white-space:nowrap;}
 .yaku-badge.wide .yb-name{flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis;}
-.yaku-badge .yb-han{flex:none; padding:1px 9px; border-radius:999px; font-weight:900;
+.yaku-badge .yb-han{flex:none; padding:1px 9px; border-radius:9px; font-weight:900;
   font-size:clamp(12.5px,3.6vw,14px); background:var(--jade); color:var(--on-accent);
   white-space:nowrap; font-variant-numeric:tabular-nums;}
 .yaku-badge .yb-han.yb-ym{background:linear-gradient(160deg,var(--gold),var(--verm));}
-.yaku-badge .yb-naki{flex:none; padding:1px 8px; border-radius:999px; font-weight:800;
+.yaku-badge .yb-naki{flex:none; padding:1px 8px; border-radius:9px; font-weight:800;
   font-size:clamp(11px,3.2vw,12.5px); white-space:nowrap; border:1.5px solid transparent;}
 .yaku-badge .yb-naki.ok{background:var(--jade-soft,#e3f6ec); color:var(--jade-ink); border-color:var(--jade);}
 .yaku-badge .yb-naki.down{background:#fff4d8; color:#7a5300; border-color:var(--gold);}
@@ -568,6 +572,9 @@ button.tile.off:active{transform:none;}
 .sc-row .sc-pt{font-variant-numeric:tabular-nums; text-align:right;}
 /* 代表ラインの表(R62): ライン名＋1翻〜4翻の4列。数字は右そろえで縦にそろえる */
 .sl-tbl .sc-row{grid-template-columns:3.4em 1fr 1fr 1fr 1fr;}
+/* ドラ4なかまの表(R63): なかま / どれがドラ / いつ の3列 */
+.dk-tbl .sc-row{grid-template-columns:4.2em 1fr 1fr; align-items:start;}
+.dk-tbl .sc-row span{line-height:1.4;}
 .sl-tbl .sc-row.sc-head span + span{text-align:right;}   /* 見出しの翻と、下の点の位置をそろえる */
 .sl-tbl .sc-row.sc-head{border-bottom-width:1.5px;}
 .sl-tbl .sc-row + .sc-row.sc-head{margin-top:8px;}
@@ -2642,7 +2649,10 @@ const COURSES=[
 {id:'ch3h',title:'役を見つけよう',icon:'🔦',section:2,type:'ch1',desc:'手牌と状況から、ついている役をぜんぶ見つける！',questions:[]},
 {id:'ch3i',title:'ドラを知ろう',icon:'💎',section:2,type:'ch1',desc:'役ではないけれど、点を上げてくれる牌があるんだ。',questions:[]},
 {id:'ch3j',title:'カンを知ろう',icon:'🧩',section:2,type:'ch1',desc:'おなじ牌4枚でつくる、特別な組を覚えよう。',questions:[]},
-{id:'ch3y',title:'点の大きさ',icon:'💰',section:2,type:'ch1',desc:'役の翻を足すと、どのくらいの点になるのかを知ろう。',questions:[]},
+/* R63: SECTION3(役がわかる)から SECTION4(点数がわかる)へ移した。
+   テーマID(th_ch3y)・Lesson ID(sc1_1〜sc2_5)・requires は変えていないので、
+   すでにここを進めている人の進捗はそのまま引きつがれる */
+{id:'ch3y',title:'点の大きさ',icon:'💰',section:3,type:'ch1',desc:'役の翻を足すと、どのくらいの点になるのかを知ろう。',questions:[]},
 {id:'ch3x',title:'もっと役を覚える',icon:'📚',section:2,type:'ch1',desc:'よゆうがあったら。めずらしい役と、もっと役満。(やらなくても先へ進めるよ)',questions:[]},
 {id:'rules',title:'基本ルール',icon:'📖',section:null,desc:'麻雀のきほんのき。和了の形からフリテンまで。',questions:[
  {q:'麻雀の和了（あがり）の基本形はどれ？',choices:['4面子＋1雀頭','5面子','7ペア＋1枚','13枚バラバラ'],a:0,exp:'3枚1組の「面子」を4つと、2枚1組の「雀頭」を1つ揃えた計14枚が基本の和了形です。（例外役：七対子・国士無双）'},
@@ -2674,15 +2684,15 @@ const COURSES=[
  {q:'翻だけで満貫になるのは何翻から？',choices:['3翻','4翻','5翻','6翻'],a:2,exp:'5翻から満貫（子8,000/親12,000）。※このアプリは「切り上げ満貫あり」なので、30符4翻・40符3翻も満貫になります。'},
  {q:'親の30符3翻、ロンの点数は？',choices:['3,900点','4,800点','5,800点','7,700点'],a:2,exp:'基本点=30×2^5=960。親のロンは×6=5,760→切り上げて5,800点。子なら3,900点です。'},
 ]},
-{id:'waits',title:'待ち当て',icon:'🔍',section:3,desc:'「完成まであと1枚」の最後の1枚＝待ちを当てよう。',type:'waits'},
-{id:'ukeire1',title:'受け入れ当て',icon:'🧩',section:3,desc:'1シャンテンの手牌から、テンパイする牌を全部当てよう。',type:'ukeire1'},
-{id:'nanikiru',title:'1択何切る',icon:'🀄',section:3,desc:'シャンテンを保って受け入れ最大の1枚を。',type:'discard',questions:[
+{id:'waits',title:'待ち当て',icon:'🔍',section:4,desc:'「完成まであと1枚」の最後の1枚＝待ちを当てよう。',type:'waits'},
+{id:'ukeire1',title:'受け入れ当て',icon:'🧩',section:4,desc:'1シャンテンの手牌から、テンパイする牌を全部当てよう。',type:'ukeire1'},
+{id:'nanikiru',title:'1択何切る',icon:'🀄',section:4,desc:'シャンテンを保って受け入れ最大の1枚を。',type:'discard',questions:[
  {id:'nk1',lv:3,fs:'nk:sh0:mg4',hand:'234556m456p678s88s',a:'5m',exp:'打5萬で23456萬の形が残り、1・4・7萬の三面張（受け11枚）。打2萬（4・7萬の7枚）より圧倒的に広いテンパイです。'},
  {id:'nk2',lv:4,fs:'nk:sh0:mg4',hand:'2224567m345p6788s',a:'8s',exp:'打8索で222萬を暗刻として活かし、4567萬＋雀頭88索…ではなく222萬＋456萬(or 567萬)の形で3・4・7萬待ち（受け10枚）。手の中の暗刻はくっつけて使うと強い！'},
  {id:'nk3',lv:5,fs:'nk:sh0:mg5',hand:'46677888m678p666s',a:'4m',exp:'打4萬で667788萬＋888…の複合形が残り、なんと5・6・7・8萬の4種待ち（受け9枚）。浮いた4萬を切るだけですが、残る形の強さを見抜けるかがポイント。'},
  {id:'nk4',lv:5,fs:'nk:sh0:mg5',hand:'12367m234777p678s',a:'7p',exp:'打7筒！777筒の暗刻を崩す勇気。77筒を雀頭にして67萬のリャンメン（5・8萬、受け8枚）が残ります。67萬を切ると7萬・6萬の単騎系しか残りません。'},
 ]},
-{id:'riichi',title:'リーチ判断',icon:'📣',section:3,desc:'局面を見て、曲げるかダマか。鳳凰卓の実測データで検証済み。',questions:SR_RIICHI_QUESTIONS},
+{id:'riichi',title:'リーチ判断',icon:'📣',section:4,desc:'局面を見て、曲げるかダマか。鳳凰卓の実測データで検証済み。',questions:SR_RIICHI_QUESTIONS},
 {id:'naki',title:'鳴き判断',icon:'🙋',section:null,desc:'ポン・チーの損得を見極めよう。',questions:[
  {q:'ポンする？',situ:{kyoku:'東1局',turn:5,seat:'子',dora:'8p',claim:'G',hand:'567m234p6p88p45sGG'},choices:['ポン','スルー'],a:0,exp:'發ポンで役が確定し、ドラ2（8筒×2）で3,900〜満貫級。打点・速度ともに十分なので積極的に鳴く。'},
  {q:'ピンフ・タンヤオ・リーチを狙える門前の好形1シャンテン。チーすると役が消える。どうする？',choices:['鳴かずに門前で進める','チーして速度を上げる','ポンできる牌を探す','手を崩して守備に回る'],a:0,exp:'鳴いて役がなくなる（＝和了できない）なら鳴きは論外。門前ならリーチ・ピンフ・ツモで打点も伸びます。'},
@@ -3017,7 +3027,10 @@ const THEMES=[
     {diff:{ch1:'ya1_2'}},                      // A1-2 リーチ
     {diff:{ch1:'ya1_3'}},                      // A1-3 ツモ
     {diff:{ch1:'ya1_4'}},                      // A1-4 リーチ？ツモ？
-    {diff:{ch1:'ya1_5'}},                      // ★A1-5 最初の役マスター
+    {diff:{ch1:'ya1_5'}},                      // A1-5 最初の役マスター(リーチ・ツモ)
+    /* R63: 一発。リーチと一緒によく出るので通常の学習導線に入れる。
+       末尾に足しているので、すでにこのテーマをクリアした人にも新しい1マスとして届く */
+    {diff:{ch1:'ya1_6'}},                      // ★A1-6 一発
    ]},
   ]},
  {id:'th_ch3b', course:'ch3b', title:'役牌', sub:'3枚そろえるだけで役になる牌',
@@ -3129,7 +3142,10 @@ const THEMES=[
     /* R61: 赤ドラを【うしろに足す】。既存ユーザー(roadProgress=5)には新しい1マスとして出るので、
        すでにクリアしたLessonの中身を書きかえる方法とちがって、ちゃんと届く(TSUMOPPY_TERMS §40)。
        まえに挿し込むと既存ユーザーの5マス目の意味が変わってしまうので、必ず末尾に足す */
-    {diff:{ch1:'yk1_6'}},                      // ★K1-6 赤ドラ
+    {diff:{ch1:'yk1_6'}},                      // K1-6 赤ドラ
+    /* R63: 裏ドラ。リーチしてアガったときだけのドラなので、リーチ・一発のあとに置く。
+       ここでドラ4種類を整理し、リーチ＋一発＋ツモ＋裏ドラの重なりも体験させる */
+    {diff:{ch1:'yk1_7'}},                      // ★K1-7 裏ドラ＋ドラ4なかま＋リーチの強さ
    ]},
   ]},
  {id:'th_ch3j', course:'ch3j', title:'カンを知ろう', sub:'おなじ牌4枚の特別な組',
@@ -3233,10 +3249,15 @@ const THEMES=[
     {diff:{lvRange:[3,4]}},{diff:{lvRange:[4,5]}},{diff:{lvRange:[2,5]}}]},
   ]},
 ];
+/* R63: 点数を独立したSECTIONにした。
+   SECTION番号はどこにも保存していない(進捗は roadProgress[テーマID]、解放は requires の連鎖)ので、
+   ここへ1つ差しこんでも既存ユーザーの進捗・解放状態は1つも変わらない。
+   「初級」は中身をそのままに SECTION5 へ繰り下がる。 */
 const SECTIONS=[
  {name:'麻雀を打てる',desc:'第1章：麻雀のきほん構造を体で覚える'},
  {name:'アガリが見える',desc:'第2章：待ち牌を見つける目を育てる'},
  {name:'役がわかる',desc:'第3章：アガリ形から役を見つけられるようになる'},
+ {name:'点数がわかる',desc:'第4章：そのアガリが何点くらいなのかが分かる'},
  {name:'初級',desc:'手作りの技術を磨く'},
 ];
 /* SECTION(2026-09-21整理): 長い一本道Roadを学習段階ごとに分ける「大きな入口」=ナビゲーション単位。
@@ -3670,6 +3691,8 @@ const RUBY_TERMS={
   '赤ドラ':'あかドラ',
   // R62: 役一覧の注記で1回だけ出す(本編Lessonでは今までどおり「鳴いていない」を使う)
   '門前':'メンゼン','大四喜':'ダイスーシー','地和':'チーホー','四槓子':'スーカンツ',
+  // R63: 一発と、ドラ4なかまの呼び名
+  '一発':'イッパツ','裏ドラ':'うらドラ','表ドラ':'おもてドラ','裏ドラ表示牌':'うらドラひょうじはい',
 };
 const RUBY_KEYS=Object.keys(RUBY_TERMS).sort((a,b)=>b.length-a.length);
 const RUBY_PAREN_RE=new RegExp('('+RUBY_KEYS.join('|')+')（[^（）<>]{1,14}）','g');
@@ -3771,6 +3794,9 @@ const RUBY_FULL_SRC=`
 # R62 役一覧・点数感覚・のこりの役満で使う語
 未学習[みがくしゅう] 系[けい] 目安[めやす] 感覚[かんかく] 同時[どうじ] 倍[ばい] 便利[べんり] 最後[さいご] 列[れつ]
 待[ま]ち方[かた] 成立[せいりつ]
+# R63 一発・裏ドラ・第4章で使う語。1字の「下」は上手/下家へ誤爆するので送りがなでピン留めする
+直後[ちょくご] 前提[ぜんてい] 整理[せいり] 共通[きょうつう] 完全版[かんぜんばん] 完全[かんぜん]
+思[おも]い その名[な]も 下[した]にふせ 独立[どくりつ] 章[しょう]
 `;
 const RUBY_KANJI_RE=/[\u3400-\u9FFF\uF900-\uFAFF々〆ヶ]/;
 let RUBY_FULL_MAP=null, RUBY_FULL_MAXLEN=0;
@@ -3927,8 +3953,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.56.0';
-const BUILD_ID='20261001-02';
+const APP_VER='0.57.0';
+const BUILD_ID='20261001-03';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -5494,6 +5520,24 @@ function doraCyclePanelHTML(cds){
    (文字で「赤5」と書くだけにしない=R58の牌の見せかたの方針)。
    このアプリのルール: 赤5萬1枚・赤5筒1枚・赤5索1枚の合計3枚 */
 const RED5_LIST=['0m','0p','0s'];
+/* ===== ドラのなかま(R63) =====
+   ドラは【役ではない】ので CH3_YAKU_META には入れない。けれど4種類あって混乱しやすいので、
+   ここを唯一の出どころにして、役一覧の下枠と教材が同じ内容を見るようにする。
+   共通するのは「1枚で+1翻」「役ではない」「それだけではアガれない」の3つ。 */
+const DORA_KINDS=[
+  {id:'omote',name:'表ドラ',how:'ドラ表示牌のつぎの牌',when:'いつでも（局のはじめから見えている）'},
+  {id:'aka',name:'赤ドラ',how:'赤い5（赤5萬・赤5筒・赤5索の3枚）',when:'いつでも（牌そのものが赤い）'},
+  {id:'kan',name:'カンドラ',how:'カンでふえた表示牌のつぎの牌',when:'だれかがカンをしたとき'},
+  {id:'ura',name:'裏ドラ',how:'裏ドラ表示牌のつぎの牌',when:'リーチしてアガったときだけ'},
+];
+function doraKind(id){ return DORA_KINDS.find(d=>d.id===id)||null; }
+function doraKindsTableHTML(){
+  return '<div class="sc-tbl dk-tbl">'
+    +'<div class="sc-row sc-head"><span>なかま</span><span>どれがドラ？</span><span>いつ</span></div>'
+    +DORA_KINDS.map(d=>'<div class="sc-row"><span class="sc-nm">'+d.name+'</span>'
+      +'<span>'+d.how+'</span><span>'+d.when+'</span></div>').join('')
+    +'</div>';
+}
 function red5PanelHTML(){
   return '<div class="dr-grid">'+RED5_LIST.map(cd=>
     doraCellHTML(red5Base(cd),'ふつうの5')+'<span class="rd-arrow">／</span>'
@@ -7849,6 +7893,10 @@ function ch3IsChuuren(tiles,ctx){
 const CH3_YAKU_META={
   riichi:{label:'リーチ',closedHan:1,openHan:null,openAllowed:false,cond:'鳴かずにテンパイして宣言する',lesson:'ya1_2',situ:'テンパイしてから「リーチ！」と言う'},
   tsumo:{label:'ツモ',closedHan:1,openHan:null,openAllowed:false,cond:'鳴いていない手をツモでアガる',lesson:'ya1_3',situ:'鳴いていない手を自分で引いてアガる'},
+  /* R63: 一発。リーチといっしょによく出る役なので、めずらしい役ではなく通常の学習導線に入れる。
+     牌の形ではなく「いつアガったか」で決まるので situ(状況)で説明する */
+  ippatsu:{label:'一発',closedHan:1,openHan:null,openAllowed:false,cond:'リーチの直後にアガる',lesson:'ya1_6',
+    situ:'リーチしたあと、つぎの自分のツモまでにアガる（とちゅうで鳴きが入ると消える）'},
   yakuhai:{label:'役牌',closedHan:1,openHan:1,openAllowed:true,cond:'三元牌・自風・場風のコーツ',lesson:'yb1_5',
     ex:{g:['234m','456p','RRR','678s','99s'],ctx:{win:'ron',winTile:'4p'}}},
   pinfu:{label:'ピンフ',closedHan:1,openHan:null,openAllowed:false,cond:'全シュンツ＋役牌でないアタマ＋リャンメン待ち',lesson:'yc1_4',
@@ -8165,6 +8213,10 @@ function ch3YakuList(tiles,ctx){
   const out=[];
   if(ctx.dblRiichi&&menzen) out.push('dblriichi');
   else if(ctx.riichi&&menzen) out.push('riichi');
+  /* 一発(R63): リーチしていることが【前提】。リーチなしでは絶対につかない。
+     リーチのあと、つぎの自分のツモまでにアガると1翻。
+     途中でだれかがチー・ポン・カンをすると消える(=その局面では ctx.ippatsu を立てない) */
+  if(ctx.ippatsu&&menzen&&(ctx.riichi||ctx.dblRiichi)) out.push('ippatsu');
   if(ctx.win==='tsumo'&&menzen) out.push('tsumo');
   if(ctx.haitei&&ctx.win==='tsumo') out.push('haitei');
   if(ctx.houtei&&ctx.win==='ron') out.push('houtei');
@@ -9382,8 +9434,11 @@ function ch3CtxHTML(c,q){
   if(c.menzen===false&&!(Array.isArray(c.melds)&&c.melds.length)) chips.push('<span class="ch3-chip warn">鳴きあり</span>');
   // R42: リーチも「文字チップ」から「実卓の見た目」へ。横向きの捨て牌がある河を出し、
   //      「リーチ中」という文字表示はやめる(D2-2で横向き牌＝リーチのしるしと学んでいる)
+  /* R63: 盤面(ch3BoardHTML)が出るときは、自分の河も盤面側が
+     【相手の河と手牌のあいだ】に描く。ここで先に描くと、相手の河より上に出てしまい
+     「相手の河のほうが自分の手牌に近い」という不自然な並びになる(実機で指摘された) */
   let river='';
-  if(c.dblRiichi||c.riichi){
+  if((c.dblRiichi||c.riichi)&&!(q&&q.__boardRiver)){
     const hand=(q&&q.hand)||null;
     const wt=(q&&q.ctx3&&q.ctx3.winTile)||c.winTile||null;
     river=ch3RiichiRiverHTML(hand,wt,!!c.dblRiichi);
@@ -9399,14 +9454,16 @@ function ch3CtxHTML(c,q){
    ツモ: 第1章で確立した「13枚+右端に分離したツモ牌」を維持。
    内部判定は14枚完成形のまま(表示だけを分ける)。「今の牌」の小ラベルは状況説明であり、
    正解ヒント(これがアガリ牌！)にはしない(河の並び順=時系列の表現)。 */
-function ch3RiverJunk(hand13,winTile){
+function ch3RiverJunk(hand13,winTile,n){
   // 相手の河のダミー捨て牌(決定論): アガリ牌と紛らわしくならないよう、
-  // その手の待ち牌(特殊形込み)・4枚使用済み・アガリ牌自身は置かない
+  // その手の待ち牌(特殊形込み)・4枚使用済み・アガリ牌自身は置かない。
+  // R63: 枚数を外から渡せるようにした。自分の河を出す盤面では、同じ巡目なのに
+  // 「自分6枚・相手4枚」のような不自然な差が出ないよう、自分の河の枚数にそろえる
   const cnt=ch3Cnt(hand13.concat([winTile]));
   const waits=ch3WaitsAll?ch3WaitsAll(hand13):[];
-  const out=[];
-  for(const cd of ['1p','9m','2s','W','9p','1m','N','1s','5p']){
-    if(out.length>=3) break;
+  const out=[], want=Math.max(1,n||3);
+  for(const cd of ['1p','9m','2s','W','9p','1m','N','1s','5p','E','3p','7m','S','8m','4s']){
+    if(out.length>=want) break;
     if(cd===winTile||(cnt[cd]||0)>=4) continue;
     if(waits.includes(cd)) continue;
     out.push(cd);
@@ -9426,6 +9483,34 @@ function ch3OpenHandHTML(q){
   return '<div class="tc-lab">あなたの手牌（'+sp.concealed.length+'枚）＋鳴いた組</div>'
     +openHandHTML(sp.concealed,sp.melds);
 }
+/* ===== 第3章の盤面(R63で上下の並びを直した) =====
+   【卓を自分の視点で見たときの自然な並び】を共通の設計原則にする(TSUMOPPY_TERMS §46):
+
+     奥  ← 相手の捨て牌（いま切られた牌はこの河のいちばん最後）
+         ← あなたの捨て牌（リーチしているときはここに横向きの宣言牌）
+     手前← あなたの手牌
+
+   R62までは 状況チップ側(ch3CtxHTML)が「あなたの捨て牌」を先に描いていたため、
+     あなたの捨て牌 → 相手の捨て牌 → あなたの手牌
+   となり、【相手の河のほうが自分の手牌に近い】という実卓ではありえない並びになっていた。
+   そこで自分の河も盤面側で描き、相手の河と手牌のあいだに置く。
+
+   枚数もそろえる: 同じ巡目なら各家の捨て牌はだいたい同じ枚数になる。
+   自分の河を出すときは、相手の河も(いま切られた1枚をふくめて)同じ枚数にする。 */
+function ch3MyRiverTiles(q){
+  // この問題で「あなたの捨て牌」を出すか。リーチしている局面だけ出す(リーチ宣言牌を見せるため)
+  const c=q.ctx3||{};
+  if(!c.riichi&&!c.dblRiichi) return null;
+  const wt=c.winTile||null;
+  return ch3RiichiRiver(q.hand||null,wt,6);
+}
+function ch3MyRiverHTML(q){
+  const t=ch3MyRiverTiles(q); if(!t||!t.length) return '';
+  const c=q.ctx3||{};
+  // 横向き=リーチを宣言したときに切った牌。ダブルリーチは1枚目
+  return riichiRiverHTML(t,c.dblRiichi?0:3,
+    {head:'あなたの捨て牌',lab:c.dblRiichi?'さいしょの捨て牌でリーチ！':'リーチ！'});
+}
 function ch3BoardHTML(q){
   const c=q.ctx3||{};
   if(!c.win||!c.winTile||!q.hand) return null;
@@ -9434,6 +9519,16 @@ function ch3BoardHTML(q){
   const idx=tiles.indexOf(c.winTile);
   if(idx<0) return null;
   const hand13=tiles.slice(); hand13.splice(idx,1);
+  const myRiv=ch3MyRiverTiles(q);
+  const myRivHTML=ch3MyRiverHTML(q);
+  /* 相手の河の枚数: 自分の河を出すときは、いまの1枚をふくめて自分とそろえる。
+     出さないときは従来どおり(ダミー3枚＋いまの1枚) */
+  const oppJunk=myRiv&&myRiv.length?Math.max(1,myRiv.length-1):3;
+  const oppRiver=()=>'<div class="tc-lab">相手の捨て牌</div>'
+    +'<div class="ch3-river">'
+    +ch3RiverJunk(hand13,c.winTile,oppJunk).map(t=>tileHTML(t)).join('')
+    +'<span class="ch3-now">'+tileHTML(c.winTile)+'<span class="ch3-now-lab">今の牌</span></span>'
+    +'</div>';
   const sp=ch3HandSplit(q);
   if(sp){
     // 鳴いた組あり: アガリ牌は手の中の牌で使う(鳴いた組は完成ずみ)。手の中＋スキマ＋右に鳴いた組
@@ -9442,15 +9537,12 @@ function ch3BoardHTML(q){
     const conc=sp.concealed.slice(); conc.splice(wi,1);
     let h='<div class="ch3-board">';
     if(c.win==='ron'){
-      h+='<div class="tc-lab">相手の捨て牌</div>'
-        +'<div class="ch3-river">'
-        +ch3RiverJunk(hand13,c.winTile).map(t=>tileHTML(t)).join('')
-        +'<span class="ch3-now">'+tileHTML(c.winTile)+'<span class="ch3-now-lab">今の牌</span></span>'
-        +'</div>'
+      h+=oppRiver()+myRivHTML
         +'<div class="tc-lab">あなたの手牌（'+conc.length+'枚）＋鳴いた組</div>'
         +openHandHTML(conc,sp.melds);
     }else{
-      h+='<div class="tc-lab">あなたの手牌（'+conc.length+'枚）＋ツモった牌＋鳴いた組</div>'
+      h+=myRivHTML
+        +'<div class="tc-lab">あなたの手牌（'+conc.length+'枚）＋ツモった牌＋鳴いた組</div>'
         +openHandHTML(conc,sp.melds,{cls:'ch3-tsumo-row',
           drawHTML:'<span class="ch3-tsumo-gap"></span><span class="ch3-now">'+tileHTML(c.winTile)+'<span class="ch3-now-lab">ツモ</span></span>'});
     }
@@ -9458,15 +9550,12 @@ function ch3BoardHTML(q){
   }
   let html='<div class="ch3-board">';
   if(c.win==='ron'){
-    html+='<div class="tc-lab">相手の捨て牌</div>'
-      +'<div class="ch3-river">'
-      +ch3RiverJunk(hand13,c.winTile).map(t=>tileHTML(t)).join('')
-      +'<span class="ch3-now">'+tileHTML(c.winTile)+'<span class="ch3-now-lab">今の牌</span></span>'
-      +'</div>'
+    html+=oppRiver()+myRivHTML
       +'<div class="tc-lab">あなたの手牌（13枚）</div>'
       +'<div class="hand">'+hand13.map(t=>tileHTML(t)).join('')+'</div>';
   }else{
-    html+='<div class="tc-lab">あなたの手牌（13枚）＋ツモった牌</div>'
+    html+=myRivHTML
+      +'<div class="tc-lab">あなたの手牌（13枚）＋ツモった牌</div>'
       +'<div class="hand ch3-tsumo-row">'+hand13.map(t=>tileHTML(t)).join('')
       +'<span class="ch3-tsumo-gap"></span>'
       +'<span class="ch3-now">'+tileHTML(c.winTile)+'<span class="ch3-now-lab">ツモ</span></span>'
@@ -10586,6 +10675,44 @@ const CH3_LESSONS={
         {tlab:'つぎへ！'}),
     ]);
   },
+  /* ★A1-6 一発(R63で追加) =====
+     一発はリーチといっしょに とてもよく経験する役なので、任意のめずらしい役ではなく
+     通常の学習導線(第3章のいちばん最初のテーマ)に置く。
+     ・正解はすべてエンジン(ch3YakuList)が出す。ctx.ippatsu は「一発の条件を満たしている局面」を表す。
+     ・リーチなしでは絶対につかないこと / 途中の鳴きで消えること の2点だけを教える。
+       細かい例外(一発目にカンされたら等)はここでは広げない。
+     ・既存ユーザーにも新しい1マスとして届くよう、テーマの【末尾】に足している。 */
+  ya1_6(){
+    return [
+      ch1Teach('リーチには、うれしい<b>おまけの役</b>がついてくることがあるよ。その名も<span class="term-chip">一発（イッパツ）</span>！',
+        {tlab:'一発',panel:yakuBadgeHTML('ippatsu')}),
+      ch1Teach('一発は<b>リーチしていることが前提</b>だよ。リーチしたあと、<b>つぎの自分のツモまで</b>にアガれたら、'
+        +yakuHanText('ippatsu')+'おまけがつくんだ。',
+        {tlab:'リーチ直後のチャンス'}),
+      ch3HasMcq('ippatsu','2m3m4m4p5p6p7s8s9s3s5s4s9p9p',
+        ch3Ctx({riichi:true,ippatsu:true,win:'ron',winTile:'4s'}),
+        'リーチした直後にアガれた！一発がついて役が1つふえたよ。'),
+      ch3HasMcq('ippatsu','2m3m4m4p5p6p7s8s9s3s5s4s9p9p',
+        ch3Ctx({ippatsu:true,win:'ron',winTile:'4s'}),
+        'リーチしていないね。<b>一発はリーチが前提</b>だから、リーチなしではつかないんだ。'),
+      ch1Teach('気をつけて！リーチしたあと、アガるまえに<b>だれかがチー・ポン・カンをすると一発は消える</b>よ。'
+        +'「リーチ直後のチャンス。途中で鳴きが入ると消える」とおぼえよう。',
+        {tlab:'鳴きが入ると消える'}),
+      ch3HasMcq('ippatsu','2m3m4m4p5p6p7s8s9s3s5s4s9p9p',
+        ch3Ctx({riichi:true,win:'ron',winTile:'4s',note:'リーチしたあと、ほかの人がポンした'}),
+        'リーチしていても、途中で鳴きが入ったから一発は消えてしまったよ。(リーチの役はのこるから、アガれることは変わらないよ！)'),
+      ch3YakuFind('2m3m4m4p5p6p7s8s9s3s5s4s9p9p',
+        ch3Ctx({riichi:true,ippatsu:true,win:'tsumo',winTile:'4s'}),
+        ['riichi','ippatsu','tsumo','pinfu'],
+        'リーチ＋一発＋ツモで3役！リーチはこうやって重なっていくんだ。'),
+      {q:'<b>一発</b>がつくのは、どんなとき？',
+       choices:['リーチしたあと、つぎの自分のツモまでにアガったとき','リーチしていなくても早くアガったとき'],a:0,
+       exp:'一発はリーチが前提。リーチ直後のチャンスだよ。'},
+      ch1Teach('🎉 <b>一発もマスター！</b>リーチは「いちばん覚えやすい役」なのに、一発やツモまで重なって'
+        +'ぐんと大きくなることがあるんだ。つぎは、3枚そろえるだけで役になる牌のはなしだよ！',
+        {tlab:'つぎへ！'}),
+    ];
+  },
   /* ===== B 役牌(ピンフより必ず先に正式学習) ===== */
   /* B1-1 白・發・中(三元牌) */
   yb1_1(){
@@ -11605,7 +11732,54 @@ const CH3_LESSONS={
        exp:'赤ドラは1枚で+1翻。ふつうのドラとおなじだよ。'},
       {q:'役がなくて、赤ドラだけ1枚ある。アガれる？',choices:['アガれる','アガれない'],a:1,
        exp:'赤ドラは役ではないから、これだけではアガれない。役が1つはひつようだよ。'},
-      ch1Teach('🎉 <b>赤ドラもマスター！</b> ドラ・カンドラ・赤ドラ、ぜんぶ<b>役ではないけれど翻をふやす</b>なかまだったね。つぎは、そのドラともつながる<b>カン</b>を覚えよう！',
+      ch1Teach('🎉 <b>赤ドラもマスター！</b> ドラ・カンドラ・赤ドラ、ぜんぶ<b>役ではないけれど翻をふやす</b>なかまだったね。つぎは、もうひとつのドラ…<b>リーチしたときだけ見られるドラ</b>のはなし！',
+        {tlab:'つぎは裏ドラ'}),
+    ];
+  },
+  /* ★K1-7 裏ドラ(R63で追加) =====
+     裏ドラは【役ではない】。表ドラ・赤ドラ・カンドラと同じ「翻をふやすおまけ」のなかま。
+     ちがうのは【リーチしてアガったときだけ見られる】こと。
+     ここでドラ4種類を整理し、そのうえで リーチ＋一発＋ツモ＋裏ドラ の重なりを体験させる(§13)。
+     既存ユーザーにも届くよう、テーマの末尾に足している。 */
+  yk1_7(){
+    return [
+      ch1Teach('ドラのなかま、さいごの1つ。<span class="term-chip">裏ドラ（うらドラ）</span>だよ。'
+        +'これは<b>リーチしてアガったときだけ</b>見られる、とくべつなドラなんだ。',
+        {tlab:'裏ドラ'}),
+      ch1Teach('リーチしてアガると、ドラ表示牌の<b>下にふせてある牌</b>をめくるよ。'
+        +'それが<span class="term-chip">裏ドラ表示牌（ひょうじはい）</span>。'
+        +'表のドラとおなじで、<b>そのつぎの牌</b>が裏ドラになるんだ。',
+        {tlab:'裏ドラ表示牌',panel:doraPanelHTML(['3m'])}),
+      doraPickQ('5p',['4p','5p','6p','9p'],'裏ドラも表のドラとおなじ読み方。5のつぎは6だよ。'),
+      doraPickQ('9s',['8s','9s','1s','1m'],'9のつぎは1にもどるのも、表のドラとおなじだよ。'),
+      ch1Teach('裏ドラも<b>1枚で+1翻</b>。リーチしてアガったとき、思いがけず手が大きくなることがあるんだ。これがリーチのたのしさだよ！',
+        {tlab:'裏ドラも1枚で+1翻'}),
+      ch1Teach('そして だいじなこと。<b>裏ドラも役ではない</b>よ。'
+        +'裏ドラだけではアガれないし、そもそも<b>リーチしていなければ見ることもできない</b>んだ。',
+        {tlab:'裏ドラも役じゃない'}),
+      {q:'<b>裏ドラ</b>が見られるのは、どんなとき？',
+       choices:['リーチしてアガったとき','いつでも見られる'],a:0,
+       exp:'リーチしてアガったときだけ。リーチへのごほうびみたいなものだね。'},
+      {q:'<b>裏ドラ</b>は役？',choices:['役ではない（翻をふやすおまけ）','役のひとつ'],a:0,
+       exp:'表ドラ・赤ドラ・カンドラとおなじで、裏ドラも役ではないよ。'},
+      ch1Teach('ここでドラのなかまを整理しよう。<b>4つとも「1枚で+1翻」「役ではない」</b>。'
+        +'ちがうのは<b>どれがドラになるか</b>と<b>いつ分かるか</b>だけだよ。',
+        {tlab:'ドラ4なかま',panel:doraKindsTableHTML()}),
+      {q:'4つのドラに<b>共通していること</b>は？',
+       choices:['1枚で+1翻／役ではない','リーチしないと使えない'],a:0,
+       exp:'リーチがいるのは裏ドラだけ。ほかの3つはリーチしていなくてもつくよ。'},
+      /* R63 §13: リーチの強さを実感する複合例。
+         一発とツモは【役】、裏ドラは【役ではない】という区別は崩さない */
+      ch1Teach('さいごに、リーチの強さを見てみよう。<b>リーチ</b>して、<b>一発</b>で、<b>ツモ</b>アガリ。'
+        +'そのうえ<b>裏ドラが1枚</b>のっていたら…？',
+        {tlab:'リーチの強さ',panel:yakuBadgeHTML('riichi')+yakuBadgeHTML('ippatsu')+yakuBadgeHTML('tsumo')}),
+      yakuSumMcq(['riichi','ippatsu','tsumo'],{dora:1,
+        exp:'リーチ'+yakuHanText('riichi')+'＋一発'+yakuHanText('ippatsu')+'＋ツモ'+yakuHanText('tsumo')
+          +'＋裏ドラ1枚で<b>合計4翻</b>！リーチひとつから、ここまで大きくなるんだ。'}),
+      {q:'さっきの手で、<b>役</b>はいくつ？',choices:['3つ（リーチ・一発・ツモ）','4つ（裏ドラも役）'],a:0,
+       exp:'役はリーチ・一発・ツモの3つ。裏ドラは役ではなく、翻だけをふやすおまけだったね。'},
+      ch1Teach('🎉 <b>ドラマスター完全版！</b> 表ドラ・赤ドラ・カンドラ・裏ドラ、ぜんぶ'
+        +'<b>役ではないけれど翻をふやす</b>なかまだったね。つぎは、そのドラともつながる<b>カン</b>を覚えよう！',
         {tlab:'つぎはカン'}),
     ];
   },
@@ -11735,7 +11909,14 @@ const CH3_LESSONS={
      ・親・子/親ツモは子3人同額/子ツモは親が多く払う は第1章th_ch1pで既習。そこへつなぐ。 */
   sc1_1(){
     return [
-      ch1Teach('第3章のしあげ！役をおぼえるとき、いっしょに<b>何翻か</b>も見てきたね。その翻が<b>点の大きさ</b>になるんだ。',
+      ch1Teach('ようこそ、<b>第4章「点数がわかる」</b>へ！第1章で、'
+        +'<b>点棒</b>・<b>ロンは1人が払う</b>・<b>ツモは3人が払う</b>・'+RB_OYA+'と'+RB_KO+'…'
+        +'という点の<b>しくみ</b>は もう覚えたね。',
+        {tlab:'第4章へようこそ'}),
+      ch1Teach('この章では、その先へ進むよ。<b>「そのアガリは、けっきょく何点なのか」</b>が'
+        +'分かるようになるのがゴールだ！',
+        {tlab:'この章のゴール'}),
+      ch1Teach('手がかりは第3章でおぼえた<b>翻</b>。役をおぼえるとき、いっしょに<b>何翻か</b>も見てきたね。その翻が<b>点の大きさ</b>になるんだ。',
         {tlab:'翻と点'}),
       ch1Teach('役が2つ以上あるときは、<b>翻を足し算</b>するよ。ここでだいじなのは…<b>役の数と翻の合計はちがう</b>ということ！',
         {tlab:'翻は足し算',panel:yakuBadgeHTML('riichi')+yakuBadgeHTML('chiitoi')}),
@@ -11976,7 +12157,7 @@ const CH3_LESSONS={
       ch1Teach('🎉 <b>点数感覚マスター！</b> これで「このアガリはだいたい何点か」が言えるようになったね。'
         +'<b>符</b>をつかったこまかい計算は、もっと先の<b>点数計算トレーニング</b>で覚えよう。'
         +'そのとき「あの点数ラインはこういう理由だったのか！」とつながるよ。',
-        {tlab:'第3章コンプリート！'}),
+        {tlab:'第4章コンプリート！'}),
     ]);
   },
   /* ===== X 任意Road「もっと役を覚える」(第3章クリアで解放。次章の前提にしない) ===== */
@@ -12466,7 +12647,9 @@ const QFORMATS={
       // 第3章: ロン/ツモは牌の配置で分かる盤面(ロン=相手の捨て牌+自分の13枚/ツモ=13枚+右端ツモ牌)。
       // 盤面が出るときはアガリ牌チップを重複表示しない(状況は牌の位置で理解させる)
       const bd3=(q.ctx3&&typeof ch3BoardHTML==='function')?ch3BoardHTML(q):null;
-      if(q.ctx3) html+=ch3CtxHTML(bd3?Object.assign({},q.ctx3,{winTile:null}):q.ctx3,q);
+      // R63: 盤面があるときは、自分の河も盤面側が描く(上下の並びを実卓とそろえるため)
+      if(q.ctx3) html+=ch3CtxHTML(bd3?Object.assign({},q.ctx3,{winTile:null}):q.ctx3,
+        bd3?Object.assign({},q,{__boardRiver:true}):q);
       if(q.seatMap) html+=ch3SeatMapHTML(q.seatMap,q.seatOpt);  // R28: 席の風を学習中は4人卓の図で視覚化(R38: seatOpt対応)
       if(q.situ) html+=tableHTML(legacySituToContext(q.situ),'T0');  // P3-B: situHTML→TableView（situHTMLはlegacyとして残置）
       else if(q.context) html+=tableHTML(q.context, q.context.reveal||'T0');  // v3ネイティブcontext問題（Compare variant等）
@@ -12877,7 +13060,9 @@ const QFORMATS={
       let html='<div class="q-type">'+(q.tlab||'役さがし')+'</div>';
       html+='<div class="q-text">'+q.q+'</div>';
       const bdY=(q.ctx3&&typeof ch3BoardHTML==='function')?ch3BoardHTML(q):null;
-      html+=ch3CtxHTML(bdY?Object.assign({},q.ctx3,{winTile:null}):q.ctx3,q);
+      // R63: 盤面があるときは、自分の河も盤面側が描く(上下の並びを実卓とそろえるため)
+      html+=ch3CtxHTML(bdY?Object.assign({},q.ctx3,{winTile:null}):q.ctx3,
+        bdY?Object.assign({},q,{__boardRiver:true}):q);
       if(bdY) html+=bdY;
       else if(ch3HandSplit(q)) html+=ch3OpenHandHTML(q);
       else if(q.hand) html+=(q.ghand?ch1HandGrouped(q.hand):handHTML(q.hand));
@@ -14164,10 +14349,12 @@ function renderYakuList(){
   }
   if(!nl.length&&!yl.length) html+='<p class="yl-note">この条件の役はないよ。</p>';
   if(YL_FILT==='all'){
-    // ドラは役ではないので役として並べない。別枠で「役ではない」ことだけ短くそえる
-    html+='<div class="yl-grp">ドラ（役ではない）</div>'
-      +'<div class="yl-dora"><b>ドラ・赤ドラは役ではありません</b>'
-      +'<p>1枚で +1翻。アガるためのチケットにはならないので、役は別にひつようだよ。</p></div>';
+    /* ドラは役ではないので役として並べない。別枠で4なかまを整理して見せる(R63)。
+       内容は DORA_KINDS の1か所から作るので、Lessonの表と食いちがわない */
+    html+='<div class="yl-grp">ドラについて（役ではない）</div>'
+      +'<div class="yl-dora"><b>ドラは役ではありません</b>'
+      +'<p>どれも<b>1枚で +1翻</b>。アガるためのチケットにはならないので、役は別にひつようだよ。</p>'
+      +doraKindsTableHTML()+'</div>';
   }
   html+='<p class="yl-note">※「鳴き」の列が「鳴かず」より小さい役は<b>食い下がり</b>（'
     +YAKU_KUISAGARI.map(k=>CH3_YAKU_META[k].label).join('・')+'）。<br>'
