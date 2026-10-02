@@ -385,6 +385,36 @@ html.ruby-full .mt-guide-card .tc-bub{height:86px;}
 .hand-open{align-items:flex-start;}
 .hand .mld-gap{flex:0 0 clamp(8px, 3vw, 16px);}
 .hand .mld-sep{flex:0 0 clamp(3px, 1.2vw, 6px);}
+/* ===== カンの見た目と副露エリア(R64) =====
+   .mld-kan は display:contents なので、中の牌はこれまでどおり手牌のフレックスの直接の仲間として
+   ならぶ(牌の大きさの計算を変えない)。テストとDOMの目印としてだけ存在する。 */
+.mld-kan{display:contents;}
+/* 加槓: 横向きの牌の上に4枚目をのせる。上下2段ぶん(牌の横幅2つぶん)の高さの箱にして、
+   下の段を行の下端にそろえる(=ほかの牌と足もとがそろう) */
+.hand .mld-side.kakan-side{display:flex; flex-direction:column; justify-content:flex-end;
+  aspect-ratio:1/1.4286; align-self:flex-end;}
+.hand .mld-side.kakan-side>.ks-cell{position:relative; flex:1 1 0; width:100%; min-height:0;}
+.hand .mld-side.kakan-side>.ks-cell>.tile{position:absolute; left:50%; top:50%; width:71.4286%;
+  max-width:none; min-width:0; flex:none; transform:translate(-50%,-50%) rotate(90deg);
+  box-shadow:3px 0 0 var(--tile-shadow);}
+/* 副露エリア: 手牌の下。牌は小さくせず、入りきらないときは折り返す。
+   足もと(下端)をそろえるので、加槓の2段も自然に見える */
+.hand.oh-split{--tile-w:clamp(19px,6.4vw,28px); margin-bottom:4px;}
+.fu-lab{margin-top:2px;}
+.fuuro-area{--tile-w:clamp(19px,6.4vw,28px); display:flex; flex-wrap:wrap; align-items:flex-end;
+  justify-content:center; gap:6px clamp(8px,3vw,16px); margin:2px 0 12px;}
+.fuuro-area .fu-set{display:flex; align-items:flex-end; gap:2px;}
+.fuuro-area .tile{flex:0 0 auto; width:var(--tile-w); max-width:none; min-width:0;}
+.fuuro-area .mg-back{flex:0 0 auto; width:var(--tile-w); max-width:none; min-width:0;}
+.fuuro-area .mld-side{position:relative; flex:0 0 auto; width:calc(var(--tile-w) * 1.4);
+  max-width:none; aspect-ratio:1/1; align-self:flex-end;}
+.fuuro-area .mld-side>.tile{position:absolute; left:50%; top:64.2857%; width:71.4286%;
+  transform:translate(-50%,-50%) rotate(90deg); box-shadow:3px 0 0 var(--tile-shadow);}
+.fuuro-area .mld-side.kakan-side{display:flex; flex-direction:column; justify-content:flex-end;
+  aspect-ratio:1/1.4286;}
+.fuuro-area .mld-side.kakan-side>.ks-cell{position:relative; flex:1 1 0; width:100%; min-height:0;}
+.fuuro-area .mld-side.kakan-side>.ks-cell>.tile{position:absolute; left:50%; top:50%; width:71.4286%;
+  transform:translate(-50%,-50%) rotate(90deg);}
 .mld-demo{display:grid; grid-template-columns:1fr 1fr; gap:2px 14px;}
 /* R62: カンを4つならべると、2列では1つぶんの幅(4枚＋横向き)が320px幅に入りきらない。
    4つ以上見せるときは1列にする(見せる内容は減らさず、はみ出しだけをなくす) */
@@ -561,7 +591,24 @@ button.tile.off:active{transform:none;}
 .yaku-badge .yb-naki.ok{background:var(--jade-soft,#e3f6ec); color:var(--jade-ink); border-color:var(--jade);}
 .yaku-badge .yb-naki.down{background:#fff4d8; color:#7a5300; border-color:var(--gold);}
 .yaku-badge .yb-naki.ng{background:#ffe9e4; color:#8c2f18; border-color:var(--verm);}
+/* R64: 役情報の3列固定グリッド。1つのグリッドに全行のセルを入れるので、
+   役名の文字数がちがっても【翻列・鳴き列の左はしが全行そろう】。
+   .yb-row は display:contents なので、セルはグリッドの直接の仲間としてならぶ
+   (行という箱は作らない=列幅が行ごとに分かれない)。320pxでも横スクロールさせない。 */
+.yaku-rows{display:grid; grid-template-columns:minmax(0,1fr) max-content max-content;
+  gap:5px 8px; align-items:center; justify-content:start; margin:8px 0 2px; max-width:100%;}
+.yaku-rows .yb-row{display:contents;}
+.yaku-rows .yb-name{min-width:0; overflow:hidden; text-overflow:ellipsis;}
+.yaku-rows .yb-han{justify-self:start; text-align:center;}
+.yaku-rows .yb-naki{justify-self:start;}
+.yaku-rows.wide{margin:0; gap:4px 6px;}
 /* 満貫以上の表(R61 §12)。スマホで横スクロールさせないため4列grid・数字は等幅で縦にそろえる */
+/* R64: 点数問題で牌姿といっしょに出す「合計翻」「系統」の小さな見出し。
+   点のならんだ表は【答えそのもの】なのでQuizには出さない(Teachだけ) */
+.sh-sum,.sh-line,.sh-note{font-size:13px; font-weight:800; color:var(--ink); margin:6px 0 0;
+  font-family:'Noto Sans JP',sans-serif;}
+.sh-sum b,.sh-line b{color:var(--jade-ink); font-size:15px;}
+.sh-note{color:var(--ink-soft); font-size:12px;}
 .sc-tbl{display:block; margin:8px 0 2px; font-family:'Noto Sans JP',sans-serif;}
 .sc-row{display:grid; grid-template-columns:3.6em 4.6em 1fr 1fr; gap:4px; align-items:center;
   padding:5px 2px; border-bottom:1.5px solid var(--line); font-size:clamp(11px,3.2vw,13px); font-weight:700;}
@@ -686,6 +733,9 @@ button.tile.off:active{transform:none;}
   background:var(--jade-soft); color:var(--ink); border:1px solid rgba(0,0,0,.10);}
 .ch3-chip.warn{background:rgba(216,67,59,.10); color:var(--verm-ink);}
 .ch3-chip.riichi{background:rgba(232,169,60,.16); color:var(--gold-ink);}
+/* R64: 一発の成立を決める「時間」の状況チップ(リーチ後のツモ回数・鳴きの有無)。
+   内部フラグだけで正解が決まらないよう、判断材料を画面に出すためのもの */
+.ch3-chip.time{background:rgba(58,120,224,.10); color:#1d4a91; border-color:rgba(29,74,145,.22);}
 /* 4人の席と風の図(R28): あなたを下に固定し、右=下家・向かい=対面・左=上家。
    席順は反時計回り(東→南→西→北)=「つぎの風の人が右どなり」という正しい関係で描く。
 
@@ -2156,18 +2206,51 @@ function handHTML(str){
    meld={type:'chi'|'pon'|'kan', tiles:'345s'または配列, called:'4s', from:'left'|'opposite'|'right'}
    横向きの牌は「横幅1.4枚分」の箱に入れて回転させる(回転しても並びがくずれない=占有サイズが正しい) */
 const MELD_FROM=['left','opposite','right'];
+/* ===== カンの表現(R64) =====
+   R63までカンは「カンを4回した」という文章でしか出せず、牌姿に槓子がなかった。
+   そこでカンを3種類まで meld データで表せるようにした(卓の上の見た目もそれぞれちがう):
+
+     kan:'ankan'  暗槓 … 自分の手の中だけで作る。鳴いたことにならない(門前のまま)。
+                         実卓では【りょうはしの2枚をふせる】ので、その見た目で描く。
+     kan:'minkan' 大明槓 … ほかの人の4枚目をもらう。もらった牌を横向き(だれからかで位置が変わる)。
+     kan:'kakan'  加槓 … ポンしていた組に4枚目を足す。横向きの牌の【上に1枚のせる】のが実卓の形。
+
+   枚数のきまり: カンは牌4枚で1メンツ。アガリ形の判定は従来どおり14枚(コーツ3枚)で行い、
+   【4枚目は副露エリアの表示だけ】が持つ(meldHandTiles)。こうすると
+   「カンした牌が手牌13枚の中にも残っている」という物理的に矛盾した絵を作らずにすむ。 */
+const KAN_KINDS=['ankan','minkan','kakan'];
+function meldKanKind(m){
+  if(!m||m.type!=='kan') return null;
+  if(m.kan&&KAN_KINDS.includes(m.kan)) return m.kan;
+  return m.from?'minkan':'ankan';          // 旧データ互換(fromがあれば大明槓・なければ暗槓)
+}
+function meldIsAnkan(m){ return meldKanKind(m)==='ankan'; }
 function meldNorm(m){
   const tiles=sortTiles(Array.isArray(m.tiles)?m.tiles.slice():parseHand(m.tiles));
   const type=m.type;
-  const from=type==='chi'?'left':m.from;
+  const kan=meldKanKind(m);
+  const from=type==='chi'?'left':(kan==='ankan'?null:m.from);
   const called=m.called||tiles[0];
-  return {type,tiles,called,from};
+  return {type,tiles,called,from,kan};
+}
+function meldHandTiles(m){
+  /* 14枚のアガリ形の判定に使う牌。カンは4枚で1メンツなので、判定側では3枚(コーツ)として数える。
+     4枚目は副露エリアの表示だけが持つ＝手牌に重複して出てこない */
+  const n=meldNorm(m);
+  return n.type==='kan'?n.tiles.slice(0,3):n.tiles.slice();
 }
 function meldCheck(m){
   // データの正しさ(決定論)。問題があれば理由の文字列、なければ''
   const n=meldNorm(m);
   if(!['chi','pon','kan'].includes(n.type)) return 'type';
-  if(!MELD_FROM.includes(n.from)) return 'from';
+  // 書いてある種類が3つのどれでもないときはエラー(だまって暗槓に落とさない)
+  if(n.type==='kan'&&m.kan&&!KAN_KINDS.includes(m.kan)) return 'kan-kind';
+  if(n.type==='kan'&&!KAN_KINDS.includes(n.kan)) return 'kan-kind';
+  if(n.kan==='ankan'){
+    if(m.from) return 'ankan-from';                                     // 暗槓はだれからももらわない
+  }else{
+    if(!MELD_FROM.includes(n.from)) return 'from';
+  }
   if(m.type==='chi'&&m.from&&m.from!=='left') return 'chi-from';        // チーは左の人からだけ
   if(!n.tiles.includes(n.called)) return 'called';
   if(n.type==='chi'&&!(n.tiles.length===3&&ch1IsRun(n.tiles))) return 'chi-shape';
@@ -2176,8 +2259,16 @@ function meldCheck(m){
   return '';
 }
 function meldLayout(m){
-  // 表示順の牌配列と横向きの位置(side)
+  // 表示順の牌配列と横向きの位置(side)。暗槓は横向きなし(side=-1)
   const n=meldNorm(m);
+  if(n.kan==='ankan') return {tiles:n.tiles.slice(),side:-1,kan:'ankan'};
+  if(n.kan==='kakan'){
+    /* 加槓: ポンの3枚の形のまま、横向きの牌の上に4枚目をのせる。
+       ならびは3枚＋「のせる1枚」(stack)。横向きの位置はポンとおなじ決め方 */
+    const three=[n.called,n.called,n.called];
+    const side=n.from==='left'?0:(n.from==='right'?2:1);
+    return {tiles:three,side,kan:'kakan',stack:n.called};
+  }
   const rest=n.tiles.slice(); rest.splice(rest.indexOf(n.called),1);
   let side;
   if(n.type==='chi') side=0;
@@ -2185,13 +2276,28 @@ function meldLayout(m){
   else if(n.from==='right') side=n.tiles.length-1;
   else side=1;                                                            // 向かいの人: まん中(カンは左から2枚目)
   const arr=rest.slice(); arr.splice(side,0,n.called);
-  return {tiles:arr,side};
+  return {tiles:arr,side,kan:n.kan};
 }
 function renderMeld(m){
   const lay=meldLayout(m);
-  return lay.tiles.map((t,i)=>i===lay.side
-    ?'<span class="mld-side" data-called="'+t+'">'+tileHTML(t,'mld-t')+'</span>'
-    :tileHTML(t,'mld-t')).join('');
+  if(lay.kan==='ankan'){
+    /* 暗槓: りょうはしの2枚をふせる(実卓とおなじ見た目)。
+       「自分の手の中だけで作ったカン」であることが、牌を見ただけで分かる */
+    return '<span class="mld-kan ankan" data-kan="ankan">'
+      +'<span class="tile mg-back"></span>'+tileHTML(lay.tiles[1],'mld-t')
+      +tileHTML(lay.tiles[2],'mld-t')+'<span class="tile mg-back"></span></span>';
+  }
+  const body=lay.tiles.map((t,i)=>{
+    if(i!==lay.side) return tileHTML(t,'mld-t');
+    if(lay.kan==='kakan'){
+      /* 加槓: 横向きの牌の【上に】4枚目をのせる。上下2段の箱にして、どちらも横向きで描く */
+      return '<span class="mld-side kakan-side" data-called="'+t+'">'
+        +'<span class="ks-cell ks-top">'+tileHTML(lay.stack,'mld-t')+'</span>'
+        +'<span class="ks-cell ks-base">'+tileHTML(t,'mld-t')+'</span></span>';
+    }
+    return '<span class="mld-side" data-called="'+t+'">'+tileHTML(t,'mld-t')+'</span>';
+  }).join('');
+  return lay.kan?'<span class="mld-kan '+lay.kan+'" data-kan="'+lay.kan+'">'+body+'</span>':body;
 }
 /* 鳴いた組の置き場所(R57b)。実卓では【自分の右はしから順に、左へ】積んでいく。
    だから melds の先頭(いちばん最初に鳴いた組)が【いちばん右】に来る。
@@ -2204,9 +2310,36 @@ function renderOpenMelds(melds){
     +melds.slice().reverse().map(m=>renderMeld(m))
       .join('<span class="mld-sep" aria-hidden="true"></span>');
 }
+/* ===== 副露エリア(R64) =====
+   チー・ポンが1〜2組なら、これまでどおり手牌と同じ行に置く(R57bのならびは変えない)。
+   カンが入ったり組が多くなると、同じ行に入れると牌を小さくするしかなくなり
+   320pxでは何の牌か分からなくなる。そこで【手牌の下に専用の副露エリア】を作り、
+   牌の大きさは保ったまま折り返す。カン4組でもスマホ幅で読める。 */
+function meldAreaNeeded(melds){
+  if(!melds||!melds.length) return false;
+  if(melds.some(m=>m.type==='kan')) return true;      // カンは4枚ぶん幅をとるので必ず別エリア
+  return meldTilesAll(melds).length>6;                // 3組以上
+}
+function fuuroAreaHTML(melds,opt){
+  if(!melds||!melds.length) return '';
+  const o=opt||{};
+  // 実卓とおなじく、最初に鳴いた組が【いちばん右】(R57b)。描くときだけ逆順にする
+  return (o.lab===false?'':'<div class="tc-lab fu-lab">'+(o.lab||'鳴いた組・カン')+'</div>')
+    +'<div class="fuuro-area">'
+    +melds.slice().reverse().map(m=>'<span class="fu-set">'+renderMeld(m)+'</span>').join('')
+    +'</div>';
+}
 function openHandHTML(concealed,melds,opt){
   // concealed=手の中の牌(配列・並べ替え済みで渡す) / melds=鳴いた組 / opt.drawHTML=ツモ牌などを手の中の右に
   opt=opt||{};
+  if(meldAreaNeeded(melds)){
+    /* oh-split=手牌と副露を上下に分けた形。実卓では手牌も副露も【おなじ大きさの牌】なので、
+       手牌側の牌の大きさも副露エリアとそろえる(2枚だけの手牌が巨大に見えるのを防ぐ) */
+    return '<div class="hand hand-open oh-split'+(opt.cls?' '+opt.cls:'')+'">'
+      +concealed.map(t=>tileHTML(t)).join('')
+      +(opt.drawHTML||'')+'</div>'
+      +fuuroAreaHTML(melds,{lab:opt.fuLab});
+  }
   return '<div class="hand hand-open'+(opt.cls?' '+opt.cls:'')+'">'
     +concealed.map(t=>tileHTML(t)).join('')
     +(opt.drawHTML||'')
@@ -3157,7 +3290,10 @@ const THEMES=[
     {diff:{ch1:'km1_3'}},                      // M1-3 大明槓
     {diff:{ch1:'km1_4'}},                      // M1-4 加槓
     {diff:{ch1:'km1_5'}},                      // M1-5 どのカン？
-    {diff:{ch1:'km1_6'}},                      // ★M1-6 カンすると何が起きる？(嶺上牌・カンドラ)
+    {diff:{ch1:'km1_6'}},                      // M1-6 カンすると何が起きる？(嶺上牌・カンドラ)
+    /* R64: カンでできる役(三槓子2翻・四槓子役満)。カンを学んだ直後に置く。
+       既存ユーザーにも新しい1マスとして届くよう【末尾】に足す(TSUMOPPY_TERMS §40) */
+    {diff:{ch1:'km1_7'}},                      // ★M1-7 三槓子・四槓子(実際の槓子を見せる)
    ]},
   ]},
  /* 点の大きさ(R61): 役の翻→満貫〜役満の点。第3章の本編テーマの最後に置く。
@@ -3184,7 +3320,12 @@ const THEMES=[
     {diff:{ch1:'sc2_2'}},                      // S2-2 1300系ライン(同じ翻でも点がちがう)
     {diff:{ch1:'sc2_3'}},                      // S2-3 七対子ライン
     {diff:{ch1:'sc2_4'}},                      // S2-4 ツモの払い方(だれがいくら)
-    {diff:{ch1:'sc2_5'}},                      // ★S2-5 点数感覚マスター
+    {diff:{ch1:'sc2_5'}},                      // S2-5 点数感覚マスター
+    /* R64: 点数を数字だけの別ゲームにしないため、【牌姿→役→翻→系統→点】でつなぐ
+       3段階のLessonを末尾に追加。既存ユーザーには新しい3マスとして出る */
+    {diff:{ch1:'sc3_1'}},                      // S3-1 序盤(役・翻・系統を見せて点だけ)
+    {diff:{ch1:'sc3_2'}},                      // S3-2 中盤(翻の合計と系統を自分で)
+    {diff:{ch1:'sc3_3'}},                      // ★S3-3 後半(牌姿だけ・役さがしから点まで)
    ]},
   ]},
  /* 任意Road(第3章クリアで解放。ここを受講しなくても次章へ進める=どの将来テーマもth_ch3xをrequiresにしない) */
@@ -3685,6 +3826,8 @@ const RUBY_TERMS={
   '清老頭':'チンロウトウ','混老頭':'ホンロウトウ','九蓮宝燈':'チューレンポートー','天和':'テンホー',
   '海底摸月':'ハイテイ','河底撈魚':'ホウテイ',
   '暗槓':'アンカン','大明槓':'ダイミンカン','加槓':'カカン','嶺上牌':'リンシャンはい','表示牌':'ひょうじはい',
+  // R64 カンの役。「三槓子」「四槓子」は「槓子」より長いので最長一致で先に当たる
+  '三槓子':'サンカンツ','四槓子':'スーカンツ','槓子':'カンツ',
   // R61 役の翻数・点の大きさ。1字の「翻」はこの教材では例外なく「ハン」(翻訳・翻すは出てこない)。
   // 「三倍満」は「倍満」より長いのでRUBY_KEYSの長さ降順ソートで先に当たる
   '翻':'ハン','食い下がり':'くいさがり','満貫':'マンガン','跳満':'ハネマン','倍満':'バイマン','三倍満':'サンバイマン',
@@ -3797,6 +3940,10 @@ const RUBY_FULL_SRC=`
 # R63 一発・裏ドラ・第4章で使う語。1字の「下」は上手/下家へ誤爆するので送りがなでピン留めする
 直後[ちょくご] 前提[ぜんてい] 整理[せいり] 共通[きょうつう] 完全版[かんぜんばん] 完全[かんぜん]
 思[おも]い その名[な]も 下[した]にふせ 独立[どくりつ] 章[しょう]
+# R64 一発の時間・カンの役・点数の牌姿で使う語。
+# 1字の「後」は「後ろ」「そのあと」へ誤爆するので、かならず前の語とセットでピン留めする
+リーチ後[ご] 短[みじか]い 有効[ゆうこう] 牌姿[はいし] 系統[けいとう] 目的[もくてき]
+の順[じゅん] 練習[れんしゅう] 総仕上[そうしあ]げ 段階[だんかい]
 `;
 const RUBY_KANJI_RE=/[\u3400-\u9FFF\uF900-\uFAFF々〆ヶ]/;
 let RUBY_FULL_MAP=null, RUBY_FULL_MAXLEN=0;
@@ -3953,8 +4100,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.57.0';
-const BUILD_ID='20261001-03';
+const APP_VER='0.58.0';
+const BUILD_ID='20261001-04';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -7674,22 +7821,27 @@ function ch3Decomps(tiles,ctx){
   // 鳴いた組(固定メンツ)をそれぞれ別のセットに割り当てられる分解だけ残す。d.mi=鳴いた組に対応するセット番号
   const out=[];
   for(const d of all){
-    const used=new Set(), mi=[];
+    const used=new Set(), mi=[], mAnkan=[];
     let ok=true;
     for(const m of ms){
-      const key=m.slice().sort().join('');
+      const key=m.tiles.slice().sort().join('');
       const k=d.sets.findIndex((g,ix)=>!used.has(ix)&&g.map(x=>tiles[x]).sort().join('')===key);
       if(k<0){ ok=false; break; }
       used.add(k); mi.push(k);
+      if(m.ankan) mAnkan.push(k);                    // 暗槓は「鳴いていない組」=暗刻として数える
     }
-    if(ok) out.push(Object.assign({},d,{mi}));
+    if(ok) out.push(Object.assign({},d,{mi,mAnkan}));
   }
   return out;
 }
 function ch3MeldList(ctx){
-  // ctx.melds→判定用の牌配列(3枚の組だけ。カン=4枚は14枚判定の対象外なので含めない)
+  /* ctx.melds→判定用の組。14枚の判定ではカンもコーツ3枚として入っているので、
+     R64からはカンも固定メンツとして扱う(R63までは4枚の組を落としていたため、
+     鳴いたカンのコーツが「暗刻」に数えられて三暗刻などが誤って立っていた)。
+     ankan=暗槓は自分だけで作った組なので、暗刻として数えてよい */
   if(!ctx||!Array.isArray(ctx.melds)) return [];
-  return ctx.melds.map(m=>sortTiles(Array.isArray(m.tiles)?m.tiles:parseHand(m.tiles))).filter(t=>t.length===3);
+  return ctx.melds.map(m=>({tiles:sortTiles(meldHandTiles(m)),ankan:meldIsAnkan(m)}))
+    .filter(x=>x.tiles.length===3);
 }
 function ch3DecompsRaw(tiles){
   if(!tiles||tiles.length!==14) return [];
@@ -7823,8 +7975,9 @@ function ch3AnkouMax(tiles,ctx){
   // 鳴いた組(ctx.melds)のコーツ=ポンは暗刻に数えない。ロン牌は手の中(鳴いた組以外)のメンツ/アタマにだけ入る
   let best=0;
   for(const d of ch3Decomps(tiles,ctx)){
-    const mi=d.mi||[];
-    const trips=d.sets.filter((g,ix)=>!mi.includes(ix)&&ch1IsTriplet(g.map(k=>tiles[k])));
+    const mi=d.mi||[], mAnkan=d.mAnkan||[];
+    // 鳴いた組は暗刻に数えない。ただし暗槓(mAnkan)は自分の手の中だけで作った組なので数える
+    const trips=d.sets.filter((g,ix)=>(!mi.includes(ix)||mAnkan.includes(ix))&&ch1IsTriplet(g.map(k=>tiles[k])));
     let n=trips.length;
     if(ctx&&ctx.win==='ron'&&ctx.winTile){
       const w=ctx.winTile;
@@ -7961,10 +8114,32 @@ const CH3_YAKU_META={
   /* R62追加: 地和。天和の子バージョン(鳴きが入っていない最初のツモでアガる) */
   chiihou:{label:'地和',closedHan:null,openHan:null,openAllowed:false,yakuman:true,cond:'<ruby>子<rt>こ</rt></ruby>が、鳴きの入っていない最初のツモでアガリ',lesson:'yx2_4',optional:true,
     situ:'<ruby>子<rt>こ</rt></ruby>が、だれも鳴いていない1回目のツモでアガる'},
-  /* R62追加: 四槓子。カンを4回するという「できごと」で決まる役満なので、牌姿では表せない */
-  suukantsu:{label:'四槓子',closedHan:null,openHan:null,openAllowed:true,yakuman:true,cond:'カンを4回する',lesson:'yx2_4',optional:true,
-    situ:'カンを4回して、4つの組がぜんぶカンになる',situTiles:['1111m','2222p','3333s','EEEE']},
+  /* R64追加: 三槓子。2翻・鳴いてもOK・鳴いても2翻(食い下がりなし)。
+     カンの数は ctx.melds の中のカンの数から決まるので、牌姿に槓子が3組見えていないと成立しない。
+     ex は牌姿例ではなく【槓子の組そのもの】なので exMelds に持たせる(役一覧もこれを描く) */
+  sankantsu:{label:'三槓子',closedHan:2,openHan:2,openAllowed:true,cond:'カンを3回する（槓子が3組）',lesson:'km1_7',
+    exMelds:'sankantsu'},
+  /* R62追加 → R64で牌姿化: 四槓子。カン4組＋アタマが見えていないと成立しない */
+  suukantsu:{label:'四槓子',closedHan:null,openHan:null,openAllowed:true,yakuman:true,cond:'カンを4回する（槓子が4組）',lesson:'yx2_4',optional:true,
+    exMelds:'suukantsu'},
 };
+/* ===== カンの数(R64) =====
+   三槓子・四槓子は「カンを何回したか」で決まる。R63までは ctx.suukantsu という
+   ただのフラグで、牌姿にはカンが1つもなかった。R64からは ctx.melds の中の
+   【実際の槓子の数】だけを見る＝画面に槓子が見えていなければ絶対に成立しない。 */
+/* 四槓子・三槓子の見本(R64)。Lesson(km1_7 / yx2_4)と役一覧が【同じデータ】を見るので、
+   どこかだけ古い絵が残る事故が起きない。アガリ形=槓子4組＋アタマ(単騎待ち) */
+const SUUKANTSU_MELDS=[{type:'kan',kan:'ankan',tiles:'1m1m1m1m'},
+  {type:'kan',kan:'minkan',tiles:'2p2p2p2p',called:'2p',from:'right'},
+  {type:'kan',kan:'kakan',tiles:'3s3s3s3s',called:'3s',from:'left'},
+  {type:'kan',kan:'ankan',tiles:'EEEE'}];
+const SUUKANTSU_HAND='1m1m1m2p2p2p3s3s3sEEE9s9s';
+const SANKANTSU_MELDS=SUUKANTSU_MELDS.slice(0,3);
+const SANKANTSU_HAND='1m1m1m4m5m6m2p2p2p3s3s3s9s9s';
+function ch3KanCount(ctx){
+  if(!ctx||!Array.isArray(ctx.melds)) return 0;
+  return ctx.melds.filter(m=>m&&m.type==='kan').length;
+}
 /* 従来の CH3_YAKU_LABEL は META から導出する(表示名の二重管理をやめる。既存の呼び出しはそのまま動く) */
 const CH3_YAKU_LABEL=Object.keys(CH3_YAKU_META)
   .reduce((o,k)=>{ o[k]=CH3_YAKU_META[k].label; return o; },{});
@@ -7988,9 +8163,18 @@ function yakuOpenText(key){
 }
 /* 役の「基本情報」バッジ。Lessonの命名Teachと役一覧が【同じ関数】を使うので、表示が食いちがえない。
    opt.wide=true で横1列(役一覧のカード用)、既定は折返しOK(Lessonのpanel用) */
-function yakuBadgeHTML(key,opt){
+/* ===== 役情報の3列表示(R64) =====
+   R63までは役1つにつき1つの flex の箱(.yaku-badge)を作り、それをタテにならべていた。
+   flexの箱は行ごとに独立しているので、役名の文字数がちがうと「1翻」「鳴きNG」の
+   左はしがそろわず、複数行ならべたときにガタガタに見えた(実機で指摘された)。
+
+   R64からは【役名 ｜ 翻 ｜ 鳴き】の3列グリッドを唯一の共通部品にする。
+   1つのグリッドの中に全行のセルを入れるので、列の幅は全行で共有される＝
+   役名の長さがちがっても翻列・鳴き列の左はしが必ずそろう。
+   役1つだけのときも同じ部品を通すので、見た目が場所によって変わらない。
+   タグの角丸9px・色(緑=鳴きOK / 金=食い下がり / 赤=鳴きNG)はR63のまま変えない。 */
+function yakuRowCells(key){
   const m=CH3_YAKU_META[key]; if(!m) return '';
-  const o=opt||{};
   const han=m.yakuman?'<span class="yb-han yb-ym">役満</span>'
     :'<span class="yb-han">'+m.closedHan+'翻</span>';
   const naki=!m.openAllowed?'<span class="yb-naki ng">鳴きNG</span>'
@@ -7998,8 +8182,19 @@ function yakuBadgeHTML(key,opt){
       :(m.openHan<m.closedHan
         ?'<span class="yb-naki down">鳴きOK → '+m.openHan+'翻</span>'
         :'<span class="yb-naki ok">鳴きOK '+m.openHan+'翻</span>'));
-  return '<div class="yaku-badge'+(o.wide?' wide':'')+'">'
-    +'<span class="yb-name">'+m.label+'</span>'+han+naki+'</div>';
+  return '<span class="yb-name">'+m.label+'</span>'+han+naki;
+}
+function yakuRowsHTML(keys,opt){
+  const o=opt||{};
+  const list=(Array.isArray(keys)?keys:[keys]).filter(k=>CH3_YAKU_META[k]);
+  if(!list.length) return '';
+  return '<div class="yaku-badge yaku-rows'+(o.wide?' wide':'')+(o.cls?' '+o.cls:'')+'">'
+    +list.map(k=>'<span class="yb-row" data-yaku="'+k+'">'+yakuRowCells(k)+'</span>').join('')
+    +'</div>';
+}
+function yakuBadgeHTML(key,opt){
+  // 旧API。中身は共通の3列グリッド(1行)。既存の呼び出しはそのまま動く
+  return yakuRowsHTML([key],opt);
 }
 /* ===== 役一覧の表のセル(R62) =====
    一覧は「早見表」なので、Lessonのような長いバッジ(鳴きOK → 2翻)を毎行くりかえさない。
@@ -8027,8 +8222,20 @@ function yakuCellOpenCls(key){
 function yakuExampleHTML(key){
   const m=CH3_YAKU_META[key]; if(!m) return '';
   if(m.ex) return '<span class="yl-ex">'+m.ex.g.map(g=>inlineTiles(g)).join('')+'</span>';
-  if(m.situTiles) return '<span class="yl-ex">'+m.situTiles.map(g=>inlineTiles(g)).join('')+'</span>';
+  /* R64: カンの役(三槓子・四槓子)は、槓子そのものを見せないと何の役か分からない。
+     Lessonとおなじ共通データ(SANKANTSU_MELDS / SUUKANTSU_MELDS)を一覧でも描く */
+  if(m.exMelds){
+    const ms=m.exMelds==='suukantsu'?SUUKANTSU_MELDS
+      :(m.exMelds==='sankantsu'?SANKANTSU_MELDS:m.exMelds);
+    return '<span class="yl-ex yl-ex-kan">'
+      +ms.map(x=>inlineTiles(meldInlineStr(x))).join('')+'</span>';
+  }
   return '';
+}
+function meldInlineStr(m){
+  // 一覧の小さな牌で槓子を見せる用。4枚ならべるだけ(横向き・ふせ牌は一覧では使わない)
+  const n=meldNorm(m);
+  return n.tiles.join('');
 }
 /* ===== 役満の倍数(R62で確定した仕様) =====
    ツモッピィでは「役満の倍数 = 成立している役満役の個数」。
@@ -8108,8 +8315,10 @@ function lineStepMcq(id,i,exp,opt){
   const others=SCORE_LINES.filter(x=>x.id!==id).map(x=>x.pts[i]).filter(v=>v!==right);
   const vals=Array.from(new Set([right].concat(others))).sort((a,b)=>a-b);
   const choices=(vals.length>1?vals:[right,right+700].sort((a,b)=>a-b)).map(v=>v+'点');
-  return Object.assign({q:'<b>'+l.name+'</b>のライン。<b>'+l.han[i]+'</b>だと、だいたいいくつ？',
-    choices,a:choices.indexOf(right+'点'),exp,panel:scoreLineTableHTML([id])},opt||{});
+  /* R64 §9: このLessonでは答えは1つに決まっているので「だいたい」と言わない。
+     R64 §12: 点のならんだ表は答えそのものなので、Quizでは出さない(Teachだけ) */
+  return Object.assign({q:'<b>'+l.short+'</b>の<b>'+l.han[i]+'</b>。何点？',
+    choices,a:choices.indexOf(right+'点'),exp},opt||{});
 }
 function lineSeqMcq(id,i,exp,opt){
   // 「1000 → 2000 → ？ → 8000」の穴うめ。図は出さない(答えがそのまま読めてしまうため)
@@ -8122,20 +8331,158 @@ function lineSeqMcq(id,i,exp,opt){
   return Object.assign({q:'よく出る点のならび。<b>？</b>に入るのは？<br>'+seq,
     choices,a:choices.indexOf(right+'点'),exp},opt||{});
 }
+/* ===== 点数問題の牌姿(R64 §6〜§11・§13) =====
+   R63までのSECTION4は「1300のライン。2翻だと、だいたいいくつ？」のような
+   【数字だけ】の問題が中心で、麻雀をしている感じがなかった。
+   R64からは原則として【実際にアガった牌姿】を見せ、
+
+       牌姿 → どんな役がついているか → 合計何翻 → どの系統 → 何点
+
+   という順でつなぐ。第3章で覚えた役・翻・鳴きを、点数のところでも使わせる。
+
+   ここに置くのは牌姿と局面だけで、翻も点も【計算して出す】:
+     翻  = CH3_YAKU_META の翻(鳴いていれば openHan)の合計 ＋ ドラ
+     点  = SCORE_LINES のその系統の、その翻のところ
+   Lesson本文にも、この表にも、点数の数字は1つも書かない。
+   keys は「この牌姿についている役」。本当についているかは ch3YakuList で検算する
+   (tests/r64-check.cjs F ブロック)。表示と実物がズレた牌姿は作らない。 */
+const SCORE_HANDS=[
+  /* 鳴いていない手(1300系になりやすい) */
+  {id:'m1',hand:'123m456p777s345s55p',line:'menzen',keys:['riichi'],
+   ctx:{riichi:true,drawsAfterRiichi:2,win:'ron',winTile:'1m'},
+   why:'リーチだけの1翻。鳴いていない手だね。'},
+  {id:'m2',hand:'234m456p777s345s55p',line:'menzen',keys:['riichi','tanyao'],
+   ctx:{riichi:true,drawsAfterRiichi:2,win:'ron',winTile:'2m'},
+   why:'1・9・字牌が1枚もないのでタンヤオもついて2翻。'},
+  {id:'m3',hand:'234m456p678s345s55p',line:'menzen',keys:['riichi','pinfu','tanyao'],
+   ctx:{riichi:true,drawsAfterRiichi:2,win:'ron',winTile:'2m'},
+   why:'ぜんぶシュンツ・アタマは役牌でない・リャンメン待ち。ピンフもついて3翻。'},
+  {id:'m4',hand:'234m456p678s345s55p',line:'menzen',keys:['riichi','tsumo','pinfu','tanyao'],
+   ctx:{riichi:true,drawsAfterRiichi:3,win:'tsumo',winTile:'2m'},
+   why:'ツモアガリなのでツモも1翻。1翻の役が4つで4翻。'},
+  /* 鳴いた手(1000系になりやすい) */
+  {id:'n1',hand:'234m456p678s99mBBB',line:'naki',keys:['yakuhai'],open:true,
+   ctx:{win:'ron',winTile:'4p',melds:[{type:'pon',tiles:'BBB',called:'B',from:'left'}]},
+   why:'白をポンしているので役牌の1翻。鳴いているからリーチもツモもつかないよ。'},
+  {id:'n2',hand:'234m234p234s567m88p',line:'naki',keys:['tanyao','sanshoku'],open:true,
+   ctx:{win:'ron',winTile:'4s',melds:[{type:'chi',tiles:'234s',called:'4s'}]},
+   why:'タンヤオは鳴いても1翻。三色は食い下がりで1翻。合わせて2翻。'},
+  {id:'n3',hand:'234p678p99pBBBSSS',line:'naki',keys:['yakuhai','honitsu'],open:true,
+   ctx:{win:'ron',winTile:'4p',melds:[{type:'pon',tiles:'BBB',called:'B',from:'left'},
+     {type:'pon',tiles:'SSS',called:'S',from:'right'}]},
+   why:'役牌1翻＋ホンイツは鳴いて2翻（食い下がり）で3翻。'},
+  /* 七対子(独自のライン) */
+  {id:'c1',hand:'11m33m55p77p22s44s9p9p',line:'chiitoi',keys:['chiitoi'],
+   ctx:{win:'ron',winTile:'9p'},
+   why:'トイツが7組。七対子は それだけで2翻からはじまる役だったね。'},
+  {id:'c2',hand:'11m33m55p77p22s44s9p9p',line:'chiitoi',keys:['riichi','chiitoi'],
+   ctx:{riichi:true,drawsAfterRiichi:2,win:'ron',winTile:'9p'},
+   why:'七対子2翻にリーチ1翻を足して3翻。'},
+  {id:'c3',hand:'11m33m55p77p22s44s9p9p',line:'chiitoi',keys:['riichi','tsumo','chiitoi'],
+   ctx:{riichi:true,drawsAfterRiichi:3,win:'tsumo',winTile:'9p'},
+   why:'七対子2翻＋リーチ1翻＋ツモ1翻で4翻。'},
+  /* ツモの払い方を見せる局面(点は問題文の中で与えるので、ここでは系統を使わない) */
+  {id:'tk',hand:'234m456p678s99mBBB',line:null,keys:['yakuhai'],open:true,
+   ctx:{win:'tsumo',winTile:'4p',melds:[{type:'pon',tiles:'BBB',called:'B',from:'left'}]},
+   why:RB_KO+'のツモアガリだよ。'},
+  {id:'to',hand:'234m456p678s345s55p',line:null,keys:['riichi','tsumo','pinfu','tanyao'],
+   ctx:{riichi:true,drawsAfterRiichi:3,win:'tsumo',winTile:'2m',sw:'E',rw:'E'},
+   why:RB_OYA+'のツモアガリだよ。'},
+  /* 一発＋裏ドラの複合例(役は3つ・翻は4) */
+  {id:'ura',hand:'123m456p777s345s55p',line:null,keys:['riichi','ippatsu','tsumo'],dora:1,
+   ctx:{riichi:true,drawsAfterRiichi:1,win:'tsumo',winTile:'1m'},
+   why:'リーチ・一発・ツモの3役で3翻、そこに裏ドラ1枚で4翻。'},
+];
+function scoreHand(id){ return SCORE_HANDS.find(h=>h.id===id)||null; }
+function scoreHandCtx(e){ return ch3Ctx(Object.assign({},e.ctx)); }
+function scoreHandHan(e){
+  return e.keys.reduce((a,k)=>{ const m=CH3_YAKU_META[k];
+    return a+((e.open?m.openHan:m.closedHan)||0); },0)+(e.dora||0);
+}
+function scoreLineHanIndex(line,han){
+  const l=scoreLine(line); return l?l.han.indexOf(han+'翻'):-1;
+}
+function scoreHandPts(e){
+  const l=scoreLine(e.line); if(!l) return null;
+  const i=scoreLineHanIndex(e.line,scoreHandHan(e));
+  return i>=0?l.pts[i]:null;
+}
+/* 問題につける図。【答えそのものは絶対に出さない】(§12):
+   系統は「1300系」という名前だけ。点のならんだ表はTeachのときだけ出す */
+function scoreHandPanel(e,opt){
+  const o=opt||{};
+  let h=yakuRowsHTML(e.keys);
+  if(e.dora) h+='<div class="sh-note">＋ <b>ドラ'+e.dora+'枚</b>（ドラは役ではないけれど翻はふえる）</div>';
+  if(o.han) h+='<div class="sh-sum">合計 <b>'+scoreHandHan(e)+'翻</b></div>';
+  if(o.line&&e.line) h+='<div class="sh-line">この手は <b>'+scoreLine(e.line).short+'</b></div>';
+  return h;
+}
+function scoreHandChoices(e){
+  // まちがいの選択肢は【ほかの系統の同じ段の点】。実際に迷う数字どうしをならべる
+  const right=scoreHandPts(e);
+  const i=scoreLineHanIndex(e.line,scoreHandHan(e));
+  const others=SCORE_LINES.filter(x=>x.id!==e.line)
+    .map(x=>x.pts[i]).filter(v=>v!=null&&v!==right);
+  const vals=Array.from(new Set([right].concat(others))).sort((a,b)=>a-b);
+  return (vals.length>1?vals:[right,right+700].sort((a,b)=>a-b)).map(v=>v+'点');
+}
+/* 【序盤】役も翻も系統も見せたうえで、点だけを答えさせる */
+function scoreHandPointMcq(id,exp,opt){
+  const e=scoreHand(id); if(!e||scoreHandPts(e)==null) return {q:'(定義エラー)',choices:['-','-'],a:-1,exp:exp||''};
+  const choices=scoreHandChoices(e), right=scoreHandPts(e)+'点';
+  return Object.assign({q:'このアガリは<b>何点</b>？',hand:e.hand,ctx3:scoreHandCtx(e),
+    choices,a:choices.indexOf(right),panel:scoreHandPanel(e,{han:true,line:true}),
+    exp:exp||(scoreLine(e.line).short+'の'+scoreHandHan(e)+'翻で'+right+'だよ。'+e.why)},opt||{});
+}
+/* 【中盤】役は見せるが、翻の合計は自分で出す */
+function scoreHandHanMcq(id,exp,opt){
+  const e=scoreHand(id); if(!e) return {q:'(定義エラー)',choices:['-','-'],a:-1,exp:exp||''};
+  const han=scoreHandHan(e), nY=e.keys.length;
+  const wrong=(nY!==han)?nY:han+1;
+  const vals=Array.from(new Set([han,wrong])).sort((a,b)=>a-b).map(v=>v+'翻');
+  return Object.assign({q:'このアガリ、<b>翻の合計</b>は？',hand:e.hand,ctx3:scoreHandCtx(e),
+    choices:vals,a:vals.indexOf(han+'翻'),panel:scoreHandPanel(e,{}),
+    exp:exp||e.why},opt||{});
+}
+/* 【中盤】翻までは見せて、どの系統かを答えさせる(系統は点への橋) */
+function scoreHandLineMcq(id,exp,opt){
+  const e=scoreHand(id); if(!e||!e.line) return {q:'(定義エラー)',choices:['-','-'],a:-1,exp:exp||''};
+  const right=scoreLine(e.line).short;
+  const vals=SCORE_LINES.map(l=>l.short);
+  return Object.assign({q:'このアガリは、どの<b>系統</b>？',hand:e.hand,ctx3:scoreHandCtx(e),
+    choices:vals,a:vals.indexOf(right),panel:scoreHandPanel(e,{han:true}),
+    exp:exp||e.why},opt||{});
+}
+/* 【後半】役を自分で見つけるところからはじめる */
+function scoreHandFind(id,cands,exp,opt){
+  const e=scoreHand(id);
+  if(!e) return {q:'(定義エラー)',choices:['-','-'],a:-1,exp:exp||''};
+  return ch3YakuFind(e.hand,scoreHandCtx(e),cands,exp||e.why,opt);
+}
 /* ツモ払いの問題。正解は TSUMO_KO_SAMPLES / TSUMO_OYA_SAMPLES から作る */
 function tsumoKoMcq(i,who,exp,opt){
   const t=TSUMO_KO_SAMPLES[i]; if(!t) return {q:'(定義エラー)',choices:['-','-'],a:-1,exp:exp||''};
   const right=who==='oya'?t.oya:t.ko, other=who==='oya'?t.ko:t.oya;
   const vals=[right,other].sort((a,b)=>a-b).map(v=>v+'点');
-  return Object.assign({q:RB_KO+'がツモで「<b>'+t.ko+'・'+t.oya+'</b>」。'
+  /* R64 §11: 数字だけで聞かず、実際のアガリ牌姿といっしょに見せる。
+     opt.hand に SCORE_HANDS のidを渡すと、その牌姿が盤面として出る */
+  const e=(opt&&opt.hand)?scoreHand(opt.hand):null;
+  const base={q:RB_KO+'のツモアガリで「<b>'+t.ko+'・'+t.oya+'</b>」。'
       +(who==='oya'?RB_OYA:RB_KO+'1人')+'が払うのは？',
-    choices:vals,a:vals.indexOf(right+'点'),exp,panel:tsumoPayHTML(t.ko,t.oya)},opt||{});
+    choices:vals,a:vals.indexOf(right+'点'),exp,panel:tsumoPayHTML(t.ko,t.oya)};
+  if(e){ base.hand=e.hand; base.ctx3=scoreHandCtx(e); }
+  const o=Object.assign({},opt||{}); delete o.hand;
+  return Object.assign(base,o);
 }
 function tsumoOyaMcq(i,exp,opt){
   const v=TSUMO_OYA_SAMPLES[i]; if(v==null) return {q:'(定義エラー)',choices:['-','-'],a:-1,exp:exp||''};
   const vals=[v,v*3].sort((a,b)=>a-b).map(x=>x+'点');
-  return Object.assign({q:RB_OYA+'がツモで「<b>'+v+'点オール</b>」。'+RB_KO+'1人が払うのは？',
-    choices:vals,a:vals.indexOf(v+'点'),exp,panel:tsumoPayHTML(v,null)},opt||{});
+  const e=(opt&&opt.hand)?scoreHand(opt.hand):null;
+  const base={q:RB_OYA+'のツモアガリで「<b>'+v+'点オール</b>」。'+RB_KO+'1人が払うのは？',
+    choices:vals,a:vals.indexOf(v+'点'),exp,panel:tsumoPayHTML(v,null)};
+  if(e){ base.hand=e.hand; base.ctx3=scoreHandCtx(e); }
+  const o=Object.assign({},opt||{}); delete o.hand;
+  return Object.assign(base,o);
 }
 /* ===== ツモの払い方(R62 §14・§15) =====
    「1000 / 2000」という数字だけを暗記させない。だれが何点払うのかが見えるようにする。
@@ -8204,7 +8551,8 @@ function ch3YakuList(tiles,ctx){
      手牌からは判定できない。ctxのフラグで表す(R62で地和・四槓子を追加) */
   if(ctx.tenhou) ym.push('tenhou');
   if(ctx.chiihou) ym.push('chiihou');
-  if(ctx.suukantsu) ym.push('suukantsu');
+  /* 四槓子(R64): 卓の上に槓子が4組あること。フラグでは成立させない */
+  if(ch3KanCount(ctx)>=4) ym.push('suukantsu');
   /* ym に入っている【個数】がそのまま役満の倍数になる(R62で確定した仕様)。
      役満2種複合=ダブル役満 / 3種複合=3倍役満。
      国士十三面・四暗刻単騎・純正九蓮・大四喜のような「特殊な形や待ち」は
@@ -8213,10 +8561,10 @@ function ch3YakuList(tiles,ctx){
   const out=[];
   if(ctx.dblRiichi&&menzen) out.push('dblriichi');
   else if(ctx.riichi&&menzen) out.push('riichi');
-  /* 一発(R63): リーチしていることが【前提】。リーチなしでは絶対につかない。
-     リーチのあと、つぎの自分のツモまでにアガると1翻。
-     途中でだれかがチー・ポン・カンをすると消える(=その局面では ctx.ippatsu を立てない) */
-  if(ctx.ippatsu&&menzen&&(ctx.riichi||ctx.dblRiichi)) out.push('ippatsu');
+  /* 一発(R64で正確化): 「リーチ済み」というフラグだけでは判定しない。
+     ch3IppatsuOK が【リーチ後に自分のツモが何回来たか】【その間に鳴きが入ったか】
+     【ロンかツモか】の3つから決める。くわしくは ch3IppatsuOK のコメント。 */
+  if(menzen&&ch3IppatsuOK(ctx)) out.push('ippatsu');
   if(ctx.win==='tsumo'&&menzen) out.push('tsumo');
   if(ctx.haitei&&ctx.win==='tsumo') out.push('haitei');
   if(ctx.houtei&&ctx.win==='ron') out.push('houtei');
@@ -8227,6 +8575,8 @@ function ch3YakuList(tiles,ctx){
   if(si.nSuits===1&&si.honors) out.push('honitsu');
   if(si.nSuits===1&&!si.honors&&si.nSuits===1&&tiles.every(t=>t.length===2)) out.push('chinitsu');
   if(std&&ch3HasToitoi(tiles,ctx)) out.push('toitoi');
+  /* 三槓子(R64): 槓子がちょうど3組。4組は四槓子(役満)なので、ここには来ない */
+  if(std&&ch3KanCount(ctx)===3) out.push('sankantsu');
   const rp=std&&ch3HasRyanpeikou(tiles,ctx);
   if(chii&&!rp) out.push('chiitoi');                       // 二盃口に取れる形は二盃口を優先(七対子と複合しない)
   if(rp) out.push('ryanpeikou');
@@ -9446,8 +9796,26 @@ function ch3CtxHTML(c,q){
   if(c.win==='tsumo') chips.push('<span class="ch3-chip">ツモでアガった</span>');
   if(c.win==='ron') chips.push('<span class="ch3-chip">ロンでアガった</span>');
   if(c.winTile) chips.push('<span class="ch3-chip">アガリ牌：'+tileLabel(c.winTile)+'</span>');
+  /* R64: 一発がつくかどうかを決める状況を【画面に出す】。
+     内部フラグだけで正解が決まる問題を作らないための共通表示。
+     ここに出るのは ch3IppatsuOK が見ている状態そのもの(時間と鳴き)。 */
+  ch3RiichiTimeChips(c).forEach(x=>chips.push(x));
   if(c.note) chips.push('<span class="ch3-chip">'+c.note+'</span>');
   return river+(chips.length?'<div class="ch3-ctx">'+chips.join('')+'</div>':'');
+}
+function ch3RiichiTimeChips(c){
+  // リーチしている局面でだけ、「リーチ後に自分のツモが何回来たか」「鳴きが入ったか」を出す
+  if(!c||!(c.riichi||c.dblRiichi)) return [];
+  const out=[], d=c.drawsAfterRiichi;
+  if(typeof d==='number'){
+    if(d===0) out.push('<span class="ch3-chip time">リーチ後、自分のツモはまだ<b>0回</b></span>');
+    else if(d===1) out.push('<span class="ch3-chip time">リーチ後、<b>最初のツモ</b></span>');
+    else out.push('<span class="ch3-chip time">リーチ後、自分のツモは<b>'+d+'回目</b></span>');
+  }
+  out.push(c.nakiAfterRiichi
+    ?'<span class="ch3-chip warn">リーチのあとに<b>鳴きが入った</b></span>'
+    :'<span class="ch3-chip time">リーチのあと、<b>鳴きは入っていない</b></span>');
+  return out;
 }
 /* ---- 第3章 ロン/ツモ盤面(UI自体を教材にする) ----
    ロン: 「相手の捨て牌」に今切られた牌(=アガリ牌)を置き、自分の手牌はロン前の13枚で見せる。
@@ -9474,13 +9842,17 @@ function ch3HandSplit(q){
   // 判定用の手牌(鳴いた組の牌もふくむ)を「手の中の牌」と「鳴いた組」に分ける。鳴いた組がなければnull
   const c=q.ctx3||{};
   if(!q.hand||!Array.isArray(c.melds)||!c.melds.length) return null;
-  const concealed=removeTiles(sortTiles(parseHand(q.hand)),meldTilesAll(c.melds));
+  /* R64: カンは「4枚で1メンツ」。判定用の14枚にはコーツ3枚として入っているので、
+     手の中から取りのぞくのも3枚。4枚目は副露エリアの表示だけが持つ */
+  const concealed=removeTiles(sortTiles(parseHand(q.hand)),
+    c.melds.reduce((a,m)=>a.concat(meldHandTiles(m)),[]));
   if(!concealed) return null;
   return {concealed,melds:c.melds};
 }
 function ch3OpenHandHTML(q){
   const sp=ch3HandSplit(q); if(!sp) return null;
-  return '<div class="tc-lab">あなたの手牌（'+sp.concealed.length+'枚）＋鳴いた組</div>'
+  const sep=meldAreaNeeded(sp.melds);     // 副露を下の段に出すときは、見出しは副露エリア側が持つ
+  return '<div class="tc-lab">あなたの手牌（'+sp.concealed.length+'枚）'+(sep?'':'＋鳴いた組')+'</div>'
     +openHandHTML(sp.concealed,sp.melds);
 }
 /* ===== 第3章の盤面(R63で上下の並びを直した) =====
@@ -9502,13 +9874,21 @@ function ch3MyRiverTiles(q){
   const c=q.ctx3||{};
   if(!c.riichi&&!c.dblRiichi) return null;
   const wt=c.winTile||null;
-  return ch3RiichiRiver(q.hand||null,wt,6);
+  /* R64: リーチ宣言牌のうしろに【リーチ後に自分が捨てた牌】がならぶ。
+     ここが0枚なら「まだ自分のツモが来ていない(＝一発の有効期間)」が目で分かる。
+     河の長さは「宣言までの牌＋宣言牌＋リーチ後に捨てた牌」。 */
+  const after=ch3DiscardsAfterRiichi(c);
+  const head=c.dblRiichi?1:4;                     // 宣言牌までの枚数(ダブルリーチは1枚目が宣言牌)
+  return ch3RiichiRiver(q.hand||null,wt,head+after);
+}
+function ch3MyRiverSideIdx(q){
+  // 横向き=リーチを宣言したときに切った牌の位置。ダブルリーチは1枚目
+  return (q.ctx3&&q.ctx3.dblRiichi)?0:3;
 }
 function ch3MyRiverHTML(q){
   const t=ch3MyRiverTiles(q); if(!t||!t.length) return '';
   const c=q.ctx3||{};
-  // 横向き=リーチを宣言したときに切った牌。ダブルリーチは1枚目
-  return riichiRiverHTML(t,c.dblRiichi?0:3,
+  return riichiRiverHTML(t,ch3MyRiverSideIdx(q),
     {head:'あなたの捨て牌',lab:c.dblRiichi?'さいしょの捨て牌でリーチ！':'リーチ！'});
 }
 function ch3BoardHTML(q){
@@ -9538,11 +9918,11 @@ function ch3BoardHTML(q){
     let h='<div class="ch3-board">';
     if(c.win==='ron'){
       h+=oppRiver()+myRivHTML
-        +'<div class="tc-lab">あなたの手牌（'+conc.length+'枚）＋鳴いた組</div>'
+        +'<div class="tc-lab">あなたの手牌（'+conc.length+'枚）'+(meldAreaNeeded(sp.melds)?'':'＋鳴いた組')+'</div>'
         +openHandHTML(conc,sp.melds);
     }else{
       h+=myRivHTML
-        +'<div class="tc-lab">あなたの手牌（'+conc.length+'枚）＋ツモった牌＋鳴いた組</div>'
+        +'<div class="tc-lab">あなたの手牌（'+conc.length+'枚）＋ツモった牌'+(meldAreaNeeded(sp.melds)?'':'＋鳴いた組')+'</div>'
         +openHandHTML(conc,sp.melds,{cls:'ch3-tsumo-row',
           drawHTML:'<span class="ch3-tsumo-gap"></span><span class="ch3-now">'+tileHTML(c.winTile)+'<span class="ch3-now-lab">ツモ</span></span>'});
     }
@@ -9564,9 +9944,51 @@ function ch3BoardHTML(q){
   return html+'</div>';
 }
 /* ---- 第3章 ビルダー(正解は必ずch3YakuList/ch3IsYakuhaiTile等で算出) ---- */
+/* ===== 一発の成立条件(R64) =====
+   R63では ctx.ippatsu という1つのフラグで決めていたが、それでは
+   「リーチ済みかどうか」しか表せず、実際の一発の条件になっていなかった。
+
+   一発が有効なのは【リーチ宣言の直後から、自分のつぎのツモまで】のあいだ。
+
+     ・ロンでアガる  … リーチ後、自分のツモがまだ1回も来ていない(drawsAfterRiichi===0)
+     ・ツモでアガる  … リーチ後の【最初の】自分のツモ(drawsAfterRiichi===1)
+     ・最初のツモを通過した(2回目以降)  … 一発は消えている
+     ・その間に一発を消す鳴きが入った(nakiAfterRiichi)  … 一発は消えている
+     ・そもそもリーチしていない  … 一発はつかない
+
+   ctx に持たせる状態(これが唯一の出どころ。画面にもこの状態を書き出す):
+     riichi / dblRiichi … リーチを宣言したか
+     drawsAfterRiichi   … リーチ宣言のあと、自分のツモが何回来たか(アガリのツモもふくむ)
+     nakiAfterRiichi    … 一発が有効なあいだに、一発を消す鳴きが入ったか
+     win                … 'ron' | 'tsumo'
+   drawsAfterRiichi を書いていない局面は「いつアガったか不明」なので一発にしない。 */
+function ch3IppatsuOK(ctx){
+  if(!ctx) return false;
+  if(!(ctx.riichi||ctx.dblRiichi)) return false;        // リーチが前提
+  if(ctx.nakiAfterRiichi) return false;                 // 有効期間中の鳴きで消える
+  const d=ctx.drawsAfterRiichi;
+  if(typeof d!=='number'||d<0) return false;            // いつアガったか不明
+  if(ctx.win==='ron')   return d===0;                   // 最初のツモが来る前のロン
+  if(ctx.win==='tsumo') return d===1;                   // リーチ後 最初のツモでのツモアガリ
+  return false;
+}
+/* リーチ後に自分が捨てた牌の枚数。リーチ宣言牌のあとに何枚ならぶかを決める。
+   ツモアガリの局面では、アガった牌は捨てていないので1枚ぶん少ない */
+function ch3DiscardsAfterRiichi(ctx){
+  if(!ctx||!(ctx.riichi||ctx.dblRiichi)) return 0;
+  const d=ctx.drawsAfterRiichi;
+  if(typeof d!=='number'||d<=0) return 0;
+  return Math.max(0,ctx.win==='tsumo'?d-1:d);
+}
 function ch3Ctx(o){
   const c=Object.assign({menzen:true},o||{});
-  if(Array.isArray(c.melds)&&c.melds.length) c.menzen=false;   // 鳴いた組がある=鳴いている(表示と判定を一致させる)
+  /* 鳴いた組がある=鳴いている(表示と判定を一致させる)。
+     ただし暗槓は自分の手の中だけで作るカンなので【鳴いたことにならない】(第1章M1-2で既習)。
+     暗槓だけの手は門前のまま＝リーチも一発もツモもつく。 */
+  if(Array.isArray(c.melds)&&c.melds.some(m=>!meldIsAnkan(m))) c.menzen=false;
+  /* R64: 一発は「リーチ済みフラグ」では決めない(ch3IppatsuOK を見る)。
+     古い書き方の ctx.ippatsu がのこっていても判定には絶対に使わせない */
+  if('ippatsu' in c) delete c.ippatsu;
   return c;
 }
 function ch3ListOf(handStr,ctx3){ return ch3YakuList(sortTiles(parseHand(handStr)),ctx3); }
@@ -9611,7 +10033,7 @@ function yakuSumMcq(keys,opt){
   const q='<b>'+names+'</b>'+(o.dora?'＋<b>ドラ'+o.dora+'枚</b>':'')
     +'でアガった'+(o.open?'（<b>鳴いている</b>）':'（鳴いていない）')+'。翻の合計は？';
   return Object.assign({q,choices,a:choices.indexOf(han+'翻'),exp:o.exp,
-    panel:keys.map(k=>yakuBadgeHTML(k)).join('')},o.opt||{});
+    panel:yakuRowsHTML(keys)},o.opt||{});
 }
 function tierOfHanMcq(han,exp,opt){
   // 「◯翻は、どの大きさ？」。正解は tierOfHan が決める(満貫〜三倍満の表を手書きしない)
@@ -10646,7 +11068,7 @@ const CH3_LESSONS={
          翻数はすべて yakuHanText(=CH3_YAKU_META)から出す。数字をここに書かない */
       ch1Teach('翻も足し算するよ。リーチが'+yakuHanText('riichi')+'、ツモが'+yakuHanText('tsumo')
         +'。だから<b>2役</b>で<b>合計2翻</b>だね。',
-        {tlab:'翻を足す',panel:yakuBadgeHTML('riichi')+yakuBadgeHTML('tsumo')}),
+        {tlab:'翻を足す',panel:yakuRowsHTML(['riichi','tsumo'])}),
       ch1Teach('でも<b>「2役だから2翻」ではない</b>よ。1つで2翻・3翻の役もあるから、<b>役の数</b>と<b>翻の合計</b>はべつべつに見てね。くわしくは第3章のさいごのテーマで！',
         {tlab:'ここが大事！'}),
       {q:'「役が2つある」とき、翻の合計はいつも2翻？',choices:['かぎらない（役ごとに翻がちがう）','いつも2翻'],a:0,
@@ -10683,31 +11105,59 @@ const CH3_LESSONS={
        細かい例外(一発目にカンされたら等)はここでは広げない。
      ・既存ユーザーにも新しい1マスとして届くよう、テーマの【末尾】に足している。 */
   ya1_6(){
+    /* R64: 一発の成立条件を正確にした。
+       有効なのは「リーチ宣言 → 自分のつぎのツモ」まで。画面には
+       ・あなたの捨て牌(リーチ宣言牌のうしろに何枚ならぶか)
+       ・リーチ後のツモ回数のチップ / 鳴きが入ったかのチップ
+       が出るので、内部フラグではなく【見て】判断できる。 */
+    const H='2m3m4m4p5p6p7s8s9s3s5s4s9p9p';
     return [
       ch1Teach('リーチには、うれしい<b>おまけの役</b>がついてくることがあるよ。その名も<span class="term-chip">一発（イッパツ）</span>！',
-        {tlab:'一発',panel:yakuBadgeHTML('ippatsu')}),
-      ch1Teach('一発は<b>リーチしていることが前提</b>だよ。リーチしたあと、<b>つぎの自分のツモまで</b>にアガれたら、'
-        +yakuHanText('ippatsu')+'おまけがつくんだ。',
+        {tlab:'一発',panel:yakuRowsHTML(['ippatsu'])}),
+      ch1Teach('一発は<b>リーチしていることが前提</b>だよ。そのうえで、一発がつくのは'
+        +'<b>リーチしてから、自分のつぎのツモまで</b>のあいだだけ。とても短いチャンスなんだ。',
         {tlab:'リーチ直後のチャンス'}),
-      ch3HasMcq('ippatsu','2m3m4m4p5p6p7s8s9s3s5s4s9p9p',
-        ch3Ctx({riichi:true,ippatsu:true,win:'ron',winTile:'4s'}),
-        'リーチした直後にアガれた！一発がついて役が1つふえたよ。'),
-      ch3HasMcq('ippatsu','2m3m4m4p5p6p7s8s9s3s5s4s9p9p',
-        ch3Ctx({ippatsu:true,win:'ron',winTile:'4s'}),
+      ch1Teach('くわしく見よう。一発がつくのは この2つだけだよ。'
+        +'<br>① <b>リーチ後、自分のツモが来る前にロン</b>'
+        +'<br>② <b>リーチ後、最初のツモでツモアガリ</b>',
+        {tlab:'一発がつく2つの形'}),
+      ch3HasMcq('ippatsu',H,
+        ch3Ctx({riichi:true,drawsAfterRiichi:0,win:'ron',winTile:'4s'}),
+        'リーチしたあと、自分のツモが来る前にロン！これが①の形だよ。捨て牌を見ると、'
+        +'リーチの横向き牌のうしろに1枚もならんでいないね。'),
+      ch3HasMcq('ippatsu',H,
+        ch3Ctx({riichi:true,drawsAfterRiichi:1,win:'tsumo',winTile:'4s'}),
+        'リーチ後の<b>最初のツモ</b>でツモアガリ。これが②の形だよ。'),
+      ch1Teach('では、つかない形。<b>最初のツモでアガれずに通りすぎた</b>ら、そこで一発は消えるよ。'
+        +'2回目のツモでアガっても、一発はもうつかないんだ。',
+        {tlab:'通りすぎたら消える'}),
+      ch3HasMcq('ippatsu',H,
+        ch3Ctx({riichi:true,drawsAfterRiichi:3,win:'tsumo',winTile:'4s'}),
+        'リーチ後3回目のツモだね。捨て牌も、リーチの横向き牌のうしろに2枚ならんでいるよ。'
+        +'最初のツモを通りすぎたので一発は消えている。（リーチとツモの役はのこるよ！）'),
+      ch3HasMcq('ippatsu',H,
+        ch3Ctx({riichi:true,drawsAfterRiichi:2,win:'ron',winTile:'4s'}),
+        'リーチのあと、自分のツモがもう2回来ているね。一発の時間はとっくに終わっているよ。'),
+      ch1Teach('もうひとつ。一発が有効なあいだに<b>だれかがチー・ポン・カンをすると一発は消える</b>よ。'
+        +'「リーチ直後のチャンス。通りすぎても、鳴きが入っても消える」とおぼえよう。',
+        {tlab:'鳴きが入っても消える'}),
+      ch3HasMcq('ippatsu',H,
+        ch3Ctx({riichi:true,drawsAfterRiichi:0,nakiAfterRiichi:true,win:'ron',winTile:'4s'}),
+        'まだ自分のツモは来ていないけれど、途中で鳴きが入ったから一発は消えてしまったよ。'
+        +'（リーチの役はのこるから、アガれることは変わらないよ！）'),
+      ch3HasMcq('ippatsu',H,
+        ch3Ctx({drawsAfterRiichi:0,win:'ron',winTile:'4s'}),
         'リーチしていないね。<b>一発はリーチが前提</b>だから、リーチなしではつかないんだ。'),
-      ch1Teach('気をつけて！リーチしたあと、アガるまえに<b>だれかがチー・ポン・カンをすると一発は消える</b>よ。'
-        +'「リーチ直後のチャンス。途中で鳴きが入ると消える」とおぼえよう。',
-        {tlab:'鳴きが入ると消える'}),
-      ch3HasMcq('ippatsu','2m3m4m4p5p6p7s8s9s3s5s4s9p9p',
-        ch3Ctx({riichi:true,win:'ron',winTile:'4s',note:'リーチしたあと、ほかの人がポンした'}),
-        'リーチしていても、途中で鳴きが入ったから一発は消えてしまったよ。(リーチの役はのこるから、アガれることは変わらないよ！)'),
-      ch3YakuFind('2m3m4m4p5p6p7s8s9s3s5s4s9p9p',
-        ch3Ctx({riichi:true,ippatsu:true,win:'tsumo',winTile:'4s'}),
+      ch3YakuFind(H,
+        ch3Ctx({riichi:true,drawsAfterRiichi:1,win:'tsumo',winTile:'4s'}),
         ['riichi','ippatsu','tsumo','pinfu'],
         'リーチ＋一発＋ツモで3役！リーチはこうやって重なっていくんだ。'),
       {q:'<b>一発</b>がつくのは、どんなとき？',
-       choices:['リーチしたあと、つぎの自分のツモまでにアガったとき','リーチしていなくても早くアガったとき'],a:0,
-       exp:'一発はリーチが前提。リーチ直後のチャンスだよ。'},
+       choices:['リーチしたあと、自分のつぎのツモまでにアガったとき','リーチしていれば、いつアガってもつく'],a:0,
+       exp:'一発はリーチが前提。しかも<b>リーチ直後のみじかいあいだ</b>だけのチャンスだよ。'},
+      {q:'リーチしたあと、最初のツモでアガれなかった。一発はどうなる？',
+       choices:['消える','まだのこっている'],a:0,
+       exp:'最初のツモを通りすぎたら、そこで一発は終わり。つぎにアガっても一発はつかないよ。'},
       ch1Teach('🎉 <b>一発もマスター！</b>リーチは「いちばん覚えやすい役」なのに、一発やツモまで重なって'
         +'ぐんと大きくなることがあるんだ。つぎは、3枚そろえるだけで役になる牌のはなしだよ！',
         {tlab:'つぎへ！'}),
@@ -11097,7 +11547,7 @@ const CH3_LESSONS={
         'マンズの4枚がじゃまもの。ぜんぶソーズにかわればチンイツだ！'),
       {q:'ホンイツとチンイツ、どちらも<b>鳴いてもつく</b>？',choices:['つく（ただし翻が1つ下がる）','つかない'],a:0,
        exp:'どちらも鳴いてOK。でも食い下がりで翻は1つ下がるよ。',
-       panel:yakuBadgeHTML('honitsu')+yakuBadgeHTML('chinitsu')},
+       panel:yakuRowsHTML(['honitsu','chinitsu'])},
     ]);
     return [
       ch1Teach('一色の役、<b>まとめ</b>だよ！',{tlab:'まとめ'}),
@@ -11171,10 +11621,10 @@ const CH3_LESSONS={
          (リーチ=1翻 + 七対子=2翻 → 2役なのに3翻)。数字はMETAから出す */
       ch1Teach('ここで大事なこと！リーチして七対子でアガると…役は<b>2つ</b>でも、翻は'
         +yakuHanText('riichi')+'＋'+yakuHanText('chiitoi')+'＝<b>合計3翻</b>。<b>2役だけど2翻じゃない</b>んだ！',
-        {tlab:'2役だけど3翻',panel:yakuBadgeHTML('riichi')+yakuBadgeHTML('chiitoi')}),
+        {tlab:'2役だけど3翻',panel:yakuRowsHTML(['riichi','chiitoi'])}),
       {q:'リーチ＋七対子でアガった。翻の合計は？',choices:['3翻','2翻'],a:0,
        exp:'リーチ'+yakuHanText('riichi')+'と七対子'+yakuHanText('chiitoi')+'を足して3翻。役の数（2役）とはべつの数だよ。',
-       panel:yakuBadgeHTML('riichi')+yakuBadgeHTML('chiitoi')},
+       panel:yakuRowsHTML(['riichi','chiitoi'])},
       ch1Teach('注意が2つ。<b>①おなじ牌4枚を「2組」には数えられない ②ポンやチーをしたら作れない</b>(トイツがくずれるからね)。',
         {tlab:'七対子の注意'}),
       ch3HasMcq('chiitoi','1m1m3m3m5p5p7p7p9s9s1s1sEE',ch3Ctx({}),
@@ -11772,10 +12222,11 @@ const CH3_LESSONS={
          一発とツモは【役】、裏ドラは【役ではない】という区別は崩さない */
       ch1Teach('さいごに、リーチの強さを見てみよう。<b>リーチ</b>して、<b>一発</b>で、<b>ツモ</b>アガリ。'
         +'そのうえ<b>裏ドラが1枚</b>のっていたら…？',
-        {tlab:'リーチの強さ',panel:yakuBadgeHTML('riichi')+yakuBadgeHTML('ippatsu')+yakuBadgeHTML('tsumo')}),
-      yakuSumMcq(['riichi','ippatsu','tsumo'],{dora:1,
-        exp:'リーチ'+yakuHanText('riichi')+'＋一発'+yakuHanText('ippatsu')+'＋ツモ'+yakuHanText('tsumo')
-          +'＋裏ドラ1枚で<b>合計4翻</b>！リーチひとつから、ここまで大きくなるんだ。'}),
+        {tlab:'リーチの強さ',panel:yakuRowsHTML(['riichi','ippatsu','tsumo'])}),
+      /* R64: 文字だけの足し算ではなく、実際のアガリ牌姿で見せる。
+         リーチ後の最初のツモ(drawsAfterRiichi:1)なので、画面を見れば一発が成立することも分かる */
+      scoreHandHanMcq('ura','リーチ'+yakuHanText('riichi')+'＋一発'+yakuHanText('ippatsu')
+        +'＋ツモ'+yakuHanText('tsumo')+'＋裏ドラ1枚で<b>合計4翻</b>！リーチひとつから、ここまで大きくなるんだ。'),
       {q:'さっきの手で、<b>役</b>はいくつ？',choices:['3つ（リーチ・一発・ツモ）','4つ（裏ドラも役）'],a:0,
        exp:'役はリーチ・一発・ツモの3つ。裏ドラは役ではなく、翻だけをふやすおまけだったね。'},
       ch1Teach('🎉 <b>ドラマスター完全版！</b> 表ドラ・赤ドラ・カンドラ・裏ドラ、ぜんぶ'
@@ -11899,6 +12350,50 @@ const CH3_LESSONS={
         {tlab:'カンのまとめ'}),
     ];
   },
+  /* ★M1-7 カンでできる役(三槓子・四槓子) ===== R64で追加
+     R63まで「カンを4回する」という文章だけで四槓子を出していて、牌姿に槓子が1つもなかった。
+     ここでは必ず【実際の槓子】を見せる。カンを学んだ直後に置くので用語の導入順も崩れない。
+     ・三槓子 2翻・鳴いてもOK・鳴いても2翻(食い下がりなし)
+     ・四槓子 役満
+     ・判定はどちらも ctx.melds の中の【槓子の数】。画面に見えていないと成立しない。
+     ・既存ユーザーにも新しい1マスとして届くよう、テーマの末尾に足している(TSUMOPPY_TERMS §40) */
+  km1_7(){
+    const K3=SANKANTSU_MELDS, K4=SUUKANTSU_MELDS;
+    const H3=SANKANTSU_HAND, H4=SUUKANTSU_HAND;
+    return [
+      ch1Teach('カンを覚えたところで、<b>カンでできる役</b>を2つ見ておこう。どちらも'
+        +'<b>卓の上に槓子がならんでいること</b>が条件だよ。',
+        {tlab:'カンの役'}),
+      ch1Teach('まずは<span class="term-chip">三槓子（サンカンツ）</span>。おなじ局で<b>カンを3回</b>して、'
+        +'槓子が3組そろったら成立する役だよ。',
+        {tlab:'三槓子',panel:yakuRowsHTML(['sankantsu'])+fuuroAreaHTML(K3,{lab:'槓子が3組'})}),
+      ch1Teach('三槓子は<b>鳴いてもOK</b>。しかも<b>食い下がりがない</b>から、鳴いても'
+        +yakuHanText('sankantsu',true)+'のままだよ。暗槓でも大明槓でも加槓でも、3組そろえばOK！',
+        {tlab:'鳴いても2翻',panel:yakuRowsHTML(['sankantsu'])}),
+      ch3HasMcq('sankantsu',H3,ch3Ctx({win:'ron',winTile:'6m',melds:K3}),
+        '槓子が3組ならんでいるね。三槓子の成立だ！'),
+      ch3HasMcq('sankantsu','1m1m1m4m5m6m2p2p2p3s4s5s9s9s',
+        ch3Ctx({win:'ron',winTile:'6m',melds:[K3[0],K3[1]]}),
+        '槓子は2組だけ。三槓子は<b>3組</b>そろわないと成立しないよ。'),
+      yakuHanMcq('sankantsu',true,'三槓子は食い下がりなし。鳴いても'+yakuHanText('sankantsu',true)+'だよ。'),
+      ch1Teach('そして…おなじ局で<b>カンを4回</b>！槓子が4組ならんだら、役満の'
+        +'<span class="term-chip">四槓子（スーカンツ）</span>だよ。',
+        {tlab:'四槓子',panel:yakuRowsHTML(['suukantsu'])+fuuroAreaHTML(K4,{lab:'槓子が4組'})}),
+      ch1Teach('四槓子のアガリ形を見てみよう。<b>槓子4組＋アタマ</b>。'
+        +'手の中にのこるのはアタマの牌だけだから、<b>最後の1枚を待つ形（単騎待ち）</b>になるんだ。',
+        {tlab:'槓子4組＋アタマ',panel:yakuRowsHTML(['suukantsu'])}),
+      ch3HasMcq('suukantsu',H4,ch3Ctx({win:'tsumo',winTile:'9s',melds:K4}),
+        '槓子が4組！役満・四槓子だよ。手の中はアタマの2枚だけだね。'),
+      ch3HasMcq('suukantsu',H3,ch3Ctx({win:'ron',winTile:'6m',melds:K3}),
+        'こちらは槓子3組なので三槓子。四槓子は<b>4組</b>そろったときだけだよ。'),
+      {q:'<b>三槓子</b>と<b>四槓子</b>のちがいは？',
+       choices:['槓子が3組か4組か','カンの種類がちがう'],a:0,
+       exp:'数のちがいだよ。3組で三槓子（'+yakuHanText('sankantsu')+'）、4組で四槓子（役満）。'},
+      ch1Teach('🎉 <b>カンの役もマスター！</b> カンは「ドラがふえる」だけじゃなく、'
+        +'そろえば<b>役そのもの</b>にもなるんだね。',
+        {tlab:'カンの役まとめ'}),
+    ];
+  },
   /* ===== S「点の大きさ」(R61 §10〜§15) =====
      ねらい: 役の翻を足して、それが【どのくらいの点になるか】をつかむ。
      ・教えるのは満貫から上だけ。1〜4翻は符でも変わるので点を出さない(§11)。
@@ -11919,7 +12414,7 @@ const CH3_LESSONS={
       ch1Teach('手がかりは第3章でおぼえた<b>翻</b>。役をおぼえるとき、いっしょに<b>何翻か</b>も見てきたね。その翻が<b>点の大きさ</b>になるんだ。',
         {tlab:'翻と点'}),
       ch1Teach('役が2つ以上あるときは、<b>翻を足し算</b>するよ。ここでだいじなのは…<b>役の数と翻の合計はちがう</b>ということ！',
-        {tlab:'翻は足し算',panel:yakuBadgeHTML('riichi')+yakuBadgeHTML('chiitoi')}),
+        {tlab:'翻は足し算',panel:yakuRowsHTML(['riichi','chiitoi'])}),
       yakuSumMcq(['riichi','chiitoi'],
         {exp:'役は2つでも、'+yakuHanText('riichi')+'＋'+yakuHanText('chiitoi')+'＝3翻。「2役だから2翻」ではないよ！'}),
       yakuSumMcq(['chinitsu'],
@@ -11930,6 +12425,8 @@ const CH3_LESSONS={
         {tlab:'同じになることもある'}),
       yakuSumMcq(['riichi','tsumo','pinfu','tanyao'],
         {exp:'ぜんぶ1翻の役だから、4役で4翻。これは たまたま同じになった例だよ。'}),
+      /* R64 §13: 文字の足し算だけで終わらせず、実物の牌姿でも1問やる */
+      scoreHandHanMcq('m3'),
       {q:'「役が3つある」とき、翻の合計は？',choices:['足し算してみないと分からない','いつも3翻'],a:0,
        exp:'役ごとに翻がちがうから、かならず足し算！'},
     ];
@@ -11950,6 +12447,8 @@ const CH3_LESSONS={
        exp:'翻がいくつあっても、役がなければアガれない。ドラは役ではないからね。'},
       ch1Teach('鳴いたときは<b>食い下がり</b>も忘れずに！鳴いた役は、下がったあとの翻で足し算するよ。',
         {tlab:'鳴いたときは食い下がり',panel:yakuBadgeHTML('honitsu')}),
+      /* R64 §13: 食い下がりも実物の牌姿で1問 */
+      scoreHandHanMcq('n3'),
       yakuSumMcq(['honitsu','tanyao'],{open:true,
         exp:'鳴いているから、ホンイツは食い下がりで'+yakuHanText('honitsu',true)
           +'。タンヤオは下がらないので'+yakuHanText('tanyao',true)+'。合計3翻だよ。'}),
@@ -12076,6 +12575,12 @@ const CH3_LESSONS={
       lineSeqMcq('naki',2,l.han[2]+'は'+l.pts[2]+'点。ここだけ数字がはんぱに見えるけど、よく出る形だよ。'),
       lineSeqMcq('naki',3,l.han[3]+'で'+l.pts[3]+'点＝満貫。'
         +'ツモッピィは<b>切り上げ満貫あり</b>なので、'+l.han[3]+'でも満貫までとどくんだ。'),
+      /* R64 §10: 系統を数字の表だけで覚えさせない。実際のアガリ牌姿につなぐ */
+      ch1Teach('実際の手で見てみよう。鳴いて役がついた手だよ。'
+        +'役の翻を足して、'+l.name+'系の表のその翻のところを見ればいいんだ。',
+        {tlab:'牌姿で見る'}),
+      scoreHandPointMcq('n1'),
+      scoreHandPointMcq('n3'),
       /* R62 §11: 断定しない。「必ず1000系」ではなく「なりやすい」 */
       {q:'鳴いている手は、<b>かならず</b>'+l.name+'系になる？',
        choices:['かぎらない（'+l.name+'系に<b>なりやすい</b>だけ）','かならずなる'],a:0,
@@ -12090,6 +12595,11 @@ const CH3_LESSONS={
       lineStepMcq('menzen',1,l.name+'系の'+l.han[1]+'は'+l.pts[1]+'点。'+n.name+'系の'+n.pts[1]+'点とまぎらわしいから気をつけて！'),
       lineSeqMcq('menzen',2,l.han[2]+'は'+l.pts[2]+'点。'+n.name+'系の'+n.pts[2]+'点とくらべてみよう。'),
       lineSeqMcq('menzen',3,'こちらも'+l.han[3]+'で満貫の'+l.pts[3]+'点にとどくよ。'),
+      /* R64 §10: 鳴いていない手の牌姿で、1300系を体験する */
+      ch1Teach('鳴いていない手で見てみよう。リーチがついている手だよ。',
+        {tlab:'牌姿で見る'}),
+      scoreHandPointMcq('m1'),
+      scoreHandPointMcq('m3'),
       ch1Teach('おなじ<b>'+l.han[1]+'</b>なのに、'+n.pts[1]+'点と'+l.pts[1]+'点の2つがあるね。これは<b>符</b>のちがいなんだ。くわしい計算は、もっと先のステップで覚えよう。',
         {tlab:'おなじ翻でも点がちがう',panel:scoreLineTableHTML(['naki','menzen'])}),
       {q:'鳴いていない手は、<b>かならず</b>'+l.name+'系になる？',
@@ -12109,6 +12619,11 @@ const CH3_LESSONS={
       lineStepMcq('chiitoi',0,'七対子は'+l.han[0]+'からはじまって'+l.pts[0]+'点。おぼえやすい数だね。'),
       lineSeqMcq('chiitoi',1,l.han[1]+'で'+l.pts[1]+'点。'+l.pts[0]+'点のちょうど2ばいだよ。'),
       lineSeqMcq('chiitoi',2,l.han[2]+'で'+l.pts[2]+'点。ここまで来たらもうすぐ満貫！'),
+      /* R64 §10: 七対子も、具体的な牌姿を見てから系統につなぐ */
+      ch1Teach('実際の七対子の手で見てみよう。トイツが7組ならんでいるね。',
+        {tlab:'牌姿で見る'}),
+      scoreHandPointMcq('c1'),
+      scoreHandPointMcq('c2'),
       {q:'七対子の点が ほかの役とちがうのは？',
        choices:['七対子だけ点の計算が特別だから','七対子が強い役だから'],a:0,
        exp:'七対子は特別な計算をするんだ。りくつはもっと先で覚えればOK！'},
@@ -12122,19 +12637,24 @@ const CH3_LESSONS={
       ch1Teach(RB_KO+'のツモは「<b>'+t0.ko+'・'+t0.oya+'</b>」のように<b>数字が2つ</b>ならぶよ。'
         +'小さいほうを'+RB_KO+'2人、大きいほうを'+RB_OYA+'が払うんだ。',
         {tlab:RB_KO+'のツモ',panel:tsumoPayHTML(t0.ko,t0.oya)}),
-      tsumoKoMcq(0,'oya','大きいほうが'+RB_OYA+'の払い。'+RB_OYA+'はアガると高いぶん、払うときも多いんだ。'),
-      tsumoKoMcq(1,'ko','小さいほうを'+RB_KO+'2人がそれぞれ払うよ。'),
+      /* R64 §11: 数字だけで聞かず、実際のアガリ牌姿を見せたうえで「だれがいくら」を聞く */
+      tsumoKoMcq(0,'oya','大きいほうが'+RB_OYA+'の払い。'+RB_OYA+'はアガると高いぶん、払うときも多いんだ。',{hand:'tk'}),
+      tsumoKoMcq(1,'ko','小さいほうを'+RB_KO+'2人がそれぞれ払うよ。',{hand:'tk'}),
       ch1Teach(RB_OYA+'のツモは<b>'+RB_KO+'3人が同じ額</b>。だから「<b>'+TSUMO_OYA_SAMPLES[0]+'点オール</b>」のように1つの数字で言うよ。',
         {tlab:RB_OYA+'のツモはオール',panel:tsumoPayHTML(TSUMO_OYA_SAMPLES[0],null)}),
-      tsumoOyaMcq(1,'「オール」は'+RB_KO+'3人が同じ額を払うという意味だよ。'),
-      tsumoOyaMcq(2,'こちらも'+RB_KO+'1人ぶんの数字。合計は3ばいになるね。'),
+      tsumoOyaMcq(1,'「オール」は'+RB_KO+'3人が同じ額を払うという意味だよ。',{hand:'to'}),
+      tsumoOyaMcq(2,'こちらも'+RB_KO+'1人ぶんの数字。合計は3ばいになるね。',{hand:'to'}),
       ch1Teach('満貫以上のツモも読み方はおなじ。'+RB_KO+'の満貫ツモ「<b>'+tierTsumoText('mangan')
         +'</b>」は'+RB_KO+'2人が'+mg.ko.tsumo[0]+'点・'+RB_OYA+'が'+mg.ko.tsumo[1]+'点、'
         +RB_OYA+'の満貫ツモは「<b>'+tierTsumoText('mangan',true)+'</b>」だよ。',
         {tlab:'満貫のツモも同じ読み方',panel:tsumoPayHTML(mg.ko.tsumo[0],mg.ko.tsumo[1])}),
-      {q:RB_OYA+'がツモでアガった。払うのは？',
-       choices:[RB_KO+'3人が<b>同じ額</b>',RB_OYA+'の下家だけ'],a:0,
-       exp:RB_OYA+'のツモは'+RB_KO+'3人が同額。だから「◯点オール」なんだね。'},
+      /* R64 §11: ここも牌姿を見せたうえで聞く。だれが払うかを答える問題なので、
+         答えがそのまま読めてしまう払いの図(tp-box)は出さない(§12) */
+      (function(){ const e=scoreHand('to');
+        return {q:'この'+RB_OYA+'のツモアガリ。払うのは？',
+          hand:e.hand,ctx3:scoreHandCtx(e),
+          choices:[RB_KO+'3人が<b>同じ額</b>',RB_OYA+'の下家だけ'],a:0,
+          exp:RB_OYA+'のツモは'+RB_KO+'3人が同額。だから「◯点オール」なんだね。'}; })(),
     ];
   },
   /* ★S2-5 点数感覚マスター */
@@ -12154,10 +12674,93 @@ const CH3_LESSONS={
       ch1Teach('<b>よく出る点数 まとめ</b>！3本のラインと、ツモの払い方をたしかめよう。',
         {tlab:'まとめ',panel:scoreLineTableHTML()}),
     ].concat(quiz).concat([
-      ch1Teach('🎉 <b>点数感覚マスター！</b> これで「このアガリはだいたい何点か」が言えるようになったね。'
+      ch1Teach('🎉 <b>点数感覚マスター！</b> 3本の系統とツモの払い方をおぼえたね。'
+        +'つぎはいよいよ<b>実際のアガリ牌姿</b>を見て、点を出してみよう！',
+        {tlab:'点数感覚マスター！'}),
+    ]);
+  },
+
+  /* ===== S3「牌姿から点数へ」(R64 §6〜§13) =====
+     ねらい: 点数を【数字だけの別ゲーム】にしない。実際のアガリ牌姿から
+       牌姿 → 役 → 翻 → 系統 → 点
+     という順でつなぎ、第3章で覚えた役・翻・鳴きをここでも使わせる。
+     むずかしさは3段階(§7):
+       sc3_1 序盤 … 役も翻も系統も見せて【点だけ】答える
+       sc3_2 中盤 … 役は見せる。翻の合計と系統は自分で出す
+       sc3_3 後半 … 牌姿だけ。役さがし→翻→点まで自分でたどる
+     数字はすべて SCORE_LINES / CH3_YAKU_META から計算する(本文に書き写さない)。
+     Quizには点のならんだ表を出さない(§12)。系統は「1300系」という名前だけ見せる。
+     既存ユーザーにも新しい3マスとして届くよう、テーマの【末尾】に足している(TSUMOPPY_TERMS §40)。 */
+  sc3_1(){
+    return [
+      ch1Teach('ここからは<b>実際のアガリ牌姿</b>で点を考えよう！麻雀の点は、'
+        +'<b>牌姿 → 役 → 翻 → 系統 → 点</b>の順でたどれば出せるんだ。',
+        {tlab:'牌姿から点へ'}),
+      ch1Teach('まずは練習。<b>役も翻も系統も見せる</b>から、<b>点だけ</b>答えてみて！'
+        +'見かたになれるのが目的だよ。',
+        {tlab:'まずは点だけ'}),
+      scoreHandPointMcq('m2'),
+      scoreHandPointMcq('n1'),
+      scoreHandPointMcq('c1'),
+      scoreHandPointMcq('m3'),
+      scoreHandPointMcq('n3'),
+      scoreHandPointMcq('c2'),
+      ch1Teach('どう？ <b>系統</b>さえ分かれば、あとは翻のところを見るだけだったね。'
+        +'つぎは<b>翻の合計</b>も自分で出してみよう！',
+        {tlab:'つぎは翻も自分で'}),
+    ];
+  },
+  sc3_2(){
+    return [
+      ch1Teach('こんどは<b>役だけ</b>見せるよ。<b>翻の合計</b>は自分で足してね。'
+        +'鳴いている手は<b>食い下がり</b>に気をつけて！',
+        {tlab:'翻は自分で'}),
+      scoreHandHanMcq('m4'),
+      scoreHandHanMcq('n2'),
+      scoreHandHanMcq('c3'),
+      ch1Teach('翻が出たら、つぎは<b>系統</b>。<b>鳴いていない手は1300系・鳴いた手は1000系に'
+        +'なりやすく</b>、<b>七対子は七対子の系統</b>だったね。',
+        {tlab:'どの系統？'}),
+      scoreHandLineMcq('m1'),
+      scoreHandLineMcq('n2'),
+      scoreHandLineMcq('c3'),
+      ch1Teach('系統まで分かれば、あとは点だけ。通しでやってみよう！',
+        {tlab:'通しでやってみる'}),
+      scoreHandPointMcq('m4'),
+      scoreHandPointMcq('n2'),
+      scoreHandPointMcq('c3'),
+    ];
+  },
+  /* ★S3-3 牌姿から点数まで(第4章の総仕上げ) */
+  sc3_3(){
+    const quiz=shuffle([
+      scoreHandFind('m3',['riichi','pinfu','tanyao','tsumo'],
+        'リーチ・ピンフ・タンヤオの3つ。ロンなのでツモはつかないよ。'),
+      scoreHandFind('n3',['yakuhai','honitsu','chinitsu','tanyao'],
+        '白のコーツで役牌、ピンズと字牌だけなのでホンイツ。鳴いているので食い下がりに注意！'),
+      scoreHandFind('c3',['riichi','tsumo','chiitoi','toitoi'],
+        'トイツが7組で七対子。リーチしてツモアガリだから3つだね。'),
+      scoreHandPointMcq('m1'),
+      scoreHandPointMcq('n2'),
+      scoreHandPointMcq('c3'),
+      scoreHandHanMcq('n3'),
+      /* ツモの払い方も、牌姿を見たうえで答える(§11) */
+      tsumoKoMcq(2,'oya','大きいほうが'+RB_OYA+'の払いだったね。',{hand:'tk'}),
+      tsumoOyaMcq(0,'「オール」は'+RB_KO+'1人ぶんの数字。'+RB_KO+'3人が同じ額を払うよ。',{hand:'to'}),
+    ]);
+    return [
+      ch1Teach('<b>総仕上げ！</b> こんどは<b>牌姿だけ</b>。役を見つけるところからやってみよう。'
+        +'<b>牌姿 → 役 → 翻 → 系統 → 点</b>の順だよ。',
+        {tlab:'牌姿だけ'}),
+    ].concat(quiz).concat([
+      ch1Teach('🎉 <b>第4章コンプリート！</b> アガった手を見て「この手はだいたい何点か」が'
+        +'言えるようになったね。'
         +'<b>符</b>をつかったこまかい計算は、もっと先の<b>点数計算トレーニング</b>で覚えよう。'
-        +'そのとき「あの点数ラインはこういう理由だったのか！」とつながるよ。',
+        +'そのとき「あの系統はこういう理由だったのか！」とつながるよ。',
         {tlab:'第4章コンプリート！'}),
+      ch1Teach('役の<b>翻</b>と<b>鳴き</b>は、いつでも<b>役一覧</b>でたしかめられるよ。'
+        +'ホーム画面と、コース画面の「🀄 役一覧」ボタンから開いてね！',
+        {tlab:'役一覧のあんない'}),
     ]);
   },
   /* ===== X 任意Road「もっと役を覚える」(第3章クリアで解放。次章の前提にしない) ===== */
@@ -12178,7 +12781,7 @@ const CH3_LESSONS={
   yx1_2(){
     return [
       ch1Teach('山の<b>さいごの1枚をツモってアガる</b>と<span class="term-chip">海底摸月（ハイテイ）</span>。<b>さいごの捨て牌でロン</b>すると<span class="term-chip">河底撈魚（ホウテイ）</span>！どちらも「さいごの一瞬」のドラマチックな役だよ。どちらも<b>'+yakuHanText('haitei')+'</b>で、鳴いていてもつくよ。',
-        {tlab:'さいごの一瞬',panel:yakuBadgeHTML('haitei')+yakuBadgeHTML('houtei')}),
+        {tlab:'さいごの一瞬',panel:yakuRowsHTML(['haitei','houtei'])}),
       ch3HasMcq('haitei','2m3m4m4p5p6p7s8s9s3s5s4s9p9p',
         ch3Ctx({haitei:true,win:'tsumo',winTile:'4s',note:'山の残り0枚・さいごのツモ'}),
         '山のラスト1枚でツモ！ハイテイだ。'),
@@ -12298,16 +12901,16 @@ const CH3_LESSONS={
       {q:'<b>天和</b>と<b>地和</b>のちがいは？',
        choices:['天和は'+RB_OYA+'が配られた手でアガリ／地和は'+RB_KO+'が1回目のツモでアガリ','おなじ役のべつの名前'],a:0,
        exp:RB_OYA+'が配られた13枚でアガるのが天和、'+RB_KO+'が1回目のツモでアガるのが地和。どちらも奇跡だね！'},
+      /* R64: 四槓子は「カンを4回した」という文章ではなく、【実際の槓子4組】で見せる。
+         アガリ形は 槓子4組＋アタマ。手の中にのこるのはアタマの牌だけ(単騎待ち) */
       ch1Teach('さいごは<b>カン</b>の役満。1つの局で<b>カンを4回</b>して、4つの組がぜんぶカンになったら…<span class="term-chip">四槓子（スーカンツ）</span>！',
-        {tlab:'四槓子',panel:yakuBadgeHTML('suukantsu')+kanDemoHTML([{ankan:'1m1m1m1m',lab:'暗槓',real:true},
-          {lab:'大明槓',meld:{type:'kan',tiles:'2p2p2p2p',called:'2p',from:'right'}},
-          {lab:'加槓',meld:{type:'kan',tiles:'3s3s3s3s',called:'3s',from:'left'}},
-          {ankan:'EEEE',lab:'暗槓',real:true}],{oneCol:true})}),
+        {tlab:'四槓子',panel:yakuRowsHTML(['suukantsu'])
+          +fuuroAreaHTML(SUUKANTSU_MELDS,{lab:'槓子が4組'})}),
       {q:'<b>四槓子</b>になるのは、カンを何回したとき？',choices:['4回','2回'],a:0,
        exp:'おなじ局でカンを4回！めったに見られない役満だよ。'},
-      ch3HasMcq('suukantsu','2m3m4m4p5p6p7s8s9s3s5s4s9p9p',
-        ch3Ctx({suukantsu:true,win:'tsumo',winTile:'4s',note:'この局でカンを4回した'}),
-        'カンが4回そろったから四槓子！'),
+      ch3HasMcq('suukantsu',SUUKANTSU_HAND,
+        ch3Ctx({win:'tsumo',winTile:'9s',melds:SUUKANTSU_MELDS}),
+        '槓子が4組ならんでいるね。役満・四槓子だ！手の中にのこるのはアタマの牌だけだよ。'),
       /* R62 §8: ダブル役満の定義。ここが唯一の教材上の説明 */
       ch1Teach('さいごに大事なルール。<b>役満が2つ同時に成立したら</b><span class="term-chip">ダブル役満</span>！たとえば<b>字一色</b>と<b>大三元</b>がいっしょにできたときだね。3つそろえば3倍役満だよ。',
         {tlab:'ダブル役満',hands:[{label:'字一色＋大三元＝ダブル役満',hand:'BBBGGGRRREEESS',g:true}]}),
