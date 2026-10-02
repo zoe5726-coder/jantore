@@ -617,6 +617,7 @@ button.tile.off:active{transform:none;}
 .sc-row:last-child{border-bottom:0;}
 .sc-row .sc-nm{font-weight:900; color:var(--jade-ink);}
 .sc-row .sc-pt{font-variant-numeric:tabular-nums; text-align:right;}
+.sc-row .sc-pt i{font-style:normal; font-size:.74em; font-weight:800; color:var(--ink-soft);}
 /* 代表ラインの表(R62): ライン名＋1翻〜4翻の4列。数字は右そろえで縦にそろえる */
 .sl-tbl .sc-row{grid-template-columns:3.4em 1fr 1fr 1fr 1fr;}
 /* ドラ4なかまの表(R63): なかま / どれがドラ / いつ の3列 */
@@ -660,6 +661,40 @@ button.tile.off:active{transform:none;}
 .ylist-top h3{margin:0; font-size:clamp(16px,4.6vw,19px); flex:1 1 auto;}
 .ylist-top .x{flex:none; background:none; border:0; font-size:24px; line-height:1; color:var(--ink-soft);
   padding:4px 6px; cursor:pointer;}
+/* R65: 資料(早見表)のタブ。役一覧と点数表を1つの画面で切りかえる */
+.ref-tabs{flex:none; display:flex; gap:8px; padding:2px 14px 0;}
+.ref-tabs button{flex:1 1 0; background:var(--card); border:2px solid var(--line); border-bottom:0;
+  border-radius:12px 12px 0 0; padding:8px 6px; font-family:inherit; font-weight:900;
+  font-size:clamp(12.5px,3.7vw,14px); color:var(--ink-soft); cursor:pointer;}
+.ref-tabs button.on{background:var(--jade); border-color:var(--jade); color:var(--on-accent);}
+.ref-tabs + .yl-filt{border-top:2px solid var(--line); padding-top:8px;}
+.yl-filt .yl-sep{flex:0 0 10px;}
+/* R65 点数表。符(縦)×翻(横)の表。320pxでも横スクロールしないよう5列に固定し、
+   数字は等幅で右そろえ＝点の桁が縦にそろう。子のツモだけ1マスに2つ(子/親)入る */
+.st-now{margin:10px 0 0; font-size:clamp(12px,3.5vw,13.5px); font-weight:800; color:var(--ink-soft);
+  font-family:'Noto Sans JP',sans-serif;}
+.st-now b{color:var(--jade-ink); font-size:1.1em;}
+.st-note{margin:4px 0 2px; font-size:clamp(10.5px,3.1vw,12px); font-weight:700; color:var(--ink-soft);
+  line-height:1.5; font-family:'Noto Sans JP',sans-serif;}
+.st-tbl{display:block; margin:6px 0 2px; font-family:'Noto Sans JP',sans-serif;}
+.st-row{display:grid; grid-template-columns:2.9em 1fr 1fr 1fr 1fr; gap:3px; align-items:stretch;
+  padding:4px 0; border-bottom:1.5px solid var(--line);}
+.st-row.st-head{border-bottom:2px solid var(--line); font-size:clamp(10px,2.9vw,11.5px);
+  font-weight:900; color:var(--ink-soft);}
+.st-row.st-head span{display:flex; align-items:flex-end; justify-content:flex-end; padding-right:2px;}
+.st-row.st-head span:first-child{justify-content:flex-start;}
+.st-row:last-child{border-bottom:0;}
+.st-fu{display:flex; align-items:center; font-weight:900; color:var(--jade-ink);
+  font-size:clamp(11px,3.2vw,12.5px);}
+.st-pt{display:flex; flex-direction:column; align-items:flex-end; justify-content:center;
+  font-weight:900; font-variant-numeric:tabular-nums; font-size:clamp(11px,3.3vw,13px);
+  padding-right:2px; white-space:nowrap;}
+.st-pt i{font-style:normal; font-size:.72em; font-weight:800; color:var(--ink-soft); margin-left:2px;}
+.st-pt.st-two b{display:block; font-weight:900; line-height:1.25;}
+.st-pt.st-mg{color:var(--jade-ink);}
+.st-x{display:flex; align-items:center; justify-content:flex-end; color:var(--ink-soft);
+  font-weight:800; padding-right:2px;}
+span.st-mg{color:var(--jade-ink); font-weight:900;}
 .yl-filt{flex:none; display:flex; gap:6px; overflow-x:auto; padding:8px 14px 2px; -webkit-overflow-scrolling:touch;}
 .yl-filt button{flex:none; background:var(--card); border:2px solid var(--line); border-radius:999px;
   padding:5px 12px; font-weight:800; font-size:clamp(12px,3.5vw,13.5px); color:var(--ink-soft); cursor:pointer;}
@@ -691,6 +726,8 @@ button.tile.off:active{transform:none;}
 .yl-ex{display:block; margin:3px 0 0; white-space:nowrap; font-size:clamp(9.5px,3vw,11.5px);}
 .yl-ex .itiles{margin:0 3px 0 0; vertical-align:middle;}
 .yl-ex .itile{width:1.02em; height:1.42em; margin:0; border-radius:0;}
+/* R65: 四槓子のテンパイ時に手の中へのこる1枚(単騎待ち)。槓子とくっつけて見せない */
+.yl-ex-wait{margin-left:4px; font-weight:900; color:var(--jade-ink);}
 .yl-cond{display:block; margin:3px 0 0; font-size:clamp(10.5px,3.1vw,12px); color:var(--ink-soft);
   font-weight:700; line-height:1.4; font-family:'Noto Sans JP',sans-serif;
   overflow:hidden; text-overflow:ellipsis;}
@@ -710,6 +747,7 @@ button.tile.off:active{transform:none;}
   background:var(--card); color:var(--jade-ink); border:2px solid var(--jade); border-radius:999px;
   padding:9px 14px; font-weight:900; font-size:13px; box-shadow:0 3px 0 var(--jade-deep); cursor:pointer;}
 .yl-open:active{transform:translateY(2px); box-shadow:0 1px 0 var(--jade-deep);}
+
 .hc-yaku{width:100%; display:flex; align-items:center; gap:10px; background:var(--card);
   border:2px solid var(--line); border-radius:16px; padding:12px 14px; margin:10px 0 0; cursor:pointer;
   text-align:left; font-family:inherit;}
@@ -1617,7 +1655,9 @@ button.mjt-pick.mjt-hp,
   <!-- コース: 学習ロードを進める場所(ロードが主役。日々の情報カードは置かない) -->
   <div id="screen-course" class="screen">
     <div class="path-wrap" id="path-wrap"></div>
-    <button class="yl-open" onclick="openYakuList()">🀄 役一覧</button>
+    <!-- R65: 役一覧と点数表は1つの資料画面にまとめた。ボタンは増やさず(画面を混ませない)、
+         ここから1タップで資料をひらき、中のタブで点数表へ切りかえる -->
+    <button class="yl-open" onclick="openYakuList()">🀄 早見表</button>
     <button class="loc-btn" onclick="scrollToNext()">📍 現在地へ</button>
   </div>
 
@@ -1665,9 +1705,12 @@ button.mjt-pick.mjt-hp,
      ここを見ることでRoadの進捗(roadProgress)・XP・ジェム・ストリークは【いっさい変わらない】 -->
 <div class="ylist" id="ylist">
   <div class="ylist-top">
-    <h3>役一覧</h3>
+    <h3 id="ref-title">役一覧</h3>
     <button class="x" onclick="closeYakuList()" aria-label="とじる">✕</button>
   </div>
+  <!-- R65: 役一覧と点数表は どちらも「打ちながら見る資料」。入口・見た目・閉じ方をそろえ、
+       1つの画面の中でタブで切りかえる(ナビゲーションタブは増やさない) -->
+  <div class="ref-tabs" id="ref-tabs"></div>
   <div class="yl-filt" id="yl-filt"></div>
   <div class="yl-body" id="yl-body"></div>
 </div>
@@ -3940,6 +3983,9 @@ const RUBY_FULL_SRC=`
 # R63 一発・裏ドラ・第4章で使う語。1字の「下」は上手/下家へ誤爆するので送りがなでピン留めする
 直後[ちょくご] 前提[ぜんてい] 整理[せいり] 共通[きょうつう] 完全版[かんぜんばん] 完全[かんぜん]
 思[おも]い その名[な]も 下[した]にふせ 独立[どくりつ] 章[しょう]
+# R65 点数表で使う語。1字の「表」は「表ドラ」「ドラ表示牌」へ誤爆するので、かならず語でピン留めする
+点数表[てんすうひょう] 早見表[はやみひょう] 参照[さんしょう] 正式[せいしき]
+切[き]り上[あ]げ満貫[マンガン] 単位[たんい] 計算[けいさん]
 # R64 一発の時間・カンの役・点数の牌姿で使う語。
 # 1字の「後」は「後ろ」「そのあと」へ誤爆するので、かならず前の語とセットでピン留めする
 リーチ後[ご] 短[みじか]い 有効[ゆうこう] 牌姿[はいし] 系統[けいとう] 目的[もくてき]
@@ -4100,8 +4146,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.58.0';
-const BUILD_ID='20261001-04';
+const APP_VER='0.59.0';
+const BUILD_ID='20261002-01';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -4760,8 +4806,14 @@ function renderHome(){
     +'<span class="hy-ico">🀄</span>'
     +'<span class="hy-txt"><b>役一覧</b>'
     +'<span>何翻？鳴ける？ 打ちながらすぐ見られる手引き</span></span></button>';
+  /* ⑤点数表(R65): 役一覧とおなじ「打ちながら見る資料」。1タップで開けるようにする。
+     どちらも学習の進みぐあいには影響しない */
+  const scoreCard='<button class="hc-yaku hc-score" onclick="openScoreTable()">'
+    +'<span class="hy-ico">💰</span>'
+    +'<span class="hy-txt"><b>点数表</b>'
+    +'<span>このアガリは何点？ '+RB_KO+'と'+RB_OYA+'・ロンとツモをすぐ引ける</span></span></button>';
   // 将来カード(今日の復習・おすすめトレーニング・週間目標等)は下へ追記するだけで拡張できる
-  el.innerHTML=streakCard+missionCard+contCard+yakuCard;
+  el.innerHTML=streakCard+missionCard+contCard+yakuCard+scoreCard;
 }
 
 /* ================= トレーニングハブ ================= */
@@ -8121,7 +8173,7 @@ const CH3_YAKU_META={
     exMelds:'sankantsu'},
   /* R62追加 → R64で牌姿化: 四槓子。カン4組＋アタマが見えていないと成立しない */
   suukantsu:{label:'四槓子',closedHan:null,openHan:null,openAllowed:true,yakuman:true,cond:'カンを4回する（槓子が4組）',lesson:'yx2_4',optional:true,
-    exMelds:'suukantsu'},
+    exMelds:'suukantsu',exWait:'9s'},   /* R65 §14: テンパイは槓子4組＋手の中1枚(単騎待ち) */
 };
 /* ===== カンの数(R64) =====
    三槓子・四槓子は「カンを何回したか」で決まる。R63までは ctx.suukantsu という
@@ -8227,8 +8279,11 @@ function yakuExampleHTML(key){
   if(m.exMelds){
     const ms=m.exMelds==='suukantsu'?SUUKANTSU_MELDS
       :(m.exMelds==='sankantsu'?SANKANTSU_MELDS:m.exMelds);
+    /* R65 §14: exWait があるときは「テンパイのときに手の中にのこる1枚」もならべる。
+       待っているあいだは1枚＝単騎待ち。2枚(アタマ)になるのはアガったあと */
     return '<span class="yl-ex yl-ex-kan">'
-      +ms.map(x=>inlineTiles(meldInlineStr(x))).join('')+'</span>';
+      +ms.map(x=>inlineTiles(meldInlineStr(x))).join('')
+      +(m.exWait?'<span class="yl-ex-wait">＋'+inlineTiles(m.exWait)+'</span>':'')+'</span>';
   }
   return '';
 }
@@ -8307,6 +8362,13 @@ function scoreLineTableHTML(ids){
         +l.pts.map(p=>'<span class="sc-pt">'+p+'</span>').join('')+'</div>').join('')
     +'</div>';
 }
+/* ===== 系統×翻 → その点になる実際の牌姿(R65 §10) =====
+   「1000系の2翻。何点？」という表だけの問題にも、実際にその翻になる牌姿をつける。
+   対応は SCORE_HANDS を走査して見つけるので、手書きの対応表は作らない
+   (牌姿を足したり直したりしても自動で追従する)。 */
+function scoreHandForLine(lineId,han){
+  return SCORE_HANDS.find(e=>e.line===lineId&&scoreHandHan(e)===han)||null;
+}
 /* 代表ラインの問題。選択肢と正解は SCORE_LINES から作る(手書きの正解を置かない) */
 function lineStepMcq(id,i,exp,opt){
   const l=scoreLine(id); if(!l||i<0||i>=l.pts.length) return {q:'(定義エラー)',choices:['-','-'],a:-1,exp:exp||''};
@@ -8316,9 +8378,15 @@ function lineStepMcq(id,i,exp,opt){
   const vals=Array.from(new Set([right].concat(others))).sort((a,b)=>a-b);
   const choices=(vals.length>1?vals:[right,right+700].sort((a,b)=>a-b)).map(v=>v+'点');
   /* R64 §9: このLessonでは答えは1つに決まっているので「だいたい」と言わない。
-     R64 §12: 点のならんだ表は答えそのものなので、Quizでは出さない(Teachだけ) */
-  return Object.assign({q:'<b>'+l.short+'</b>の<b>'+l.han[i]+'</b>。何点？',
-    choices,a:choices.indexOf(right+'点'),exp},opt||{});
+     R64 §12: 点のならんだ表は答えそのものなので、Quizでは出さない(Teachだけ)。
+     R65 §10: その翻になる実際の牌姿があれば、かならず見せる(数字だけの問題にしない)。
+       役と翻は見せてよい(問いが聞いているのは点)。系統は問いの中にもう書いてある。 */
+  const han=+String(l.han[i]).replace('翻','');
+  const e=scoreHandForLine(id,han);
+  const base={q:'<b>'+l.short+'</b>の<b>'+l.han[i]+'</b>。何点？',
+    choices,a:choices.indexOf(right+'点'),exp};
+  if(e){ base.hand=e.hand; base.ctx3=scoreHandCtx(e); base.panel=scoreHandPanel(e,{}); }
+  return Object.assign(base,opt||{});
 }
 function lineSeqMcq(id,i,exp,opt){
   // 「1000 → 2000 → ？ → 8000」の穴うめ。図は出さない(答えがそのまま読めてしまうため)
@@ -8392,6 +8460,34 @@ const SCORE_HANDS=[
   {id:'ura',hand:'123m456p777s345s55p',line:null,keys:['riichi','ippatsu','tsumo'],dora:1,
    ctx:{riichi:true,drawsAfterRiichi:1,win:'tsumo',winTile:'1m'},
    why:'リーチ・一発・ツモの3役で3翻、そこに裏ドラ1枚で4翻。'},
+  /* ===== R65 §11: 文字だけで聞いていた「何翻？」にも牌姿をつけるための手 =====
+     doraInd を書いた手は、その表示牌のつぎの牌が【ちょうど dora 枚】入っていることを
+     テストで検算する(r65-check B)。ドラの枚数も画面のドラ表示牌から数えられる。 */
+  {id:'chin',hand:'111m234m567m99m345m',line:null,keys:['chinitsu'],
+   ctx:{win:'ron',winTile:'4m'},
+   why:'チンイツは<b>1役なのに'+'6翻'+'</b>。役の数と翻は、ほんとうにべつの数なんだ。'},
+  {id:'tansan',hand:'234m234p234s567m88p',line:null,keys:['pinfu','tanyao','sanshoku'],
+   ctx:{win:'ron',winTile:'7m'},
+   why:'ピンフ・タンヤオ・三色の3役。1翻＋1翻＋2翻で4翻だよ。'},
+  {id:'rp1',hand:'123m456p678s345s55p',line:null,keys:['riichi','pinfu'],dora:1,doraInd:'9m',
+   ctx:{riichi:true,drawsAfterRiichi:2,win:'ron',winTile:'1m'},
+   why:'リーチ＋ピンフで2翻、ドラ1枚で+1翻。合計3翻！'},
+  {id:'tt',hand:'222m555p777s333m88p',line:null,keys:['tanyao','toitoi'],open:true,dora:3,doraInd:'4p',
+   ctx:{win:'ron',winTile:'7s',melds:[{type:'pon',tiles:'222m',called:'2m',from:'left'}]},
+   why:'タンヤオ1翻＋トイトイ2翻＋ドラ3枚＝6翻。ドラは一気に大きくなるね！'},
+  /* カンの入った手。R64のカンUI(副露エリア)は役Lesson専用ではなく、点数の問題でも使える(§15) */
+  {id:'sank',hand:SANKANTSU_HAND,line:null,keys:['sankantsu'],open:true,
+   ctx:{win:'ron',winTile:'6m',melds:SANKANTSU_MELDS},
+   why:'槓子が3組そろって三槓子。三槓子は食い下がりがないので、鳴いていても2翻だよ。'},
+  {id:'rd2',hand:'111m456p678s345s99m',line:null,keys:['riichi'],dora:2,doraInd:'8m',
+   ctx:{riichi:true,drawsAfterRiichi:2,win:'ron',winTile:'4p'},
+   why:'リーチ1翻＋ドラ2枚で3翻。<b>役は1つのまま</b>だよ。'},
+  {id:'ct',hand:'234m345m567m88m678m',line:null,keys:['tanyao','chinitsu'],open:true,
+   ctx:{win:'ron',winTile:'7m',melds:[{type:'chi',tiles:'234m',called:'4m',from:'left'}]},
+   why:'鳴いているからチンイツは食い下がりで5翻。タンヤオは下がらないので1翻。合計6翻＝跳満だ！'},
+  {id:'c2d',hand:'11m33m55p77p22s44s9p9p',line:null,keys:['riichi','chiitoi'],dora:2,doraInd:'8p',
+   ctx:{riichi:true,drawsAfterRiichi:2,win:'ron',winTile:'9p'},
+   why:'リーチ1翻＋七対子2翻＋ドラ2枚＝5翻。満貫だ！'},
 ];
 function scoreHand(id){ return SCORE_HANDS.find(h=>h.id===id)||null; }
 function scoreHandCtx(e){ return ch3Ctx(Object.assign({},e.ctx)); }
@@ -8412,6 +8508,9 @@ function scoreHandPts(e){
 function scoreHandPanel(e,opt){
   const o=opt||{};
   let h=yakuRowsHTML(e.keys);
+  /* R65: ドラがある手は【ドラ表示牌】も出す。何がドラで何枚あるかを手牌から数えられる
+     (「ドラ2枚」と書くだけにしない)。表示牌→ドラ の変換は doraPanelHTML が1か所で持つ */
+  if(e.doraInd) h+=doraPanelHTML([e.doraInd]);
   if(e.dora) h+='<div class="sh-note">＋ <b>ドラ'+e.dora+'枚</b>（ドラは役ではないけれど翻はふえる）</div>';
   if(o.han) h+='<div class="sh-sum">合計 <b>'+scoreHandHan(e)+'翻</b></div>';
   if(o.line&&e.line) h+='<div class="sh-line">この手は <b>'+scoreLine(e.line).short+'</b></div>';
@@ -8517,15 +8616,65 @@ function tierTsumoText(id,oya){
   return oya?(t.oya.tsumoAll+'点オール')
     :(t.ko.tsumo[0]+'点・'+t.ko.tsumo[1]+'点');
 }
+/* ===== 正式な点数(符と翻)の計算(R65) =====
+   R64までの Road は符を教えないので、点は SCORE_TIERS(満貫以上)と
+   SCORE_LINES(代表3ライン)だけで足りていた。
+   R65で【実戦中に見る点数表】を作るにあたり、符を含む正式な点も必要になる。
+
+   ここが点数の【唯一の出どころ】。表にもQuizにも数字を手書きしない。
+   将来の「点数計算Training」も、符を自分で数えたあとこの関数を呼べばよい。
+
+     基本点 = 符 × 2^(2+翻)
+     子ロン  = 基本点×4 / 子ツモ = 子が基本点×1・親が基本点×2
+     親ロン  = 基本点×6 / 親ツモ = 子3人が基本点×2 ずつ
+     どれも100点単位で切り上げる。
+
+   ツモッピィのルール(TSUMOPPY_TERMS §47-8):
+   ・切り上げ満貫あり … 30符4翻 と 60符3翻 は満貫としてあつかう
+   ・数え役満なし     … 翻をいくら足しても役満にはならない(11翻以上は三倍満)
+   基本点が2000以上になったら満貫(SCORE_TIERS)に乗りかえる。 */
+const SCORE_FU=[20,25,30,40,50,60,70];
+/* 切り上げ満貫になる組み合わせ。ここが唯一の定義 */
+const KIRIAGE_MANGAN=[{fu:30,han:4},{fu:60,han:3}];
+function isKiriageMangan(fu,han){ return KIRIAGE_MANGAN.some(k=>k.fu===fu&&k.han===han); }
+function scoreBasePoint(fu,han){ return fu*Math.pow(2,2+han); }
+function roundUp100(v){ return Math.ceil(v/100)*100; }
+/* その符・翻が実際に存在するか。
+   ・20符は「鳴いていない手のピンフ＋ツモ」だけ。ロンでは出ない(ピンフのロンは30符)。
+     しかもピンフ1翻＋ツモ1翻なので最低2翻。
+   ・25符は七対子だけ。七対子は最低2翻なので1翻の欄はない。 */
+function fuHanExists(fu,han,win){
+  if(han<1) return false;
+  if(fu===20) return win==='tsumo'&&han>=2;
+  if(fu===25) return han>=2;
+  return true;
+}
+/* 符と翻から点を出す。戻り値:
+   {tier:満貫以上ならそのid, ron:ロン点, tsumo:[子が払う,親が払う] または [子3人が払う], kiriage:切り上げ満貫か} */
+function scoreByFuHan(fu,han,oya){
+  const base=scoreBasePoint(fu,han);
+  const kiriage=isKiriageMangan(fu,han);
+  if(han>=5||base>=2000||kiriage){
+    const t=tierOfHan(han>=5?han:5)||scoreTier('mangan');
+    return {tier:t.id,ron:oya?t.oya.ron:t.ko.ron,
+      tsumo:oya?[t.oya.tsumoAll]:[t.ko.tsumo[0],t.ko.tsumo[1]],kiriage};
+  }
+  return {tier:null,ron:roundUp100(base*(oya?6:4)),
+    tsumo:oya?[roundUp100(base*2)]:[roundUp100(base),roundUp100(base*2)],kiriage:false};
+}
 /* 満貫以上の表(子・親をならべる)。親が子より高いことが一目で分かる形にする */
 function tierTableHTML(ids,oya){
   const list=(ids||SCORE_TIERS.map(t=>t.id)).map(scoreTier).filter(Boolean);
   return '<div class="sc-tbl">'
     +'<div class="sc-row sc-head"><span>大きさ</span><span>何翻</span><span>'
     +(oya?RB_OYA:RB_KO)+'のロン</span><span>'+(oya?RB_OYA:RB_KO)+'のツモ</span></div>'
+    /* R65 §7: ツモの欄は数字をならべるだけにしない。だれがいくら払うかを小さく添える */
     +list.map(t=>'<div class="sc-row"><span class="sc-nm">'+t.name+'</span>'
       +'<span>'+t.han+'</span><span class="sc-pt">'+(oya?t.oya.ron:t.ko.ron)+'</span>'
-      +'<span class="sc-pt">'+(oya?(t.oya.tsumoAll+'オール'):(t.ko.tsumo[0]+'・'+t.ko.tsumo[1]))+'</span></div>').join('')
+      +'<span class="sc-pt">'+(oya
+        ?(t.oya.tsumoAll+'<i>オール</i>')
+        :(t.ko.tsumo[0]+'<i>'+RB_KO+'</i>・'+t.ko.tsumo[1]+'<i>'+RB_OYA+'</i>'))
+      +'</span></div>').join('')
     +'</div>';
 }
 /* 役の一覧(決定論)。教材の正解は必ずこの関数から作る */
@@ -12379,11 +12528,28 @@ const CH3_LESSONS={
       ch1Teach('そして…おなじ局で<b>カンを4回</b>！槓子が4組ならんだら、役満の'
         +'<span class="term-chip">四槓子（スーカンツ）</span>だよ。',
         {tlab:'四槓子',panel:yakuRowsHTML(['suukantsu'])+fuuroAreaHTML(K4,{lab:'槓子が4組'})}),
-      ch1Teach('四槓子のアガリ形を見てみよう。<b>槓子4組＋アタマ</b>。'
-        +'手の中にのこるのはアタマの牌だけだから、<b>最後の1枚を待つ形（単騎待ち）</b>になるんだ。',
-        {tlab:'槓子4組＋アタマ',panel:yakuRowsHTML(['suukantsu'])}),
+      /* R65 §14: テンパイのときとアガったあとを【はっきり分ける】。
+         ・テンパイ … 槓子4組 ＋ 手の中に1枚 → その1枚とおなじ牌を待つ(単騎待ち)
+         ・アガリ   … その牌が来て 槓子4組 ＋ アタマ(2枚)
+         「アタマが2枚だから単騎待ち」という言い方はしない(待っているときは1枚しかない) */
+      ch1Teach('四槓子の<b>待ち</b>を見てみよう。カンを4回すると、手の中にのこるのは'
+        +'<b>たった1枚</b>。その1枚とおなじ牌が来るのを待つんだ。これが'
+        +'<span class="term-chip">単騎待ち（タンキまち）</span>だよ。',
+        {tlab:'テンパイ：手の中は1枚',
+         panel:'<div class="tc-lab">テンパイ（まだアガっていない）</div>'
+           +handHTML('9s')+fuuroAreaHTML(K4,{lab:'槓子が4組'})
+           +'<p class="sh-note">手の中は<b>9索が1枚</b>だけ。<b>9索</b>を待っているよ。</p>'}),
+      ch1Teach('待っていた牌が来たら…手の中の1枚とならんで<b>アタマ（2枚）</b>の完成！'
+        +'これで<b>槓子4組＋アタマ</b>のアガリ形になるよ。',
+        {tlab:'アガリ：アタマが完成',
+         panel:'<div class="tc-lab">アガリ（9索が来た）</div>'
+           +handHTML('9s9s')+fuuroAreaHTML(K4,{lab:'槓子が4組'})
+           +'<p class="sh-note">待っていた<b>9索</b>が来て、アタマが2枚にそろったね。</p>'}),
+      {q:'四槓子でテンパイしているとき、<b>手の中</b>には何枚ある？',
+       choices:['1枚（その牌を待っている）','2枚（アタマができている）'],a:0,
+       exp:'待っているあいだは<b>1枚</b>。その牌が来てはじめてアタマの2枚になるよ。'},
       ch3HasMcq('suukantsu',H4,ch3Ctx({win:'tsumo',winTile:'9s',melds:K4}),
-        '槓子が4組！役満・四槓子だよ。手の中はアタマの2枚だけだね。'),
+        '待っていた9索をツモった！槓子が4組＋アタマで、役満・四槓子だよ。'),
       ch3HasMcq('suukantsu',H3,ch3Ctx({win:'ron',winTile:'6m',melds:K3}),
         'こちらは槓子3組なので三槓子。四槓子は<b>4組</b>そろったときだけだよ。'),
       {q:'<b>三槓子</b>と<b>四槓子</b>のちがいは？',
@@ -12415,16 +12581,18 @@ const CH3_LESSONS={
         {tlab:'翻と点'}),
       ch1Teach('役が2つ以上あるときは、<b>翻を足し算</b>するよ。ここでだいじなのは…<b>役の数と翻の合計はちがう</b>ということ！',
         {tlab:'翻は足し算',panel:yakuRowsHTML(['riichi','chiitoi'])}),
-      yakuSumMcq(['riichi','chiitoi'],
-        {exp:'役は2つでも、'+yakuHanText('riichi')+'＋'+yakuHanText('chiitoi')+'＝3翻。「2役だから2翻」ではないよ！'}),
-      yakuSumMcq(['chinitsu'],
-        {exp:'チンイツは<b>1役なのに'+yakuHanText('chinitsu')+'</b>。役の数と翻は、ほんとうにべつの数なんだ。'}),
-      yakuSumMcq(['tanyao','sanshoku'],
-        {exp:'タンヤオ'+yakuHanText('tanyao')+'＋三色'+yakuHanText('sanshoku')+'＝3翻。'}),
+      /* R65 §11: 文字だけの足し算ではなく、実際にその役が成立している牌姿で聞く */
+      scoreHandHanMcq('c2',
+        '役は2つでも、'+yakuHanText('riichi')+'＋'+yakuHanText('chiitoi')+'＝3翻。「2役だから2翻」ではないよ！'),
+      scoreHandHanMcq('chin',
+        'チンイツは<b>1役なのに'+yakuHanText('chinitsu')+'</b>。役の数と翻は、ほんとうにべつの数なんだ。'),
+      scoreHandHanMcq('tansan',
+        'ピンフ'+yakuHanText('pinfu')+'＋タンヤオ'+yakuHanText('tanyao')+'＋三色'+yakuHanText('sanshoku')
+        +'＝4翻。<b>3役で4翻</b>だね。'),
       ch1Teach('もちろん、<b>たまたま同じになる</b>こともあるよ。1翻の役だけがならんだときだね。でも「いつも同じ」ではないから、かならず足し算してね。',
         {tlab:'同じになることもある'}),
-      yakuSumMcq(['riichi','tsumo','pinfu','tanyao'],
-        {exp:'ぜんぶ1翻の役だから、4役で4翻。これは たまたま同じになった例だよ。'}),
+      scoreHandHanMcq('m4',
+        'リーチ・ツモ・ピンフ・タンヤオ。ぜんぶ1翻の役だから、4役で4翻。これは たまたま同じになった例だよ。'),
       /* R64 §13: 文字の足し算だけで終わらせず、実物の牌姿でも1問やる */
       scoreHandHanMcq('m3'),
       {q:'「役が3つある」とき、翻の合計は？',choices:['足し算してみないと分からない','いつも3翻'],a:0,
@@ -12437,21 +12605,22 @@ const CH3_LESSONS={
         {tlab:'ドラも足す'}),
       ch1Teach('ただし…<b>ドラは役ではない</b>。足せるのは<b>翻だけ</b>で、役の数はふえないよ。ここは何度でも思い出してね。',
         {tlab:'ドラは役じゃない'}),
-      yakuSumMcq(['riichi'],{dora:2,
-        exp:'リーチ'+yakuHanText('riichi')+'＋ドラ2枚で3翻。役は1つのままだよ。'}),
-      yakuSumMcq(['riichi','pinfu'],{dora:1,
-        exp:'リーチ＋ピンフで2翻、ドラ1枚で+1翻。合計3翻！'}),
-      yakuSumMcq(['tanyao','toitoi'],{dora:3,
-        exp:'タンヤオ'+yakuHanText('tanyao')+'＋トイトイ'+yakuHanText('toitoi')+'＋ドラ3枚＝6翻。ドラは一気に大きくなるね！'}),
+      scoreHandHanMcq('rd2'),
+      /* R65 §11: ドラの足し算も牌姿で。ドラ表示牌を出すので、何枚ドラがあるか手牌から数えられる */
+      scoreHandHanMcq('rp1'),
+      scoreHandHanMcq('tt'),
       {q:'役がなくて、ドラが4枚ある。アガれる？',choices:['アガれない','アガれる（4翻あるから）'],a:0,
        exp:'翻がいくつあっても、役がなければアガれない。ドラは役ではないからね。'},
       ch1Teach('鳴いたときは<b>食い下がり</b>も忘れずに！鳴いた役は、下がったあとの翻で足し算するよ。',
         {tlab:'鳴いたときは食い下がり',panel:yakuBadgeHTML('honitsu')}),
       /* R64 §13: 食い下がりも実物の牌姿で1問 */
       scoreHandHanMcq('n3'),
-      yakuSumMcq(['honitsu','tanyao'],{open:true,
-        exp:'鳴いているから、ホンイツは食い下がりで'+yakuHanText('honitsu',true)
-          +'。タンヤオは下がらないので'+yakuHanText('tanyao',true)+'。合計3翻だよ。'}),
+      /* R65: R62で置いていた「ホンイツ＋タンヤオ」は、じつは【同時に成立しない】組み合わせだった
+         (ホンイツは字牌がいる・タンヤオは字牌を入れられない)。実在する牌姿に置きかえる。
+         食い下がりを体験させる、というねらいは変えていない */
+      scoreHandHanMcq('n3',
+        '鳴いているから、ホンイツは食い下がりで'+yakuHanText('honitsu',true)
+        +'。役牌は下がらないので'+yakuHanText('yakuhai',true)+'。合計3翻だよ。'),
     ];
   },
   sc1_3(){
@@ -12534,14 +12703,12 @@ const CH3_LESSONS={
   /* ★S1-7 点の大きさマスター */
   sc1_7(){
     const quiz=shuffle([
-      yakuSumMcq(['riichi','chiitoi'],{dora:2,
-        exp:'リーチ'+yakuHanText('riichi')+'＋七対子'+yakuHanText('chiitoi')+'＋ドラ2枚＝5翻。満貫だ！'}),
+      scoreHandHanMcq('c2d'),
       tierOfHanMcq(7,'6〜7翻は跳満だよ。'),
       tierOfHanMcq(13,'11翻以上はぜんぶ三倍満。翻を足して役満にはならないルールだったね。'),
       tierPointMcq('mangan',false,'ron',RB_KO+'の満貫ロンは'+tierRonText('mangan')+'。'),
       tierPointMcq('baiman',true,'ron',RB_OYA+'の倍満ロンは'+tierRonText('baiman',true)+'。'),
-      yakuSumMcq(['chinitsu','tanyao'],{open:true,
-        exp:'鳴いているからチンイツは'+yakuHanText('chinitsu',true)+'。タンヤオを足して6翻＝跳満だ！'}),
+      scoreHandHanMcq('ct'),
       {q:'役がなくて、ドラが5枚ある。アガれる？',choices:['アガれない','アガれる（満貫だから）'],a:0,
        exp:'ドラは役ではない。翻がいくつあっても役がなければアガれないよ。'},
     ]);
@@ -12553,7 +12720,7 @@ const CH3_LESSONS={
       ch1Teach('🎉 <b>点の大きさマスター！</b> これで「この手はどのくらい大きいか」が分かるようになったね。'
         +'つぎは、実際の麻雀で<b>よく出てくる点の数字</b>を覚えよう！',
         {tlab:'つぎへ！'}),
-      ch1Teach('役の<b>翻</b>と<b>鳴き</b>は、いつでも<b>役一覧</b>でたしかめられるよ。ホーム画面と、コース画面の「🀄 役一覧」ボタンから開いてね！',
+      ch1Teach('役の<b>翻</b>と<b>鳴き</b>は、いつでも<b>役一覧</b>でたしかめられるよ。ホーム画面と、コース画面の「🀄 早見表」ボタンから開いてね！',
         {tlab:'役一覧のあんない'}),
     ]);
   },
@@ -12663,8 +12830,9 @@ const CH3_LESSONS={
       lineSeqMcq('naki',2,scoreLine('naki').name+'系の'+scoreLine('naki').han[2]+'だよ。'),
       lineSeqMcq('menzen',1,scoreLine('menzen').name+'系の'+scoreLine('menzen').han[1]+'だよ。'),
       lineStepMcq('chiitoi',2,'七対子は特別なラインだったね。'),
-      tsumoKoMcq(2,'oya','大きいほうが'+RB_OYA+'の払い。'),
-      tsumoOyaMcq(0,'「オール」は'+RB_KO+'1人ぶんの数字だよ。'),
+      /* R65 §10: まとめのツモ問題にも牌姿をつける */
+      tsumoKoMcq(2,'oya','大きいほうが'+RB_OYA+'の払い。',{hand:'tk'}),
+      tsumoOyaMcq(0,'「オール」は'+RB_KO+'1人ぶんの数字だよ。',{hand:'to'}),
       {q:'鳴いていない手は かならず'+scoreLine('menzen').name+'系？',
        choices:['かぎらない（なりやすいだけ）','かならず'],a:0,
        exp:'実際の点は符で変わるよ。目安として覚えておこう。'},
@@ -12758,9 +12926,14 @@ const CH3_LESSONS={
         +'<b>符</b>をつかったこまかい計算は、もっと先の<b>点数計算トレーニング</b>で覚えよう。'
         +'そのとき「あの系統はこういう理由だったのか！」とつながるよ。',
         {tlab:'第4章コンプリート！'}),
-      ch1Teach('役の<b>翻</b>と<b>鳴き</b>は、いつでも<b>役一覧</b>でたしかめられるよ。'
-        +'ホーム画面と、コース画面の「🀄 役一覧」ボタンから開いてね！',
-        {tlab:'役一覧のあんない'}),
+      /* R65: 点数表も役一覧とおなじ「打ちながら見る資料」。第4章のしあげで両方あんないする */
+      ch1Teach('役の<b>翻</b>と<b>鳴き</b>は<b>役一覧</b>で、点は<b>点数表</b>で、'
+        +'いつでもたしかめられるよ。ホーム画面と、コース画面の「🀄 早見表」ボタンから開いてね！',
+        {tlab:'早見表のあんない'}),
+      ch1Teach('<b>点数表</b>には、'+RB_KO+'と'+RB_OYA+'・ロンとツモのちがいも、'
+        +'<b>符</b>をつかった正式な点ものっているよ。符の数えかたは、もっと先の'
+        +'<b>点数計算トレーニング</b>で覚えるから、いまは「見ればわかる」で大丈夫！',
+        {tlab:'点数表のあんない'}),
     ]);
   },
   /* ===== X 任意Road「もっと役を覚える」(第3章クリアで解放。次章の前提にしない) ===== */
@@ -14859,6 +15032,18 @@ function showStreakDetail(off){
 let YL_FILT='all';            // 'all'|'h1'|'h2'|'h3'|'ym' (保存しない=localStorageの形は変えない)
 let YL_DET=null;              // タップで開いている役のキー(1つだけ。保存しない)
 const YL_FILTS=[{k:'all',t:'すべて'},{k:'h1',t:'1翻'},{k:'h2',t:'2翻'},{k:'h3',t:'3翻以上'},{k:'ym',t:'役満'}];
+/* ===== 資料(早見表)のタブ(R65) =====
+   役一覧と点数表は どちらも「実際に打ちながら見るもの」。入口・見た目・閉じ方をそろえる。
+   ・学習の進みぐあいとは【完全に独立】。見ても roadProgress/XP/ジェム/ストリークは変わらない
+   ・ナビゲーションタブは増やさない(画面を狭くしない)。1つの資料画面の中でタブで切りかえる
+   ・状態は保存しない＝localStorageの形は変えない */
+const REF_TABS=[{k:'yaku',t:'🀄 役一覧'},{k:'score',t:'💰 点数表'}];
+let REF_TAB='yaku';
+/* 点数表のならび: 子/親 × ロン/ツモ。1画面に1つだけ出すので、
+   320pxでも符×翻の表が横スクロールなしで入る(4列+符列) */
+const ST_WHO=[{k:'ko',t:RB_KO},{k:'oya',t:RB_OYA}];
+const ST_WIN=[{k:'ron',t:'ロン'},{k:'tsumo',t:'ツモ'}];
+let ST_OYA=false, ST_WIN_K='ron';
 /* その役を初めて名前付きで教えるLessonが、どのテーマの何番目かを THEMES から引く(定義の二重化を避ける) */
 function yakuLessonPos(lessonKey){
   for(const t of THEMES){
@@ -14918,11 +15103,90 @@ function ylCardHTML(key){
     +det+'</button>';
 }
 function ylTap(key){ YL_DET=(YL_DET===key)?null:key; renderYakuList(); }
-function ylSetFilt(k){ YL_FILT=k; YL_DET=null; renderYakuList(); try{ document.getElementById('yl-body').scrollTop=0; }catch(e){} }
+function ylSetFilt(k){ YL_FILT=k; YL_DET=null; REF_TAB='yaku'; renderRefTabs(); renderYakuList(); try{ document.getElementById('yl-body').scrollTop=0; }catch(e){} }
 function ylHeadHTML(){
   /* 「門前」はこの教材ではまだ導入していない語(TSUMOPPY_TERMS T082: 初心者には「鳴いていない」)。
      見出しは導入ずみの言葉だけでつくる。本当の麻雀での呼び名は一覧のいちばん下で1回だけ紹介する */
   return '<div class="yl-head"><span>役</span><span>鳴かず</span><span>鳴き</span></div>';
+}
+/* ===== 点数表(R65) =====
+   実戦中に見る参照用の表。Roadではまだ符を教えないが、ここは【参照用】なので
+   正式な符べつの点を出してよい(TSUMOPPY_TERMS §48)。
+   値はすべて scoreByFuHan / SCORE_TIERS / SCORE_LINES から作る。数字は1つも手書きしない。 */
+function stSetWho(oya){ ST_OYA=!!oya; renderRefBody(); }
+function stSetWin(k){ ST_WIN_K=k; renderRefBody(); }
+function stCellHTML(fu,han){
+  if(!fuHanExists(fu,han,ST_WIN_K)) return '<span class="st-x">—</span>';
+  const r=scoreByFuHan(fu,han,ST_OYA);
+  const mg=r.tier?' st-mg':'';
+  if(ST_WIN_K==='ron') return '<span class="st-pt'+mg+'">'+r.ron+'</span>';
+  if(ST_OYA) return '<span class="st-pt'+mg+'">'+r.tsumo[0]+'<i>オール</i></span>';
+  /* 子のツモは「だれがいくら」が分かる形にする。数字を2つならべるだけにしない(R65 §7) */
+  return '<span class="st-pt st-two'+mg+'"><b>'+r.tsumo[0]+'<i>'+RB_KO+'</i></b>'
+    +'<b>'+r.tsumo[1]+'<i>'+RB_OYA+'</i></b></span>';
+}
+function stFuTableHTML(){
+  const hans=[1,2,3,4];
+  return '<div class="st-tbl">'
+    +'<div class="st-row st-head"><span>符</span>'+hans.map(h=>'<span>'+h+'翻</span>').join('')+'</div>'
+    +SCORE_FU.map(fu=>'<div class="st-row"><span class="st-fu">'+fu+'符</span>'
+      +hans.map(h=>stCellHTML(fu,h)).join('')+'</div>').join('')
+    +'</div>';
+}
+function renderScoreTable(){
+  const fb=document.getElementById('yl-filt'), bd=document.getElementById('yl-body');
+  if(!fb||!bd) return;
+  // フィルタ行は「子/親」「ロン/ツモ」の切りかえに使う(役一覧と同じ見た目・同じ場所)
+  fb.innerHTML=ST_WHO.map(w=>'<button class="'+((w.k==='oya')===ST_OYA?'on':'')
+      +'" onclick="stSetWho('+(w.k==='oya')+')">'+w.t+'</button>').join('')
+    +'<span class="yl-sep" aria-hidden="true"></span>'
+    +ST_WIN.map(w=>'<button class="'+(ST_WIN_K===w.k?'on':'')
+      +'" onclick="stSetWin(\''+w.k+'\')">'+w.t+'</button>').join('');
+  const who=ST_OYA?RB_OYA:RB_KO, win=ST_WIN_K==='ron'?'ロン':'ツモ';
+  let html='<div class="st-now">いま見ているのは <b>'+who+'</b> の <b>'+win+'</b></div>';
+  /* ① まずは覚えた代表3ライン(初心者がいちばん使う) */
+  html+='<div class="yl-grp">よく出る点（まずはここ）</div>'
+    +'<p class="st-note">'+RB_KO+'のロンでよく出てくる3本のライン。'
+    +'<b>鳴いていない手は1300系・鳴いた手は1000系になりやすい</b>という目安だよ'
+    +'（かならずそうなるわけではないよ）。</p>'
+    +scoreLineTableHTML();
+  /* ② 符と翻の正式な表 */
+  html+='<div class="yl-grp">符と翻の点数表（'+who+'・'+win+'）</div>'
+    +(ST_WIN_K==='tsumo'
+      ?'<p class="st-note">'+(ST_OYA
+        ?RB_OYA+'のツモは'+RB_KO+'3人が<b>同じ額</b>。だから「◯点オール」というよ。'
+        :RB_KO+'のツモは'+RB_KO+'2人と'+RB_OYA+'で額がちがう。<b>'+RB_OYA+'が多く払う</b>よ。')+'</p>'
+      :'<p class="st-note">ロンは<b>アガられた1人だけ</b>が払うよ。</p>')
+    +stFuTableHTML()
+    +'<p class="st-note">※<b>20符</b>はピンフのツモだけ、<b>25符</b>は七対子だけに出てくる符だよ。'
+    +'<span class="st-mg">みどり</span>の点は<b>満貫</b>。'
+    +'ツモッピィは<b>切り上げ満貫あり</b>なので、'
+    +KIRIAGE_MANGAN.map(k=>k.fu+'符'+k.han+'翻').join('と')+'も満貫になるよ。</p>';
+  /* ③ 満貫から上 */
+  html+='<div class="yl-grp">満貫より大きいアガリ（'+who+'）</div>'
+    +tierTableHTML(null,ST_OYA)
+    +'<p class="st-note">※ツモッピィは<b>数え役満なし</b>。翻をどれだけ足しても'
+    +'<b>三倍満どまり</b>で、役満は<b>役満の役</b>ができたときだけだよ。</p>';
+  /* ④ 符はまだRoadで教えていないことを明記する */
+  html+='<p class="yl-note">符の数えかたは、もっと先の<b>点数計算トレーニング</b>で覚えるよ。'
+    +'いまは「この<b>点数表</b>を見ればわかる」でOK！</p>';
+  bd.innerHTML=html;
+}
+/* 資料画面の中身を、いま選ばれているタブで切りかえる */
+function refSetTab(k){
+  REF_TAB=k; YL_DET=null;
+  renderRefTabs(); renderRefBody();
+  try{ document.getElementById('yl-body').scrollTop=0; }catch(e){}
+}
+function renderRefTabs(){
+  const tb=document.getElementById('ref-tabs'); if(!tb) return;
+  tb.innerHTML=REF_TABS.map(t=>'<button class="'+(REF_TAB===t.k?'on':'')
+    +'" onclick="refSetTab(\''+t.k+'\')">'+t.t+'</button>').join('');
+  const ttl=document.getElementById('ref-title');
+  if(ttl) ttl.textContent=REF_TAB==='score'?'点数表':'役一覧';
+}
+function renderRefBody(){
+  if(REF_TAB==='score') renderScoreTable(); else renderYakuList();
 }
 function renderYakuList(){
   const fb=document.getElementById('yl-filt'), bd=document.getElementById('yl-body');
@@ -14965,10 +15229,12 @@ function renderYakuList(){
     +'※「鳴かず」は、ほんとうの麻雀では<ruby>門前<rt>メンゼン</rt></ruby>ともいうよ。</p>';
   bd.innerHTML=html;
 }
-function openYakuList(){
-  YL_DET=null;
+function openYakuList(){ openRef('yaku'); }
+function openScoreTable(){ openRef('score'); }
+function openRef(tab){
+  YL_DET=null; REF_TAB=tab||'yaku';
   const el=document.getElementById('ylist'); if(!el) return;
-  renderYakuList();
+  renderRefTabs(); renderRefBody();
   el.classList.add('show');
   try{ document.getElementById('yl-body').scrollTop=0; }catch(e){}
 }
