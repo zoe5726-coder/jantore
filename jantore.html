@@ -401,15 +401,18 @@ html.ruby-full .mt-guide-card .tc-bub{height:86px;}
    足もと(下端)をそろえるので、加槓の2段も自然に見える */
 .hand.oh-split{--tile-w:clamp(19px,6.4vw,28px); margin-bottom:4px;}
 .fu-lab{margin-top:2px;}
-/* R66: 組と組のあいだは5〜10pxだけ。牌1枚ぶんのような空白は作らない＝一続きのさらしに見える。
-   組の数がふえるほど牌をすこしだけ小さくして、できるかぎり横1列におさめる
-   (16pxを下まわらせない。入らない端末では折り返す) */
-.fuuro-area{--tile-w:clamp(19px,6.4vw,28px); display:flex; flex-wrap:wrap; align-items:flex-end;
+/* R66+R67: 組と組のあいだは5〜10pxだけ。牌1枚ぶんのような空白は作らない＝一続きのさらしに見える。
+   組の数がふえるほど牌をすこしだけ小さくするが、優先順位は
+     ①牌が読める → ②一続きのさらしに見える → ③できれば横1列
+   の順。③のために①を犠牲にしない(R67 §8・§9)。
+   --fuuro-min が【読める下限】。この1か所だけで全部の鳴きの下限が決まる。
+   下限に当たって横1列に入らない端末では、牌を縮めずに組と組のあいだで折り返す。 */
+.fuuro-area{--fuuro-min:19px; --tile-w:clamp(var(--fuuro-min),6.4vw,28px);
+  display:flex; flex-wrap:wrap; align-items:flex-end;
   justify-content:center; gap:5px 7px; margin:2px 0 12px;}
-/* vwはLessonの左右の余白ぶんを引けないので、横1列に入る係数まで落としてある
-   (16pxは「何の牌か読める」下限。これ以上は小さくしない) */
-.fuuro-area.fu-n3{--tile-w:clamp(17px,5.5vw,25px);}
-.fuuro-area.fu-n4{--tile-w:clamp(16px,4.8vw,22px);}
+/* vwはLessonの左右の余白ぶんを引けないので、横1列に入る係数まで落としてある */
+.fuuro-area.fu-n3{--tile-w:clamp(var(--fuuro-min),5.5vw,25px);}
+.fuuro-area.fu-n4{--tile-w:clamp(var(--fuuro-min),4.8vw,22px);}
 .fuuro-area .fu-set{display:flex; align-items:flex-end; gap:1px;}
 .fuuro-area .tile{flex:0 0 auto; width:var(--tile-w); max-width:none; min-width:0;}
 .fuuro-area .mg-back{flex:0 0 auto; width:var(--tile-w); max-width:none; min-width:0;}
@@ -615,6 +618,10 @@ button.tile.off:active{transform:none;}
 .sh-sum,.sh-line,.sh-note{font-size:13px; font-weight:800; color:var(--ink); margin:6px 0 0;
   font-family:'Noto Sans JP',sans-serif;}
 .sh-sum b,.sh-line b{color:var(--jade-ink); font-size:15px;}
+/* R67 §8: 点を決める条件(子か親か)。答えではなく【前提】なので図のいちばん上に出す */
+.sh-who{font-size:12.5px; font-weight:800; color:var(--ink-soft); margin:0 0 4px;
+  font-family:'Noto Sans JP',sans-serif;}
+.sh-who b{color:var(--ink); font-size:14px;}
 .sh-note{color:var(--ink-soft); font-size:12px;}
 .sc-tbl{display:block; margin:8px 0 2px; font-family:'Noto Sans JP',sans-serif;}
 .sc-row{display:grid; grid-template-columns:3.6em 4.6em 1fr 1fr; gap:4px; align-items:center;
@@ -730,7 +737,10 @@ span.st-mg{color:var(--jade-ink); font-weight:900;}
 .yl-c3.down{color:#8a6100;}
 /* 牌姿例・条件は1列目の中だけ(右の2列を押し広げない) */
 .yl-sub{grid-column:1; grid-row:2; min-width:0;}
-.yl-ex{display:block; margin:3px 0 0; white-space:nowrap; font-size:clamp(9.5px,3vw,11.5px);}
+/* R67 §8: 組の中は絶対に切らない(.itiles 側が nowrap)が、1列目の幅に入りきらないときは
+   【組と組のあいだ】で next line へ続けてよい。四槓子(5組18枚)が狭い端末で列をはみ出して
+   いたのを、牌を小さくするのではなく自然に折り返して直す。 */
+.yl-ex{display:block; margin:3px 0 0; white-space:normal; font-size:clamp(9.5px,3vw,11.5px);}
 .yl-ex .itiles{margin:0 3px 0 0; vertical-align:middle;}
 .yl-ex .itile{width:1.02em; height:1.42em; margin:0; border-radius:0;}
 /* R66: 四槓子の完成したアタマ2枚。槓子とくっつけて見せない */
@@ -762,8 +772,13 @@ span.st-mg{color:var(--jade-ink); font-weight:900;}
   text-align:left; font-family:inherit;}
 .hc-yaku .hy-ico{flex:none; font-size:22px;}
 .hc-yaku .hy-txt{flex:1 1 auto; min-width:0;}
-.hc-yaku .hy-txt b{display:block; font-size:15px;}
-.hc-yaku .hy-txt span{display:block; font-size:12px; color:var(--ink-soft); font-weight:700;}
+/* R67 §3: ホームの主要アクション3枚(つづきから・役一覧・点数表)は、幅だけでなく
+   【1行＋はみ出しは…で切る】という見出し/説明の扱いもそろえる。
+   .hc-continue .hc-txt span が前から使っているルールに合わせたので、
+   カードの高さがそろい、狭い端末でも2行に伸びない。 */
+.hc-yaku .hy-txt b{display:block; font-size:clamp(14.5px,4vw,16.5px);}
+.hc-yaku .hy-txt span{display:block; font-size:clamp(11px,3.1vw,12.5px); color:var(--ink-soft);
+  font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
 .hc-yaku:active{transform:translateY(1px);}
 .ch1-cands{display:flex; flex-wrap:nowrap; justify-content:center; gap:2px; margin:14px 0 6px;
   touch-action:none; user-select:none; -webkit-user-select:none;}  /* なぞり選択(共通UI)のため */
@@ -1420,8 +1435,14 @@ button.mjt-pick.mjt-hp,
 
 /* ================= 第8段階: Daily Engagement ================= */
 /* ホーム画面: カードを縦に積む構造(将来カードを追記可能) */
-.home-wrap{padding:4px 0 96px;}
-.hc-continue{display:flex; align-items:center; gap:12px; width:calc(100% - 32px); margin:10px 16px 0;
+/* ホーム画面のコンテンツ幅は【ここだけ】で決める(R67 §1・§2)。
+   基準は「つづきから」が使っていた左右16px。カードごとに margin-left や
+   width:calc(100% - 32px) を足すと、R66で見つかった「役一覧・点数表だけ左右に広い」
+   という食いちがいがまた起きるので、横方向の指定はカード側に書かない。
+   >* の打ち消しは、将来カードを足したときに自動でこの幅に乗るようにするため。 */
+.home-wrap{--home-gut:16px; padding:4px var(--home-gut) 96px;}
+.home-wrap>*{margin-left:0; margin-right:0; width:100%;}
+.hc-continue{display:flex; align-items:center; gap:12px; width:100%; margin:10px 0 0;
   border:none; background:var(--jade); color:var(--on-accent); border-radius:14px; padding:13px 16px;
   box-shadow:0 4px 0 var(--jade-deep); text-align:left; cursor:pointer;}
 .hc-continue:active{transform:translateY(3px); box-shadow:0 1px 0 var(--jade-deep);}
@@ -1446,7 +1467,7 @@ button.mjt-pick.mjt-hp,
 .rt-more summary{font-size:clamp(11.5px,3.2vw,13px); font-weight:800; color:var(--jade-ink);
   cursor:pointer; padding:4px 0;}
 /* 今日の学習状況(ストリーク)+つづきから */
-.today-strip{margin:10px 16px 0; background:var(--card); border:2px solid var(--line); border-radius:12px;
+.today-strip{margin:10px 0 0; background:var(--card); border:2px solid var(--line); border-radius:12px;
   padding:8px 12px; display:flex; align-items:center; gap:8px; cursor:pointer;}
 .today-strip .ts-streak{font-size:clamp(12.5px,3.5vw,14px); white-space:nowrap;}
 .today-strip .ts-state{flex:1; min-width:0; font-size:clamp(10.5px,3vw,12px); color:var(--ink-soft); font-weight:700;}
@@ -1455,7 +1476,7 @@ button.mjt-pick.mjt-hp,
   padding:6px 12px; font-size:clamp(11px,3.1vw,12.5px); box-shadow:0 2px 0 var(--jade-deep); white-space:nowrap;}
 .today-strip .ts-go:active{transform:translateY(2px); box-shadow:none;}
 /* 今日のミッションカード(コンパクト・ロードを圧迫しない) */
-.mission-card{margin:8px 16px 0; background:var(--card); border:2px solid var(--line); border-radius:12px;
+.mission-card{margin:8px 0 0; background:var(--card); border:2px solid var(--line); border-radius:12px;
   padding:8px 12px 10px;}
 .mission-card .mc-head{display:flex; justify-content:space-between; align-items:center;
   font-weight:800; font-size:clamp(12.5px,3.5vw,14px); margin-bottom:4px;}
@@ -2873,7 +2894,10 @@ const COURSES=[
  {q:'親の満貫ツモ。支払いは？',choices:['2,600オール','3,000オール','4,000オール','6,000オール'],a:2,exp:'親の満貫は12,000点。ツモなら子3人が4,000点ずつ＝4,000オールです。'},
  {q:'子の40符2翻、ロンの点数は？',choices:['2,000点','2,600点','3,200点','3,900点'],a:1,exp:'基本点=40×2^4=640。×4=2,560→切り上げて2,600点。'},
  {q:'子のピンフ・ツモ（20符4翻）の支払いは？',choices:['1,000・2,000','1,300・2,600','2,000・3,900','2,600・5,200'],a:1,exp:'基本点=20×2^6=1,280。子は1,280→1,300点、親は2,560→2,600点の支払いです。'},
- {q:'翻だけで満貫になるのは何翻から？',choices:['3翻','4翻','5翻','6翻'],a:2,exp:'5翻から満貫（子8,000/親12,000）。※このアプリは「切り上げ満貫あり」なので、30符4翻・40符3翻も満貫になります。'},
+ /* R67 §1・§13: 「満貫は何翻から？」は4翻とも5翻とも取れる曖昧な問いなので作らない。
+    ここは非公開の旧コースだが、①同じ形の問題をファイルに残さない ②40符3翻は満貫ではない
+    （切り上げ満貫は30符4翻と60符3翻）という誤りを消す、の2つのために書きあらためた。 */
+ {q:'子が5翻でロン。点数は？',choices:['5,200点','6,400点','8,000点','12,000点'],a:2,exp:'5翻なら符にかかわらず満貫＝子8,000点。4翻以下でも符によっては満貫になります（このアプリの切り上げ満貫は30符4翻と60符3翻。40符3翻は5,200点で満貫ではありません）。'},
  {q:'親の30符3翻、ロンの点数は？',choices:['3,900点','4,800点','5,800点','7,700点'],a:2,exp:'基本点=30×2^5=960。親のロンは×6=5,760→切り上げて5,800点。子なら3,900点です。'},
 ]},
 {id:'waits',title:'待ち当て',icon:'🔍',section:4,desc:'「完成まであと1枚」の最後の1枚＝待ちを当てよう。',type:'waits'},
@@ -3935,7 +3959,7 @@ const RUBY_FULL_SRC=`
 順位[じゅんい] 勝負[しょうぶ] 席順[せきじゅん] {1位}[いちい]
 判断[はんだん] 判定中[はんていちゅう] 判定[はんてい] 反対[はんたい] 正反対[せいはんたい] 名前[なまえ] 問題[もんだい]
 基本[きほん] 基本形[きほんけい] 基本的[きほんてき] 場合[ばあい] 場所[ばしょ] 大事[だいじ] 大丈夫[だいじょうぶ] 奇跡[きせき]
-学習[がくしゅう] 学習中[がくしゅうちゅう] 安心[あんしん] 完成[かんせい] 完成形[かんせいけい] 実戦[じっせん] 実戦形[じっせんけい] 実戦編[じっせんへん] 実戦練習[じっせんれんしゅう]
+学習[がくしゅう] 学習中[がくしゅうちゅう] 安心[あんしん] 教[おし]え 完成[かんせい] 完成形[かんせいけい] 実戦[じっせん] 実戦形[じっせんけい] 実戦編[じっせんへん] 実戦練習[じっせんれんしゅう]
 宣言[せんげん] 役割[やくわり] 復習[ふくしゅう] 必要[ひつよう] 意味[いみ] 意識[いしき] 成立[せいりつ]
 手作[てづく]り 技術[ぎじゅつ] 挑戦[ちょうせん] 数字[すうじ] 漢数字[かんすうじ] 漢字[かんじ] 最初[さいしょ] 最大[さいだい] 最高[さいこう] 最終進化形[さいしゅうしんかけい]
 本物[ほんもの] 条件[じょうけん] 枚数[まいすう] 枚形[まいけい] 案内[あんない] 構造[こうぞう] 横向[よこむ]き
@@ -4162,8 +4186,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.60.0';
-const BUILD_ID='20261002-02';
+const APP_VER='0.61.0';
+const BUILD_ID='20261002-03';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -8479,14 +8503,16 @@ const SCORE_LINES=[
 ];
 function scoreLine(id){ return SCORE_LINES.find(l=>l.id===id)||null; }
 function scoreLineTableHTML(ids){
-  // ラインごとに「何翻のときいくら」を横にならべる。翻のならびはラインごとに持つ(七対子は2翻から)
+  /* ラインごとに「何翻のときいくら」を横にならべる。翻のならびはラインごとに持つ(七対子は2翻から)
+     R67 §8・§15: この数字は【子のロン】の点。点を決める条件を言わずに数字だけ出さない。
+     表そのものに書いておけば、どの画面でこの表を使っても条件がついてまわる。 */
   const list=(ids||SCORE_LINES.map(l=>l.id)).map(scoreLine).filter(Boolean);
   return '<div class="sc-tbl sl-tbl">'
     +list.map(l=>'<div class="sc-row sc-head"><span>'+l.short+'</span>'
         +l.han.map(h=>'<span>'+h+'</span>').join('')+'</div>'
       +'<div class="sc-row"><span class="sc-nm">点</span>'
         +l.pts.map(p=>'<span class="sc-pt">'+p+'</span>').join('')+'</div>').join('')
-    +'</div>';
+    +'</div><p class="sh-note">どれも'+RB_KO+'の<b>ロン</b>の点だよ</p>';
 }
 /* ===== 系統×翻 → その点になる実際の牌姿(R65 §10) =====
    「1000系の2翻。何点？」という表だけの問題にも、実際にその翻になる牌姿をつける。
@@ -8512,7 +8538,8 @@ function lineStepMcq(id,i,exp,opt){
        役と翻は見せてよい(問いが聞いているのは点)。系統は問いの中にもう書いてある。 */
   const han=+String(l.han[i]).replace('翻','');
   const e=scoreHandForLine(id,han);
-  const base={q:'<b>'+l.short+'</b>の<b>'+l.han[i]+'</b>。何点？',
+  /* R67 §8: 点は子/親・ロン/ツモで変わる。代表ラインは【子のロン】の数字なので、問いに書く */
+  const base={q:RB_KO+'の<b>ロン</b>。<b>'+l.short+'</b>の<b>'+l.han[i]+'</b>。何点？',
     choices,a:choices.indexOf(right+'点'),exp};
   if(e){ base.hand=e.hand; base.ctx3=scoreHandCtx(e); base.panel=scoreHandPanel(e,{}); }
   return Object.assign(base,opt||{});
@@ -8525,7 +8552,8 @@ function lineSeqMcq(id,i,exp,opt){
   const others=SCORE_LINES.filter(x=>x.id!==id).map(x=>x.pts[i]).filter(v=>v!==right);
   const vals=Array.from(new Set([right].concat(others))).sort((a,b)=>a-b);
   const choices=(vals.length>1?vals:[right,right+700].sort((a,b)=>a-b)).map(v=>v+'点');
-  return Object.assign({q:'よく出る点のならび。<b>？</b>に入るのは？<br>'+seq,
+  /* R67 §8: 代表ラインは【子のロン】の数字。条件を書かずに数字だけならべない */
+  return Object.assign({q:RB_KO+'の<b>ロン</b>でよく出る点のならび。<b>？</b>に入るのは？<br>'+seq,
     choices,a:choices.indexOf(right+'点'),exp},opt||{});
 }
 /* ===== 点数問題の牌姿(R64 §6〜§11・§13) =====
@@ -8653,16 +8681,21 @@ function scoreHandPts(e){
   return scoreLine(line).pts[i];
 }
 /* 点数表(正式な符べつの点)から出した点。代表ラインと食いちがっていないことをテストで見る */
+/* 子か親か。点はこれで変わるので【1か所】で決めて、計算にも画面表示にも同じ値を使う */
+function scoreHandIsOya(e){ const c=scoreHandCtx(e); return !!(c.sw==='E'&&c.rw==='E'); }
 function scoreHandPtsByFu(e){
   const ctx=scoreHandCtx(e), fu=scoreHandFu(e);
   if(fu==null||ctx.win!=='ron') return null;
-  return scoreByFuHan(fu,scoreHandHan(e),!!(ctx.sw==='E'&&ctx.rw==='E')).ron;
+  return scoreByFuHan(fu,scoreHandHan(e),scoreHandIsOya(e)).ron;
 }
 /* 問題につける図。【答えそのものは絶対に出さない】(§12):
    系統は「1300系」という名前だけ。点のならんだ表はTeachのときだけ出す */
 function scoreHandPanel(e,opt){
   const o=opt||{};
-  let h=yakuRowsHTML(e.keys);
+  /* R67 §8・§15: 点は【子か親か】でも変わる。画面に出さずに点を答えさせない。
+     ロン/ツモは盤面のチップ(ch3Ctx)が出すので、ここは子/親だけ。 */
+  let h='<div class="sh-who">あなたは <b>'+(scoreHandIsOya(e)?RB_OYA:RB_KO)+'</b></div>'
+    +yakuRowsHTML(e.keys);
   /* R65: ドラがある手は【ドラ表示牌】も出す。何がドラで何枚あるかを手牌から数えられる
      (「ドラ2枚」と書くだけにしない)。表示牌→ドラ の変換は doraPanelHTML が1か所で持つ */
   if(e.doraInd) h+=doraPanelHTML([e.doraInd]);
@@ -10342,16 +10375,9 @@ function yakuSumMcq(keys,opt){
   return Object.assign({q,choices,a:choices.indexOf(han+'翻'),exp:o.exp,
     panel:yakuRowsHTML(keys)},o.opt||{});
 }
-function tierOfHanMcq(han,exp,opt){
-  // 「◯翻は、どの大きさ？」。正解は tierOfHan が決める(満貫〜三倍満の表を手書きしない)
-  const t=tierOfHan(han);
-  const names=['満貫','跳満','倍満','三倍満'];
-  /* 表はTeach側だけに置く。問題で表を出すと、答えがそのまま読めてしまって
-     「おぼえているか」を見る問題にならない(R61の実機確認で気づいた)。
-     opt.panel で明示的に渡したときだけ図を出す */
-  return Object.assign({q:'ぜんぶで<b>'+han+'翻</b>。これはどの大きさ？',
-    choices:names,a:t?names.indexOf(t.name):-1,exp},opt||{});
-}
+/* R67 §2: 「◯翻はどの大きさ？」という名前あての問題ビルダー(tierOfHanMcq)は廃止した。
+   実戦で要るのは名前ではなく点なので、fuHanPointMcq(条件→実際の点)に置きかえている。
+   名前(満貫・跳満・倍満・三倍満)は Teach と、正解したあとの解説で覚える。 */
 function tierPointMcq(tierId,oya,win,exp,opt){
   /* 「(子|親)の(満貫|…)を(ロン|ツモ)でアガった。点は？」
      選択肢は SCORE_TIERS のおなじ列からとる(=となりの大きさの点が distractor になる)ので、
@@ -10367,6 +10393,52 @@ function tierPointMcq(tierId,oya,win,exp,opt){
   return Object.assign({q:(oya?RB_OYA:RB_KO)+'の<b>'+t.name
     +'</b>を<b>'+(win==='tsumo'?'ツモ':'ロン')+'</b>でアガった。点は？',
     choices:uniq,a:uniq.indexOf(right),exp},opt||{});
+}
+/* ===== R67 §3〜§6・§12 「条件 → 実際の点」を答えさせる問題ビルダー =====
+   R66までのSECTION4には「◯翻はどの大きさ？」という【名前を当てるだけ】の問題が多かった。
+   実戦で要るのは名前ではなく【いくら動くか】なので、翻(と、必要なら符)・子/親・ロン/ツモを
+   そろえて見せて、点そのものを答えさせる形にする。名前は解説で補う。
+
+   正解も まちがいの選択肢も、すべて正式な点数ロジック(scoreByFuHan / SCORE_TIERS)から作る。
+   問題文に点を手書きしない＝問題と計算が二重管理にならない(§12)。 */
+function scorePayText(r,oya){
+  // r = scoreByFuHan(...) の戻り値。ツモは「だれがいくら払うか」まで言葉にする
+  return oya?(r.tsumo[0]+'点オール'):(r.tsumo[0]+'点・'+r.tsumo[1]+'点');
+}
+function fuHanAnswer(fu,han,oya,win){
+  const r=scoreByFuHan(fu,han,oya);
+  return win==='tsumo'?scorePayText(r,oya):(r.ron+'点');
+}
+function fuHanPointMcq(o){
+  /* o={fu,han,oya,win,exp,cond}
+     fu を省くと「満貫以上=符にかかわらず翻だけで決まる」問題になる(5翻以上のみ) */
+  const oya=!!o.oya, win=o.win||'ron', han=o.han;
+  const fu=o.fu!=null?o.fu:null;
+  if(fu==null&&han<5) return {q:'(定義エラー)',choices:['-','-'],a:-1,exp:o.exp||''};
+  const right=fuHanAnswer(fu==null?30:fu,han,oya,win);
+  /* まちがいの選択肢は【実際にありえるほかの条件の点】。
+     ・満貫以上 … となりの大きさの点 ・満貫未満 … おなじ符の±1翻の点 */
+  const cands=[];
+  if(fu==null||scoreByFuHan(fu,han,oya).tier){
+    /* 役満は【翻を足しても届かない】(数え役満なし)ので、翻の問題の選択肢には入れない */
+    SCORE_TIERS.filter(t=>t.lo!=null).forEach(t=>{
+      cands.push(fuHanAnswer(fu==null?30:fu,t.lo,oya,win)); });
+  }else{
+    [han-1,han+1,han+2].forEach(h=>{ if(h>=1&&fuHanExists(fu,h,win)) cands.push(fuHanAnswer(fu,h,oya,win)); });
+  }
+  const num=s=>parseInt(String(s).replace(/[^0-9]/,''),10)||0;
+  const all=[]; [right].concat(cands).forEach(v=>{ if(v&&!all.includes(v)) all.push(v); });
+  all.sort((a,b)=>num(a)-num(b));
+  /* まちがいの選択肢は【正解のとなりの点】にする。遠い数字をならべると消去法で解けてしまう。
+     ならび順は点の安い順＝表とおなじなので、位置で覚えられないようにもなる */
+  const ri=all.indexOf(right);
+  let st=Math.max(0,Math.min(ri-1,all.length-3));
+  const choices=all.slice(st,st+3);
+  const who=oya?RB_OYA:RB_KO, w=win==='tsumo'?'ツモ':'ロン';
+  const cond=(fu==null?'<b>'+han+'翻</b>':'<b>'+fu+'符'+han+'翻</b>');
+  return Object.assign({
+    q:who+'が<b>'+w+'</b>でアガった。'+cond+'。'+(win==='tsumo'?'払いは？':'点は？'),
+    choices,a:choices.indexOf(right),exp:o.exp||''},o.opt||{});
 }
 function ch3AgariMcq(handStr,ctx3,exp,opt){
   // 役あり/なし: 形が完成していても役がなければアガれない(第1章D2-1の実戦定着)
@@ -12784,10 +12856,16 @@ const CH3_LESSONS={
   sc1_3(){
     const mg=scoreTier('mangan');
     return [
-      ch1Teach('翻の合計が<b>'+mg.lo+'翻</b>になると、特別な名前の大きさになるよ。その名前は<span class="term-chip">満貫（マンガン）</span>！',
+      /* R67 §1・§7・§14: 「満貫＝5翻から」と単純化しない。
+         5翻は符にかかわらず満貫だが、4翻以下でも符によっては満貫にとどく。
+         だから「満貫は何翻から？」という問題は作らない(作ると4翻か5翻か決まらない) */
+      ch1Teach('翻の合計が<b>'+mg.lo+'翻</b>になると、特別な名前の大きさになるよ。その名前は<span class="term-chip">満貫（マンガン）</span>！'
+        +mg.lo+'翻あれば、そのほかがどうであっても満貫だよ。',
         {tlab:'満貫'}),
-      /* R61 §11: 符は「あること」だけ伝える。符の数え方・基本点の式・30符3翻3900 のような練習は出さない */
-      ch1Teach('じつは<b>4翻までの点</b>は、翻のほかに<span class="term-chip">符（フ）</span>というこまかい数でも変わるんだ。だからこの章では<b>4翻までの点は出さない</b>よ。満貫からは<b>翻だけ</b>で点が決まるから、ここから覚えよう！',
+      /* R61 §11 → R67 §4・§10: 符は【自分で数えさせない】。
+         ただし点がきまらない問題にしないため、必要なときは問題のほうで条件として見せる */
+      ch1Teach('じつは<b>4翻までの点</b>は、翻のほかに<span class="term-chip">符（フ）</span>というこまかい数でも変わるんだ。'
+        +'符を自分で数えるのは、ずっと先のステップ。ここでは<b>「30符」「40符」のように問題のほうが教えてくれる</b>から、安心してね。',
         {tlab:'4翻までは符もつかう'}),
       ch1Teach(RB_KO+'の満貫は、ロンなら<b>'+tierRonText('mangan')
         +'</b>。ツモなら<b>'+tierTsumoText('mangan')+'</b>だよ。',
@@ -12795,25 +12873,39 @@ const CH3_LESSONS={
       tierPointMcq('mangan',false,'ron',RB_KO+'の満貫ロンは'+tierRonText('mangan')+'。おぼえやすい数だね！'),
       tierPointMcq('mangan',false,'tsumo',RB_KO+'の満貫ツモは'+tierTsumoText('mangan')
         +'。小さいほうを'+RB_KO+'2人、大きいほうを'+RB_OYA+'が払うよ。'),
-      ch1Teach('おまけの話。このアプリでは<b>4翻でも満貫になることがある</b>ルールをつかっているよ（<b>切り上げ満貫</b>）。符がもう少しで満貫にとどくときだね。いまは「そういうルールがある」だけ覚えておこう。',
+      ch1Teach('そして、このアプリでは<b>4翻以下でも満貫になることがある</b>よ（<b>切り上げ満貫</b>）。'
+        +KIRIAGE_MANGAN.map(k=>'<b>'+k.fu+'符'+k.han+'翻</b>').join('と')+'がそれ。実際に見てみよう。',
         {tlab:'切り上げ満貫'}),
-      {q:'<b>翻だけ</b>で満貫になるのは、何翻から？',choices:[mg.lo+'翻から','3翻から'],a:0,
-       exp:mg.lo+'翻で満貫。4翻までは符でも変わるから、この章ではあつかわないよ。'},
+      /* R67 §1・§5・§13: 「満貫は何翻から？」という曖昧な問題のかわりに、
+         満貫になる/ならない条件を【実際の点】で区別させる。正解はすべて scoreByFuHan から出す */
+      fuHanPointMcq({fu:KIRIAGE_MANGAN[0].fu,han:KIRIAGE_MANGAN[0].han,oya:false,win:'ron',
+        exp:'これが切り上げ満貫。4翻でも満貫の'+tierRonText('mangan')+'にとどくんだ。'}),
+      fuHanPointMcq({fu:40,han:3,oya:false,win:'ron',
+        exp:'こちらは満貫ではないよ。おなじ3翻でも符で点が変わる、という見本だね。'}),
+      fuHanPointMcq({han:mg.lo,oya:false,win:'ron',
+        exp:mg.lo+'翻あれば符はもう関係ない。'+RB_KO+'のロンで'+tierRonText('mangan')+'＝満貫だよ。'}),
     ];
   },
   sc1_4(){
     return [
       ch1Teach('満貫のうえには、もっと大きな名前があるよ。<span class="term-chip">跳満（ハネマン）</span>・<span class="term-chip">倍満（バイマン）</span>・<span class="term-chip">三倍満（サンバイマン）</span>！',
         {tlab:'満貫のうえ',panel:tierTableHTML(['mangan','haneman','baiman','sanbaiman'])}),
-      tierOfHanMcq(6,'6翻は跳満。満貫のつぎの大きさだよ。'),
-      tierOfHanMcq(9,'8〜10翻は倍満。満貫の2ばいくらいの大きさだね。'),
-      tierOfHanMcq(12,'11〜12翻は三倍満。ここまで来たらすごい手だ！'),
+      /* R67 §2・§6: 「◯翻はどの大きさ？」という名前あてではなく、実際の点を答えさせる。
+         名前(跳満・倍満・三倍満)は解説で添える＝実戦で要る順に覚えられる */
+      fuHanPointMcq({han:6,oya:false,win:'ron',
+        exp:'6〜7翻は<b>跳満</b>。'+RB_KO+'のロンで'+tierRonText('haneman')+'だよ。'}),
+      fuHanPointMcq({han:9,oya:true,win:'ron',
+        exp:'8〜10翻は<b>倍満</b>。'+RB_OYA+'のロンで'+tierRonText('baiman',true)+'。'}),
+      fuHanPointMcq({han:12,oya:false,win:'tsumo',
+        exp:'11〜12翻は<b>三倍満</b>。'+RB_KO+'のツモは'+tierTsumoText('sanbaiman')
+          +'（小さいほうを'+RB_KO+'2人、大きいほうを'+RB_OYA+'が払う）。'}),
       tierPointMcq('haneman',false,'ron',RB_KO+'の跳満ロンは'+tierRonText('haneman')+'。'),
       tierPointMcq('baiman',false,'ron',RB_KO+'の倍満ロンは'+tierRonText('baiman')+'。満貫のちょうど2ばいだね。'),
       /* R61 §13: 数え役満なし。翻をいくら足しても役満にはならないことを、ここで問題にして定着させる */
       ch1Teach('ここでルールの確認！このアプリでは<b>翻をどれだけ足しても役満にはならない</b>よ。どんなに大きくても<b>三倍満どまり</b>なんだ。',
         {tlab:'三倍満どまり',panel:tierTableHTML(['sanbaiman'])}),
-      tierOfHanMcq(14,'14翻でも三倍満。翻を足して役満になることはないルールだよ。'),
+      fuHanPointMcq({han:14,oya:false,win:'ron',
+        exp:'14翻でも<b>三倍満</b>の'+tierRonText('sanbaiman')+'。翻を足して役満になることはないルールだよ。'}),
     ];
   },
   sc1_5(){
@@ -12862,17 +12954,26 @@ const CH3_LESSONS={
   sc1_7(){
     const quiz=shuffle([
       scoreHandHanMcq('c2d'),
-      tierOfHanMcq(7,'6〜7翻は跳満だよ。'),
-      tierOfHanMcq(13,'11翻以上はぜんぶ三倍満。翻を足して役満にはならないルールだったね。'),
+      fuHanPointMcq({han:7,oya:true,win:'tsumo',
+        exp:'6〜7翻は<b>跳満</b>。'+RB_OYA+'のツモは'+tierTsumoText('haneman',true)+'だよ。'}),
+      fuHanPointMcq({han:13,oya:true,win:'ron',
+        exp:'11翻以上はぜんぶ<b>三倍満</b>。'+RB_OYA+'のロンで'+tierRonText('sanbaiman',true)
+          +'。翻を足して役満にはならないルールだったね。'}),
       tierPointMcq('mangan',false,'ron',RB_KO+'の満貫ロンは'+tierRonText('mangan')+'。'),
       tierPointMcq('baiman',true,'ron',RB_OYA+'の倍満ロンは'+tierRonText('baiman',true)+'。'),
+      /* R67 §13-D: Teachで名前を出した もう1つの切り上げ満貫(60符3翻)も、実際の点で確かめる */
+      fuHanPointMcq({fu:KIRIAGE_MANGAN[1].fu,han:KIRIAGE_MANGAN[1].han,oya:false,win:'ron',
+        exp:'これも<b>切り上げ満貫</b>。3翻でも満貫の'+tierRonText('mangan')+'にとどくんだ。'}),
       scoreHandHanMcq('ct'),
       {q:'役がなくて、ドラが5枚ある。アガれる？',choices:['アガれない','アガれる（満貫だから）'],a:0,
        exp:'ドラは役ではない。翻がいくつあっても役がなければアガれないよ。'},
     ]);
     return [
+      /* R67 §14: 「満貫は5翻から」と断定しない。5翻なら必ず満貫だが、
+         4翻以下でも符(切り上げ満貫をふくむ)で満貫にとどくことがある */
       ch1Teach('<b>点の大きさ まとめ</b>！①役の翻を足す ②ドラも+1翻ずつ足す ③'
-        +scoreTier('mangan').lo+'翻から満貫 ④11翻以上は三倍満どまり ⑤役満は役満の役だけ。',
+        +scoreTier('mangan').lo+'翻なら<b>かならず</b>満貫（4翻以下でも符で満貫になることがある）'
+        +' ④11翻以上は三倍満どまり ⑤役満は役満の役だけ。',
         {tlab:'まとめ',panel:tierTableHTML()}),
     ].concat(quiz).concat([
       ch1Teach('🎉 <b>点の大きさマスター！</b> これで「この手はどのくらい大きいか」が分かるようになったね。'
