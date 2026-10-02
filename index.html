@@ -618,10 +618,20 @@ button.tile.off:active{transform:none;}
 .sh-sum,.sh-line,.sh-note{font-size:13px; font-weight:800; color:var(--ink); margin:6px 0 0;
   font-family:'Noto Sans JP',sans-serif;}
 .sh-sum b,.sh-line b{color:var(--jade-ink); font-size:15px;}
-/* R67 §8: 点を決める条件(子か親か)。答えではなく【前提】なので図のいちばん上に出す */
+/* R67 §8: 点を決める条件(子か親か)。R68からは盤面の状況チップが出すので、
+   この .sh-who は旧データ互換のためだけに残してある */
 .sh-who{font-size:12.5px; font-weight:800; color:var(--ink-soft); margin:0 0 4px;
   font-family:'Noto Sans JP',sans-serif;}
 .sh-who b{color:var(--ink); font-size:14px;}
+/* R68 §13: 符は条件として見せるだけ(自分で数えさせない) */
+.sh-fu{font-size:12.5px; font-weight:800; color:var(--ink-soft); margin:6px 0 0;
+  font-family:'Noto Sans JP',sans-serif;}
+.sh-fu b{color:var(--ink); font-size:14px;}
+/* R68 §9 LEVEL B: 役の名前だけのチップ(翻は出さない) */
+.yaku-names{display:flex; flex-wrap:wrap; gap:6px; margin:6px 0 0;}
+.yaku-names .yn-chip{font-size:clamp(12px,3.4vw,13.5px); font-weight:900; padding:4px 11px;
+  border-radius:9px; background:var(--jade-soft); color:var(--jade-ink);
+  border:1.5px solid var(--jade); font-family:'Noto Sans JP',sans-serif;}
 .sh-note{color:var(--ink-soft); font-size:12px;}
 .sc-tbl{display:block; margin:8px 0 2px; font-family:'Noto Sans JP',sans-serif;}
 .sc-row{display:grid; grid-template-columns:3.6em 4.6em 1fr 1fr; gap:4px; align-items:center;
@@ -795,6 +805,8 @@ span.st-mg{color:var(--jade-ink); font-weight:900;}
   background:var(--jade-soft); color:var(--ink); border:1px solid rgba(0,0,0,.10);}
 .ch3-chip.warn{background:rgba(216,67,59,.10); color:var(--verm-ink);}
 .ch3-chip.riichi{background:rgba(232,169,60,.16); color:var(--gold-ink);}
+/* R68: 局・自風(＝親子)。点を決める実戦の文脈なので、ほかの状況チップより少し濃く出す */
+.ch3-chip.situ{background:var(--card); border-color:var(--jade); color:var(--jade-ink);}
 /* R64: 一発の成立を決める「時間」の状況チップ(リーチ後のツモ回数・鳴きの有無)。
    内部フラグだけで正解が決まらないよう、判断材料を画面に出すためのもの */
 .ch3-chip.time{background:rgba(58,120,224,.10); color:#1d4a91; border-color:rgba(29,74,145,.22);}
@@ -2295,8 +2307,14 @@ const KAN_KINDS=['ankan','minkan','kakan'];
 function meldKanKind(m){
   if(!m||m.type!=='kan') return null;
   if(m.kan&&KAN_KINDS.includes(m.kan)) return m.kan;
-  return m.from?'minkan':'ankan';          // 旧データ互換(fromがあれば大明槓・なければ暗槓)
+  /* R68: 書いていないカンを【推測しない】。
+     R67まではここで from の有無から大明槓/暗槓を当てていたため、
+     kan:'kakan' を書き忘れた加槓の見本が【大明槓として描かれていた】(実機で指摘)。
+     推測をやめて、書き忘れは meldCheck がデータエラーとして出す。 */
+  return m.from?'minkan':'ankan';
 }
+/* カンの種類が明示されているか。教材データはかならず明示する(R68) */
+function meldKanDeclared(m){ return !(m&&m.type==='kan')||KAN_KINDS.includes(m.kan); }
 function meldIsAnkan(m){ return meldKanKind(m)==='ankan'; }
 function meldNorm(m){
   const tiles=sortTiles(Array.isArray(m.tiles)?m.tiles.slice():parseHand(m.tiles));
@@ -2319,6 +2337,8 @@ function meldCheck(m){
   // 書いてある種類が3つのどれでもないときはエラー(だまって暗槓に落とさない)
   if(n.type==='kan'&&m.kan&&!KAN_KINDS.includes(m.kan)) return 'kan-kind';
   if(n.type==='kan'&&!KAN_KINDS.includes(n.kan)) return 'kan-kind';
+  // R68: kan を書いていない4枚組はデータエラー(推測で別の種類に描かれるのを防ぐ)
+  if(!meldKanDeclared(m)) return 'kan-undeclared';
   if(n.kan==='ankan'){
     if(m.from) return 'ankan-from';                                     // 暗槓はだれからももらわない
   }else{
@@ -3341,7 +3361,10 @@ const THEMES=[
     {diff:{ch1:'yj1_3'}},                      // J1-3 役を全部見つけよう
     {diff:{ch1:'yj1_4'}},                      // J1-4 アガれる？アガれない？
     {diff:{ch1:'yj1_5'}},                      // J1-5 実戦で役を見つけよう
-    {diff:{ch1:'yj1_6'}},                      // ★J1-6 第3章チャレンジ「役がわかる！」
+    {diff:{ch1:'yj1_6'}},                      // J1-6 第3章チャレンジ「役がわかる！」
+    /* R68 §16〜§21: 完成した牌姿から【複合する役をぜんぶ見抜く】しあげ。
+       §40のとおり小テーマの【末尾に足す】ので、すでにクリアした人にもちゃんと届く。 */
+    {diff:{ch1:'yj1_7'}},                      // ★J1-7 複合する役を見抜く(しあげ)
    ]},
   ]},
  /* ドラ→カンの順(2026-09-23追加)。「役がないとアガれない」(J1-4)を理解したあとにドラを置き、
@@ -4186,8 +4209,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.61.0';
-const BUILD_ID='20261002-03';
+const APP_VER='0.62.0';
+const BUILD_ID='20261002-04';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -8386,6 +8409,15 @@ function yakuRowsHTML(keys,opt){
     +list.map(k=>'<span class="yb-row" data-yaku="'+k+'">'+yakuRowCells(k)+'</span>').join('')
     +'</div>';
 }
+/* R68 §9 LEVEL B: 役の【名前だけ】を見せる(翻も鳴きも出さない)。
+   翻は自分で思い出して足す段階なので、3列グリッドは使わない。 */
+function yakuNamesHTML(keys){
+  const list=(Array.isArray(keys)?keys:[keys]).filter(k=>CH3_YAKU_META[k]);
+  if(!list.length) return '';
+  return '<div class="yaku-names">'
+    +list.map(k=>'<span class="yn-chip" data-yaku="'+k+'">'+CH3_YAKU_META[k].label+'</span>').join('')
+    +'</div>';
+}
 function yakuBadgeHTML(key,opt){
   // 旧API。中身は共通の3列グリッド(1行)。既存の呼び出しはそのまま動く
   return yakuRowsHTML([key],opt);
@@ -8573,89 +8605,126 @@ function lineSeqMcq(id,i,exp,opt){
    (tests/r64-check.cjs F ブロック)。表示と実物がズレた牌姿は作らない。 */
 const SCORE_HANDS=[
   /* 鳴いていない手(1300系になりやすい) */
-  {id:'m1',hand:'123m456p777s345s55p',keys:['riichi'],
+  {id:'m1',round:'E1',seat:'S',hand:'123m456p777s345s55p',keys:['riichi'],
    ctx:{riichi:true,drawsAfterRiichi:2,win:'ron',winTile:'1m'},
    why:'リーチだけの1翻。鳴いていない手だね。'},
-  {id:'m2',hand:'234m456p777s345s55p',keys:['riichi','tanyao'],
+  {id:'m2',round:'E2',seat:'W',hand:'234m456p777s345s55p',keys:['riichi','tanyao'],
    ctx:{riichi:true,drawsAfterRiichi:2,win:'ron',winTile:'2m'},
    why:'1・9・字牌が1枚もないのでタンヤオもついて2翻。'},
-  {id:'m3',hand:'234m456p678s345s55p',keys:['riichi','pinfu','tanyao'],
+  {id:'m3',round:'E1',seat:'S',hand:'234m456p678s345s55p',keys:['riichi','pinfu','tanyao'],
    ctx:{riichi:true,drawsAfterRiichi:2,win:'ron',winTile:'2m'},
    why:'ぜんぶシュンツ・アタマは役牌でない・リャンメン待ち。ピンフもついて3翻。'},
-  {id:'m4',hand:'234m456p678s345s55p',keys:['riichi','tsumo','pinfu','tanyao'],
+  {id:'m4',round:'E1',seat:'S',hand:'234m456p678s345s55p',keys:['riichi','tsumo','pinfu','tanyao'],
    ctx:{riichi:true,drawsAfterRiichi:3,win:'tsumo',winTile:'2m'},
    why:'ツモアガリなのでツモも1翻。1翻の役が4つで4翻。'},
   /* 鳴いた手(1000系になりやすい) */
-  {id:'n1',hand:'234m456p678s99mBBB',keys:['yakuhai'],open:true,
+  {id:'n1',round:'E3',seat:'N',hand:'234m456p678s99mBBB',keys:['yakuhai'],open:true,
    ctx:{win:'ron',winTile:'4p',melds:[{type:'pon',tiles:'BBB',called:'B',from:'left'}]},
    why:'白をポンしているので役牌の1翻。鳴いているからリーチもツモもつかないよ。'},
   /* R66: アガリ牌はチーした牌と同じにできない(自分がチーした牌でロンはできないし、
      盤面も「手の中にアガリ牌がない」状態になって描けなかった)。手の中の牌でアガる形に直した */
-  {id:'n2',hand:'234m234p234s567m88p',keys:['tanyao','sanshoku'],open:true,
+  {id:'n2',round:'E1',seat:'S',hand:'234m234p234s567m88p',keys:['tanyao','sanshoku'],open:true,
    ctx:{win:'ron',winTile:'7m',melds:[{type:'chi',tiles:'234s',called:'4s'}]},
    why:'タンヤオは鳴いても1翻。三色は食い下がりで1翻。合わせて2翻。'},
-  {id:'n3',hand:'234p678p99pBBBSSS',keys:['yakuhai','honitsu'],open:true,
+  {id:'n3',round:'E1',seat:'W',hand:'234p678p99pBBBSSS',keys:['yakuhai','honitsu'],open:true,
    ctx:{win:'ron',winTile:'4p',melds:[{type:'pon',tiles:'BBB',called:'B',from:'left'},
      {type:'pon',tiles:'SSS',called:'S',from:'right'}]},
    why:'役牌1翻＋ホンイツは鳴いて2翻（食い下がり）で3翻。'},
   /* 七対子(独自のライン) */
-  {id:'c1',hand:'11m33m55p77p22s44s9p9p',keys:['chiitoi'],
+  {id:'c1',round:'E1',seat:'S',hand:'11m33m55p77p22s44s9p9p',keys:['chiitoi'],
    ctx:{win:'ron',winTile:'9p'},
    why:'トイツが7組。七対子は それだけで2翻からはじまる役だったね。'},
-  {id:'c2',hand:'11m33m55p77p22s44s9p9p',keys:['riichi','chiitoi'],
+  {id:'c2',round:'E1',seat:'S',hand:'11m33m55p77p22s44s9p9p',keys:['riichi','chiitoi'],
    ctx:{riichi:true,drawsAfterRiichi:2,win:'ron',winTile:'9p'},
    why:'七対子2翻にリーチ1翻を足して3翻。'},
-  {id:'c3',hand:'11m33m55p77p22s44s9p9p',keys:['riichi','tsumo','chiitoi'],
+  {id:'c3',round:'E2',seat:'S',hand:'11m33m55p77p22s44s9p9p',keys:['riichi','tsumo','chiitoi'],
    ctx:{riichi:true,drawsAfterRiichi:3,win:'tsumo',winTile:'9p'},
    why:'七対子2翻＋リーチ1翻＋ツモ1翻で4翻。'},
   /* ツモの払い方を見せる局面(点は問題文の中で与えるので、ここでは系統を使わない) */
-  {id:'tk',hand:'234m456p678s99mBBB',keys:['yakuhai'],open:true,
+  {id:'tk',round:'E1',seat:'S',hand:'234m456p678s99mBBB',keys:['yakuhai'],open:true,
    ctx:{win:'tsumo',winTile:'4p',melds:[{type:'pon',tiles:'BBB',called:'B',from:'left'}]},
    why:RB_KO+'のツモアガリだよ。'},
-  {id:'to',hand:'234m456p678s345s55p',keys:['riichi','tsumo','pinfu','tanyao'],
-   ctx:{riichi:true,drawsAfterRiichi:3,win:'tsumo',winTile:'2m',sw:'E',rw:'E'},
+  {id:'to',round:'E1',seat:'E',hand:'234m456p678s345s55p',keys:['riichi','tsumo','pinfu','tanyao'],
+   ctx:{riichi:true,drawsAfterRiichi:3,win:'tsumo',winTile:'2m'},
    why:RB_OYA+'のツモアガリだよ。'},
   /* 一発＋裏ドラの複合例(役は3つ・翻は4) */
-  {id:'ura',hand:'123m456p777s345s55p',keys:['riichi','ippatsu','tsumo'],dora:1,
+  {id:'ura',round:'E4',seat:'W',hand:'123m456p777s345s55p',keys:['riichi','ippatsu','tsumo'],dora:1,
    ctx:{riichi:true,drawsAfterRiichi:1,win:'tsumo',winTile:'1m'},
    why:'リーチ・一発・ツモの3役で3翻、そこに裏ドラ1枚で4翻。'},
   /* ===== R65 §11: 文字だけで聞いていた「何翻？」にも牌姿をつけるための手 =====
      doraInd を書いた手は、その表示牌のつぎの牌が【ちょうど dora 枚】入っていることを
      テストで検算する(r65-check B)。ドラの枚数も画面のドラ表示牌から数えられる。 */
-  {id:'chin',hand:'111m234m567m99m345m',keys:['chinitsu'],
+  {id:'chin',round:'E1',seat:'S',hand:'111m234m567m99m345m',keys:['chinitsu'],
    ctx:{win:'ron',winTile:'4m'},
    why:'チンイツは<b>1役なのに'+'6翻'+'</b>。役の数と翻は、ほんとうにべつの数なんだ。'},
-  {id:'tansan',hand:'234m234p234s567m88p',keys:['pinfu','tanyao','sanshoku'],
+  {id:'tansan',round:'E2',seat:'S',hand:'234m234p234s567m88p',keys:['pinfu','tanyao','sanshoku'],
    ctx:{win:'ron',winTile:'7m'},
    why:'ピンフ・タンヤオ・三色の3役。1翻＋1翻＋2翻で4翻だよ。'},
-  {id:'rp1',hand:'123m456p678s345s55p',keys:['riichi','pinfu'],dora:1,doraInd:'9m',
+  {id:'rp1',round:'E1',seat:'S',hand:'123m456p678s345s55p',keys:['riichi','pinfu'],dora:1,doraInd:'9m',
    ctx:{riichi:true,drawsAfterRiichi:2,win:'ron',winTile:'1m'},
    why:'リーチ＋ピンフで2翻、ドラ1枚で+1翻。合計3翻！'},
-  {id:'tt',hand:'222m555p777s333m88p',keys:['tanyao','toitoi'],open:true,dora:3,doraInd:'4p',
+  {id:'tt',round:'E1',seat:'S',hand:'222m555p777s333m88p',keys:['tanyao','toitoi'],open:true,dora:3,doraInd:'4p',
    ctx:{win:'ron',winTile:'7s',melds:[{type:'pon',tiles:'222m',called:'2m',from:'left'}]},
    why:'タンヤオ1翻＋トイトイ2翻＋ドラ3枚＝6翻。ドラは一気に大きくなるね！'},
   /* カンの入った手。R64のカンUI(副露エリア)は役Lesson専用ではなく、点数の問題でも使える(§15) */
-  {id:'sank',hand:SANKANTSU_HAND,keys:['sankantsu'],open:true,
+  {id:'sank',round:'E3',seat:'S',hand:SANKANTSU_HAND,keys:['sankantsu'],open:true,
    ctx:{win:'ron',winTile:'6m',melds:SANKANTSU_MELDS},
    why:'槓子が3組そろって三槓子。三槓子は食い下がりがないので、鳴いていても2翻だよ。'},
-  {id:'rd2',hand:'111m456p678s345s99m',keys:['riichi'],dora:2,doraInd:'8m',
+  {id:'rd2',round:'E1',seat:'S',hand:'111m456p678s345s99m',keys:['riichi'],dora:2,doraInd:'8m',
    ctx:{riichi:true,drawsAfterRiichi:2,win:'ron',winTile:'4p'},
    why:'リーチ1翻＋ドラ2枚で3翻。<b>役は1つのまま</b>だよ。'},
-  {id:'ct',hand:'234m345m567m88m678m',keys:['tanyao','chinitsu'],open:true,
+  {id:'ct',round:'E2',seat:'S',hand:'234m345m567m88m678m',keys:['tanyao','chinitsu'],open:true,
    ctx:{win:'ron',winTile:'7m',melds:[{type:'chi',tiles:'234m',called:'4m',from:'left'}]},
    why:'鳴いているからチンイツは食い下がりで5翻。タンヤオは下がらないので1翻。合計6翻＝跳満だ！'},
   /* R66: 七対子の4翻【ロン】。c3はツモなので「何点？」には使えない
      (ツモの点は「子◯・親◯」の2つになるため、払い方の問題であつかう) */
-  {id:'c4',hand:'11m33m55p77p22s44s9p9p',keys:['riichi','ippatsu','chiitoi'],
+  {id:'c4',round:'E1',seat:'S',hand:'11m33m55p77p22s44s9p9p',keys:['riichi','ippatsu','chiitoi'],
    ctx:{riichi:true,drawsAfterRiichi:0,win:'ron',winTile:'9p'},
    /* Roadには符の数を出さない(§44)。七対子が別の系統になる理由は「特別な形だから」で止める */
    why:'七対子2翻＋リーチ1翻＋一発1翻で4翻。七対子は点のならびが特別だから七対子の系統だよ。'},
-  {id:'c2d',hand:'11m33m55p77p22s44s9p9p',keys:['riichi','chiitoi'],dora:2,doraInd:'8p',
+  {id:'c2d',round:'E1',seat:'S',hand:'11m33m55p77p22s44s9p9p',keys:['riichi','chiitoi'],dora:2,doraInd:'8p',
    ctx:{riichi:true,drawsAfterRiichi:2,win:'ron',winTile:'9p'},
    why:'リーチ1翻＋七対子2翻＋ドラ2枚＝5翻。満貫だ！'},
+  /* ===== R68 §7・§8 子ロンだけに偏らせない =====
+     牌姿と役は上の手とそろえて、ちがうのは【局・自風(＝親子)・アガリ方】だけにしてある。
+     おなじ手でも「だれが」「どうやって」アガったかで点が変わる、を比べて体験できる。 */
+  {id:'oyn3',round:'E1',seat:'E',hand:'234m456p678s345s55p',keys:['riichi','pinfu','tanyao'],
+   ctx:{riichi:true,drawsAfterRiichi:2,win:'ron',winTile:'2m'},
+   why:RB_OYA+'は'+RB_KO+'よりロンの点が高いよ。おなじ3翻でもちがうんだ。'},
+  {id:'oym4',round:'E3',seat:'E',hand:'234m234p234s567m88p',keys:['pinfu','tanyao','sanshoku'],
+   ctx:{win:'ron',winTile:'7m'},
+   why:RB_OYA+'の4翻のロン。切り上げ満貫にとどいているよ。'},
+  {id:'oyc4',round:'S1',seat:'E',hand:'11m33m55p77p22s44s9p9p',keys:['riichi','ippatsu','chiitoi'],
+   ctx:{riichi:true,drawsAfterRiichi:0,win:'ron',winTile:'9p'},
+   why:'七対子4翻を'+RB_OYA+'でロン。'+RB_KO+'のときとくらべてみよう。'},
+  {id:'oyc3',round:'E1',seat:'E',hand:'11m33m55p77p22s44s9p9p',keys:['riichi','tsumo','chiitoi'],
+   ctx:{riichi:true,drawsAfterRiichi:3,win:'tsumo',winTile:'9p'},
+   why:RB_OYA+'のツモは'+RB_KO+'3人が<b>おなじ額</b>。だから「◯点オール」と言うんだ。'},
+  {id:'oyc5',round:'E2',seat:'E',hand:'11m33m55p77p22s44s9p9p',keys:['riichi','ippatsu','tsumo','chiitoi'],
+   ctx:{riichi:true,drawsAfterRiichi:1,win:'tsumo',winTile:'9p'},
+   why:'七対子2翻＋リーチ・一発・ツモで5翻＝満貫。'+RB_OYA+'の満貫ツモはおぼえやすい数だよ。'},
+  {id:'kot3',round:'E2',seat:'W',hand:'234p678p99pBBBSSS',keys:['yakuhai','honitsu'],open:true,
+   ctx:{win:'tsumo',winTile:'4p',melds:[{type:'pon',tiles:'BBB',called:'B',from:'left'},
+     {type:'pon',tiles:'SSS',called:'S',from:'right'}]},
+   why:RB_KO+'のツモは「'+RB_KO+'の払い・'+RB_OYA+'の払い」の2つで言うよ。'},
+  {id:'oyt3',round:'E1',seat:'E',hand:'234p678p99pBBBSSS',keys:['yakuhai','honitsu'],open:true,
+   ctx:{win:'tsumo',winTile:'4p',melds:[{type:'pon',tiles:'BBB',called:'B',from:'left'},
+     {type:'pon',tiles:'SSS',called:'S',from:'right'}]},
+   why:'おなじ手でも'+RB_OYA+'のツモは「オール」。'+RB_KO+'のときとくらべてみて。'},
 ];
 function scoreHand(id){ return SCORE_HANDS.find(h=>h.id===id)||null; }
-function scoreHandCtx(e){ return ch3Ctx(Object.assign({},e.ctx)); }
+/* ===== R68 §3〜§5 局・自風・親子は牌姿データから1か所で導く =====
+   ctx に rw(場風)/sw(自風)/round(局) を【ここで入れる】。
+   牌姿データ側に「親」「子」という項目は作らない＝画面と計算で親子がずれない。 */
+function scoreHandRound(e){ return e.round||'E1'; }
+function scoreHandSeat(e){ return e.seat||'S'; }
+function scoreHandCtx(e){
+  const o=Object.assign({},e.ctx);
+  o.round=scoreHandRound(e);
+  o.rw=roundWind(o.round);
+  o.sw=scoreHandSeat(e);
+  return ch3Ctx(o);
+}
 function scoreHandHan(e){
   return e.keys.reduce((a,k)=>{ const m=CH3_YAKU_META[k];
     return a+((e.open?m.openHan:m.closedHan)||0); },0)+(e.dora||0);
@@ -8672,56 +8741,113 @@ function scoreHandFu(e){ return ch3Fu(sortTiles(parseHand(e.hand)),scoreHandCtx(
 function scoreHandLine(e){ const fu=scoreHandFu(e); return fu==null?null:scoreLineOfFu(fu); }
 /* 点を1つの数で言えるのは【ロン】だけ。ツモは「子◯・親◯」なので、
    点をあてる問題には使わず、払い方の問題(tsumoKoMcq/tsumoOyaMcq)で扱う */
+/* 代表3ライン(1000系/1300系/七対子)は【子のロン】の数字なので、
+   子のロンの手にしか当てはめられない(R68 §6)。親やツモにこの数字を使わない。 */
+function scoreHandLineUsable(e){
+  return scoreHandCtx(e).win==='ron'&&!scoreHandIsOya(e);
+}
 function scoreHandPts(e){
-  const ctx=scoreHandCtx(e);
-  if(ctx.win!=='ron') return null;
+  if(!scoreHandLineUsable(e)) return null;
   const line=scoreHandLine(e); if(!line) return null;
   const i=scoreLineHanIndex(line,scoreHandHan(e));
   if(i<0) return null;                                  // 代表ラインの外(5翻以上など)は系統で教えない
   return scoreLine(line).pts[i];
 }
 /* 点数表(正式な符べつの点)から出した点。代表ラインと食いちがっていないことをテストで見る */
-/* 子か親か。点はこれで変わるので【1か所】で決めて、計算にも画面表示にも同じ値を使う */
-function scoreHandIsOya(e){ const c=scoreHandCtx(e); return !!(c.sw==='E'&&c.rw==='E'); }
+/* 子か親か。点はこれで変わるので【1か所】で決めて、計算にも画面表示にも同じ値を使う。
+   R68: 判定は自風だけで決まる(東家＝親)。場風は関係ない(南場でも東家が親) */
+function scoreHandIsOya(e){ return isOyaSeat(scoreHandCtx(e).sw); }
 function scoreHandPtsByFu(e){
   const ctx=scoreHandCtx(e), fu=scoreHandFu(e);
   if(fu==null||ctx.win!=='ron') return null;
   return scoreByFuHan(fu,scoreHandHan(e),scoreHandIsOya(e)).ron;
 }
+/* ===== R68 §2・§6 牌姿からの【答えそのもの】 =====
+   ロンなら1つの点、子のツモなら「子の払い・親の払い」、親のツモなら「◯点オール」。
+   形は fuHanAnswer(R67)が win から決めるので、ツモの問題にロン点が出ることは構造的に起きない。 */
+function scoreHandAnswer(e){
+  const ctx=scoreHandCtx(e), fu=scoreHandFu(e);
+  if(fu==null||!(ctx.win==='ron'||ctx.win==='tsumo')) return null;
+  return fuHanAnswer(fu,scoreHandHan(e),scoreHandIsOya(e),ctx.win);
+}
+/* 答えの「形」を見分ける。形とアガリ方が食いちがっていないことをテストで見る */
+function scoreAnswerKind(txt){
+  const t=String(txt==null?'':txt).replace(/<[^>]*>/g,'').trim();
+  if(/オール/.test(t)) return 'oya-tsumo';
+  if(/・/.test(t)) return 'ko-tsumo';
+  if(/^[0-9,]+点$/.test(t)) return 'ron';
+  return null;
+}
+function scoreAnswerWin(kind){ return kind==='ron'?'ron':(kind?'tsumo':null); }
 /* 問題につける図。【答えそのものは絶対に出さない】(§12):
    系統は「1300系」という名前だけ。点のならんだ表はTeachのときだけ出す */
+/* ===== R68 §9〜§12 見せる情報の3段階 =====
+     LEVEL A … 役＋それぞれの翻＋合計翻 を見せて、点だけを答えさせる
+     LEVEL B … 役の【名前だけ】。翻は自分で思い出して足す
+     LEVEL C … 役も翻も見せない。牌姿から役を見つけるところからやる
+   隠すのは【役と翻】だけ。符はまだ自分で数えられないので、必要なら条件として見せる(§13)。
+   同じ牌姿データ・同じ計算のまま、見せる量だけを変える＝将来のTrainingにもそのまま使える。 */
+const SCORE_LEVELS=['A','B','C'];
+function scoreLevelOf(opt){ const l=(opt||{}).level; return SCORE_LEVELS.includes(l)?l:'A'; }
 function scoreHandPanel(e,opt){
-  const o=opt||{};
-  /* R67 §8・§15: 点は【子か親か】でも変わる。画面に出さずに点を答えさせない。
-     ロン/ツモは盤面のチップ(ch3Ctx)が出すので、ここは子/親だけ。 */
-  let h='<div class="sh-who">あなたは <b>'+(scoreHandIsOya(e)?RB_OYA:RB_KO)+'</b></div>'
-    +yakuRowsHTML(e.keys);
+  const o=opt||{}, lv=scoreLevelOf(o);
+  /* 局・自風・親子・ロン/ツモは盤面のチップ(ch3CtxHTML)が出す。ここでは役と翻と符だけ。 */
+  let h='';
+  if(lv==='A') h+=yakuRowsHTML(e.keys);          // 役＋翻(3列)
+  else if(lv==='B') h+=yakuNamesHTML(e.keys);    // 役の名前だけ(翻は出さない)
   /* R65: ドラがある手は【ドラ表示牌】も出す。何がドラで何枚あるかを手牌から数えられる
      (「ドラ2枚」と書くだけにしない)。表示牌→ドラ の変換は doraPanelHTML が1か所で持つ */
   if(e.doraInd) h+=doraPanelHTML([e.doraInd]);
-  if(e.dora) h+='<div class="sh-note">＋ <b>ドラ'+e.dora+'枚</b>（ドラは役ではないけれど翻はふえる）</div>';
-  if(o.han) h+='<div class="sh-sum">合計 <b>'+scoreHandHan(e)+'翻</b></div>';
+  if(e.dora&&lv!=='C') h+='<div class="sh-note">＋ <b>ドラ'+e.dora+'枚</b>（ドラは役ではないけれど翻はふえる）</div>';
+  if(o.han&&lv==='A') h+='<div class="sh-sum">合計 <b>'+scoreHandHan(e)+'翻</b></div>';
   const ln=scoreHandLine(e);
-  if(o.line&&ln) h+='<div class="sh-line">この手は <b>'+scoreLine(ln).short+'</b></div>';
+  /* 代表ラインは子のロンの数字。親やツモには当てはめない(R68 §6) */
+  if(o.line&&ln&&scoreHandLineUsable(e)) h+='<div class="sh-line">この手は <b>'+scoreLine(ln).short+'</b></div>';
+  else if(o.fu!==false&&scoreHandFu(e)!=null)
+    h+='<div class="sh-fu">この手は <b>'+scoreHandFu(e)+'符</b>（符はまだ自分で数えなくていいよ）</div>';
   return h;
 }
+/* ===== R68 §6・§14 答えの選択肢 =====
+   正解も まちがいも、かならず fuHanAnswer(= scoreByFuHan)から作る。
+   ロンの問題にツモの形、ツモの問題にロンの形が混ざることは構造的に起きない。 */
 function scoreHandChoices(e){
-  // まちがいの選択肢は【ほかの系統の同じ段の点】。実際に迷う数字どうしをならべる
-  const right=scoreHandPts(e);
-  const ln=scoreHandLine(e);
-  const i=scoreLineHanIndex(ln,scoreHandHan(e));
-  const others=SCORE_LINES.filter(x=>x.id!==ln)
-    .map(x=>x.pts[i]).filter(v=>v!=null&&v!==right);
-  const vals=Array.from(new Set([right].concat(others))).sort((a,b)=>a-b);
-  return (vals.length>1?vals:[right,right+700].sort((a,b)=>a-b)).map(v=>v+'点');
+  const ctx=scoreHandCtx(e), fu=scoreHandFu(e), han=scoreHandHan(e), oya=scoreHandIsOya(e);
+  const right=scoreHandAnswer(e); if(right==null) return [];
+  const cands=[];
+  /* 子のロンで代表ラインに乗る手は、まちがいを【ほかの系統の同じ段の点】にする。
+     実際に迷う数字どうしがならぶので、系統を教えている文脈ではこちらがよい */
+  if(scoreHandLineUsable(e)&&scoreHandPts(e)!=null){
+    const i=scoreLineHanIndex(scoreHandLine(e),han);
+    SCORE_LINES.forEach(x=>{ if(x.pts[i]!=null) cands.push(x.pts[i]+'点'); });
+  }
+  /* それ以外(ツモ・親・系統のない符)は【おなじ条件で翻が1つちがう点】 */
+  [han-1,han+1,han+2].forEach(h=>{
+    if(h>=1&&fuHanExists(fu,h,ctx.win)) cands.push(fuHanAnswer(fu,h,oya,ctx.win)); });
+  const num=x=>parseInt(String(x).replace(/[^0-9]/,''),10)||0;
+  const all=[]; [right].concat(cands).forEach(v=>{ if(v&&!all.includes(v)) all.push(v); });
+  all.sort((a,b)=>num(a)-num(b));
+  if(all.length<2) return [right];
+  const ri=all.indexOf(right);
+  const st=Math.max(0,Math.min(ri-1,all.length-3));
+  return all.slice(st,st+3);
 }
-/* 【序盤】役も翻も系統も見せたうえで、点だけを答えさせる */
+/* 点を答えさせる問題。level で見せる情報を変える(A=役＋翻 / B=役だけ / C=牌姿だけ) */
 function scoreHandPointMcq(id,exp,opt){
-  const e=scoreHand(id); if(!e||scoreHandPts(e)==null) return {q:'(定義エラー)',choices:['-','-'],a:-1,exp:exp||''};
-  const choices=scoreHandChoices(e), right=scoreHandPts(e)+'点';
-  return Object.assign({q:'このアガリは<b>何点</b>？',hand:e.hand,ctx3:scoreHandCtx(e),
-    choices,a:choices.indexOf(right),panel:scoreHandPanel(e,{han:true,line:true}),
-    exp:exp||(scoreLine(scoreHandLine(e)).short+'の'+scoreHandHan(e)+'翻で'+right+'だよ。'+e.why)},opt||{});
+  const e=scoreHand(id); const o=opt||{}, lv=scoreLevelOf(o);
+  if(!e||scoreHandAnswer(e)==null) return {q:'(定義エラー)',choices:['-','-'],a:-1,exp:exp||''};
+  const ctx=scoreHandCtx(e), right=scoreHandAnswer(e), choices=scoreHandChoices(e);
+  const ask=ctx.win==='tsumo'
+    ?'このアガリ、<b>払いは</b>？'          // ツモは「だれがいくら払うか」
+    :'このアガリは<b>何点</b>？';
+  const ln=scoreHandLine(e);
+  const base=scoreHandLineUsable(e)&&ln&&scoreHandPts(e)!=null
+    ?(scoreLine(ln).short+'の'+scoreHandHan(e)+'翻で'+right+'だよ。')
+    :((scoreHandIsOya(e)?RB_OYA:RB_KO)+'の'+(ctx.win==='tsumo'?'ツモ':'ロン')
+      +'で'+scoreHandHan(e)+'翻。'+right+'だよ。');
+  return Object.assign({q:ask,hand:e.hand,ctx3:ctx,
+    choices,a:choices.indexOf(right),
+    panel:scoreHandPanel(e,{level:lv,han:true,line:lv==='A'}),
+    exp:exp||(base+e.why)},o);
 }
 /* 【中盤】役は見せるが、翻の合計は自分で出す */
 function scoreHandHanMcq(id,exp,opt){
@@ -8932,6 +9058,20 @@ function ch3YakuList(tiles,ctx){
 }
 /* ---- 第3章 状況表示(場風/自風/鳴き/リーチ/アガリ方)。用語は導入済みのものだけ使う ---- */
 const CH3_WIND_JP={E:'東',S:'南',W:'西',N:'北'};
+/* ===== R68 §3〜§5 局・自風・親子 =====
+   点は【子か親か】で変わる。親子を別のデータとして手書きで持つと、画面に出す親子と
+   計算に使う親子がずれる(実機で「南家（親）」のような矛盾が起きうる)。
+   そこで持つのは【局(round)】と【自風(seat)】だけにして、
+     場風 = 局の1文字目
+     親子 = 自風が東家なら親、それ以外は子
+   を1か所で導く。本場・供託は今回あつかわない(0本場固定) */
+function roundWind(round){ return String(round||'E1').charAt(0); }
+function roundLabel(round){ const r=String(round||'E1');
+  return CH3_WIND_JP[r.charAt(0)]+r.slice(1)+'<ruby>局<rt>きょく</rt></ruby>'; }
+function isOyaSeat(seat){ return seat==='E'; }
+function seatLabel(seat){
+  return CH3_WIND_JP[seat]+'<ruby>家<rt>チャ</rt></ruby>（'+(isOyaSeat(seat)?RB_OYA:RB_KO)+'）';
+}
 /* 4人の席の図(R28): あなた(sw)を下に固定。麻雀の席は反時計回りに東→南→西→北なので、
    あなたの右どなり(下家)=つぎの風、向かい(対面)=2つ先、左どなり(上家)=3つ先。
    例: あなたが東家なら 右=南家・向かい=西家・左=北家(実際の卓と同じ正しい関係) */
@@ -10117,8 +10257,11 @@ function nkActMcq(o){
 function ch3CtxHTML(c,q){
   if(!c) return '';
   const chips=[];
-  if(c.rw) chips.push('<span class="ch3-chip">'+CH3_WIND_JP[c.rw]+'場</span>');
-  if(c.sw) chips.push('<span class="ch3-chip">あなた：'+CH3_WIND_JP[c.sw]+'家</span>');
+  /* R68 §3・§4: 点を決める実戦の文脈は【局 → 自風(＝親子)】の順でコンパクトに出す。
+     親子はここでも scoreHandIsOya でも isOyaSeat(自風) から導く＝二重管理にしない */
+  if(c.round) chips.push('<span class="ch3-chip situ">'+roundLabel(c.round)+'</span>');
+  if(c.rw&&!c.round) chips.push('<span class="ch3-chip">'+CH3_WIND_JP[c.rw]+'場</span>');
+  if(c.sw) chips.push('<span class="ch3-chip situ">あなた：'+(c.round?seatLabel(c.sw):CH3_WIND_JP[c.sw]+'家')+'</span>');
   // 鳴いたかどうかはチップ(ラベル)ではなく牌の置き方で見せる(手の中＋右に鳴いた組・もらった牌は横向き)。
   // 鳴いた組データのない旧形式のmenzen:falseだけ、互換のためチップを残す(教材には残さない=テストで検出)
   if(c.menzen===false&&!(Array.isArray(c.melds)&&c.melds.length)) chips.push('<span class="ch3-chip warn">鳴きあり</span>');
@@ -10468,6 +10611,12 @@ function ch3WhichMcq(handStr,ctx3,choiceKeys,exp,opt){
   return Object.assign({q:'この手についている<b>役</b>はどれ？',hand:handStr,ctx3,
     choices:choiceKeys.map(k=>CH3_YAKU_LABEL[k]),a,exp},opt||{});
 }
+/* ===== R68 §19 用語導入順(複合役の誤答候補) =====
+   複合役の問題で、まだ出てきていない役を【まちがいの選択肢】に混ぜない。
+   どの役がどのLessonで出るかは CH3_YAKU_META[k].lesson が持っているので、
+   Roadに出るLessonのならび順と突き合わせれば「ここまでに出た役」は機械的に決まる。
+   その判定は【テスト側(r68-check E7)が独立に計算して】見ている。
+   アプリ側に同じ計算を置くと、その関数ごと壊れたときに見のがしてしまうので置かない。 */
 function ch3YakuFind(handStr,ctx3,candKeys,exp,opt){
   const list=ch3ListOf(handStr,ctx3);
   const answers=candKeys.map((k,i)=>list.includes(k)?i:-1).filter(i=>i>=0);
@@ -11529,7 +11678,8 @@ const CH3_LESSONS={
         'リーチしていないね。<b>一発はリーチが前提</b>だから、リーチなしではつかないんだ。'),
       ch3YakuFind(H,
         ch3Ctx({riichi:true,drawsAfterRiichi:1,win:'tsumo',winTile:'4s'}),
-        ['riichi','ippatsu','tsumo','pinfu'],
+        /* R68 §19: ここはピンフを習う前なので、候補はここまでに出た役だけにする */
+        ['riichi','ippatsu','tsumo'],
         'リーチ＋一発＋ツモで3役！リーチはこうやって重なっていくんだ。'),
       {q:'<b>一発</b>がつくのは、どんなとき？',
        choices:['リーチしたあと、自分のつぎのツモまでにアガったとき','リーチしていれば、いつアガってもつく'],a:0,
@@ -12416,7 +12566,67 @@ const CH3_LESSONS={
        exp:'風・鳴き・ロンかツモか。そのときのようすこそ役のカギ！'},
     ];
   },
-  /* ★J1-6 第3章チャレンジ「役がわかる！」(第1章+第2章+第3章をつなげる) */
+  /* ===== ★J1-7 複合する役を見抜く(R68 §16〜§21) =====
+     役を1つずつ覚えたあと、実戦では役は【かさなる】。
+     完成したアガリ牌姿から、ついている役をぜんぶ選ぶ練習をここでしあげる。
+     むずかしさは 2役 → 3役 → 鳴き → 3〜4役＋まぎらわしい不成立役 の順。
+     まちがいの選択肢は【ここまでに出てきた役だけ】(r68-check E7 がデータから独立に見ている)。
+     ここで作る「牌姿→役をぜんぶ見つける」力が、第4章 LEVEL C の土台になる。 */
+  yj1_7(){
+    const quiz=shuffle([
+      /* ① 2役から。刻子が入るのでピンフはつかない＝まぎらわしい不成立役を1つ混ぜる */
+      ch3YakuFind('2m3m4m5p6p7p3s3s3s4s5s6s8p8p',
+        ch3Ctx({riichi:true,drawsAfterRiichi:2,win:'ron',winTile:'4m'}),
+        ['riichi','tanyao','pinfu','sanshoku'],
+        'リーチ＋タンヤオの2役。<b>333ソーのコーツ</b>があるからピンフはつかないよ。'),
+      /* ② 3役。三色・一盃口は「ありそうで ない」側 */
+      ch3YakuFind('3m4m5m4p5p6p6p7p8p2s3s4s7m7m',
+        ch3Ctx({riichi:true,drawsAfterRiichi:2,win:'ron',winTile:'2s'}),
+        ['riichi','pinfu','tanyao','sanshoku','iipeiko'],
+        'リーチ＋ピンフ＋タンヤオの3役。345と456と678…色がそろっていないので三色ではないよ。'),
+      /* ③ 鳴くと門前限定役が消える。おなじ牌姿で くらべられるようにしてある */
+      ch3YakuFind('3m4m5m4p5p6p6p7p8p2s3s4s7m7m',
+        ch3Ctx({win:'ron',winTile:'2s',melds:[{type:'chi',tiles:'456p',called:'4p',from:'left'}]}),
+        ['riichi','pinfu','tanyao','iipeiko'],
+        'さっきと<b>おなじ牌姿</b>だけど、チーしているのでリーチもピンフも消えた。のこるのはタンヤオだけ！'),
+      /* ④ 鳴いても成立する役。食い下がりは「消える」ではなく「翻がへる」だけ */
+      ch3YakuFind('234p678p99pBBBSSS',
+        ch3Ctx({rw:'E',sw:'W',win:'ron',winTile:'4p',
+          melds:[{type:'pon',tiles:'BBB',called:'B',from:'left'},
+            {type:'pon',tiles:'SSS',called:'S',from:'right'}]}),
+        ['yakuhai','honitsu','chinitsu','tanyao','toitoi'],
+        '白の役牌＋ピンズと字牌だけのホンイツ。<b>鳴いても消えない役</b>もあるんだ（ホンイツは食い下がりで翻がへるだけ）。'),
+      /* ⑤ 七対子＋まぎらわしい(トイトイ・一盃口) */
+      ch3YakuFind('2m2m4m4m6p6p8p8p3s3s5s5s7s7s',
+        ch3Ctx({riichi:true,drawsAfterRiichi:2,win:'ron',winTile:'7s'}),
+        ['riichi','tanyao','chiitoi','toitoi','iipeiko'],
+        'リーチ＋タンヤオ＋七対子の3役。トイツ7組は<b>七対子</b>。コーツではないのでトイトイではないよ。'),
+      /* ⑥ 4役。一発は「リーチ後の時間」で決まるので、ここではつかない */
+      ch3YakuFind('3m4m5m4p5p6p6p7p8p2s3s4s7m7m',
+        ch3Ctx({riichi:true,drawsAfterRiichi:3,win:'tsumo',winTile:'2s'}),
+        ['riichi','tsumo','pinfu','tanyao','ippatsu','sanshoku'],
+        'リーチ＋ツモ＋ピンフ＋タンヤオの4役！一発はリーチのすぐあとだけだったね。'),
+    ]);
+    return [
+      ch1Teach('第3章のしあげ！ 実戦では役は<b>かさなる</b>。'
+        +'完成したアガリを見て、ついている役を<b>ぜんぶ</b>見つけよう。'
+        +'1つでも もれたり、ついていない役をえらんだりしたら やりなおしだよ。',
+        {tlab:'役をぜんぶ見抜く'}),
+      ch1Teach('コツは3つ。①<b>鳴いているか</b>（リーチ・ピンフ・イーペーコーは鳴くと消える）'
+        +'②<b>アガリ方</b>（ツモはツモでアガったときだけ）'
+        +'③<b>場と自分の風</b>（役牌はこれで変わる）。',
+        {tlab:'3つのコツ'}),
+    ].concat(quiz).concat([
+      {q:'鳴いた手から<b>消える</b>役は？',
+       choices:['リーチ・ピンフ・イーペーコー','タンヤオ・役牌'],a:0,
+       exp:'鳴くと消えるのは<b>門前（鳴いていないこと）が条件の役</b>。'
+         +'タンヤオや役牌は鳴いてもつくよ。ホンイツなどは<b>翻がへる</b>だけ（食い下がり）。'},
+      ch1Teach('🎉 これで<b>牌姿から役をぜんぶ見抜く</b>力がついたね！'
+        +'第4章では、その役の<b>翻</b>を思い出して、さいごに<b>点</b>まで出すよ。',
+        {tlab:'第3章コンプリート！'}),
+    ]);
+  },
+  /* J1-6 第3章チャレンジ「役がわかる！」(第1章+第2章+第3章をつなげる) */
   yj1_6(){
     return [
       ch1Teach('いよいよ<b>第3章チャレンジ</b>！<b>待ち牌を見つけて→リーチして→ツモって→ついた役をぜんぶ見つける</b>。今まで覚えたことを ぜんぶ使うよ！',
@@ -12659,10 +12869,10 @@ const CH3_LESSONS={
         {tlab:'3枚＋捨て牌',hands:[{label:'手の中',hand:'1p1p1p'},{label:'ほかの人が捨てた牌',hand:'1p'}]}),
       ch1Teach('その捨て牌をもらって4枚の組にできるよ。これが<span class="term-chip">大明槓（ダイミンカン）</span>。<b>だれの捨て牌でもOK</b>だよ（左の人からだけ、なのはチーだけだったね）。',
         {tlab:'大明槓',panel:kanDemoHTML([{lab:'大明槓（向かいの人からもらった）',
-          meld:{type:'kan',tiles:'1p1p1p1p',called:'1p',from:'opposite'}}])}),
+          meld:{type:'kan',kan:'minkan',tiles:'1p1p1p1p',called:'1p',from:'opposite'}}])}),
       ch1Teach('ポンとくらべてみよう。もらった牌が<b>横向き</b>なのは同じ。ちがいは<b>3枚か4枚か</b>だよ。',
         {tlab:'ポンとのちがい',panel:kanDemoHTML([{lab:'ポン＝3枚',meld:{type:'pon',tiles:'1p1p1p',called:'1p',from:'opposite'}},
-          {lab:'大明槓＝4枚',meld:{type:'kan',tiles:'1p1p1p1p',called:'1p',from:'opposite'}}])}),
+          {lab:'大明槓＝4枚',meld:{type:'kan',kan:'minkan',tiles:'1p1p1p1p',called:'1p',from:'opposite'}}])}),
       {q:'手の中におなじ牌が3枚。<b>右の人</b>が4枚目を捨てた。もらって4枚の組にするのは？',hand:'5s5s5s',
        choices:['大明槓','暗槓'],a:0,
        exp:'ほかの人の捨て牌で4枚にするのが大明槓。暗槓は自分の手の中だけだったね。'},
@@ -12677,7 +12887,7 @@ const CH3_LESSONS={
         {tlab:'ポンしている',panel:kanDemoHTML([{lab:'ポンした組',meld:{type:'pon',tiles:'5s5s5s',called:'5s',from:'left'}}])}),
       ch1Teach('あとから<b>自分で4枚目をツモった</b>ら、そのポンの組に足して4枚にできるよ。これが<span class="term-chip">加槓（カカン）</span>。',
         {tlab:'加槓',panel:kanDemoHTML([{lab:'加槓（ポンの組に4枚目を足した）',
-          meld:{type:'kan',tiles:'5s5s5s5s',called:'5s',from:'left'}}])}),
+          meld:{type:'kan',kan:'kakan',tiles:'5s5s5s5s',called:'5s',from:'left'}}])}),
       {q:'ポンした3枚に、自分でツモった4枚目を足して4枚にした。これは？',choices:['加槓','大明槓'],a:0,
        exp:'ポンした組に足すのが加槓。大明槓は「3枚持っていて、ほかの人の捨て牌をもらう」だったね。'},
       {q:'加槓ができるのは、どんなとき？',
@@ -12692,8 +12902,8 @@ const CH3_LESSONS={
     return [
       ch1Teach('カンは3種類。<b>暗槓</b>＝自分の手の中だけで4枚／<b>大明槓</b>＝3枚持っていて、ほかの人の捨て牌をもらう／<b>加槓</b>＝ポンした組に、自分で引いた4枚目を足す。',
         {tlab:'3種類のカン',panel:kanDemoHTML([{ankan:'1m1m1m1m',lab:'暗槓（ほんとうの置き方）',real:true},
-          {lab:'大明槓',meld:{type:'kan',tiles:'1p1p1p1p',called:'1p',from:'right'}},
-          {lab:'加槓',meld:{type:'kan',tiles:'5s5s5s5s',called:'5s',from:'left'}}])}),
+          {lab:'大明槓',meld:{type:'kan',kan:'minkan',tiles:'1p1p1p1p',called:'1p',from:'right'}},
+          {lab:'加槓',meld:{type:'kan',kan:'kakan',tiles:'5s5s5s5s',called:'5s',from:'left'}}])}),
       {q:'自分の手の中だけで、おなじ牌が4枚そろった。これは？',hand:'7m7m7m7m',
        choices:['暗槓','大明槓','加槓'],a:0,
        exp:'ほかの人からもらっていない＝暗槓。だから鳴いたことにならないよ。'},
@@ -12704,7 +12914,7 @@ const CH3_LESSONS={
        choices:['加槓','暗槓','大明槓'],a:0,
        exp:'ポンした組に自分で引いた4枚目を足す＝加槓。'},
       {q:'この組を見て、鳴いてできたカンだと分かるのはどこ？',
-       oh:{lab:'ある人のカン',hand:'2m3m4m6p7p8p5s5s',melds:[{type:'kan',tiles:'1p1p1p1p',called:'1p',from:'opposite'}]},
+       oh:{lab:'ある人のカン',hand:'2m3m4m6p7p8p5s5s',melds:[{type:'kan',kan:'minkan',tiles:'1p1p1p1p',called:'1p',from:'opposite'}]},
        choices:['1枚が横向きになっている','牌が4枚ならんでいる'],a:0,
        exp:'横向き＝ほかの人からもらった牌のしるし。暗槓は自分だけで作るので、横向きの牌がないよ。'},
     ];
@@ -13125,21 +13335,38 @@ const CH3_LESSONS={
      数字はすべて SCORE_LINES / CH3_YAKU_META から計算する(本文に書き写さない)。
      Quizには点のならんだ表を出さない(§12)。系統は「1300系」という名前だけ見せる。
      既存ユーザーにも新しい3マスとして届くよう、テーマの【末尾】に足している(TSUMOPPY_TERMS §40)。 */
+  /* ★S3-1 LEVEL A(R68 §9): 役も翻も見せて、点だけを答えさせる。
+     ここで【局・自風(＝親子)・ロン/ツモ】という実戦の条件もいっしょに読む練習をする。 */
   sc3_1(){
     return [
       ch1Teach('ここからは<b>実際のアガリ牌姿</b>で点を考えよう！麻雀の点は、'
-        +'<b>牌姿 → 役 → 翻 → 系統 → 点</b>の順でたどれば出せるんだ。',
+        +'<b>牌姿 → 役 → 翻 → 点</b>の順でたどれば出せるんだ。',
         {tlab:'牌姿から点へ'}),
-      ch1Teach('まずは練習。<b>役も翻も系統も見せる</b>から、<b>点だけ</b>答えてみて！'
+      /* R68 §3: 点は「だれが」「どうやって」アガったかで変わる。その条件を先に読ませる */
+      ch1Teach('牌姿の上に<b>東1局</b>／<b>南家（'+RB_KO+'）</b>のような<b>小さなしるし</b>が出るよ。'
+        +'点は<b>'+RB_KO+'か'+RB_OYA+'か</b>・<b>ロンかツモか</b>で変わるから、まずここを見るんだ。'
+        +'（自風が<b>東家</b>のときだけ'+RB_OYA+'、ほかは'+RB_KO+'だったね）',
+        {tlab:'まず条件を読む'}),
+      ch1Teach('まずは練習。<b>役も翻も見せる</b>から、<b>点だけ</b>答えてみて！'
         +'見かたになれるのが目的だよ。',
         {tlab:'まずは点だけ'}),
       scoreHandPointMcq('m2'),
       scoreHandPointMcq('n1'),
       scoreHandPointMcq('c1'),
+      /* R68 §2・§6: ツモは「点」ではなく【払い】を答える。ロンと答え方が別だと体で覚える */
+      ch1Teach('つぎは<b>ツモ</b>のアガリ。ツモは点を1つで言わないよ。'
+        +'<b>'+RB_KO+'のツモ</b>＝「'+RB_KO+'の払い・'+RB_OYA+'の払い」の2つ、'
+        +'<b>'+RB_OYA+'のツモ</b>＝「◯点オール」だったね。',
+        {tlab:'ツモは払いを答える'}),
+      scoreHandPointMcq('kot3'),
+      scoreHandPointMcq('oyt3'),
+      ch1Teach('いまの2つ、<b>牌姿も役も翻もまったく同じ</b>。ちがうのは'
+        +RB_KO+'か'+RB_OYA+'かだけなんだ。'+RB_OYA+'はアガると大きいね！',
+        {tlab:'おなじ手でもちがう'}),
       scoreHandPointMcq('m3'),
-      scoreHandPointMcq('n3'),
+      scoreHandPointMcq('oyn3'),
       scoreHandPointMcq('c2'),
-      ch1Teach('どう？ <b>系統</b>さえ分かれば、あとは翻のところを見るだけだったね。'
+      ch1Teach('どう？ 条件（局・'+RB_KO+'/'+RB_OYA+'・ロン/ツモ）と翻が分かれば点は出せるね。'
         +'つぎは<b>翻の合計</b>も自分で出してみよう！',
         {tlab:'つぎは翻も自分で'}),
     ];
@@ -13158,13 +13385,19 @@ const CH3_LESSONS={
       scoreHandLineMcq('m1'),
       scoreHandLineMcq('n2'),
       scoreHandLineMcq('c4'),
-      ch1Teach('系統まで分かれば、あとは点だけ。通しでやってみよう！',
-        {tlab:'通しでやってみる'}),
-      /* R66: ツモの手(m4・c3)は点が「子◯・親◯」になるので「何点？」には使わない。
-         同じ翻のロンの手に置きかえ、ツモの払い方は tsumoKoMcq/tsumoOyaMcq であつかう */
-      scoreHandPointMcq('tansan'),
-      scoreHandPointMcq('n2'),
-      scoreHandPointMcq('c4'),
+      /* ★ここから LEVEL B(R68 §9・§11): 役の【名前だけ】を見せる。
+         翻は自分で思い出して足す。SECTION3で覚えた「役＝何翻」を点につなぐ橋。 */
+      ch1Teach('ここからは<b>役の名前だけ</b>にするよ。<b>何翻だったか</b>は自分で思い出してね。'
+        +'（わすれたら<b>役一覧</b>で見てOK！）',
+        {tlab:'翻は見せないよ'}),
+      scoreHandPointMcq('m2',null,{level:'B'}),
+      scoreHandPointMcq('n2',null,{level:'B'}),
+      scoreHandPointMcq('c4',null,{level:'B'}),
+      /* ツモもLEVEL Bでやる。実機で「ツモなのにロンの点」が出た手(七対子4翻のツモ)はここ */
+      ch1Teach('ツモもおなじようにやってみよう。答え方だけ気をつけてね。',
+        {tlab:'ツモでも'}),
+      scoreHandPointMcq('c3',null,{level:'B'}),
+      scoreHandPointMcq('oyc3',null,{level:'B'}),
     ];
   },
   /* ★S3-3 牌姿から点数まで(第4章の総仕上げ) */
@@ -13176,18 +13409,25 @@ const CH3_LESSONS={
         '白のコーツで役牌、ピンズと字牌だけなのでホンイツ。鳴いているので食い下がりに注意！'),
       scoreHandFind('c3',['riichi','tsumo','chiitoi','toitoi'],
         'トイツが7組で七対子。リーチしてツモアガリだから3つだね。'),
-      scoreHandPointMcq('m1'),
-      scoreHandPointMcq('n2'),
-      scoreHandPointMcq('c4'),
+      /* LEVEL B(役の名前だけ)が中心。親のロン・親のツモもここでそろえる(R68 §7・§10) */
+      scoreHandPointMcq('m1',null,{level:'B'}),
+      scoreHandPointMcq('rd2',null,{level:'B'}),
+      scoreHandPointMcq('oyc4',null,{level:'B'}),
+      scoreHandPointMcq('oym4',null,{level:'B'}),
+      scoreHandPointMcq('ura',null,{level:'B'}),
+      scoreHandPointMcq('oyc5',null,{level:'B'}),
+      /* LEVEL C(役も翻も見せない)は【少量だけ】(R68 §12)。反復は将来のTrainingで */
+      scoreHandPointMcq('tansan',null,{level:'C'}),
+      scoreHandPointMcq('c4',null,{level:'C'}),
       scoreHandHanMcq('n3'),
       /* ツモの払い方も、牌姿を見たうえで答える(§11) */
       tsumoKoMcq(2,'oya','大きいほうが'+RB_OYA+'の払いだったね。',{hand:'tk'}),
       tsumoOyaMcq(0,'「オール」は'+RB_KO+'1人ぶんの数字。'+RB_KO+'3人が同じ額を払うよ。',{hand:'to'}),
     ]);
     return [
-      ch1Teach('<b>総仕上げ！</b> こんどは<b>牌姿だけ</b>。役を見つけるところからやってみよう。'
-        +'<b>牌姿 → 役 → 翻 → 系統 → 点</b>の順だよ。',
-        {tlab:'牌姿だけ'}),
+      ch1Teach('<b>総仕上げ！</b> ここでは<b>役の名前だけ</b>の問題と、'
+        +'<b>牌姿だけ</b>の問題がまざるよ。<b>牌姿 → 役 → 翻 → 点</b>の順でたどろう。',
+        {tlab:'しあげ'}),
     ].concat(quiz).concat([
       ch1Teach('🎉 <b>第4章コンプリート！</b> アガった手を見て「この手はだいたい何点か」が'
         +'言えるようになったね。'
