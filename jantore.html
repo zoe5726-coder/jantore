@@ -332,6 +332,19 @@ html.ruby-full .mt-guide-card .tc-bub{height:86px;}
 .tr-pick.tr-any{grid-column:1/-1; border-color:var(--jade); background:var(--jade-soft); color:var(--jade-ink);}
 .tr-pick.tr-any small{color:var(--jade-ink); opacity:.85;}
 .tr-note{font-size:11px; color:var(--ink-soft); font-weight:700; margin:8px 0 0;}
+/* R69 点数トレーニング: 難易度は3つを縦にならべる(1行1Lv。説明が長いので2列にしない) */
+.tr-grid.tr-grid1{grid-template-columns:1fr;}
+.tr-pick.tr-lv{align-items:flex-start; text-align:left; padding:10px 14px; gap:2px;}
+.tr-pick.tr-lv b{font-size:clamp(13px,3.7vw,14.5px);}
+.tr-ref{display:block; width:100%; margin:8px 0 0; padding:9px 12px; border-radius:12px;
+  border:2px solid var(--line); background:var(--card); color:var(--jade-ink);
+  font-weight:800; font-size:clamp(11.5px,3.2vw,13px); font-family:inherit; cursor:pointer;}
+.tr-ref:active{transform:translateY(1px);}
+/* 回答後に開く「なぜその点か」(役→翻→符→親子→ロン/ツモ→点) */
+.st-rev{margin:2px 0 0;}
+.st-rev .sh-line b{font-size:16px; color:var(--jade-ink);}
+/* 問題番号(3 / 10) */
+.q-type .q-num{float:right; font-variant-numeric:tabular-nums; color:var(--ink-soft);}
 
 /* ---------- lesson ---------- */
 .lesson{position:fixed; inset:0; z-index:40; background:var(--paper); display:none; flex-direction:column; height:100dvh;}
@@ -4209,8 +4222,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.62.0';
-const BUILD_ID='20261002-04';
+const APP_VER='0.63.0';
+const BUILD_ID='20261002-05';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -4924,7 +4937,21 @@ function trainLockInfo(n){
     +'<p>学習ロードの「待ちの基本」で<b>'+(st?st.title:n+'枚形')+'</b>を さいごまでクリアすると、ここでも れんしゅうできるよ。</p>'
     +'<button class="btn" onclick="closeModal()">とじる</button>');
 }
+/* R69 点数トレーニングの難易度えらび。
+   内部名のA/B/Cはユーザーに見せず、Lv1〜Lv3と「何が見えるか」で説明する(§26) */
+function scoreTrainPickHTML(){
+  return '<div class="tr-opt"><p class="tr-opt-h">どこまで自分で考える？</p>'
+    +'<div class="tr-grid tr-grid1">'
+    +SCORE_TRAIN_LEVELS.map(l=>'<button class="tr-pick tr-lv" onclick="startTraining(\'score\','+l.id+')">'
+      +'<b>Lv'+l.id+' '+l.title+'</b><small>'+l.desc+'</small></button>').join('')
+    +'</div>'
+    +'<p class="tr-note">どのLvでも <b>局・自風・'+RB_KO+'/'+RB_OYA+'・ロン/ツモ</b> は見えるよ。'
+    +'符はまだ自分で数えなくていいから、条件として出すね。</p>'
+    +'<button class="tr-ref" onclick="openScoreTable()">💰 点数表を見る</button>'
+    +'</div>';
+}
 function trainOptionsHTML(cat){
+  if(cat==='score') return scoreTrainPickHTML();
   if(cat!=='waits') return '<button class="btn" onclick="startTraining(\''+cat+'\')">トレーニング開始（7問）</button>';
   const un=waitsTilesUnlocked(), steps=waitsTileSteps();
   const cell=s=>un.includes(s.n)
@@ -4969,7 +4996,17 @@ function renderTraining(){
       bandText('waits')+'（おまかせは あなたのレーティングに合わせて自動調整）')
     +card('nanikiru','🀄','何切るトレーニング','受け入れ最大の1枚')
     +card('riichi','📣','リーチ判断トレーニング','曲げるかダマか・鳳凰卓実測で検証済み','検証済み問題からランダム7問（2択・レーティング反映）')
-    +'<p style="text-align:center;font-size:11px;color:var(--ink-soft);padding:0 24px;">他のカテゴリ（役判定・点数計算・押し引き…）は学習ロードの進行で解放予定</p>';
+    /* R69 点数トレーニング: 点数のレーティングはまだ作らないので、RATINGを出さない専用カード */
+    +'<div class="card">'
+    +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">'
+    +'<span style="font-size:30px;">💰</span>'
+    +'<div style="flex:1;"><b style="font-size:15px;">点数トレーニング</b>'
+    +'<div style="font-size:12px;color:var(--ink-soft);font-weight:700;">牌姿から点数を判断する練習</div></div></div>'
+    +'<p style="font-size:11px;color:var(--ink-soft);margin:0 0 10px;font-weight:700;">'
+    +SCORE_TRAIN_N+'問1セット。何度でもくりかえせるよ</p>'
+    +trainOptionsHTML('score')
+    +'</div>'
+    +'<p style="text-align:center;font-size:11px;color:var(--ink-soft);padding:0 24px;">他のカテゴリ（役判定・押し引き…）は学習ロードの進行で解放予定</p>';
 }
 /* tiles: 数値=その枚数形だけ / 'auto'=おまかせ(習った枚数からレーティングに合わせて選ぶ)
    / 省略=従来どおり枚数を固定しない(既存の呼び出し・自動テストは挙動不変) */
@@ -4979,6 +5016,19 @@ function startTraining(cat,tiles){
   if(cat==='waits'&&tiles!=null){
     const un=waitsTilesUnlocked();
     wtiles=(tiles==='auto'||!un.includes(tiles))?'auto':tiles;   // 未解放が来たら おまかせへ落とす
+  }
+  /* R69 点数トレーニング: 10問を先に作ってから始める(seedを渡せば同じセットになる＝テストできる)。
+     点数のレーティングはまだ作らないので rcat は持たせない(§45) */
+  if(cat==='score'){
+    const lv=scoreTrainLevel(tiles||1);
+    const qs=scoreTrainSet(lv.id,(Date.now()^(Math.random()*0x7fffffff))>>>0);
+    L={course:{id:'tr-score',title:'点数トレーニング Lv'+lv.id,type:'score',training:true},
+       qs,idx:0,correct:0,sel:null,checked:false,done:false,
+       rcat:null,ratingStart:null,bigMiss:0,startedAt:Date.now(),combo:0,maxCombo:0,
+       scoreTrain:{level:lv.id,ron:{n:0,ok:0},tsumo:{n:0,ok:0}}};
+    document.getElementById('lesson').classList.add('show');
+    renderQ();
+    return;
   }
   const course = cat==='waits'
     ? {id:'tr-waits',title:'待ちトレーニング',type:'waits',training:true}
@@ -8821,10 +8871,15 @@ function scoreHandChoices(e){
     SCORE_LINES.forEach(x=>{ if(x.pts[i]!=null) cands.push(x.pts[i]+'点'); });
   }
   /* それ以外(ツモ・親・系統のない符)は【おなじ条件で翻が1つちがう点】 */
-  [han-1,han+1,han+2].forEach(h=>{
+  const addHan=hs=>hs.forEach(h=>{
     if(h>=1&&fuHanExists(fu,h,ctx.win)) cands.push(fuHanAnswer(fu,h,oya,ctx.win)); });
+  addHan([han-1,han+1,han+2]);
   const num=x=>parseInt(String(x).replace(/[^0-9]/,''),10)||0;
-  const all=[]; [right].concat(cands).forEach(v=>{ if(v&&!all.includes(v)) all.push(v); });
+  const uniq=()=>{ const a=[]; [right].concat(cands).forEach(v=>{ if(v&&!a.includes(v)) a.push(v); }); return a; };
+  /* 満貫以上はとなりの翻でも点が同じになる(6翻と7翻はどちらも跳満)。
+     2択になると当てずっぽうで当たってしまうので、3つそろうまで翻を広げてさがす(R69 §18) */
+  if(uniq().length<3) addHan([han-2,han+3,han-3,han+4,han+5]);
+  const all=uniq();
   all.sort((a,b)=>num(a)-num(b));
   if(all.length<2) return [right];
   const ri=all.indexOf(right);
@@ -10582,6 +10637,180 @@ function fuHanPointMcq(o){
   return Object.assign({
     q:who+'が<b>'+w+'</b>でアガった。'+cond+'。'+(win==='tsumo'?'払いは？':'点は？'),
     choices,a:choices.indexOf(right),exp:o.exp||''},o.opt||{});
+}
+/* ===== R69 点数トレーニング =====
+   Roadで学んだ「牌姿 → 役 → 翻 → 点」を、何度でも反復する場所。
+   いちばん大事な決まり: 【問題を手で書かない】。
+     ・出題のもとは「どの牌姿を・どの局で・どの自風で・ロンかツモか」だけ。
+     ・役も翻も符も点も答えの形も、Roadとまったく同じ計算
+       (ch3ListOf / scoreHandHan / ch3Fu / scoreByFuHan / fuHanAnswer)から導く。
+     ・だから Road を直せば Training も直るし、その逆も成り立つ。
+   Lvは「見せる情報の量」だけを変える(R68 §9の A/B/C をそのまま使う)。
+   符そのものを答えさせるのは将来のLv4(符Training)。いまは符は条件として見せるだけ。 */
+const SCORE_TRAIN_N=10;                       // 1セットの問題数
+const SCORE_TRAIN_LEVELS=[
+  {id:1,lv:'A',title:'点数をおぼえよう',desc:'役・翻・符が見える'},
+  {id:2,lv:'B',title:'翻も考えよう',    desc:'役と符が見える'},
+  {id:3,lv:'C',title:'牌姿から考えよう',desc:'符だけが見える'},
+];
+function scoreTrainLevel(id){ return SCORE_TRAIN_LEVELS.find(x=>x.id===id)||SCORE_TRAIN_LEVELS[0]; }
+/* 1セットのカテゴリ配分。ロン5/ツモ5・親3/子7になるよう先に枠を決めてから中身をえらぶ
+   (ただのランダムだと、たまたまツモが1問も出ないセットができてしまう) */
+const SCORE_TRAIN_QUOTA=[['koRon',4],['oyaRon',1],['koTsumo',3],['oyaTsumo',2]];
+/* テストでは同じ seed なら同じセットになるようにする(本番は Date.now() を種にする) */
+function scoreTrainRnd(seed){
+  let x=(seed>>>0)||1;
+  return ()=>{ x=(x*1664525+1013904223)>>>0; return x/4294967296; };
+}
+/* 牌姿(SCORE_HANDS)＋条件(自風・アガリ方)から、Training用の1問ぶんのデータを作る。
+   役は【かならず計算で出す】ので、条件を変えれば役も翻も符も点も自動で追いかける */
+function scoreTrainVariant(base,seat,win){
+  const e=Object.assign({},base,{seat,ctx:Object.assign({},base.ctx,{win})});
+  e.srcId=base.id;
+  e.vid=base.id+'/'+seat+'/'+win;
+  e.keys=ch3ListOf(e.hand,scoreHandCtx(e));
+  return e;
+}
+/* 役牌のコーツがいくつあるか。役リストは「役牌」を1つとしか数えないので、
+   2つ以上ある手は翻がずれる。そういう条件のバリアントはTrainingに使わない */
+function scoreTrainYakuhaiSets(e){
+  const c=scoreHandCtx(e), cnt=ch3Cnt(sortTiles(parseHand(e.hand)));
+  let n=0;
+  Object.keys(cnt).forEach(t=>{ if(ch3IsHonor(t)&&cnt[t]>=3&&ch3IsYakuhaiTile(t,c)) n++; });
+  return n;
+}
+/* Trainingの問題として成立するかの監査。理由の文字列を返す(''なら使える) */
+function scoreTrainCheck(e){
+  if(!e||!e.hand) return 'no-hand';
+  const c=scoreHandCtx(e);
+  if(!(c.win==='ron'||c.win==='tsumo')) return 'win';
+  if(!c.round||!c.sw) return 'situation';
+  if(!Array.isArray(e.keys)||!e.keys.length) return 'no-yaku';         // 役なしではアガれない
+  if(e.keys.some(k=>!CH3_YAKU_META[k])) return 'unknown-yaku';          // 未実装役に依存しない
+  if(e.keys.some(k=>CH3_YAKU_META[k].yakuman)) return 'yakuman';        // R69では役満は出さない
+  if(scoreTrainYakuhaiSets(e)>1) return 'double-yakuhai';
+  const han=scoreHandHan(e); if(!(han>=1)) return 'han';
+  const fu=scoreHandFu(e); if(fu==null) return 'fu';
+  if(!fuHanExists(fu,han,c.win)) return 'fu-han';
+  const ans=scoreHandAnswer(e); if(ans==null) return 'answer';
+  if(scoreAnswerWin(scoreAnswerKind(ans))!==c.win) return 'answer-kind';
+  const ch=scoreHandChoices(e);
+  if(ch.length<2||ch.indexOf(ans)<0) return 'choices';
+  if(ch.some(x=>scoreAnswerWin(scoreAnswerKind(x))!==c.win)) return 'choice-kind';
+  try{ if(ch3BoardHTML({hand:e.hand,ctx3:c})===null) return 'board'; }catch(x){ return 'board'; }
+  return '';
+}
+/* 出題プール。SCORE_HANDS の牌姿 × (自風=その手のまま / 東家=親) × (ロン / ツモ)
+   を全部ならべて、監査を通ったものだけを残す。点はどこにも手書きしない */
+function scoreTrainPool(){
+  if(scoreTrainPool._c) return scoreTrainPool._c;
+  const out=[];
+  SCORE_HANDS.forEach(b=>{
+    const seats=[scoreHandSeat(b)];
+    if(!seats.includes('E')) seats.push('E');                 // 親のパターンも作る
+    seats.forEach(seat=>['ron','tsumo'].forEach(win=>{
+      const e=scoreTrainVariant(b,seat,win);
+      if(scoreTrainCheck(e)==='') out.push(e);
+    }));
+  });
+  scoreTrainPool._c=out;
+  return out;
+}
+function scoreTrainByVid(vid){ return scoreTrainPool().find(e=>e.vid===vid)||null; }
+function scoreTrainCat(e){
+  return (scoreHandIsOya(e)?'oya':'ko')+(scoreHandCtx(e).win==='tsumo'?'Tsumo':'Ron');
+}
+/* 点数帯。ロンでもツモでも比べられるよう、同じ条件のロンの点でそろえる */
+function scoreTrainBand(e){
+  const s=scoreByFuHan(scoreHandFu(e),scoreHandHan(e),scoreHandIsOya(e));
+  if(s.tier) return s.tier==='mangan'?'mangan':'over';
+  return s.ron<=2600?'low':(s.ron<=5200?'mid':'high');
+}
+/* 回答後に見せる「なぜその点になるか」。役 → 翻 → 符 → 親子 → ロン/ツモ → 点 の順。
+   Lv2/Lv3で隠していた情報は、ここでかならず開く(Training自体が復習になる) */
+function scoreTrainRevealHTML(e){
+  const c=scoreHandCtx(e), oya=scoreHandIsOya(e);
+  return '<div class="st-rev">'
+    +yakuRowsHTML(e.keys)
+    +'<div class="sh-sum">合計 <b>'+scoreHandHan(e)+'翻</b></div>'
+    +'<div class="sh-fu"><b>'+scoreHandFu(e)+'符'+scoreHandHan(e)+'翻</b> ／ '
+      +(oya?RB_OYA:RB_KO)+'の<b>'+(c.win==='tsumo'?'ツモ':'ロン')+'</b></div>'
+    +'<div class="sh-line">→ <b>'+scoreHandAnswer(e)+'</b></div>'
+    +'</div>';
+}
+/* 1問ぶんの問題オブジェクト。見せる量は level だけで変える */
+function scoreTrainQ(e,level,no){
+  const lv=scoreTrainLevel(level), c=scoreHandCtx(e);
+  const right=scoreHandAnswer(e), choices=scoreHandChoices(e);
+  return {q:c.win==='tsumo'?'このアガリ、<b>払いは</b>？':'このアガリは<b>何点</b>？',
+    hand:e.hand,ctx3:c,choices,a:choices.indexOf(right),
+    panel:scoreHandPanel(e,{level:lv.lv,han:true,line:false}),
+    exp:scoreTrainRevealHTML(e),
+    qnum:no+' / '+SCORE_TRAIN_N,
+    stLevel:level,stVid:e.vid};
+}
+/* 1セット(10問)を作る。
+   ①カテゴリの枠を先に決める(ロンだけ・子だけのセットができない)
+   ②枠の中では、まだ出ていない点数帯を優先してえらぶ(3900ばかりにならない)
+   ③同じ条件の牌姿は1セットに1回まで(同じ牌姿の条件ちがいは学習になるので許す)
+   seed を渡せば毎回おなじセットになる＝テストできる */
+function scoreTrainSet(level,seed,opt){
+  const o=opt||{};
+  const rnd=o.rnd||scoreTrainRnd(seed);
+  const pool=o.pool||scoreTrainPool();
+  const by={};
+  pool.forEach(e=>{ const k=scoreTrainCat(e); (by[k]=by[k]||[]).push(e); });
+  const used=new Set(), out=[];
+  const bandCount=()=>{ const m={}; out.forEach(e=>{ const b=scoreTrainBand(e); m[b]=(m[b]||0)+1; }); return m; };
+  const take=list=>{
+    if(!list.length) return null;
+    const m=bandCount();
+    let lo=Infinity; list.forEach(e=>{ const n=m[scoreTrainBand(e)]||0; if(n<lo) lo=n; });
+    const cand=list.filter(e=>(m[scoreTrainBand(e)]||0)===lo);
+    const e=cand[Math.min(cand.length-1,Math.floor(rnd()*cand.length))];
+    used.add(e.vid); out.push(e); return e;
+  };
+  SCORE_TRAIN_QUOTA.forEach(q=>{ for(let i=0;i<q[1];i++) take((by[q[0]]||[]).filter(e=>!used.has(e.vid))); });
+  while(out.length<SCORE_TRAIN_N){
+    const rest=pool.filter(e=>!used.has(e.vid));
+    if(!rest.length) break;
+    take(rest);
+  }
+  for(let i=out.length-1;i>0;i--){
+    const j=Math.min(i,Math.floor(rnd()*(i+1)));
+    const t=out[i]; out[i]=out[j]; out[j]=t;
+  }
+  return out.map((e,i)=>scoreTrainQ(e,level,i+1));
+}
+/* ===== 回答ログ(R69 §23・§44) =====
+   将来「何が苦手か」を出せるよう、1問ずつ最小限だけ残す。
+   ・既存の学習データ(jantore-v1)には一切さわらない。専用キーに分けて持つ
+   ・牌姿のHTMLや長い文字列は保存しない。牌姿はIDだけ(あとから再現できる)
+   ・上限を決めて、ふえ続けないようにする
+   ・保存に失敗してもTrainingは止めない(try/catch) */
+const SCORE_LOG_KEY='jantore-scorelog-v1', SCORE_LOG_MAX=300;
+function scoreTrainLogRead(){
+  try{ const a=JSON.parse(localStorage.getItem(SCORE_LOG_KEY)||'[]'); return Array.isArray(a)?a:[]; }
+  catch(e){ return []; }
+}
+function scoreTrainLogRec(q,selIdx,ok){
+  const e=scoreTrainByVid(q.stVid); if(!e) return null;
+  const c=scoreHandCtx(e);
+  return {t:Date.now(),lv:q.stLevel,h:e.srcId,vid:e.vid,
+    rd:c.round,sw:c.sw,oya:scoreHandIsOya(e)?1:0,win:c.win,
+    yk:e.keys.slice(),han:scoreHandHan(e),fu:scoreHandFu(e),
+    band:scoreTrainBand(e),
+    ans:scoreHandAnswer(e),sel:(q.choices[selIdx]!=null?q.choices[selIdx]:null),
+    ok:ok?1:0};
+}
+function scoreTrainLog(q,selIdx,ok){
+  try{
+    const rec=scoreTrainLogRec(q,selIdx,ok); if(!rec) return;
+    const arr=scoreTrainLogRead();
+    arr.push(rec);
+    if(arr.length>SCORE_LOG_MAX) arr.splice(0,arr.length-SCORE_LOG_MAX);
+    localStorage.setItem(SCORE_LOG_KEY,JSON.stringify(arr));
+  }catch(e){}                      // 保存できなくてもTrainingは続ける
 }
 function ch3AgariMcq(handStr,ctx3,exp,opt){
   // 役あり/なし: 形が完成していても役がなければアガれない(第1章D2-1の実戦定着)
@@ -13921,7 +14150,9 @@ const QFORMATS={
     qid(q){ return null; },
     render(q){
       let html='';
-      html+='<div class="q-type">'+L.course.title+'</div>';
+      /* R69: Trainingは「いま何問目か」を出す。qnum を持つ問題だけ(ほかの画面は変わらない) */
+      html+='<div class="q-type">'+L.course.title
+        +(q.qnum?'<span class="q-num">'+q.qnum+'</span>':'')+'</div>';
       html+='<div class="q-text">'+q.q+'</div>';
       if(q.ctx) html+='<div class="q-ctx">'+q.ctx+'</div>';
       // 図(ヘルパー関数で生成。ドラ・カンなど)。
@@ -15043,6 +15274,15 @@ function check(){
     logCompare({compareId:q.compareId,variantId:q.variantId,changedCategories:q.changedCategories,
       S:res.S,isCorrect:res.isCorrect,answeredAt:new Date().toISOString()});
   }
+  /* R69: 点数トレーニングの回答を記録する(将来の弱点分析のため)。
+     保存に失敗してもTrainingは止まらない(scoreTrainLog が中でtry/catchしている) */
+  if(q.stVid){
+    scoreTrainLog(q,(ans&&ans.index!=null)?ans.index:-1,res.isCorrect);
+    if(L.scoreTrain){
+      const w=(q.ctx3&&q.ctx3.win==='tsumo')?'tsumo':'ron';
+      L.scoreTrain[w].n++; if(res.isCorrect) L.scoreTrain[w].ok++;
+    }
+  }
   const fb=fmt.feedback(q,res);
   /* R60: 麻雀イベント演出(ポン！/ロン！など)が出ているあいだは、学習の結果カードを重ねない。
      演出が終わってから結果へ進める。
@@ -15232,7 +15472,20 @@ function renderResult(ctx){
     +'<div class="v">'+v+'</div><div class="k">'+k+'</div></div>';
   const noteStyle='color:var(--ink-soft);font-size:12px;margin:2px 0 0;';
   let stats;
-  if(L.course.training&&bestInfo){
+  if(L.scoreTrain){
+    /* R69 §22: 点数トレーニングの結果。正解率と、ロン/ツモの内わけだけ。
+       大きな分析ダッシュボードにはしない(弱点分析はログを土台に将来つくる) */
+    const st=L.scoreTrain, lv=scoreTrainLevel(st.level);
+    const br=(lab,o)=>o.n?statBox(o.ok+' / '+o.n,lab):'';
+    stats='<div class="res-grid">'
+      +statBox(L.correct+' / '+quizN,'正解')
+      +statBox(accuracy+'%','正解率')
+      +br('ロン',st.ron)+br('ツモ',st.tsumo)
+      +'</div>'
+      +'<p class="stag" style="'+noteStyle+'animation-delay:'+(SI++)*MOTION.resultStagger+'ms">'
+      +'💰 Lv'+lv.id+'　'+lv.title+'（'+lv.desc+'）</p>'
+      +'<div class="stag"'+stagStyle(SI++)+'><span class="xp-chip" style="font-size:12px;padding:6px 12px;">+'+xp+' EXP</span></div>';
+  }else if(L.course.training&&bestInfo){
     // トレーニング: 正解率・今回タイム・自己ベスト・ランクが中心(ランク基準は設定データ・未設定種別は非表示)
     const rank=rankForTime(bestInfo.key,duration);
     stats='<div class="res-grid">'
@@ -15270,7 +15523,11 @@ function renderResult(ctx){
   area.scrollTop=0;
   const foot=document.getElementById('lesson-foot');
   foot.className='lesson-foot';
-  foot.innerHTML='<button class="btn" onclick="afterLesson()">つづける</button>';
+  /* R69: 点数トレーニングは「何度でもくりかえせる」場所。もう一度/トレーニングへ戻る の2つを出す */
+  foot.innerHTML=L.scoreTrain
+    ?'<button class="btn" onclick="scoreTrainAgain('+L.scoreTrain.level+')">もう一度（'+SCORE_TRAIN_N+'問）</button>'
+      +'<button class="btn gray" style="margin-top:8px;" onclick="afterLesson()">トレーニングに戻る</button>'
+    :'<button class="btn" onclick="afterLesson()">つづける</button>';
   // DAILY COMPLETE(第8段階): 3ミッション全達成のその日1回だけ、解説を邪魔しない
   // リザルト表示のタイミングで再生(COMPLETE/MASTER演出の後に順番に流れる。操作は塞がない)
   if(DAILY_FX_PENDING){
@@ -15279,6 +15536,12 @@ function renderResult(ctx){
       +'<div class="fx-s">今日のミッション達成！　🔥 '+S.streak+'日連続</div>'
       +'<div class="fx-s2">また明日！</div>','fx-daily',MOTION.dailyComplete);
   }
+}
+/* R69: 同じLvで新しい10問をすぐ始める。進捗(roadProgress)には一切さわらない */
+function scoreTrainAgain(level){
+  document.getElementById('lesson').classList.remove('show');
+  L=null; renderHUD();
+  startTraining('score',level);
 }
 function afterLesson(){
   document.getElementById('lesson').classList.remove('show');
