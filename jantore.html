@@ -4249,8 +4249,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.64.0';
-const BUILD_ID='20261003-01';
+const APP_VER='0.65.0';
+const BUILD_ID='20261003-02';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -5505,12 +5505,33 @@ function ch1MiniContains(big,small){  // bigのmultisetがsmallを包含する�
   const b=ch1MiniCounts(big), sm=ch1MiniCounts(small);
   return Object.keys(sm).every(k=>(b[k]||0)>=sm[k]);
 }
-/* 切ってよい牌か(決定論): 切った残り4枚が目標アガリ形の部分集合で、
-   かつ残りの山とあわせて目標形を完成できること(=教材山で必ずアガれる牌だけがOK) */
+/* 切ってよい牌か(決定論)。
+   ===== R71でここを直した =====
+   R70までは「切ったあとの手が【つねに目標の部分集合】であること」を求めていた。
+   そのため開始手にいらない牌を2枚以上入れられず(1枚切っても もう1枚のこるとNGになる)、
+   ミニ麻雀は【ほぼテンパイから始めるしかない】構造になっていた。
+   実測でも開始シャンテンは 0 が76% / 1 が24%、2シャンテン以上は1件も作れなかった。
+
+   R71からは「切ったあと、のこりの山で まだ目標にたどりつけること」だけを見る。
+     のこりで足りない牌(= 目標 − 手牌) が、ぜんぶ まだ山にある
+   これは今までの条件をふくむ(手が目標の部分集合なら、同じ判定になる)ので、
+   いままで切れた牌はそのまま切れる。いらない牌を何枚持っていても始められるようになる。 */
 function ch1MiniOk(i){
   const mg=L.mg, five=mg.hand.concat([mg.tsumo]);
   const rest=five.slice(); rest.splice(i,1);
-  return ch1MiniContains(mg.target,rest)&&ch1MiniContains(rest.concat(mg.wall),mg.target);
+  return ch1MiniReachable(rest,mg.wall,mg.target);
+}
+/* のこりの山で目標にたどりつけるか。足りない牌がぜんぶ山にあればよい */
+function ch1MiniReachable(hand,wall,target){
+  const H=ch1MiniCounts(hand), T=ch1MiniCounts(target), W=ch1MiniCounts(wall);
+  let need=0;
+  for(const t of Object.keys(T)){
+    const lack=T[t]-(H[t]||0);
+    if(lack<=0) continue;
+    if((W[t]||0)<lack) return false;
+    need+=lack;
+  }
+  return need<=wall.length;
 }
 function ch1MiniGuide(){
   const mg=L.mg; if(!mg) return '';
@@ -6189,6 +6210,253 @@ function ch1HonorOrNumMcq(tile,exp){
 }
 
 /* ---- C1用ビルダー(正解は必ずch1MiniWin5/ch1MiniWaitsで算出) ---- */
+/* ===================================================================
+   R71 ミニ麻雀のシナリオ生成
+   ===================================================================
+   R70までのミニ麻雀(ch1Mini)は、29問すべてが手で書いた固定データだった。
+   実測すると、3つの偏りがあった(実機で指摘されたとおり)。
+
+     ① アガリ時の山の残り = 0枚 が 29/29（100%）
+        山は1〜3枚しかなく、最後の1枚がかならずアガリ牌。
+        → 山の残り枚数を見ればいつアガるか分かってしまう
+     ② 開始シャンテン 0 が 22/29（76%）・1 が 7/29。2シャンテン以上は0件
+        推移も 0→0→0 が多く、手は育たず「ツモ切りして待つ」だけになっていた
+     ③ 最終待ちは シャンポン13 / 両面13 / 単騎2 / ペンチャン1、カンチャンは0件
+        10枚・13枚のミニ麻雀にかぎるとシャンポンが最多
+
+   R71は【完全ランダム】にはしない。初心者教材として制御したまま、
+   予定調和に見えないようにする。作り方は【アガリの形から逆算する】。
+
+     ① ねらいの形(target)を作る   指定した待ち形になるように、メンツとアタマを組む
+     ② テンパイ = target − アガリ牌
+     ③ 開始手   = テンパイから k 枚ぬいて、代わりに「あきらかにいらない牌」を k 枚入れる
+                  → 開始シャンテンは k。ぬく枚数で開始の遠さを決める
+     ④ 山       = ぬいた k 枚 ＋ 手が進まないツモ(noise) ＋ アガリ牌 ＋ アガリ後ものこる山
+                  → アガリ巡目も、山の残り枚数も、1パターンに固定されない
+
+   すべて seed から決まるので、同じ seed なら同じ局になる(テストできる)。 */
+const MINI_WAITS=['両面','カンチャン','ペンチャン','シャンポン','単騎'];
+/* 捨てやすい「あきらかにいらない牌」。初心者が見て判断できる 字牌と端の牌だけ(§3) */
+const MINI_JUNK=['E','S','W','N','B','G','R','1m','9m','1p','9p','1s','9s'];
+function miniCnt(a){ const c={}; a.forEach(t=>c[t]=(c[t]||0)+1); return c; }
+function miniRun(n,su){ return [n+su,(n+1)+su,(n+2)+su]; }
+/* 牌が4枚をこえないように取る */
+function miniCanTake(used,tiles){
+  const c=Object.assign({},used);
+  for(const t of tiles){ c[t]=(c[t]||0)+1; if(c[t]>4) return false; }
+  return true;
+}
+function miniTake(used,tiles){ tiles.forEach(t=>used[t]=(used[t]||0)+1); return used; }
+/* 待ち形から「アガリ牌を含む組」と「アガリ牌」を作る。
+   かならずこの形で待つ＝待ちの分類がぶれない牌姿だけを使う(§8) */
+function miniWinGroup(kind,rnd,used){
+  const su=['m','p','s'][Math.floor(rnd()*3)];
+  const pick=a=>a[Math.floor(rnd()*a.length)];
+  if(kind==='両面'){
+    /* 345 の 3待ち(45のリャンメン) か 5待ち(34のリャンメン)。
+       12→3 と 89→7 はペンチャンなので、その形にならない位置だけを使う */
+    const n=2+Math.floor(rnd()*5);              // 2〜6 → run n..n+2
+    const hi=rnd()<0.5;
+    const run=miniRun(n,su);
+    const win=hi?run[2]:run[0];
+    const rest=hi?[run[0],run[1]]:[run[1],run[2]];
+    /* 端にかかると意味が変わるので除く(例 123 の 3待ち=ペンチャン) */
+    if(hi&&n===1) return null;
+    if(!hi&&n+2===9) return null;
+    return {win,rest,kind:'両面'};
+  }
+  if(kind==='カンチャン'){
+    const n=1+Math.floor(rnd()*7);
+    const run=miniRun(n,su);
+    return {win:run[1],rest:[run[0],run[2]],kind:'カンチャン'};
+  }
+  if(kind==='ペンチャン'){
+    return rnd()<0.5
+      ? {win:'3'+su,rest:['1'+su,'2'+su],kind:'ペンチャン'}
+      : {win:'7'+su,rest:['8'+su,'9'+su],kind:'ペンチャン'};
+  }
+  if(kind==='シャンポン'){
+    const t=pick(CH1_ALL34);
+    if(!miniCanTake(used,[t,t,t])) return null;
+    return {win:t,rest:[t,t],kind:'シャンポン'};
+  }
+  /* 単騎: アガリ牌がアタマになる */
+  const t=pick(CH1_ALL34);
+  if(!miniCanTake(used,[t,t])) return null;
+  return {win:t,rest:[t],kind:'単騎',head:true};
+}
+/* ふつうのメンツ(シュンツかコーツ)を1つ作る */
+function miniGroup(rnd,used){
+  for(let tries=0;tries<40;tries++){
+    if(rnd()<0.72){
+      const su=['m','p','s'][Math.floor(rnd()*3)];
+      const n=1+Math.floor(rnd()*7);
+      const g=miniRun(n,su);
+      if(miniCanTake(used,g)) return g;
+    }else{
+      const t=CH1_ALL34[Math.floor(rnd()*CH1_ALL34.length)];
+      if(miniCanTake(used,[t,t,t])) return [t,t,t];
+    }
+  }
+  return null;
+}
+/* アタマ(対子)を1つ作る */
+function miniPair(rnd,used){
+  for(let tries=0;tries<40;tries++){
+    const t=CH1_ALL34[Math.floor(rnd()*CH1_ALL34.length)];
+    if(miniCanTake(used,[t,t])) return [t,t];
+  }
+  return null;
+}
+/* 1局ぶんのシナリオを作る。
+     size      手牌の枚数(4/7/10/13)
+     shanten   開始の遠さ(ぬく枚数)
+     wait      最終待ち形
+     noise     手が進まないツモを何回はさむか
+     after     アガったあとも山にのこる枚数
+   作れなかったら null を返す(呼び出し側がseedを変えて作りなおす) */
+function miniBuild(o,rnd){
+  const size=o.size||13, nSets=Math.round((size+1-2)/3);
+  const used={};
+  const wg=miniWinGroup(o.wait||'両面',rnd,used);
+  if(!wg) return null;
+  miniTake(used,wg.rest.concat([wg.win]));
+  const groups=[], target=wg.rest.concat([wg.win]);
+  let head=wg.head?null:miniPair(rnd,used);
+  if(!wg.head){ if(!head) return null; miniTake(used,head); }
+  const needSets=wg.head?nSets:(nSets-1);
+  for(let i=0;i<needSets;i++){
+    const g=miniGroup(rnd,used); if(!g) return null;
+    miniTake(used,g); groups.push(g);
+  }
+  const full=sortTiles(target.concat(head||[],groups.reduce((a,g)=>a.concat(g),[])));
+  if(full.length!==size+1) return null;
+  if(!ch1MiniWin(full)) return null;
+  const tenpai=sortTiles(removeTiles(full,[wg.win])||[]);
+  if(tenpai.length!==size) return null;
+  /* 待ちがこの形だけに決まること(ぶれる牌姿は使わない=§8) */
+  if(miniWaitKinds(tenpai,wg.win).join('/')!==wg.kind) return null;
+  /* 開始手: テンパイから k 枚ぬいて、いらない牌を k 枚入れる */
+  const k=Math.max(0,Math.min(3,o.shanten==null?2:o.shanten));
+  const pullable=[];
+  groups.forEach(g=>{ if(g[0]!==g[1]) pullable.push(g[2]); });   // シュンツの端をぬく
+  groups.forEach(g=>{ if(g[0]===g[1]) pullable.push(g[2]); });   // コーツの1枚
+  if(pullable.length<k) return null;
+  const pulled=pullable.slice(0,k);
+  let hand=sortTiles(removeTiles(tenpai,pulled)||[]);
+  if(hand.length!==size-k) return null;
+  /* いらない牌も毎回おなじ並びにしない(東→南→西→北… が固定だと作業に見える)。
+     字牌だけでなく端の牌もまざるように、seedでならべかえてから取る */
+  const junkPool=MINI_JUNK.slice();
+  for(let i=junkPool.length-1;i>0;i--){
+    const j=Math.floor(rnd()*(i+1)); const t=junkPool[i]; junkPool[i]=junkPool[j]; junkPool[j]=t;
+  }
+  const junk=[];
+  for(const j of junkPool){
+    if(junk.length>=k) break;
+    if((used[j]||0)>0) continue;                  // ねらいの形に使っている牌は いらない牌にしない
+    junk.push(j); miniTake(used,[j]);
+  }
+  if(junk.length<k) return null;
+  hand=sortTiles(hand.concat(junk));
+  if(hand.length!==size) return null;
+  /* 手が進まないツモ(noise)。切ってよい牌が自分だけになるので、ツモ切りになる */
+  const noiseN=Math.max(0,o.noise==null?1:o.noise);
+  const afterN=Math.max(0,o.after==null?2:o.after);
+  const noise=[];
+  for(const j of junkPool){
+    if(noise.length>=noiseN+afterN) break;
+    if((used[j]||0)>0) continue;
+    noise.push(j); miniTake(used,[j]);
+  }
+  if(noise.length<noiseN+afterN) return null;
+  /* 山のならび: ぬいた牌と noise をまぜて、毎回手が進むようには しない */
+  const before=pulled.concat(noise.slice(0,noiseN));
+  for(let i=before.length-1;i>0;i--){
+    const j=Math.floor(rnd()*(i+1)); const t=before[i]; before[i]=before[j]; before[j]=t;
+  }
+  const wall=before.concat([wg.win],noise.slice(noiseN));
+  return {hand,wall,target:full.join(''),win:wg.win,wait:wg.kind,
+    shanten:k,winAt:before.length+1,after:afterN,tenpai:tenpai.join('')};
+}
+/* 待ち形の判定(R71 §8)。テンパイ手とアガリ牌から、完成形の分解を見て決める。
+   見た目だけで決めず、アガリ牌がどの組を完成させたかで分類する。
+   2通りに読める牌姿は【両方】を返すので、出題側が使わないようにできる */
+function miniWaitKinds(hand,win){
+  const full=sortTiles(hand.concat([win]));
+  const w=ch1MiniWin(full);
+  if(!w) return [];
+  const kinds=[];
+  const add=x=>{ if(!kinds.includes(x)) kinds.push(x); };
+  const sets=w.mentsuSets?w.mentsuSets:[w.mentsuIdx];
+  const headT=(w.headIdx||[]).map(i=>full[i]);
+  const inHand=hand.filter(x=>x===win).length;
+  if(headT.includes(win)) add(inHand===1?'単騎':'シャンポン');
+  sets.forEach(gi=>{
+    const gt=gi.map(i=>full[i]);
+    if(!gt.includes(win)) return;
+    if(gt[0]===gt[1]&&gt[1]===gt[2]){ add('シャンポン'); return; }
+    const n=+win[0], ns=gt.map(x=>+x[0]).sort((a,b)=>a-b);
+    if(n===ns[1]) add('カンチャン');
+    else if((n===3&&ns[0]===1)||(n===7&&ns[2]===9)) add('ペンチャン');
+    else add('両面');
+  });
+  return kinds;
+}
+/* シナリオの監査(R71 §13)。''なら出題できる。画面側の例外処理でごまかさない */
+function miniCheck(sc){
+  if(!sc||!sc.hand||!sc.wall||!sc.target) return 'no-data';
+  const hand=sortTiles(sc.hand.slice()), wall=sc.wall.slice(), target=parseHand(sc.target);
+  if(![4,7,10,13].includes(hand.length)) return 'hand-size';
+  if(target.length!==hand.length+1) return 'target-size';
+  if(!ch1MiniWin(sortTiles(target))) return 'target-not-win';
+  const all=miniCnt(hand.concat(wall));
+  if(Object.keys(all).some(t=>all[t]>4)) return 'over4';
+  const inc=(big,sm)=>{ const B=miniCnt(big),S=miniCnt(sm);
+    return Object.keys(S).every(x=>(B[x]||0)>=S[x]); };
+  /* 正解手順をたどる: ツモ → アガれるならアガる → 目標にそって1枚切る */
+  let h=hand.slice(), w2=wall.slice(), n=0, winAt=null, winTile=null;
+  while(w2.length){
+    const t=w2.shift(); n++;
+    const five=sortTiles(h.concat([t]));
+    if(five.length!==h.length+1) return 'count';
+    if(ch1MiniWin(five)){ winAt=n; winTile=t; break; }
+    /* 目標に入っていない牌から先に切る(初心者がやる順番)。
+       切ってよいかは ch1MiniOk と同じ規則で見る */
+    let cut=-1;
+    const T=miniCnt(target), have={};
+    const order=five.map((t,i)=>i).sort((a,b)=>{
+      const sc2=i2=>{ const t=five[i2]; return (T[t]||0)>0?1:0; };
+      return sc2(a)-sc2(b);
+    });
+    for(const i of order){
+      const rest=five.slice(); rest.splice(i,1);
+      if(ch1MiniReachable(rest,w2,target)){ cut=i; break; }
+    }
+    if(cut<0) return 'no-legal-discard';
+    const rest=five.slice(); rest.splice(cut,1); h=sortTiles(rest);
+  }
+  if(winAt==null) return 'never-win';
+  const kinds=miniWaitKinds(h,winTile);
+  if(kinds.length!==1) return kinds.length?'wait-ambiguous':'wait-unknown';
+  return '';
+}
+/* seedから1局作る。作れなければ seed を少しずらして作りなおす */
+function miniScenario(o,seed){
+  for(let i=0;i<60;i++){
+    const rnd=scoreTrainRnd(((seed>>>0)+i*7919)>>>0);
+    const sc=miniBuild(o,rnd);
+    if(sc&&miniCheck(sc)==='') return sc;
+  }
+  return null;
+}
+/* Lessonから呼ぶ入口。作れなかったときに静かに固定データへ落ちると
+   「生成していない」ことに気づけないので、作れないのはテストで落とす */
+function ch1MiniGen(o,seed,opt){
+  const sc=miniScenario(o,seed);
+  if(!sc) return ch1Mini(parseHand('123m456p789s11m'),['2m'],'123m456p789s11m22m',opt);
+  return ch1Mini(sc.hand,sc.wall,sc.target,opt);
+}
 function ch1Mini(hand,wall,target,opt){
   opt=opt||{};
   const q={mini:{hand,wall,target,level:opt.level||2}};
@@ -6817,12 +7085,12 @@ const CH1_LESSONS={
     return [
       ch1Teach('いよいよ<b>10枚</b>ミニ麻雀！牌がふえても、やることは同じ。ツモって、アガリをたしかめて、ちがえば1枚切る！',
         {tlab:'やることは同じ'}),
-      ch1Mini(['1m','2m','3m','4p','5p','6p','7s','8s','2s','2s'],['9s'],'123m456p789s22s',
-        {exp:'9ソーをツモって3メンツ＋1アタマ！10枚でも、ツモった瞬間アガリはあるんだ。'}),
-      ch1Mini(['2m','3m','4m','5p','6p','7p','8s','8s','G','G'],['W','G'],'234m567p88sGGG',
-        {exp:'西はなかまはずれ…切ってよし！發のコーツができて、8ソーのアタマでアガリ！'}),
-      ch1Mini(['1p','2p','3p','6s','7s','8s','N','N','4m','4m'],['E','B','N'],'123p678sNNN44m',
-        {exp:'いらない字牌を2回切って、北のコーツでアガリ！4マンがアタマだよ。'}),
+      ch1MiniGen({size:10,shanten:1,wait:'両面',noise:1,after:2},71101,
+        {exp:'ツモって、いらない牌を切って…10枚でもアガリまでいけたね！'}),
+      ch1MiniGen({size:10,shanten:1,wait:'カンチャン',noise:0,after:3},71102,
+        {exp:'まんなかが1枚だけ空いている形。そこに入る牌を待っていたんだね。'}),
+      ch1MiniGen({size:10,shanten:2,wait:'両面',noise:1,after:1},71103,
+        {exp:'いらない牌を切っていくうちに、手がだんだん形になっていったね。'}),
       ch1WinMcq11('555m678p22sEEE','555m・678p・東東東の3メンツ＋2ソーのアタマ。アガリ！'),
     ];
   },
@@ -6841,9 +7109,9 @@ const CH1_LESSONS={
       ch1TenpaiMcq('234m678p55sGG','5ソーか發が来ればアガリ。あと1枚＝テンパイだよ！'),
     ]);
     return quiz.concat([
-      ch1Mini(['3m','4m','5m','6m','7m','8m','5s','5s','R','R'],['E','R'],'345m678m55sRRR',
-        {exp:'マンズのシュンツ2つに中のコーツ！5ソーがアタマ。あとすこしで13枚だね！'}),
-      ch1Mini(['2s','3s','4s','6p','7p','8p','4m','4m','9p','9p'],['E','W','9p'],'234s678p999p44m',
+      ch1MiniGen({size:10,shanten:2,wait:'シャンポン',noise:0,after:2},71104,
+        {exp:'同じ牌が2枚ずつ。どちらが来てもアガリになる形だったよ。あとすこしで13枚だね！'}),
+      ch1MiniGen({size:10,shanten:2,wait:'ペンチャン',noise:2,after:1},71105,
         {exp:'ぜんぶ自分の力でアガれたね！4枚→7枚→10枚とおなじやりかたでここまで来た。つぎはいよいよ、本物とおなじ13枚！'}),
     ]);
   },
@@ -6873,12 +7141,12 @@ const CH1_LESSONS={
     return [
       ch1Teach('<b>本物の麻雀とおなじ13枚</b>で打ってみよう！ツモって14枚→アガリをたしかめる→ちがえば1枚切る。ぜんぶ今までとおなじだよ！',
         {tlab:'本物とおなじ13枚'}),
-      ch1Mini(['1m','2m','3m','4m','5m','6m','2p','2p','4s','5s','6s','7s','8s'],['3s'],'123m456m22p345s678s',
-        {exp:'3ソーをツモって4メンツ＋1アタマ！13枚でも、ツモった瞬間アガリはあるんだ。'}),
-      ch1Mini(['2m','3m','4m','7m','8m','9m','3p','3p','5s','6s','7s','W','W'],['1p','W'],'234m789m33p567sWWW',
-        {exp:'1ピンはなかまはずれ…切ってよし！西のコーツができて、3ピンのアタマでアガリ！'}),
-      ch1Mini(['1p','2p','3p','5p','6p','7p','2s','3s','4s','N','N','8m','8m'],['E','G','N'],'123p567p234sNNN88m',
-        {exp:'いらない字牌を2回切って、北のコーツでアガリ！8マンがアタマ。13枚でもリズムはおなじだね！'}),
+      ch1MiniGen({size:13,shanten:1,wait:'両面',noise:0,after:3},71111,
+        {exp:'13枚でも、やることはおなじ。ツモって、いらない牌を切るだけだよ。'}),
+      ch1MiniGen({size:13,shanten:2,wait:'カンチャン',noise:1,after:2},71112,
+        {exp:'手が進まないツモもあったね。そういう牌はそのまま切ってだいじょうぶ。'}),
+      ch1MiniGen({size:13,shanten:2,wait:'シャンポン',noise:1,after:1},71113,
+        {exp:'同じ牌が2枚ずつのこる形。どちらが来てもアガリだったよ。'}),
       ch1WinMcq14('111m234p567s888pEE','111m・234p・567s・888pの4メンツ＋東のアタマ。アガリ！'),
     ];
   },
@@ -6912,9 +7180,9 @@ const CH1_LESSONS={
       ch1WinMcq14('EEEBBB123p456s88s','字牌のコーツが2つでもOK！4メンツ＋8ソーのアタマでアガリ！'),
     ]);
     return quiz.concat([
-      ch1Mini(['3m','4m','5m','6p','7p','8p','1s','2s','3s','9p','9p','G','G'],['W','G'],'345m678p123s99pGGG',
-        {exp:'西を切って、發のコーツ完成！9ピンのアタマで4メンツ＋1アタマ！'}),
-      ch1Mini(['2m','3m','4m','6m','7m','8m','4p','5p','6p','9s','9s','5s','5s'],['E','N','5s'],'234m678m456p555s99s',
+      ch1MiniGen({size:13,shanten:3,wait:'両面',noise:1,after:2},71114,
+        {exp:'けっこう遠いところから、ツモと打牌をくりかえして ここまで来たね！'}),
+      ch1MiniGen({size:13,shanten:3,wait:'単騎',noise:0,after:4},71115,
         {exp:'13枚でもアガれた！🎉 4枚からはじめた練習が、本物とおなじ13枚につながったね。でも、本物の麻雀でアガるには、もうひとつ大事なことがあるんだ。それは、つぎのおたのしみ！'}),
     ]);
   },
@@ -7037,7 +7305,7 @@ const CH1_LESSONS={
       {q:'どうして、ツモったあとに1枚切るの？',
         choices:['ツモって14枚になったから','13枚だと足りないから'],a:0,
         exp:'14枚のままにはできないきまり。だからツモったら1枚切って13枚にもどすよ。'},
-      ch1Mini(['1m','2m','3m','4p','5p','6p','7s','8s','9s','2s','3s','9p','9p'],['W','4s'],'123m456p789s234s99p',
+      ch1MiniGen({size:13,shanten:2,wait:'両面',noise:1,after:2},71116,
         {guided:true,exp:'ツモって、切って、またツモって…アガリ！これが1回ぶんの勝負だよ。'}),
       ch1Teach('いまやったのが<b>1回ぶんの勝負</b>。これを<span class="term-chip">'+KYOKU+'</span>というよ。',
         {tlab:KYOKU}),
@@ -7271,7 +7539,7 @@ const CH1_LESSONS={
         '横向きの牌があるね。この人はリーチしているよ！'),
       d2RiichiSeeMcq(['1p','9m','2s','W','9p','1m'],-1,
         '横向きの牌がないから、この人はまだリーチしていないよ。'),
-      ch1Mini(['2m','3m','4m','5m','6m','7m','8p','8p','3s','4s','5s','6s','E'],['7s','N','8s'],'234m567m88p345s678s',
+      ch1MiniGen({size:13,shanten:1,wait:'両面',noise:1,after:3},71117,
         {guided:true,riichi:true,
          exp:'はじめてのリーチ→ツモ！🎉 「リーチ！」と宣言してからテンパイになる牌を切る。あとはツモ切りで待つ。これがリーチの基本だよ。'}),
       d2RiichiMcq('234m567m88p345s67s','あと1枚(5ソーか8ソー)でアガリ＝テンパイ！テンパイなら、つぎのツモのあとに「リーチ！」を宣言できるチャンスだよ。'),
@@ -7285,7 +7553,7 @@ const CH1_LESSONS={
       {q:'リーチしたあと、手牌の牌とツモった牌を<b>入れかえてもいい</b>？',
         choices:['入れかえない','すきに入れかえていい'],a:0,
         exp:'リーチしたら手は そのまま。だから「リーチするぞ」と決めるのは大事な選択なんだ。'},
-      ch1Mini(['1m','2m','3m','4p','5p','6p','7p','8p','9p','9s','9s','2s','W'],['3s','E','1s'],'123m456p789p123s99s',
+      ch1MiniGen({size:13,shanten:2,wait:'両面',noise:1,after:2},71118,
         {riichi:true,
          exp:'じぶんの力でリーチ→アガリ！🎉 リーチを宣言→テンパイになる牌を切る→ツモ切り→待ち牌が来たら「アガリ！」。この流れが本物の麻雀の基本だよ。'}),
     ];
@@ -7356,7 +7624,7 @@ const CH1_LESSONS={
       ch1Teach('いよいよ<b>第1章チャレンジ</b>！ここまで覚えたことをぜんぶ使って、<b>自分の力でアガりきろう</b>。ツモって、切って、テンパイできる形になったら<b>切るまえに「リーチ！」</b>。待ち牌が来たら…「アガリ！」だ！',
         {tlab:'第1章チャレンジ'}),
     ].concat(quiz).concat([
-      ch1Mini(['3m','4m','5m','6m','7m','8m','2p','3p','4p','5p','5p','7s','W'],['8s','N','6s'],'345m678m234p678s55p',
+      ch1MiniGen({size:13,shanten:3,wait:'カンチャン',noise:1,after:3},71119,
         {level:3,riichi:true,
          exp:'第1章チャレンジ、クリア！🎉 ツモって、切って、テンパイして、リーチして、自分の力でアガれた！'}),
       /* R44: 第1章の最後は「点のしくみ」になったので、行き先をそこへ書きかえた(第2章の案内は p2_2 の最後へ移した) */
@@ -11720,7 +11988,7 @@ const CH2_LESSONS={
       ch2WaitFind('2m3m4m6p7p8p5s6s7s3s3sEE',['4s','5s','W','2s'],
         {grouped:false,q:'チャレンジ！この手牌の<b>待ち牌</b>を、ぜんぶ見つけよう！',
          exp:'3ソーと東のシャンポン！つぎはこの手牌で、ほんとうにアガってみよう！'}),
-      ch1Mini(['2m','3m','4m','6p','7p','8p','5s','6s','7s','3s','3s','E','E'],['1p','3s'],'234m678p567s333sEE',
+      ch1MiniGen({size:13,shanten:3,wait:'ペンチャン',noise:2,after:2},71120,
         {level:3,riichi:true,
          exp:'第2章チャレンジ、クリア！🎉 待ち牌が見えたから、まよわずアガれたね！'}),
       /* R45: 第2章の最後は「ロンとフリテン」になったので、行き先をそこへ書きかえた
