@@ -538,7 +538,7 @@ button.tile.off:active{transform:none;}
 
 /* ---------- choices ---------- */
 .choices{display:flex; flex-direction:column; gap:10px;}
-.choice{border:2px solid var(--line); background:var(--card); color:var(--ink); border-radius:14px;
+.choice{border:2px solid var(--line); background:var(--card); color:var(--ink); border-radius:12px;
   padding:clamp(12px,3.6vw,15px) 14px; font-size:clamp(14.5px, 4vw, 16.5px); font-weight:700; text-align:left; box-shadow:0 3px 0 var(--line);}
 .choice.sel{border-color:var(--jade); color:var(--jade); background:var(--jade-soft); box-shadow:0 3px 0 var(--jade-deep);}
 .choice.correct{border-color:var(--jade); background:var(--jade-soft); color:var(--jade-ink);}
@@ -813,9 +813,22 @@ span.st-mg{color:var(--jade-ink); font-weight:900;}
   color:var(--ink-soft); font-size:12px; font-weight:800; margin:6px 0 0; padding:0 8px;}
 .wf-msg.retry{color:var(--verm,#d0454c);}
 /* 第3章: 状況チップ(場風/自風/鳴き/ロン・ツモ)と役えらびボタン(yfind) */
-.ch3-ctx{display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin:2px 0 10px;}
-.ch3-chip{font-size:11px; font-weight:800; padding:3px 10px; border-radius:999px;
+/* R70 §4・§6: 同じ階層の条件タグ(局・自風・ロン/ツモ…)は【同じ寸法】でならべる。
+   R69までは .ch3-ctx が flex の既定(align-items:stretch)だったため、
+   ルビの入る「あなた：南家（子）」のある行だけ背が高くなり、
+   同じ階層の条件なのに「ロンでアガった」が34px、ほかが23〜24pxとバラバラだった(実機で指摘)。
+   高さは中身ではなくここで1つだけ決める。重要度の差は【色】で出す(大きさは変えない)。 */
+.ch3-ctx{display:flex; flex-wrap:wrap; gap:6px; justify-content:center; align-items:center;
+  margin:2px 0 10px;}
+.ch3-chip{display:inline-flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:800; line-height:1.1; padding:0 10px;
+  height:24px; min-height:24px; box-sizing:border-box;
+  /* R70 §5: 「何でもピル型」をやめる。押せないタグなので角丸は控えめにする */
+  border-radius:11px;
   background:var(--jade-soft); color:var(--ink); border:1px solid rgba(0,0,0,.10);}
+/* タグの中のルビで高さが変わらないようにする(ふりがなは出すが、行の高さは広げない) */
+.ch3-chip ruby{line-height:1;}
+.ch3-chip rt{font-size:7px; line-height:1; transform:translateY(1px);}
 .ch3-chip.warn{background:rgba(216,67,59,.10); color:var(--verm-ink);}
 .ch3-chip.riichi{background:rgba(232,169,60,.16); color:var(--gold-ink);}
 /* R68: 局・自風(＝親子)。点を決める実戦の文脈なので、ほかの状況チップより少し濃く出す */
@@ -1255,6 +1268,20 @@ button.mjt-pick.mjt-hp,
 }
 /* 第3章 ロン/ツモ盤面: 相手の捨て牌(河)は手牌より少し小さく・「今の牌」は河の最後+小ラベル */
 .ch3-board{margin:2px 0 6px;}
+/* ===== R70 §9 捨て牌は主役ではない =====
+   R69までは相手の河が固定30px・自分のリーチ河が38〜45pxで、
+   320pxでは手牌(20.8px)より【捨て牌のほうが大きい】状態だった(実機で指摘)。
+   視覚的な優先順位は 手牌・アガリ牌 ＞ 回答 ＞ 捨て牌 なので、
+   第3章の盤面の中の河だけを小さくする(待ちさがし・実戦の河は主役なので変えない)。
+   下限は17px。320pxでは手牌そのものが18.45pxしかないので、
+   R67の副露の下限(19px)をそのまま当てると【捨て牌のほうが手牌より大きい】ままになってしまう。
+   手牌を小さくして帳尻を合わせるのは禁止(R70 §10)なので、捨て牌側の下限を手牌より下にする。 */
+.ch3-board .ch3-river{gap:1px;}
+.ch3-board .ch3-river .tile{width:clamp(17px,5.2vw,23px); max-width:23px;}
+.ch3-board .rc-river,.ch3-sriver .rc-river{--tile-w:clamp(17px,5.4vw,24px); gap:1px;}
+.ch3-board .rc-wrap,.ch3-sriver .rc-wrap{margin:6px auto 8px;}
+.ch3-board .rc-lab,.ch3-sriver .rc-lab{font-size:11px;}
+.ch3-board .ch3-river+.tc-lab,.ch3-board .rc-wrap+.tc-lab{margin-top:6px;}
 .ch3-river{display:flex; flex-wrap:nowrap; gap:2px; justify-content:center; align-items:flex-start;
   min-height:52px; margin:2px 0 8px;}
 .ch3-river .tile{width:30px; max-width:30px; flex:none; opacity:.9;}
@@ -4222,8 +4249,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.63.0';
-const BUILD_ID='20261002-05';
+const APP_VER='0.64.0';
+const BUILD_ID='20261003-01';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -8847,8 +8874,12 @@ function scoreHandPanel(e,opt){
   else if(lv==='B') h+=yakuNamesHTML(e.keys);    // 役の名前だけ(翻は出さない)
   /* R65: ドラがある手は【ドラ表示牌】も出す。何がドラで何枚あるかを手牌から数えられる
      (「ドラ2枚」と書くだけにしない)。表示牌→ドラ の変換は doraPanelHTML が1か所で持つ */
-  if(e.doraInd) h+=doraPanelHTML([e.doraInd]);
-  if(e.dora&&lv!=='C') h+='<div class="sh-note">＋ <b>ドラ'+e.dora+'枚</b>（ドラは役ではないけれど翻はふえる）</div>';
+  /* R70 §13・§14: 点数を出すのが目的の画面では「ドラ表示牌 → ドラ」という教材表示をしない。
+     実際のドラだけを出す。ドラ表示牌からドラを導くのはドラLesson(Teach)の仕事(§41・§42)。
+     「ドラは役ではないけれど翻はふえる」という既習の説明も、問題中には常時出さない。 */
+  const dv=(o.dora==='teach')?'teach':'now';
+  if(e.doraInd) h+=(dv==='teach'?doraPanelHTML([e.doraInd]):doraNowPanelHTML(e.doraInd));
+  if(e.dora&&lv!=='C') h+='<div class="sh-note">＋ <b>ドラ'+e.dora+'枚</b></div>';
   if(o.han&&lv==='A') h+='<div class="sh-sum">合計 <b>'+scoreHandHan(e)+'翻</b></div>';
   const ln=scoreHandLine(e);
   /* 代表ラインは子のロンの数字。親やツモには当てはめない(R68 §6) */
@@ -8899,9 +8930,9 @@ function scoreHandPointMcq(id,exp,opt){
     ?(scoreLine(ln).short+'の'+scoreHandHan(e)+'翻で'+right+'だよ。')
     :((scoreHandIsOya(e)?RB_OYA:RB_KO)+'の'+(ctx.win==='tsumo'?'ツモ':'ロン')
       +'で'+scoreHandHan(e)+'翻。'+right+'だよ。');
-  return Object.assign({q:ask,hand:e.hand,ctx3:ctx,
+  return Object.assign({q:ask,hand:e.hand,ctx3:ctx,view:QV_SCORE,
     choices,a:choices.indexOf(right),
-    panel:scoreHandPanel(e,{level:lv,han:true,line:lv==='A'}),
+    panel:scoreHandPanel(e,{level:lv,han:true,line:lv==='A',dora:QV_SCORE.dora}),
     exp:exp||(base+e.why)},o);
 }
 /* 【中盤】役は見せるが、翻の合計は自分で出す */
@@ -8910,8 +8941,8 @@ function scoreHandHanMcq(id,exp,opt){
   const han=scoreHandHan(e), nY=e.keys.length;
   const wrong=(nY!==han)?nY:han+1;
   const vals=Array.from(new Set([han,wrong])).sort((a,b)=>a-b).map(v=>v+'翻');
-  return Object.assign({q:'このアガリ、<b>翻の合計</b>は？',hand:e.hand,ctx3:scoreHandCtx(e),
-    choices:vals,a:vals.indexOf(han+'翻'),panel:scoreHandPanel(e,{}),
+  return Object.assign({q:'このアガリ、<b>翻の合計</b>は？',hand:e.hand,ctx3:scoreHandCtx(e),view:QV_SCORE,
+    choices:vals,a:vals.indexOf(han+'翻'),panel:scoreHandPanel(e,{dora:QV_SCORE.dora}),
     exp:exp||e.why},opt||{});
 }
 /* 【中盤】翻までは見せて、どの系統かを答えさせる(系統は点への橋) */
@@ -8920,8 +8951,8 @@ function scoreHandLineMcq(id,exp,opt){
   if(!e||!ln) return {q:'(定義エラー)',choices:['-','-'],a:-1,exp:exp||''};
   const right=scoreLine(ln).short;
   const vals=SCORE_LINES.map(l=>l.short);
-  return Object.assign({q:'このアガリは、どの<b>系統</b>？',hand:e.hand,ctx3:scoreHandCtx(e),
-    choices:vals,a:vals.indexOf(right),panel:scoreHandPanel(e,{han:true}),
+  return Object.assign({q:'このアガリは、どの<b>系統</b>？',hand:e.hand,ctx3:scoreHandCtx(e),view:QV_SCORE,
+    choices:vals,a:vals.indexOf(right),panel:scoreHandPanel(e,{han:true,dora:QV_SCORE.dora}),
     exp:exp||e.why},opt||{});
 }
 /* 【後半】役を自分で見つけるところからはじめる */
@@ -10309,6 +10340,28 @@ function nkActMcq(o){
     choices:CH, a, exp:o.exp, tlab:o.tlab||'よく見てえらぼう',
     fk:{kind:'act',hand:o.hand||o.mine,now:o.now,from}};
 }
+/* ===== R70 §2・§3 問題タイプごとに「必要な情報」を決める =====
+   R69までは「出せる情報を全部出す」形になっていて、
+     ・問題を解くために必要な情報
+     ・盤面を見れば分かる情報
+     ・学習上の説明
+   が同じ強さでならんでいた(実機で指摘)。
+
+   R70からは、問題のほうに【この問題では何がいるか】を持たせ、
+   盤面(ch3BoardHTML)と状況チップ(ch3CtxHTML)はそれを見て出し分ける。
+   全面の作りなおしはしない。既存の問題は QV_DEFAULT のままで今までどおり動く。
+
+     river  … 捨て牌(相手の河・自分の河)を出すか
+     dora   … 'teach' ドラ表示牌→ドラ（ドラの仕組みを教える画面）
+               'now'   実際のドラだけ（点数を出すのが目的の画面）
+     note   … 学習上の補足(「ドラは役ではないけれど…」など)を問題中に出すか */
+const QV_DEFAULT={river:true,dora:'teach',note:true};
+/* 点数を出すのが目的の問題。捨て牌も教材説明も判断に使わないので出さない(R70 §11・§13・§14) */
+const QV_SCORE={river:false,dora:'now',note:false};
+function qView(q){
+  const v=(q&&q.view)||null;
+  return v?Object.assign({},QV_DEFAULT,v):QV_DEFAULT;
+}
 function ch3CtxHTML(c,q){
   if(!c) return '';
   const chips=[];
@@ -10326,14 +10379,18 @@ function ch3CtxHTML(c,q){
      【相手の河と手牌のあいだ】に描く。ここで先に描くと、相手の河より上に出てしまい
      「相手の河のほうが自分の手牌に近い」という不自然な並びになる(実機で指摘された) */
   let river='';
-  if((c.dblRiichi||c.riichi)&&!(q&&q.__boardRiver)){
+  if((c.dblRiichi||c.riichi)&&qView(q).river&&!(q&&q.__boardRiver)){
     const hand=(q&&q.hand)||null;
     const wt=(q&&q.ctx3&&q.ctx3.winTile)||c.winTile||null;
-    river=ch3RiichiRiverHTML(hand,wt,!!c.dblRiichi);
+    /* R70 §9: 盤面の中に描く河と同じ大きさにそろえる(捨て牌は主役ではない) */
+    river='<div class="ch3-sriver">'+ch3RiichiRiverHTML(hand,wt,!!c.dblRiichi)+'</div>';
   }
   if(c.win==='tsumo') chips.push('<span class="ch3-chip">ツモでアガった</span>');
   if(c.win==='ron') chips.push('<span class="ch3-chip">ロンでアガった</span>');
-  if(c.winTile) chips.push('<span class="ch3-chip">アガリ牌：'+tileLabel(c.winTile)+'</span>');
+  /* R70 §2: アガリ牌は盤面で【手牌の右に分けて】見せている。文字でもう一度は言わない。
+     盤面が出ない問題(牌姿がない・14枚でない)のときだけ、条件として文字で出す */
+  if(c.winTile&&!(q&&q.hand&&c.win))
+    chips.push('<span class="ch3-chip">アガリ牌：'+tileLabel(c.winTile)+'</span>');
   /* R64: 一発がつくかどうかを決める状況を【画面に出す】。
      内部フラグだけで正解が決まる問題を作らないための共通表示。
      ここに出るのは ch3IppatsuOK が見ている状態そのもの(時間と鳴き)。 */
@@ -10342,18 +10399,17 @@ function ch3CtxHTML(c,q){
   return river+(chips.length?'<div class="ch3-ctx">'+chips.join('')+'</div>':'');
 }
 function ch3RiichiTimeChips(c){
-  // リーチしている局面でだけ、「リーチ後に自分のツモが何回来たか」「鳴きが入ったか」を出す
+  /* ===== R70 §7・§8 盤面から読める情報は文章でくりかえさない =====
+     「リーチ後、自分のツモは◯回目」は、リーチ宣言牌のうしろにならぶ自分の捨て牌を
+     数えれば分かる(R64でそう描くことにした)。だから補助タグでは出さない。
+
+     残すのは【盤面からは読めず、正解を決める条件】だけ＝リーチのあとに鳴きが入ったか。
+     ただしそれも、一発がまだ生きている期間でなければ答えを変えないので出さない。 */
   if(!c||!(c.riichi||c.dblRiichi)) return [];
-  const out=[], d=c.drawsAfterRiichi;
-  if(typeof d==='number'){
-    if(d===0) out.push('<span class="ch3-chip time">リーチ後、自分のツモはまだ<b>0回</b></span>');
-    else if(d===1) out.push('<span class="ch3-chip time">リーチ後、<b>最初のツモ</b></span>');
-    else out.push('<span class="ch3-chip time">リーチ後、自分のツモは<b>'+d+'回目</b></span>');
-  }
-  out.push(c.nakiAfterRiichi
+  if(!ch3IppatsuWindow(c)) return [];
+  return [c.nakiAfterRiichi
     ?'<span class="ch3-chip warn">リーチのあとに<b>鳴きが入った</b></span>'
-    :'<span class="ch3-chip time">リーチのあと、<b>鳴きは入っていない</b></span>');
-  return out;
+    :'<span class="ch3-chip time">リーチのあと、<b>鳴きは入っていない</b></span>'];
 }
 /* ---- 第3章 ロン/ツモ盤面(UI自体を教材にする) ----
    ロン: 「相手の捨て牌」に今切られた牌(=アガリ牌)を置き、自分の手牌はロン前の13枚で見せる。
@@ -10429,6 +10485,12 @@ function ch3MyRiverHTML(q){
   return riichiRiverHTML(t,ch3MyRiverSideIdx(q),
     {head:'あなたの捨て牌',lab:c.dblRiichi?'さいしょの捨て牌でリーチ！':'リーチ！'});
 }
+/* アガリ牌を手牌の右に分けて見せる(捨て牌を出さない問題で使う)。
+   ロンでも「どの牌でアガったか」は点を出すのに要る情報なので、ラベルだけ変えて同じ形にする */
+function ch3WinTileHTML(c){
+  return '<span class="ch3-tsumo-gap"></span><span class="ch3-now">'+tileHTML(c.winTile)
+    +'<span class="ch3-now-lab">'+(c.win==='tsumo'?'ツモ':'ロン')+'</span></span>';
+}
 function ch3BoardHTML(q){
   const c=q.ctx3||{};
   if(!c.win||!c.winTile||!q.hand) return null;
@@ -10454,6 +10516,13 @@ function ch3BoardHTML(q){
     if(wi<0) return null;
     const conc=sp.concealed.slice(); conc.splice(wi,1);
     let h='<div class="ch3-board">';
+    if(!qView(q).river){
+      /* R70 §11: 点数を出すのが目的の問題。捨て牌は判断に使わないので出さない */
+      h+='<div class="tc-lab">あなたの手牌（'+conc.length+'枚）＋'+(c.win==='tsumo'?'ツモった牌':'ロンした牌')
+          +(meldAreaNeeded(sp.melds)?'':'＋鳴いた組')+'</div>'
+        +openHandHTML(conc,sp.melds,{cls:'ch3-tsumo-row',drawHTML:ch3WinTileHTML(c)});
+      return h+'</div>';
+    }
     if(c.win==='ron'){
       h+=oppRiver()+myRivHTML
         +'<div class="tc-lab">あなたの手牌（'+conc.length+'枚）'+(meldAreaNeeded(sp.melds)?'':'＋鳴いた組')+'</div>'
@@ -10467,6 +10536,12 @@ function ch3BoardHTML(q){
     return h+'</div>';
   }
   let html='<div class="ch3-board">';
+  if(!qView(q).river){
+    html+='<div class="tc-lab">あなたの手牌（13枚）＋'+(c.win==='tsumo'?'ツモった牌':'ロンした牌')+'</div>'
+      +'<div class="hand ch3-tsumo-row">'+hand13.map(t=>tileHTML(t)).join('')
+      +ch3WinTileHTML(c)+'</div>';
+    return html+'</div>';
+  }
   if(c.win==='ron'){
     html+=oppRiver()+myRivHTML
       +'<div class="tc-lab">あなたの手牌（13枚）</div>'
@@ -10527,7 +10602,57 @@ function ch3Ctx(o){
   /* R64: 一発は「リーチ済みフラグ」では決めない(ch3IppatsuOK を見る)。
      古い書き方の ctx.ippatsu がのこっていても判定には絶対に使わせない */
   if('ippatsu' in c) delete c.ippatsu;
+  /* ===== R70 リーチからの時間は【かならず数で持つ】 =====
+     R69まで、リーチ手なのに drawsAfterRiichi を書いていないデータが17件あった。
+     そのとき ch3IppatsuOK は「いつアガったか不明」として一発を落としていたが、
+     画面にも何回目か出ないので、学習者からは【なぜ一発がつかないのか分からない】。
+     R70からは、書いていなければ「一発の期間はもう過ぎた、ふつうのリーチ」とみなして
+     数を入れる。これで一発の成否は かならず ctx の数だけで決まり、
+     画面に出す条件と役判定が同じ1つの値を見る。 */
+  if((c.riichi||c.dblRiichi)&&typeof c.drawsAfterRiichi!=='number')
+    c.drawsAfterRiichi=CH3_DRAWS_DEFAULT[c.win==='tsumo'?'tsumo':'ron'];
   return c;
+}
+/* 「一発の期間を過ぎた、ふつうのリーチ」を表す既定値。
+   ロンは2(自分のツモが2回来たあと)、ツモは3(3回目のツモでアガった)。既存データの書き方にそろえてある */
+const CH3_DRAWS_DEFAULT={ron:2,tsumo:3};
+/* ===== R70 アガリ方を変えたら、リーチからの時間も作りなおす =====
+   R69の点数Trainingは「同じ牌姿をロンにもツモにもする」。このとき win だけ差しかえると、
+     一発ロン(リーチ後のツモ0回) → ツモに変換 → 「ツモでアガったのにリーチ後のツモは0回」
+   という【実際にはありえない局面】ができ、画面の条件と一発の有無が食いちがう(実機で指摘)。
+   アガリ方を変えるときは、この関数で時間も作りなおす。
+     ・もとが一発なら、新しいアガリ方でも一発になる時間にする(ロン=0 / ツモ=1)
+     ・もとが一発でないなら、一発の期間を過ぎた時間にする(ロン=2 / ツモ=3)
+   「鳴きが入ったか」はそのまま引きつぐ(時間とは別の条件なので勝手に消さない)。 */
+function ch3RetimeForWin(ctx,win){
+  const c=Object.assign({},ctx||{},{win});
+  if(!(c.riichi||c.dblRiichi)) return c;
+  const wasIppatsu=ch3IppatsuOK(Object.assign({},ctx||{}));
+  if(wasIppatsu&&!c.nakiAfterRiichi) c.drawsAfterRiichi=(win==='tsumo')?1:0;
+  else c.drawsAfterRiichi=CH3_DRAWS_DEFAULT[win==='tsumo'?'tsumo':'ron'];
+  return c;
+}
+/* ===== R70 リーチの局面として【ありえる】かの監査 =====
+   ''なら成立している。理由の文字列を返す。
+   ・ツモでアガったのに「リーチ後のツモが0回」は起こりえない(アガリ牌を引いている)
+   ・リーチ手なのに時間が数で入っていない(ch3Ctxを通していないデータ)
+   出題データがこの監査を1件も落とさないことをテストで見る。 */
+function ch3TimingBad(ctx){
+  const c=ctx||{};
+  if(!(c.riichi||c.dblRiichi)) return '';
+  const d=c.drawsAfterRiichi;
+  if(typeof d!=='number'||d<0) return 'no-timing';
+  if(c.win==='tsumo'&&d<1) return 'tsumo-draw0';
+  return '';
+}
+/* 一発がまだ生きている期間か(＝「鳴きが入ったか」が答えを変える期間か)。
+   期間を過ぎていれば、鳴きの有無は一発の成否を変えないので画面にも出さない(R70 §7・§8) */
+function ch3IppatsuWindow(ctx){
+  const c=ctx||{};
+  if(!(c.riichi||c.dblRiichi)) return false;
+  const d=c.drawsAfterRiichi;
+  if(typeof d!=='number') return false;
+  return c.win==='tsumo'?d===1:d===0;
 }
 function ch3ListOf(handStr,ctx3){ return ch3YakuList(sortTiles(parseHand(handStr)),ctx3); }
 function ch3HasMcq(key,handStr,ctx3,exp,opt){
@@ -10665,7 +10790,9 @@ function scoreTrainRnd(seed){
 /* 牌姿(SCORE_HANDS)＋条件(自風・アガリ方)から、Training用の1問ぶんのデータを作る。
    役は【かならず計算で出す】ので、条件を変えれば役も翻も符も点も自動で追いかける */
 function scoreTrainVariant(base,seat,win){
-  const e=Object.assign({},base,{seat,ctx:Object.assign({},base.ctx,{win})});
+  /* R70: win だけ差しかえると「ツモなのにリーチ後のツモ0回」という
+     ありえない局面ができ、一発が落ちる(実機で指摘)。時間もいっしょに作りなおす */
+  const e=Object.assign({},base,{seat,ctx:ch3RetimeForWin(base.ctx,win)});
   e.srcId=base.id;
   e.vid=base.id+'/'+seat+'/'+win;
   e.keys=ch3ListOf(e.hand,scoreHandCtx(e));
@@ -10685,6 +10812,7 @@ function scoreTrainCheck(e){
   const c=scoreHandCtx(e);
   if(!(c.win==='ron'||c.win==='tsumo')) return 'win';
   if(!c.round||!c.sw) return 'situation';
+  const tb=ch3TimingBad(c); if(tb) return tb;          // R70: ありえないリーチ局面を出さない
   if(!Array.isArray(e.keys)||!e.keys.length) return 'no-yaku';         // 役なしではアガれない
   if(e.keys.some(k=>!CH3_YAKU_META[k])) return 'unknown-yaku';          // 未実装役に依存しない
   if(e.keys.some(k=>CH3_YAKU_META[k].yakuman)) return 'yakuman';        // R69では役満は出さない
@@ -10743,8 +10871,8 @@ function scoreTrainQ(e,level,no){
   const lv=scoreTrainLevel(level), c=scoreHandCtx(e);
   const right=scoreHandAnswer(e), choices=scoreHandChoices(e);
   return {q:c.win==='tsumo'?'このアガリ、<b>払いは</b>？':'このアガリは<b>何点</b>？',
-    hand:e.hand,ctx3:c,choices,a:choices.indexOf(right),
-    panel:scoreHandPanel(e,{level:lv.lv,han:true,line:false}),
+    hand:e.hand,ctx3:c,view:QV_SCORE,choices,a:choices.indexOf(right),
+    panel:scoreHandPanel(e,{level:lv.lv,han:true,line:false,dora:QV_SCORE.dora}),
     exp:scoreTrainRevealHTML(e),
     qnum:no+' / '+SCORE_TRAIN_N,
     stLevel:level,stVid:e.vid};
@@ -10853,6 +10981,258 @@ function ch3YakuFind(handStr,ctx3,candKeys,exp,opt){
     q:'この手についている<b>役</b>を<b>ぜんぶ</b>えらんで、「これで決定」！',
     hand:handStr,ctx3,cands:candKeys.map(k=>CH3_YAKU_LABEL[k]),candKeys,answers,exp,
     _bad:list.some(k=>!candKeys.includes(k))||answers.length===0},opt||{});
+}
+/* ===================================================================
+   R70 役さがしの出題エンジン
+   ===================================================================
+   R69までの役さがしは【Lessonの中に手で書いた28問】だけだった。
+   実測すると、正解役は11種類しか出ず、牌姿は14種類の使い回し、
+   そのうち1つの牌姿が7回も出ていた(だから「基本役ばかり」に見えた)。
+
+   R70では問題を手で書き足さない。すでにあるものから機械的に作る。
+
+     ① 出どころ(yfSources)
+          SCORE_HANDS            … 点数問題で使っている完成牌姿
+          CH3_YAKU_META[k].ex    … 役一覧で見せている役ごとの見本(25役ぶん)
+          YF_HANDS               … 上の2つでは作れない組み合わせだけを足した再利用データ
+     ② 条件(yfVariant)
+          ロン / ツモ × リーチする / しない を かけ合わせる。
+          役は【かならず ch3ListOf で計算】するので、
+          リーチ＋一盃口・リーチ＋ツモ＋三色 のような複合役が自動でできる。
+     ③ 監査(yfCheck)
+          アガリの形になっている・役がある・役満でない・まだ習っていない役が出ない・
+          リーチの局面としてありえる(R70の一発の時間)・盤面が描ける
+     ④ えらび方(yfPick)
+          ぜんぶ均等にはしない。基本役は高頻度、中級役は十分、珍しい役は少なめ。
+          同じセットの中で出たばかりの役は下げる(将来 seenCount/mistakeRate を足す入口)。
+
+   正解の役は1つも手で書かない。候補(誤答)も【その時点までに習った役】からえらぶ。 */
+
+/* 上の2つの出どころでは作れない組み合わせだけを足す。
+   役さがし専用ではなく、ほかの問題からも使える「完成した牌姿」として持つ。 */
+const YF_HANDS=[
+  /* ピンフと三色が同時につく手。META.exの三色(234m234p234s555p77s)は
+     555pがコーツなのでピンフにならず、この組み合わせだけ作れなかった */
+  {id:'ps3',hand:'234m234p234s678p55s',winTile:'6p',why:'ぜんぶシュンツ・アタマは役牌でない・リャンメン待ち。三色もついている'},
+  /* 純チャンと三色。どちらも「端の数字」でできているので、同時につく形は実戦でも出る */
+  {id:'jn3',hand:'123m123p123s789m11s',winTile:'3p',why:'どのメンツにも1か9が入っていて、123の三色でもある'},
+  /* 一気通貫とタンヤオは同居しない(1と9が入るため)。代わりに一通＋ホンイツの形 */
+  {id:'ith',hand:'123m456m789m22mEEE',winTile:'6m',why:'萬子と字牌だけ。1〜9がそろっているので一気通貫もつく'},
+  /* 対々和と役牌。鳴いても残る役どうしの組み合わせ */
+  {id:'tty',hand:'333m777p999sBBB55s',winTile:'3m',why:'ぜんぶコーツ。白のコーツは役牌にもなる'},
+];
+/* 役のむずかしさの段階(R70 §31)。全部を均等には出さない */
+const YF_TIER={
+  basic:['riichi','tsumo','yakuhai','pinfu','tanyao'],
+  mid:['honitsu','chinitsu','toitoi','chiitoi','iipeiko','sanshoku','ittsu','chanta','junchan','sanankou'],
+  rare:['ippatsu','dblriichi','shousangen','honroutou','ryanpeikou','haitei','houtei','sankantsu'],
+};
+const YF_W={basic:6,mid:4,rare:3};
+/* 鳴いた形は「役が消える」ことに気づく大事な練習だが、
+   門前の複合役(リーチ＋ピンフ＋三色 など)もたっぷり見せたいので少しだけ下げる */
+const YF_W_NAKI=0.6;
+function yfTierOf(k){
+  if(YF_TIER.basic.includes(k)) return 'basic';
+  if(YF_TIER.mid.includes(k)) return 'mid';
+  return 'rare';
+}
+/* まちがえやすい相手。誤答候補はここを優先する(明らかにありえない役ばかりにしない=R70 §27) */
+const YF_CONFUSE={
+  pinfu:['iipeiko','tanyao','sanshoku'], iipeiko:['pinfu','ryanpeikou','sanshoku'],
+  tanyao:['pinfu','sanshoku','toitoi'], sanshoku:['ittsu','iipeiko','junchan'],
+  ittsu:['sanshoku','chinitsu','junchan'], toitoi:['sanankou','honroutou','chiitoi'],
+  sanankou:['toitoi','honroutou'], chiitoi:['toitoi','iipeiko','ryanpeikou'],
+  honitsu:['chinitsu','honroutou','yakuhai'], chinitsu:['honitsu','ittsu'],
+  chanta:['junchan','honroutou'], junchan:['chanta','sanshoku'],
+  yakuhai:['shousangen','honitsu','toitoi'], shousangen:['yakuhai','honitsu'],
+  honroutou:['toitoi','chanta','chiitoi'], ryanpeikou:['iipeiko','chiitoi'],
+  riichi:['tsumo','ippatsu'], tsumo:['riichi','pinfu'], ippatsu:['riichi','tsumo'],
+};
+/* その Lesson までに習った役(導入順)。CH3_YAKU_META[k].lesson と Road のならび順から出す。
+   手書きの一覧は作らない＝役を足せば自動でついてくる */
+function yfLessonOrder(){
+  if(yfLessonOrder._c) return yfLessonOrder._c;
+  const o=[];
+  THEMES.forEach(t=>themeLessons(t).forEach(l=>{
+    const k=l&&l.diff&&l.diff.ch1; if(k) o.push(k);
+  }));
+  yfLessonOrder._c=o;
+  return o;
+}
+function yfIntroducedBy(lessonKey){
+  const order=yfLessonOrder();
+  const upto=lessonKey==null?order.length:(order.indexOf(lessonKey)+1||order.length);
+  const seen=new Set(order.slice(0,upto));
+  return Object.keys(CH3_YAKU_META).filter(k=>{
+    const m=CH3_YAKU_META[k];
+    return !m.yakuman&&m.lesson&&seen.has(m.lesson);
+  });
+}
+/* 出どころ。{id,hand,ctx} だけを持ち、役は持たない(役は計算で出す) */
+function yfSources(){
+  if(yfSources._c) return yfSources._c;
+  const out=[];
+  SCORE_HANDS.forEach(e=>out.push({id:'s:'+e.id,hand:e.hand,
+    ctx:Object.assign({},e.ctx),round:e.round,seat:e.seat}));
+  Object.keys(CH3_YAKU_META).forEach(k=>{
+    const m=CH3_YAKU_META[k];
+    if(!m.ex||m.yakuman) return;
+    out.push({id:'y:'+k,hand:m.ex.g.join(''),ctx:Object.assign({},m.ex.ctx)});
+  });
+  YF_HANDS.forEach(h=>out.push({id:'f:'+h.id,hand:h.hand,
+    ctx:{win:'ron',winTile:h.winTile},why:h.why}));
+  yfSources._c=out;
+  return out;
+}
+/* アガリ牌が決まっていない見本に、役を1つも減らさないアガリ牌を決める。
+   「どの牌でアガったか」は盤面を描くのに要るが、手で書くと牌姿と食いちがう。
+   だから【手の中の牌を順にためして、役が減らないものをえらぶ】 */
+function yfWinTile(hand,ctx){
+  const tiles=sortTiles(parseHand(hand));
+  const base=ch3ListOf(hand,ch3Ctx(Object.assign({},ctx,{winTile:null})));
+  const uniq=[]; tiles.forEach(t=>{ if(!uniq.includes(t)) uniq.push(t); });
+  for(const t of uniq){
+    const c=ch3Ctx(Object.assign({},ctx,{winTile:t}));
+    const ks=ch3ListOf(hand,c);
+    if(base.every(k=>ks.includes(k))) return t;
+  }
+  return uniq[0]||null;
+}
+/* ===== R70 §28 鳴いた形も作る =====
+   「門前なら成立する役が、鳴いたことで消える」と気づく練習は役さがしの柱の1つ。
+   そのために鳴いた牌姿を手で書き足すのではなく、完成した牌姿を分解して
+   【そのうち1組をさらした形】を作る。アガリ牌の入った組はさらさない(ロンの牌は手の中にある)。 */
+function yfMeldFrom(hand,ctx){
+  const tiles=sortTiles(parseHand(hand));
+  let decs=[]; try{ decs=ch3Decomps(tiles,ctx); }catch(x){ return null; }
+  if(!decs.length) return null;                       // 七対子など、メンツに分かれない手は鳴けない
+  for(const d of decs){
+    for(const g of d.sets){
+      const gt=g.map(k=>tiles[k]);
+      if(ctx.winTile&&gt.includes(ctx.winTile)) continue;
+      if(gt[0]===gt[1]&&gt[1]===gt[2]) return {type:'pon',tiles:gt.join(''),from:'opposite'};
+      if(ch1IsRun(gt)) return {type:'chi',tiles:gt.join(''),called:gt[0],from:'left'};
+    }
+  }
+  return null;
+}
+/* 1問ぶんのデータ。条件(アガリ方・リーチ・鳴き)を差しかえて、役を計算しなおす */
+function yfVariant(base,o){
+  const e={srcId:base.id,hand:base.hand,why:base.why||''};
+  let c=Object.assign({},base.ctx);
+  if(o.win) c.win=o.win;
+  if(!c.win) c.win='ron';
+  if(o.riichi){ c.riichi=true; c.menzen=true; }
+  else if(!base.ctx.riichi) delete c.riichi;
+  if(base.round&&!c.round) c.round=base.round;
+  if(base.seat&&!c.sw) c.sw=base.seat;
+  c=ch3RetimeForWin(c,c.win);
+  if(!c.winTile) c.winTile=yfWinTile(base.hand,c);
+  if(o.naki&&!(Array.isArray(c.melds)&&c.melds.length)){
+    const m=yfMeldFrom(base.hand,c);
+    if(!m) return null;                               // 鳴ける組がない手は鳴きの問題にしない
+    c.melds=[m]; c.menzen=false; delete c.riichi;
+  }
+  e.ctx=ch3Ctx(c);
+  e.keys=ch3ListOf(e.hand,e.ctx);
+  e.vid=base.id+'/'+e.ctx.win+(e.ctx.riichi?'/r':'')+(o.naki?'/n':'');
+  e.naki=Array.isArray(e.ctx.melds)&&e.ctx.melds.some(m=>!meldIsAnkan(m));
+  return e;
+}
+/* 出題できるか。''なら使える */
+function yfCheck(e,allowed){
+  if(!e||!e.hand) return 'no-hand';
+  const c=e.ctx||{};
+  if(!(c.win==='ron'||c.win==='tsumo')) return 'win';
+  if(!c.winTile) return 'no-wintile';
+  if(!Array.isArray(e.keys)||!e.keys.length) return 'no-yaku';
+  if(e.keys.some(k=>!CH3_YAKU_META[k])) return 'unknown-yaku';
+  if(e.keys.some(k=>CH3_YAKU_META[k].yakuman)) return 'yakuman';
+  if(ch3TimingBad(c)) return 'timing';
+  if(c.riichi&&c.menzen===false) return 'riichi-naki';
+  if(allowed&&e.keys.some(k=>!allowed.includes(k))) return 'not-introduced';
+  try{ if(ch3BoardHTML({hand:e.hand,ctx3:c})===null) return 'board'; }catch(x){ return 'board'; }
+  return '';
+}
+/* 出題プール。Lessonの進みぐあい(習った役)ごとにキャッシュする */
+function yfPool(lessonKey){
+  yfPool._c=yfPool._c||{};
+  const ck=lessonKey==null?'*':lessonKey;
+  if(yfPool._c[ck]) return yfPool._c[ck];
+  const allowed=yfIntroducedBy(lessonKey);
+  const out=[], seen=new Set();
+  yfSources().forEach(b=>{
+    ['ron','tsumo'].forEach(win=>[false,true].forEach(riichi=>[false,true].forEach(naki=>{
+      if(riichi&&naki) return;                                            // リーチした手は鳴けない
+      if(riichi&&Array.isArray(b.ctx.melds)&&b.ctx.melds.some(m=>!meldIsAnkan(m))) return;
+      if(naki&&Array.isArray(b.ctx.melds)&&b.ctx.melds.length) return;    // もともと鳴いている手は二重にしない
+      let e; try{ e=yfVariant(b,{win,riichi,naki}); }catch(x){ return; }
+      if(!e) return;
+      if(seen.has(e.vid)) return;
+      if(yfCheck(e,allowed)!=='') return;
+      seen.add(e.vid); out.push(e);
+    })));
+  });
+  yfPool._c[ck]=out;
+  return out;
+}
+/* その手のむずかしさ(いちばん珍しい役で決める)と重み */
+function yfRarest(e){
+  let r='basic';
+  e.keys.forEach(k=>{ const t=yfTierOf(k);
+    if(t==='rare') r='rare'; else if(t==='mid'&&r!=='rare') r='mid'; });
+  return r;
+}
+function yfWeight(e,seen){
+  let w=YF_W[yfRarest(e)];
+  if(e.naki) w*=YF_W_NAKI;
+  /* R70 §33: 将来 seenCount / recentness / mistakeRate で頻度を変えられるようにしておく。
+     いまはセットの中で「もう出た役」を下げるところまで(同じ役ばかりにならない) */
+  if(seen){ let n=0; e.keys.forEach(k=>{ n+=(seen[k]||0); }); w=w/(1+n); }
+  return w;
+}
+/* 誤答候補。その時点までに習った役からだけ、まちがえやすいものを優先してえらぶ */
+function yfDistractors(e,allowed,rnd,n){
+  const right=e.keys, pool=allowed.filter(k=>!right.includes(k));
+  const pref=[];
+  right.forEach(k=>(YF_CONFUSE[k]||[]).forEach(x=>{
+    if(pool.includes(x)&&!pref.includes(x)) pref.push(x); }));
+  const rest=pool.filter(k=>!pref.includes(k));
+  const out=[];
+  const take=list=>{ while(out.length<n&&list.length){
+    out.push(list.splice(Math.floor(rnd()*list.length),1)[0]); } };
+  take(pref); take(rest);
+  return out;
+}
+/* 1問。正解は ch3YakuFind が ch3ListOf から出すので、ここでも手書きしない */
+function yfQ(e,allowed,rnd,no,total){
+  const nd=Math.max(2,Math.min(4,6-e.keys.length));
+  const cands=e.keys.concat(yfDistractors(e,allowed,rnd,nd));
+  for(let i=cands.length-1;i>0;i--){
+    const j=Math.floor(rnd()*(i+1)); const t=cands[i]; cands[i]=cands[j]; cands[j]=t;
+  }
+  const q=ch3YakuFind(e.hand,e.ctx,cands,e.why||'',{yfVid:e.vid});
+  if(no) q.qnum=no+' / '+total;
+  return q;
+}
+/* n問のセット。seedを渡せば同じセットになる(テストできる) */
+function yfSet(lessonKey,seed,n,opt){
+  const o=opt||{}, rnd=o.rnd||scoreTrainRnd(seed);
+  const allowed=yfIntroducedBy(lessonKey);
+  const pool=o.pool||yfPool(lessonKey);
+  const want=n||10, out=[], used=new Set(), seen={};
+  while(out.length<want){
+    let list=pool.filter(e=>!used.has(e.vid));
+    if(!list.length){ used.clear(); list=pool.slice(); if(!list.length) break; }
+    const ws=list.map(e=>yfWeight(e,seen));
+    let tot=0; ws.forEach(w=>tot+=w);
+    let r=rnd()*tot, pick=list[list.length-1];
+    for(let i=0;i<list.length;i++){ r-=ws[i]; if(r<=0){ pick=list[i]; break; } }
+    used.add(pick.vid);
+    pick.keys.forEach(k=>{ seen[k]=(seen[k]||0)+1; });
+    out.push(pick);
+  }
+  return out.map((e,i)=>yfQ(e,allowed,rnd,i+1,want));
 }
 function ch3BlockPick(handStr,q,exp,opt){
   // タンヤオのじゃま牌(1・9・字牌)タップ: 正解は決定論(ch3IsTermHon)
@@ -13632,12 +14012,10 @@ const CH3_LESSONS={
   /* ★S3-3 牌姿から点数まで(第4章の総仕上げ) */
   sc3_3(){
     const quiz=shuffle([
-      scoreHandFind('m3',['riichi','pinfu','tanyao','tsumo'],
-        'リーチ・ピンフ・タンヤオの3つ。ロンなのでツモはつかないよ。'),
-      scoreHandFind('n3',['yakuhai','honitsu','chinitsu','tanyao'],
-        '白のコーツで役牌、ピンズと字牌だけなのでホンイツ。鳴いているので食い下がりに注意！'),
-      scoreHandFind('c3',['riichi','tsumo','chiitoi','toitoi'],
-        'トイツが7組で七対子。リーチしてツモアガリだから3つだね。'),
+      /* R70: しあげの役さがしは【出題エンジンから出す】(手で書かない)。
+         ここまでに習った役だけを使い、牌姿も誤答候補も yfSet が計算で決める。
+         seedを固定しているので、同じLessonなら毎回おなじ3問になる(テストできる)。 */
+      ...yfSet('sc3_3',70031,3),
       /* LEVEL B(役の名前だけ)が中心。親のロン・親のツモもここでそろえる(R68 §7・§10) */
       scoreHandPointMcq('m1',null,{level:'B'}),
       scoreHandPointMcq('rd2',null,{level:'B'}),
