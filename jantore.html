@@ -364,10 +364,21 @@ html.ruby-full .mt-guide-card .tc-bub{height:86px;}
 .q-text.bt-q{font-size:clamp(15.5px, 4.4vw, 18px); margin:8px 4px 0; line-height:1.45; text-align:center;}
 .q-text.bt-q:empty{display:none;}
 #bt-q:not(:empty) + #bt-ui:not(:empty){margin-top:8px;}
+/* R77: 卓つきの選択問題・卓のタップ問題・卓の打牌(第1章の鳴き・第2章のロンとフリテン・牌を選んで切る)も同じならび */
+.q-text.bt-q + .choices{margin-top:8px;}
+.choices.c2{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+.choices.c2 .choice{padding-left:10px; padding-right:10px; text-align:center;}
+/* R77: 判断しているあいだは 下の帯をたたむ(押すものがないとき)。選択肢が帯のうしろに かくれないように */
+.lesson-foot.foot-none{display:none;}
 /* 低い画面(320x568 など)は 選択肢が下へ押し出されやすいので、問いのまわりを少し詰める(R60の --tbl-gap と同じ考え方) */
+@media (max-height:700px){
+  .choices.c2s{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .choices.c2s .choice{padding-left:10px; padding-right:10px; text-align:center;}
+}
 @media (max-height:620px){
   .q-text.bt-q{margin-top:5px; line-height:1.3;}
   #bt-q:not(:empty) + #bt-ui:not(:empty){margin-top:6px;}
+  .q-text.bt-q + .choices{margin-top:6px;}
 }
 .q-ctx{font-size:clamp(12.5px, 3.5vw, 14.5px); color:var(--ink-soft); font-weight:700; background:var(--jade-soft);
   border-radius:10px; padding:8px 12px; margin-bottom:12px;}
@@ -3289,7 +3300,7 @@ const THEMES=[
   requires:'th_ch2e',
   subThemes:[
    {id:'st_ch2f1', title:'ツモって切る', lessons:[
-    {diff:{ch1:'tu1_1'}},                      // T1 1枚ツモったら？(14枚になる・どれを切ってもよい)
+    {diff:{ch1:'tu1_1'}},                      // T1 1枚ツモったら？(14枚になる・いらない牌を1枚切る)
     {diff:{ch1:'tu1_2'}},                      // T2 ツモった牌をそのまま切る(ツモ切り)
     {diff:{ch1:'tu1_3'}},                      // T3 手牌から1枚切る(ツモ牌が手に入る)
    ]},
@@ -4274,8 +4285,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.69.0';
-const BUILD_ID='20261005-02';
+const APP_VER='0.70.0';
+const BUILD_ID='20261006-01';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -4362,19 +4373,34 @@ const MJFX_MS={ call:700, win:1250, agariAt:400, fade:200,
    はみ出しているときだけ、見える位置まで そっと送る。
    ・卓の上端が画面から消えるほどは送らない(いま何が起きているのか分からなくならないように)
    ・はみ出していない画面では1pxも動かさない */
+/* R77: 卓(実卓の盤面)を見て答える問題か。ミニ実戦・卓の打牌・卓のタップ・卓つきの選択問題。
+   こういう問題は ①問いを卓の下に置く ②判断中は下の帯をたたむ ③操作するところが画面に入るように送る */
+function isTableQ(q){
+  if(!q) return false;
+  if(q.bt) return true;
+  if(q.td||q.tt) return true;
+  return !!(q.panel&&/class="mjt[ "]/.test(q.panel));
+}
 function btRevealUI(){
-  const area=document.getElementById('q-area'), ui=document.getElementById('bt-ui');
-  if(!area||!ui||!ui.firstElementChild) return;
+  const area=document.getElementById('q-area'); if(!area) return;
+  /* 画面に入れたい「操作するところ」: 選択肢があれば選択肢、なければ問い(その上が手牌) */
+  const btui=document.getElementById('bt-ui');
+  const ui=(btui&&btui.firstElementChild)?btui
+    :(area.querySelector('.q-text.bt-q ~ .choices')||area.querySelector('.q-text.bt-q'));
+  if(!ui) return;
   const ar=area.getBoundingClientRect(), ur=ui.getBoundingClientRect();
   /* R76: 見えている下はしは【下の帯(.lesson-foot)の上はし】。R75までは q-area の下はし(=画面の下はし)で見ていたので、
      選択肢が帯のうしろに かくれていても「見えている」と数えて、送らないことがあった */
   const foot=document.querySelector('#lesson .lesson-foot');
   const fr=foot?foot.getBoundingClientRect():null;
-  const vb=(fr&&fr.height>0&&fr.top<ar.bottom)?fr.top:ar.bottom;
+  /* R77: 下の帯をたたんでいるときは 画面の下はし。そのときは safe-area(ホームインジケーターの帯)ぶんを空ける。
+     q-area の下の余白は 120px + safe-area なので、そこから safe-area を読む */
+  const safe=Math.max(0,(parseFloat(getComputedStyle(area).paddingBottom)||120)-120);
+  const vb=(fr&&fr.height>0&&fr.top<ar.bottom)?fr.top:(ar.bottom-safe);
   const over=ur.bottom-(vb-8);
   if(over<=0) return;
-  const mjt=document.querySelector('#bt-board .mjt');
-  const room=mjt?Math.max(0,mjt.getBoundingClientRect().top-ar.top-8):over;
+  const mjt=area.querySelector('.mjt');
+  const room=mjt?Math.max(0,mjt.getBoundingClientRect().top-ar.top-4):over;
   const by=Math.min(over,room);
   if(by>0) area.scrollTo({top:area.scrollTop+by, behavior:reducedMotion()?'auto':'smooth'});
 }
@@ -8411,7 +8437,7 @@ const CH1_LESSONS={
       mjtActMcq({hand:H6,from:'top',now:'5m',
         exp:'おなじ牌も2枚なく、ならびも作れない。なにもできないね。'}),
       mjtNakiPickQ({hand:H4,from:'left',now:'7p',act:'kan',
-        q:'上家が<b>7ピン</b>を捨てた。手牌の中で<b>カン</b>につかう牌はどれ？',
+        q:'この牌を<b>カン</b>するとき、いっしょにつかう牌はどれ？',
         exp:'7ピンが3枚。ここに4枚目でカンだね。カンは3人 だれからでもOKだったね。'}),
       {q:'チーできるのは だれの捨て牌？',choices:['上家だけ','3人とも'],a:0,
         exp:'チーだけ上家。ポンとカンは3人 だれからでもOKだったね。'},
@@ -8426,19 +8452,19 @@ const CH1_LESSONS={
       ch1Teach('総まとめ！　<b>ほかの人が牌を捨てた瞬間</b>に、あなたが何をするか。ぜんぶ思い出そう。'
         +'卓ぜんたいを見て決めよう。',{tlab:'鳴きマスターへ'}),
     ].concat(quiz).concat([
-      {q:'さいごは ながれの通しだよ。上家が5マンを捨てた。まず何をする？',
+      {q:'この牌を<b>チー</b>するよ。まず何をする？',
         panel:mjtHTML({hand:H3,now:{seat:'left',tile:'5m'},myLab:'あなたの捨て牌',myRiver:['1p','9m','W','2s']}),
-        choices:['「チー！」と声に出す','だまって5マンを取る','自分の牌を1枚切る'],a:0,
+        choices:['「チー！」と声に出す','だまって5マンを取る'],a:0,   // R77: 3択→2択(小さい画面で3つ目が画面の外へ出ていた)
         rel:{seat:'left',hand:['3m','4m']},
         exp:'上家だからチーできるね。鳴きは<b>声がさき</b>。「チー！」と言ってから牌をもらうよ。'},
       {q:'「チー！」と言った。つぎは？',
         choices:['345マンを みんなに見えるように置く','345マンを手の中にしまう'],a:0,
         exp:'鳴いた組は さらしておく。手の中にはもどさないよ。'},
-      {q:'345マンをさらした。さいごにすることは？',
+      {q:'さらしたあと、さいごにすることは？',
         panel:mjtHTML({hand:'678p55s2s3s9p1pEE',myLab:'あなたの捨て牌',
           melds:[{type:'chi',tiles:'345m',called:'5m',from:'left'}],
           myRiver:['1p','9m','W','2s'],cap:'右はしの345マンが、さらした組だよ'}),
-        choices:['自分の手牌から1枚 切る','山から1枚 引く','なにもしない'],a:0,
+        choices:['自分の手牌から1枚 切る','山から1枚 引く'],a:0,   // R77: 3択→2択(同上)
         exp:'これで1回ぶんの動きが おわり。つぎは下家の番だよ。'},
       ch1Teach('🎉 <b>鳴きマスター！</b>　ほかの人の捨て牌を見て、鳴けるか決めて、'
         +'声に出して、さらして、1枚切る。これで実戦の動きが ひととおりできるようになったね！'
@@ -10475,7 +10501,10 @@ function mjtAfterDiscard(o,selIdx){
     handPick:false, pick:[], myPick:false, rivers:keep, nowInRiver:!!mjtCurrent(o),
     myRiver:(o.myRiver||[]).concat([pk.tile]), myJust:true});
 }
-/* 1問ぶん。mode は free(どれでもよい) / tsumogiri(ツモ牌) / named(いわれた牌) / shape(形をくずさない) */
+/* 1問ぶん。mode は junk(いらない牌ならどれでも) / tsumogiri(ツモ牌) / named(いわれた牌) / shape(形をくずさない)
+   R77: free(14枚のどれでもよい)は Lesson では使わない。完成した組・アタマ・テンパイをくずす牌まで「正解」になり、
+        「牌を選んで切る」(いらない牌を見つけて切る)の目的と合わないため。
+        junk は o.cuts に【いらない牌】をぜんぶ書く。その牌なら どれを切っても同じ正解(おすすめ順位は付けない) */
 function mjtDiscardQ(o){
   const hand=mjtHandTiles(o);
   if(hand.length!==13) throw new Error('mjtDiscardQ: 手牌は13枚 (got '+hand.length+')');
@@ -10484,6 +10513,7 @@ function mjtDiscardQ(o){
   const mode=o.mode||'free';
   let ok;
   if(mode==='free') ok=picks.map((p,i)=>i);
+  else if(mode==='junk') ok=picks.map((p,i)=>((o.cuts||[]).indexOf(p.tile)>=0)?i:-1).filter(i=>i>=0);
   else if(mode==='tsumogiri') ok=picks.map((p,i)=>p.type==='tsumo'?i:-1).filter(i=>i>=0);
   else ok=picks.map((p,i)=>(p.tile===o.cut&&(mode!=='named'||p.type==='hand'))?i:-1).filter(i=>i>=0);
   if(!ok.length) throw new Error('mjtDiscardQ: 切る牌が盤面にない ('+mode+'/'+o.cut+')');
@@ -10491,7 +10521,7 @@ function mjtDiscardQ(o){
     q:o.q||'どれか1枚えらんで切ろう', a:ok[0],
     choices:mjtChoiceLabels(board), exp:o.exp,
     tlab:o.tlab||'牌をえらんで切ろう',
-    fk:{kind:'discard',mode,hand:o.hand,tsumo:o.tsumo,cut:o.cut||null,
+    fk:{kind:'discard',mode,hand:o.hand,tsumo:o.tsumo,cut:o.cut||null,cuts:(o.cuts||[]).slice(),
         myRiver:(o.myRiver||[]).slice()}};
 }
 /* ================= R54 はじめてのミニ実戦 =================
@@ -13241,7 +13271,7 @@ const CH2_LESSONS={
       // 自分の河の牌そのものをタップさせる(R48)。「どれが原因か」を自分で見つけさせる
       mjtFuritenPickQ({hand:A,showWait:true,note:true,myRiver:['1p','8s','W','2m'],
         now:{seat:'right',tile:'5s'},relSeat:'right',
-        q:'下家が<b>5ソー</b>を捨てたけどロンできない。あなたの河の中で、<b>その原因</b>になっている牌はどれ？',
+        q:'この牌でロンできない。<b>原因</b>は あなたの河のどの牌？',
         exp:'河の<b>8ソー</b>だね。8ソーも待ち牌だから、待ちぜんぶがロンできなくなるんだ。'}),
       mjtRonMcq({hand:B,showWait:true,myRiver:['9s','3m','W'],from:'left',now:'6m',
         exp:'待ちは3マンと6マン。河に<b>3マン</b>があるからフリテン。出たのが6マンでもロンできないよ。'}),
@@ -13299,18 +13329,16 @@ const CH2_LESSONS={
       ch1Teach('リーチしているときは、そのあと<b>ずっとロンできない</b>。'
         +'リーチは「この待ちでまつ」とやくそくしているからね。（どちらもツモならアガれるよ）',
         {tlab:'リーチしているとき'}),
-      {q:'下家の5ソーを<b>見逃した</b>。すぐあとに 対面も5ソーを捨てたよ。ロンできる？',
+      {q:'<b>見逃した</b>すぐあと。ロンできる？',   // R77: だれが何を切ったか・見のがしたことは卓に出ている
         panel:mjtPanelHTML({hand:A,showWait:true,note:true,myRiver:['1p','2m','W'],
-          now:{seat:'top',tile:'5s'},miss:{seat:'right',tile:'5s'},
-          cap:'自分の河に 待ち牌は ない ＝ フリテンではない。<br>でも さっき下家の5ソーを見のがしている'}),
+          now:{seat:'top',tile:'5s'},miss:{seat:'right',tile:'5s'}}),   // R77: 卓の下の説明文(cap)は外した。答えの手がかりを先に言っていたため(解説で言う)
         choices:['ロンできない','ロンできる'],a:0,
         exp:'自分の河に待ち牌はないのでフリテンではないよ。でも<b>さっき見逃した</b>から、'
           +'<b>自分のつぎのツモがくるまで</b>はロンできないんだ。'},
-      {q:'見逃したあと、自分のツモがきて1枚切った。そのあと下家が5ソーを捨てたよ。ロンできる？',
-        panel:mjtPanelHTML({hand:A,showWait:true,myRiver:['1p','2m','W','3p'],now:{seat:'right',tile:'5s'},
-          cap:'自分のツモを すぎた（河に3ピンがふえている）'}),
+      {q:'自分のツモの<b>あと</b>。ロンできる？',
+        panel:mjtPanelHTML({hand:A,showWait:true,myRiver:['1p','2m','W','3p'],now:{seat:'right',tile:'5s'}}),
         choices:['ロンできる','ロンできない'],a:0,
-        exp:'自分のツモをすぎたら、もうロンできるよ。（リーチしていないときの話だよ）'},
+        exp:'自分のツモをすぎたら、もうロンできるよ（河に3ピンがふえているね）。リーチしていないときの話だよ。'},
       {q:'見逃したあと、<b>自分でツモってアガる</b>のは できる？',
         choices:['できる','できない'],a:0,
         exp:'ここもフリテンとおなじ。止まるのは<b>ロンだけ</b>だよ。'},
@@ -13368,29 +13396,37 @@ const CH2_LESSONS={
      ねらいは牌効率ではなく【自分の番の基本動作】:
        13枚 → 1枚ツモって14枚 → 1枚えらんで切る → 13枚にもどる
      受け入れ枚数・シャンテン数・複合形などの数値や理論には いっさい踏みこまない。 */
-  /* T1 1枚ツモったら？(14枚になることを体で覚える。どれを切ってもよい) */
+  /* T1 1枚ツモったら？(14枚になることを体で覚える)
+     R77: R53〜R76は「どれでもいいから1枚」(14枚のどれを切っても正解)だった。
+       実機で出た問題: 完成した組・アタマの牌も切れてしまう。2問目は ツモった時点でアガリ形で、
+       どれを切ってもアガリをくずす問題だった。「どれでもいい」は 教材として成立していなかった。
+     直し: 【いらない牌(1枚だけで仲間がいない牌)が はっきりある手】にして、それを切る。
+       ここは本格的な「何切る」ではない。牌効率・テンパイを考えさせない。
+       のこる牌は ぜんぶ 3枚の組・同じ牌2枚・となりあう2枚 のどれか。いらない牌が2〜3枚あるときは どれを切っても正解 */
   tu1_1(){
-    const A='123m456m789p22s45s', B='234p678p111s99m45m', C='345m567s234p66p18s';
+    const A='123m456m78p22s45sE', B='234p678p111s45m9mW', C='345m567s234p66p1sN';
     return [
       ch1Teach('自分の番がまわってきたら、山から牌を<b>1枚ツモる</b>よ。'
         +'ツモった牌は、手牌の右に<b>すこし はなして</b>置こう。',
-        {tlab:'自分の番',panel:mjtHTML({hand:A,tsumo:'7s',myRiver:['1p','9m','W']})}),
+        {tlab:'自分の番',panel:mjtHTML({hand:A,tsumo:'N',myRiver:['1p','9m','W']})}),
       ch1Teach('数えてみて。手牌が<b>14枚</b>になったね。'
-        +'このままでは多すぎるから、<b>14枚の中から1枚えらんで切る</b>んだ。切れば また13枚にもどるよ。',
-        {tlab:'13枚 → 14枚 → 13枚',panel:mjtHTML({hand:A,tsumo:'7s',myRiver:['1p','9m','W']})}),
-      mjtDiscardQ({hand:A,tsumo:'7s',myRiver:['1p','9m','W'],mode:'free',
-        q:'まずは れんしゅう。<b>どれでもいい</b>から1枚えらんで切ってみよう',
+        +'このままでは多すぎるから、<b>14枚の中から1枚えらんで切る</b>んだ。切れば また13枚にもどるよ。'
+        +'<br>切るのは、1枚だけで仲間がいない<b>いらない牌</b>。',
+        {tlab:'13枚 → 14枚 → 13枚',panel:mjtHTML({hand:A,tsumo:'N',myRiver:['1p','9m','W']})}),
+      mjtDiscardQ({hand:A,tsumo:'N',myRiver:['1p','9m','W'],mode:'junk',cuts:['E','N'],
+        q:'<b>いらない牌</b>を1枚切ろう',
         tlab:'えらんで、切る',
         exp:'えらんだ牌が あなたの河に入って、手牌は13枚にもどったね。これが自分の番の基本だよ。'}),
       {q:'ツモって14枚になったら、何枚切る？',choices:['1枚','2枚'],a:0,
         exp:'切るのは1枚だけ。14枚から1枚切って、また13枚にもどすよ。'},
-      mjtDiscardQ({hand:B,tsumo:'3m',myRiver:['5p','E','2s','8m'],mode:'free',
-        q:'もう一度。<b>どれでもいい</b>から1枚えらんで切ろう',tlab:'えらんで、切る',
-        exp:'いいね！ えらぶ→切る の2ステップにも慣れてきたね。'}),
+      mjtDiscardQ({hand:B,tsumo:'3m',myRiver:['5p','E','2s','8m'],mode:'junk',cuts:['9m','W'],
+        q:'<b>いらない牌</b>を1枚切ろう',tlab:'えらんで、切る',
+        exp:'いいね！ ツモった'+inlineTile('3m')+'は'+inlineTiles(['3m','4m','5m'])+'の組になったから のこしたよ。'
+          +'えらぶ→切る の2ステップにも慣れてきたね。'}),
       {q:'切った牌は、どこへ行く？',choices:['自分の河','山にもどす'],a:0,
         exp:'切った牌は自分の河へ。だれにでも見えるところに置かれるよ。'},
-      mjtDiscardQ({hand:C,tsumo:'W',myRiver:['1m','6s','3p','9p','2m'],mode:'free',
-        q:'さいごにもう1枚。<b>どれでもいい</b>よ',tlab:'えらんで、切る',
+      mjtDiscardQ({hand:C,tsumo:'W',myRiver:['1m','6s','3p','9p','2m'],mode:'junk',cuts:['1s','N','W'],
+        q:'<b>いらない牌</b>を1枚切ろう',tlab:'えらんで、切る',
         exp:'河の牌は、切った順に ひだりから ならんでいくよ。'}),
       ch1Teach('これが自分の番だよ。<b>1枚ツモって、1枚切る</b>。これのくりかえしで麻雀は進むんだ！',
         {tlab:'まとめ'}),
@@ -13404,17 +13440,17 @@ const CH2_LESSONS={
         +'これを<span class="term-chip">ツモ切り</span>というんだったね。',
         {tlab:'ツモ切り',panel:mjtHTML({hand:A,tsumo:'W',myRiver:['1p','9s','E']})}),
       mjtDiscardQ({hand:A,tsumo:'W',myRiver:['1p','9s','E'],mode:'tsumogiri',
-        q:'ツモってきた'+inlineTile('W')+'は、手牌のどこにも使えないね。<b>ツモ切り</b>してみよう',
+        q:inlineTile('W')+'を<b>ツモ切り</b>しよう',
         tlab:'ツモ牌をえらぶ',
-        exp:'ツモ切り！ ツモった'+inlineTile('W')+'がそのまま河へ。もとの13枚は1枚も動いていないよ。'}),
+        exp:'ツモ切り！ '+inlineTile('W')+'は手牌のどこにも使えない牌。そのまま河へ行って、もとの13枚は1枚も動いていないよ。'}),
       {q:'「ツモ切り」って、どういうこと？',
         choices:['ツモった牌をそのまま切る','手牌から1枚えらんで切る'],a:0,
         exp:'ツモった牌をそのまま河へ。手牌はまったく変わらないよ。'},
       mjtDiscardQ({hand:B,tsumo:'N',myRiver:['2p','7s','E','4m','9p'],mode:'tsumogiri',
-        q:'この'+inlineTile('N')+'も使えないね。<b>ツモ切り</b>しよう',tlab:'ツモ牌をえらぶ',
-        exp:'手牌はそのまま。ツモった1枚だけが河へ行ったね。'}),
+        q:inlineTile('N')+'を<b>ツモ切り</b>しよう',tlab:'ツモ牌をえらぶ',
+        exp:'この'+inlineTile('N')+'も使えない牌。手牌はそのまま、ツモった1枚だけが河へ行ったね。'}),
       mjtDiscardQ({hand:C,tsumo:'S',myRiver:['3m','8p','W','1s','6p','4s'],mode:'tsumogiri',
-        q:inlineTile('S')+'をツモった。<b>ツモ切り</b>しよう',tlab:'ツモ牌をえらぶ',
+        q:inlineTile('S')+'を<b>ツモ切り</b>しよう',tlab:'ツモ牌をえらぶ',
         exp:'河が7枚目になったから、2段目のさきあたまに置かれたね。'}),
       {q:'ツモ切りをしたあと、手牌の13枚はどうなる？',choices:['まったく変わらない','1枚へる'],a:0,
         exp:'ツモった牌をそのまま切るので、もとの13枚はそのままだよ。'},
@@ -13422,46 +13458,55 @@ const CH2_LESSONS={
   },
   /* T3 手牌から1枚切る(ツモ牌が手牌に入り、かわりに1枚出ていく) */
   tu1_3(){
-    const A='123m456m789m22p4p9s', B='234s678s345p55p1m9m', C='111p789p234m66s3s8m';
+    /* R77: B は 1マンと9マンの2枚が「いらない牌」だった(1マンを名指しするので 9マンは×になる)。
+       いわれた牌が その手で たった1枚の いらない牌になるように、9マン1枚を 東2枚に入れかえた(45ピンは ツモの6ピンで組になる) */
+    const A='123m456m789m22p4p9s', B='234s678s45p99m1mEE', C='111p789p234m66s3s8m';
     return [
       ch1Teach('こんどは<b>ツモった牌をつかう</b>ばん。ツモ牌が手牌に入って、'
         +'かわりに<b>手牌の中の1枚</b>が出ていくよ。それでもやっぱり13枚だ。',
         {tlab:'手牌から切る',panel:mjtHTML({hand:A,tsumo:'3p',myRiver:['1s','8m','E']})}),
       mjtDiscardQ({hand:A,tsumo:'3p',myRiver:['1s','8m','E'],mode:'named',cut:'9s',
-        q:inlineTile('3p')+'をツモった。手牌の中の'+inlineTile('9s')+'を切ろう',tlab:'手牌からえらぶ',
+        q:'手牌の中の'+inlineTile('9s')+'を切ろう',tlab:'手牌からえらぶ',
         exp:inlineTile('3p')+'が手牌に入って、'+inlineTile('9s')+'が河へ。手牌はちゃんと13枚だね。'}),
       {q:'手牌から1枚切ったとき、ツモってきた牌はどうなる？',
         choices:['手牌の中に入る','いっしょに河へ行く'],a:0,
         exp:'ツモ牌は手牌に入るよ。だから切るのは いつも1枚だけ。'},
       mjtDiscardQ({hand:B,tsumo:'6p',myRiver:['9s','2m','W','5s'],mode:'named',cut:'1m',
-        q:inlineTile('6p')+'をツモった。手牌の'+inlineTile('1m')+'を切ろう',tlab:'手牌からえらぶ',
+        q:'手牌の中の'+inlineTile('1m')+'を切ろう',tlab:'手牌からえらぶ',
         exp:inlineTile('1m')+'が河へ。ツモった'+inlineTile('6p')+'は手牌の中だよ。'}),
       mjtDiscardQ({hand:C,tsumo:'4s',myRiver:['1p','7m','N','3p','9s','2s'],mode:'named',cut:'8m',
-        q:inlineTile('4s')+'をツモった。手牌の'+inlineTile('8m')+'を切ろう',tlab:'手牌からえらぶ',
-        exp:'切った牌は河の7枚目。2段目のさきあたまに置かれたね。'}),
+        q:'手牌の中の'+inlineTile('8m')+'を切ろう',tlab:'手牌からえらぶ',
+        exp:'ツモった'+inlineTile('4s')+'は手牌の中へ。切った牌は河の7枚目で、2段目のさきあたまに置かれたね。'}),
       {q:'14枚から1枚切ったあと、手牌は何枚？',choices:['13枚','14枚'],a:0,
         exp:'いつも13枚にもどるよ。これが自分の番のきほん。'},
     ];
   },
-  /* T4 いわれた牌を切ろう(牌の見分けの復習も兼ねる。萬子・筒子・索子・字牌をまぜる) */
+  /* T4 いわれた牌を切ろう(牌の見分けの復習も兼ねる。萬子・筒子・索子・字牌をまぜる)
+     R77: R53〜R76は 4問のうち3問で、いわれた牌を切ると 手がこわれた(実機で指摘)。
+       ① 2ピン … アタマ(2ピン2枚)をくずし、テンパイもくずす
+       ② 5マン … テンパイをくずす(ツモった西のほうが いらない牌なのに)
+       ④ 3ソー … アタマ(3ソー2枚)をくずし、テンパイもくずす(ツモった東のほうが いらない牌なのに)
+     アプリの言うとおりに切ると手が悪くなる、という問題を作らない。
+     直し: いわれた牌が【その手で たった1枚の いらない牌】になる牌姿にした。ツモった牌は組になる牌。
+       同じ種類の牌(ピンズならピンズ)を手にいくつか入れて、「数を見分けてさがす」ことは のこしてある */
   tu1_4(){
-    const A='123m456m789m22p45p', B='234p678p123s99s45m', C='345s789s234m11p6p9m',
-          D='111m456m789p33s67s';
+    const A='123m456m2p66p78p45s', B='111m5m234p67p99s12s', C='345s789s34m11p6p99m',
+          D='111m456m78p55p3s66s';
     return [
       ch1Teach('つぎは<b>いわれた牌</b>を切るれんしゅう。'
         +'マンズ・ピンズ・ソーズ・字牌を、ちゃんと見分けられるかな？',{tlab:'牌を見つけて切る'}),
-      mjtDiscardQ({hand:A,tsumo:'1s',myRiver:['9p','3s','E'],mode:'named',cut:'2p',
-        q:'手牌の中の<b>2ピン</b>を1枚えらんで切ろう',tlab:'ピンズをさがす',
-        exp:'○がまるくならんでいるのがピンズ。2ピンを切れたね。'}),
-      mjtDiscardQ({hand:B,tsumo:'W',myRiver:['1m','8p','S','4s'],mode:'named',cut:'5m',
+      mjtDiscardQ({hand:A,tsumo:'3s',myRiver:['9p','1s','E'],mode:'named',cut:'2p',
+        q:'手牌の中の<b>2ピン</b>を切ろう',tlab:'ピンズをさがす',
+        exp:'○がまるくならんでいるのがピンズ。2ピンを切れたね。1枚だけで仲間がいない牌だったよ。'}),
+      mjtDiscardQ({hand:B,tsumo:'8p',myRiver:['1p','8s','S','4s'],mode:'named',cut:'5m',
         q:'手牌の中の<b>5マン</b>を切ろう',tlab:'マンズをさがす',
         exp:'漢数字と「萬」の字があるのがマンズだよ。'}),
-      mjtDiscardQ({hand:C,tsumo:'2m',myRiver:['7p','1s','N','9m','5p'],mode:'named',cut:'6p',
+      mjtDiscardQ({hand:C,tsumo:'2m',myRiver:['7p','1s','N','8m','5p'],mode:'named',cut:'6p',
         q:'手牌の中の<b>6ピン</b>を切ろう',tlab:'ピンズをさがす',
         exp:'よく見つけたね！ 同じピンズでも数がちがうと別の牌だよ。'}),
-      mjtDiscardQ({hand:D,tsumo:'E',myRiver:['2s','9p','W','6m','1p','8s'],mode:'named',cut:'3s',
-        q:'手牌の中の<b>3ソー</b>を1枚えらんで切ろう',tlab:'ソーズをさがす',
-        exp:'竹のような絵がソーズ。同じ牌が2枚あるときは どちらをえらんでも正解だよ。'}),
+      mjtDiscardQ({hand:D,tsumo:'9p',myRiver:['2s','1p','W','6m','9s','8s'],mode:'named',cut:'3s',
+        q:'手牌の中の<b>3ソー</b>を切ろう',tlab:'ソーズをさがす',
+        exp:'竹のような絵がソーズ。同じソーズでも、数を見て3ソーを見つけられたね。'}),
       // R57: 打牌は1タップになったので、この問題も操作のとおりに直した
       {q:'切りたい牌が見つかったら、どうする？',
         choices:['その牌を1回タップする','2回タップする'],a:0,
@@ -13476,11 +13521,11 @@ const CH2_LESSONS={
         +'といっても むずかしくないよ。<b>もうできている3枚の組は のこす</b>、それだけだよ。',
         {tlab:'できている組はのこす',panel:mjtHTML({hand:A,tsumo:'N',myRiver:['1p','9s','E']})}),
       mjtDiscardQ({hand:A,tsumo:'N',myRiver:['1p','9s','E'],mode:'shape',cut:'N',
-        q:'北をツモった。<b>形をくずさず</b>に1枚切るなら、どれ？',tlab:'できている組はのこす',
+        q:'<b>形をくずさず</b>に1枚切るなら、どれ？',tlab:'できている組はのこす',
         exp:inlineTiles(['1m','2m','3m'])+'も'+inlineTiles(['E','E','E'])+'も、もうできている組。'
           +inlineTile('N')+'は1枚だけで仲間がいないね。'}),
       mjtDiscardQ({hand:B,tsumo:'6s',myRiver:['2p','7m','W','5s'],mode:'shape',cut:'9m',
-        q:'6ソーをツモって678ソーがそろった！ <b>形をくずさず</b>切るなら、どれ？',
+        q:'<b>形をくずさず</b>に1枚切るなら、どれ？',
         tlab:'できている組はのこす',
         exp:inlineTile('9m')+'は1枚だけ。'+inlineTiles(['1m','2m','3m'])+'・'+inlineTiles(['E','E','E'])
           +'・'+inlineTiles(['6s','7s','8s'])+'は のこしておこう。'}),
@@ -13488,7 +13533,7 @@ const CH2_LESSONS={
         choices:['のこす','くずして切る'],a:0,
         exp:'そろっている組をくずすと、また作り直しになっちゃうよ。'},
       mjtDiscardQ({hand:C,tsumo:'1m',myRiver:['3p','8s','E','2m','9p','4s'],mode:'shape',cut:'1m',
-        q:'1マンをツモった。<b>形をくずさず</b>切るなら、どれ？',tlab:'できている組はのこす',
+        q:'<b>形をくずさず</b>に1枚切るなら、どれ？',tlab:'できている組はのこす',
         exp:inlineTiles(['4p','5p','6p'])+'も'+inlineTiles(['W','W','W'])+'も できている組。'
           +'ツモった'+inlineTile('1m')+'は仲間がいないから ツモ切りだね。'}),
       {q:'1枚だけで仲間がいない牌は、どうなりやすい？',
@@ -15948,12 +15993,16 @@ const QFORMATS={
       /* R69: Trainingは「いま何問目か」を出す。qnum を持つ問題だけ(ほかの画面は変わらない) */
       html+='<div class="q-type">'+L.course.title
         +(q.qnum?'<span class="q-num">'+q.qnum+'</span>':'')+'</div>';
-      html+='<div class="q-text">'+q.q+'</div>';
+      /* R77: 図が【実卓】の問題は 見出し → 卓 → 問い → 選択肢 の順(R76でミニ実戦に入れた ならびを、卓のある問題ぜんぶへ)。
+         卓のない問題(牌姿・図・文だけ)は これまでどおり 問いが先 */
+      const tblQ=isTableQ(q);
+      if(!tblQ) html+='<div class="q-text">'+q.q+'</div>';
       if(q.ctx) html+='<div class="q-ctx">'+q.ctx+'</div>';
       // 図(ヘルパー関数で生成。ドラ・カンなど)。
       // R60: 図が【実卓】のときは、卓と選択肢のあいだを --tbl-gap で区切る目印を付ける
       if(q.panel) html+='<div class="rd-panel'+(/class="mjt[ "]/.test(q.panel)?' rd-panel-table':'')
         +'">'+q.panel+'</div>';
+      if(tblQ){ html+='<div class="q-text bt-q" id="tbl-q">'+q.q+'</div>'; requestAnimationFrame(btRevealUI); }
       // 第3章: ロン/ツモは牌の配置で分かる盤面(ロン=相手の捨て牌+自分の13枚/ツモ=13枚+右端ツモ牌)。
       // 盤面が出るときはアガリ牌チップを重複表示しない(状況は牌の位置で理解させる)
       const bd3=(q.ctx3&&typeof ch3BoardHTML==='function')?ch3BoardHTML(q):null;
@@ -15968,7 +16017,14 @@ const QFORMATS={
       else if(q.ctx3&&ch3HandSplit(q)) html+=ch3OpenHandHTML(q);   // 鳴いた組: 手の中＋右に鳴いた組
       else if(q.hands2){ for(const h of q.hands2) html+='<div class="tc-lab">'+h.label+'</div>'+handHTML(h.hand); }  // 比較問題: 判断させる牌姿は区切らない
       else if(q.hand) html+=(q.ghand?ch1HandGrouped(q.hand):handHTML(q.hand));  // ghand=理牌+組スキマ表示(第1章等のTeach的表示)
-      html+='<div class="choices">'+q.choices.map((ch,i)=>
+      /* R77: 卓つきの4択(「なにができる？」)は 2列にならべる。たてに4つ積むと 小さい画面で下の2つが画面の外へ出るため。
+         みじかい選択肢(8文字以内)が3つ以上のときだけ。長い選択肢・卓のない問題は これまでどおり たてに積む */
+      const chShort=tblQ&&q.choices.every(c=>String(c).replace(/<[^>]*>/g,'').length<=8);
+      const c2=chShort&&q.choices.length>=3;
+      /* R77: 卓つきの みじかい2択(「ロンできる／ロンできない」など)は、低い画面(高さ700px以下)だけ 横に2つならべる。
+         たてに積むと「あなたの待ち」の行が画面の上へ出てしまうため(卓・待ち・問い・2択を 1画面に入れる)。CSSの .c2s を参照 */
+      const c2s=chShort&&q.choices.length===2;
+      html+='<div class="choices'+(c2?' c2':'')+(c2s?' c2s':'')+'">'+q.choices.map((ch,i)=>
         '<button class="choice" id="ch-'+i+'" onpointerdown="selChoice('+i+')">'+ch+'</button>').join('')+'</div>';
       return html;
     },
@@ -16096,8 +16152,9 @@ const QFORMATS={
     render(q){
       const n=mjtPicks(q.tt.board).length;
       let html='<div class="q-type">'+(q.tlab||'卓を見て牌をタップ')+'</div>';
-      html+='<div class="q-text">'+q.q+'</div>';
       html+=mjtPanelHTML(q.tt.board);
+      html+='<div class="q-text bt-q" id="tbl-q">'+q.q+'</div>';   // R77: 問いは卓の下
+      requestAnimationFrame(btRevealUI);
       if(q.tt.none!==false)
         html+='<div class="choices mjt-none"><button class="choice" id="ch-'+n+'" onpointerdown="selChoice('+n+')">'
           +q.choices[n]+'</button></div>';
@@ -16130,8 +16187,9 @@ const QFORMATS={
     qid(q){ return null; },
     render(q){
       let html='<div class="q-type">'+(q.tlab||'牌をえらんで切ろう')+'</div>';
-      html+='<div class="q-text">'+q.q+'</div>';
       html+='<div id="td-board">'+mjtPanelHTML(q.td.board)+'</div>';
+      html+='<div class="q-text bt-q" id="tbl-q">'+q.q+'</div>';   // R77: 問いは卓の下(=タップする手牌のすぐ下)
+      requestAnimationFrame(btRevealUI);
       L.sel=null;
       return html;
     },
@@ -16158,14 +16216,14 @@ const QFORMATS={
     feedback(q,res){
       const set=(q.td.aSet&&q.td.aSet.length)?q.td.aSet:[q.a];
       if(!res.isCorrect){
-        return {ansText:'', expText: (q.td.mode==='shape')
+        return {ansText:'', expText: (q.td.mode==='shape'||q.td.mode==='junk')
           ? 'その牌は のこしておきたいね。1枚だけで仲間がいない牌をさがしてタップしてみよう。'
           : 'その牌じゃないよ。もう一度さがしてタップしてみよう。'};
       }
       // R58: 回答のあとなので、切った牌を【絵】で見せる(文字→牌の変換をさせない)
       const pk=mjtPicks(q.td.board)[L.sel!=null?L.sel:set[0]];
       const nm=pk?inlineTile(pk.tile):'';
-      return {ansText:(q.td.mode==='free'?'切った牌： ':'正解： 打')+nm, expText:q.exp||''};
+      return {ansText:((q.td.mode==='free'||q.td.mode==='junk')?'切った牌： ':'正解： 打')+nm, expText:q.exp||''};
     },
   },
   battle:{
@@ -16762,23 +16820,19 @@ function renderFoot(){
     foot.innerHTML='<button class="btn" id="answer-btn" '+(ok?'':'disabled')+' onclick="teachNext()">つづける</button>';
     return;
   }
-  if(qNow&&qNow.bt&&!L.checked&&!qNow.ch1t){
-    if(L.bt&&L.bt.playing){ foot.innerHTML='<div class="foot-wait">…</div>'; return; }
-    // R57: 打牌は1タップ。確定ボタンは出さない(下の固定ボタン領域も使わない)
-    if(qNow.bt.kind==='discard')
-      foot.innerHTML='<div class="foot-wait">'+(L.judging?'…':'切る牌をタップしよう')+'</div>';
-    else foot.innerHTML='<div class="foot-wait">'+(L.judging?'…':'えらんでこたえよう')+'</div>';
-    return;
-  }
-  if(qNow&&qNow.td&&!L.checked){
-    // R57: R53の実卓打牌も1タップ。タップしたその牌がそのまま河へ行く
-    foot.innerHTML='<div class="foot-wait">'+(L.judging?'…':'切る牌をタップしよう')+'</div>';
-    return;
-  }
+  /* R77: 卓を見て答える問題は、判断しているあいだ 下の帯をたたむ(foot-none)。
+     R76まで: 「えらんでこたえよう」「切る牌をタップしよう」と出すだけの帯が 80px を占め、
+              小さい画面では そのうしろに選択肢が かくれていた(320x568 では2つ目の選択肢がまるごと)。
+              何をするかは 卓のすぐ下の問いが言っているので、帯の文は なくてよい。
+     たたむのは【押すものが何もない】状態だけ。答えたあと(つづける)・Teach・導入・しめくくり・
+     まちがえたあとの「べつの牌をタップしよう」は これまでどおり帯を出す */
+  if(qNow&&qNow.bt&&!L.checked&&!qNow.ch1t){ footNone(foot); return; }
+  if(qNow&&qNow.td&&!L.checked){ footNone(foot); return; }
   // 回答UX(2026-09-21): 単一選択はタップ=回答確定なのでボタンを出さない(下端タップ自体を廃止)。
   // 複数選択(牌/数字/役のSet選択・本番形のパターン込み)だけ「これで決定」を残す
   const multiSel=(L.sel instanceof Set)||(qNow&&qNow.full);
   if(!multiSel){
+    if(isTableQ(qNow)){ footNone(foot); return; }     // R77: 卓つきの選択問題・卓のタップ問題も同じ
     foot.innerHTML='<div class="foot-wait">'+(L.judging?'…':'えらんでこたえよう')+'</div>';
     return;
   }
@@ -16786,6 +16840,7 @@ function renderFoot(){
   const ready=L.sel!==null&&(!(L.sel instanceof Set)||L.sel.size>0)&&patReady;
   foot.innerHTML='<button class="btn" id="answer-btn" '+(ready?'':'disabled')+' onclick="answerNow(this)">これで決定</button>';
 }
+function footNone(foot){ foot.className='lesson-foot foot-none'; foot.innerHTML=''; }
 // こたえあわせ: 押した瞬間に押下状態+disabledで反応を見せ、描画後に判定する(二重タップ防止)。
 // 判定はローカルで即時完了するため人工的な待ち時間は入れない。
 function answerNow(btn){
