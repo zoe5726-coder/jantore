@@ -380,6 +380,37 @@ html.ruby-full .mt-guide-card .tc-bub{height:86px;}
   #bt-q:not(:empty) + #bt-ui:not(:empty){margin-top:6px;}
   .q-text.bt-q + .choices{margin-top:6px;}
 }
+/* ================= R78: 点数問題は 牌姿ファースト =================
+   上から 見出し → 【牌姿】 → 【条件】 → 【ヒント】 → 【問い】 → 選択肢。
+   主役は牌姿。牌は小さくしない(.hand のまま)。1画面に入らなければ ふつうに たてスクロールする。
+   ヒント(役・翻・符)は うすい箱に入れて、牌姿より目立たせない */
+.sq-board{margin:6px 0 0;}
+.sq-board .ch3-board{margin:0;}
+.sq-board .tc-lab{margin-top:0;}
+.sq-board .hand{margin:8px 0 4px;}
+.sq-cond{margin:10px 0 0;}
+.sq-cond .ch3-ctx{margin:0;}
+/* 条件は すぐ読めるように、ほかの画面のタグ(11px・24px)より ひとまわり大きくする。同じ行のタグは同じ寸法 */
+.sq-cond .ch3-chip{font-size:12px; height:26px; min-height:26px; border-radius:12px;}
+.sq-dora{display:inline-flex; align-items:center; gap:5px; height:26px;}
+.sq-dora-lab{font-size:12px; font-weight:800; color:var(--ink-soft);}
+.sq-dora .tile{width:20px; max-width:20px; flex:none;}
+.sq-help{margin:10px 0 0; padding:7px 12px 9px; border-radius:12px; background:var(--card); border:1px solid var(--line);}
+.sq-help-lab{display:block; font-size:10.5px; font-weight:800; letter-spacing:.1em; color:var(--ink-soft); margin:0 0 1px;}
+.sq-help .yaku-rows{margin:3px 0 0; gap:4px 8px;}
+.sq-help .yaku-badge .yb-name{font-size:clamp(13px,3.7vw,14.5px); font-weight:800;}
+.sq-help .yaku-names{margin:4px 0 0;}
+.sq-help .sh-sum,.sq-help .sh-line,.sq-help .sh-note,.sq-help .sh-fu{margin:5px 0 0;}
+.sq-help .tp-box{margin:2px 0 0; border:0; padding:0; box-shadow:none; background:none;}
+.q-text.sq-q{margin:14px 2px 10px; font-size:clamp(16px, 4.6vw, 19px);}
+/* R78: 条件タグの中身は1つの箱にして、タグの中を ふつうの1行にする(ルビつきの字だけ下へずれるのを直す。ch3Chip を参照) */
+.ch3-chip > .ch3-chip-t{display:block; white-space:nowrap;}
+/* R78: 局・自風のタグ(.ch3-chip.situ)には、べつの部品(.situ=むかしの状況カード)の margin-bottom:10px が
+   クラス名の重なりで かかっていた。そのため この2つだけ、同じ行の「ロン」「ツモ」より 5px 上にあった。同じ行のタグは同じ高さにならべる */
+.ch3-ctx > .ch3-chip.situ{margin-bottom:0;}
+/* 表示モード「すべて」: タグごとにルビがあったりなかったりしても、親文字の高さがタグどうしでそろうように、
+   どのタグにも【ルビ1段ぶんの見えない柱】を立てる(ルビのないタグだけ字が上へ寄るのを防ぐ) */
+html.ruby-full .ch3-chip > .ch3-chip-t::before{content:''; display:inline-block; width:0; height:1.7em; vertical-align:baseline;}
 .q-ctx{font-size:clamp(12.5px, 3.5vw, 14.5px); color:var(--ink-soft); font-weight:700; background:var(--jade-soft);
   border-radius:10px; padding:8px 12px; margin-bottom:12px;}
 
@@ -4023,6 +4054,16 @@ const RUBY_KEYS=Object.keys(RUBY_TERMS).sort((a,b)=>b.length-a.length);
 const RUBY_PAREN_RE=new RegExp('('+RUBY_KEYS.join('|')+')（[^（）<>]{1,14}）','g');
 const RUBY_WORD_RE=new RegExp('('+RUBY_KEYS.join('|')+')','g');
 function rb(term){ const r=RUBY_TERMS[term]; return r?'<ruby>'+term+'<rt>'+r+'</rt></ruby>':term; }
+/* ===== R78 ルビを振りすぎない =====
+   標準の表示では、ルビは【難読な麻雀用語】と【読みを初めて教える場面】だけに付ける。
+   ふつうに読める字(親・子・局・家・麻雀)や、読みを教えたあと実戦・Trainingで何度も出る表記には付けない。
+     rbx('親','おや') … 標準では ただの「親」(<x-rb>)。表示モード「すべて」のときだけ <ruby class="rbf"> になる
+                         (1字の親・子は「すべてルビ」の辞書に入れられないので、読みをここに持たせる)
+     RUBY_HEAD_SKIP   … 見出し(SECTION名・テーマ名)でルビを付けない語 */
+/* 目印は span ではなく 名前つきの独自タグ(x-rb)にする。「.hc-yaku .hy-txt span{display:block}」のような
+   span 向けのCSSに巻きこまれて 改行されるのを防ぐ(独自タグは ただのインライン要素で、どのCSSにも当たらない) */
+function rbx(base,read){ return '<x-rb data-rt="'+read+'">'+base+'</x-rb>'; }
+const RUBY_HEAD_SKIP=new Set(['麻雀']);
 function rubyize(html){
   if(typeof html!=='string'||!html||html.indexOf('<ruby>')>=0) return html;
   return html.replace(RUBY_PAREN_RE,(m,t)=>rb(t));
@@ -4030,7 +4071,7 @@ function rubyize(html){
 function rbFirst(text){
   if(typeof text!=='string'||!text) return text;
   const seen=new Set();
-  return text.replace(RUBY_WORD_RE,t=>{ if(seen.has(t)) return t; seen.add(t); return rb(t); });
+  return text.replace(RUBY_WORD_RE,t=>{ if(seen.has(t)||RUBY_HEAD_SKIP.has(t)) return t; seen.add(t); return rb(t); });
 }
 /* ================= ルビ表示モード(R33) =================
    標準(standard)= R29〜R32の方針そのまま(上のRUBY_TERMS・rubyize/rbFirst。麻雀用語の初出など)。
@@ -4177,6 +4218,13 @@ function rubyFullText(str){
   return hit?out:null;
 }
 function rubyFullNode(tn){
+  /* R78: rbx(標準ではルビなしの 親・子)。「すべて」のときは 持っている読みでルビにする */
+  const px=tn.parentElement;
+  if(px&&px.tagName==='X-RB'&&px.getAttribute('data-rt')){
+    const r=document.createElement('ruby'); r.className='rbf'; r.appendChild(document.createTextNode(tn.nodeValue));
+    const rt=document.createElement('rt'); rt.textContent=px.getAttribute('data-rt'); r.appendChild(rt);
+    tn.parentNode.replaceChild(r,tn); return;
+  }
   const seg=rubyFullText(tn.nodeValue); if(!seg) return;
   const f=document.createDocumentFragment();
   for(const x of seg){
@@ -4285,8 +4333,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.70.0';
-const BUILD_ID='20261006-01';
+const APP_VER='0.71.0';
+const BUILD_ID='20261006-02';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -7123,9 +7171,9 @@ function kyokuStripHTML(hl,opt){
 /* 局の状況チップ(既存の .ch3-ctx / .ch3-chip をそのまま使う) */
 function kyokuCtxHTML(st){
   const c=[];
-  if(st.who) c.push('<span class="ch3-chip">'+st.who+'がアガった</span>');
-  if(st.wall!=null) c.push('<span class="ch3-chip">山ののこり '+st.wall+'枚</span>');
-  if(st.noWin) c.push('<span class="ch3-chip">まだだれもアガっていない</span>');
+  if(st.who) c.push(ch3Chip('',st.who+'がアガった'));
+  if(st.wall!=null) c.push(ch3Chip('','山ののこり '+st.wall+'枚'));
+  if(st.noWin) c.push(ch3Chip('','まだだれもアガっていない'));
   return c.length?'<div class="ch3-ctx">'+c.join('')+'</div>':'';
 }
 /* 局の終わり方: 正解は状態から算出(アガった人がいない＋山0枚＝流局) */
@@ -7232,7 +7280,7 @@ const CH1_LESSONS={
   /* A1-1 牌にさわってみよう(短尺: Teach2+Try4) */
   a1_1(){
     return [
-      ch1Teach('やっほー、ボクはイソピィ！これが麻雀（マージャン）の<span class="term-chip">牌（ハイ）</span>だよ。まずはさわってみよう！',
+      ch1Teach('やっほー、ボクはイソピィ！これが麻雀の<span class="term-chip">牌（ハイ）</span>だよ。まずはさわってみよう！',
         {tlab:'はじめまして',hand:'5m3p7s E',
          act:{label:'牌にさわってみる',snd:'tileTouch',
            result:'カチャッ♪ いい音！これから牌ととってもなかよくなるよ🐣',
@@ -7848,7 +7896,7 @@ const CH1_LESSONS={
     ];
   },
   s1_4(){
-    const OYA='<ruby>親<rt>おや</rt></ruby>';
+    const OYA=RB_OYA;   // R78: 親・子の読みは s1_3 で教えた。ここからは ルビなし(「すべてルビ」のときだけ付く)
     return [
       ch1Teach('大事なこと！<b>上家・下家・対面</b>は<b>あなたから見た場所</b>のよび方。<b>東家・南家・西家・北家</b>は<b>席についた風</b>のよび方。べつのものだよ。',
         {tlab:'2つのよび方'}),
@@ -7904,7 +7952,7 @@ const CH1_LESSONS={
     ];
   },
   g1_2(){
-    const KYOKU='<ruby>局<rt>きょく</rt></ruby>';
+    const KYOKU='局';   // R78: 局の読みは g1_1 で教えた。ここからは ルビなし
     return [
       ch1Teach(KYOKU+'は、いつ終わるんだろう？　じつは終わり方は<b>2つ</b>あるんだ。',
         {tlab:'終わり方は2つ'}),
@@ -7942,7 +7990,7 @@ const CH1_LESSONS={
     ];
   },
   g1_4(){
-    const KYOKU='<ruby>局<rt>きょく</rt></ruby>';
+    const KYOKU='局';   // R78: 局の読みは g1_1 で教えた。ここからは ルビなし
     const quiz=shuffle([
       {q:'ツモったとき、手牌はなん枚になる？',choices:['14枚','13枚'],a:0,
         exp:'13枚＋ツモった1枚で14枚。そこから1枚切って13枚にもどすよ。'},
@@ -7966,8 +8014,8 @@ const CH1_LESSONS={
     ]);
   },
   g2_1(){
-    const OYA='<ruby>親<rt>おや</rt></ruby>', KO='<ruby>子<rt>こ</rt></ruby>';
-    const KYOKU='<ruby>局<rt>きょく</rt></ruby>';
+    const OYA=RB_OYA, KO=RB_KO;
+    const KYOKU='局';   // R78: 局の読みは g1_1 で教えた。ここからは ルビなし
     return [
       ch1Teach('4人のうち1人が<b>'+OYA+'</b>、のこりの3人が<b>'+KO+'</b>だったね。',
         {tlab:OYA+'と'+KO+'（ふくしゅう）',seatMap:'S',seatOpt:{hl:oyaPosAt('S')}}),
@@ -7994,7 +8042,7 @@ const CH1_LESSONS={
     ];
   },
   g2_2(){
-    const OYA='<ruby>親<rt>おや</rt></ruby>', KYOKU='<ruby>局<rt>きょく</rt></ruby>';
+    const OYA=RB_OYA, KYOKU='局';
     const K1='<ruby>東1局<rt>トンイーキョク</rt></ruby>';
     const w2=nextSelfWind('E'), w3=nextSelfWind(w2), w4=nextSelfWind(w3);
     return [
@@ -8024,7 +8072,7 @@ const CH1_LESSONS={
     ];
   },
   g2_3(){
-    const KYOKU='<ruby>局<rt>きょく</rt></ruby>';
+    const KYOKU='局';   // R78: 局の読みは g1_1 で教えた。ここからは ルビなし
     const TONBA='<ruby>東場<rt>トンば</rt></ruby>', NANBA='<ruby>南場<rt>ナンば</rt></ruby>';
     return [
       ch1Teach('東1局から東4局までの<b>ひとまとまり</b>を<span class="term-chip">'+TONBA+'</span>というよ。',
@@ -8058,8 +8106,8 @@ const CH1_LESSONS={
     ];
   },
   g2_4(){
-    const OYA='<ruby>親<rt>おや</rt></ruby>', KO='<ruby>子<rt>こ</rt></ruby>';
-    const KYOKU='<ruby>局<rt>きょく</rt></ruby>';
+    const OYA=RB_OYA, KO=RB_KO;
+    const KYOKU='局';   // R78: 局の読みは g1_1 で教えた。ここからは ルビなし
     const TONBA='<ruby>東場<rt>トンば</rt></ruby>', HAN='<ruby>半荘<rt>ハンチャン</rt></ruby>';
     const quiz=shuffle([
       {q:'<b>'+KO+'</b>がアガった。つぎの'+KYOKU+'の'+OYA+'は？',
@@ -8499,7 +8547,7 @@ const CH1_LESSONS={
       ch1Teach('ゲームがはじまるとき、4人とも<b>おなじだけ</b>点をもってスタートするよ。'
         +'よくあるのは1人25000点。でも、ここはルールによってちがうんだ。',{tlab:'はじまりの点'}),
       {q:'ゲームがはじまるとき、4人の点は？',
-        choices:['4人ともおなじ','<ruby>親<rt>おや</rt></ruby>だけ多い','0からスタート'],a:0,
+        choices:['4人ともおなじ',RB_OYA+'だけ多い','0からスタート'],a:0,
         exp:'おなじ点からスタートして、そこから ふえたり へったりするよ。'},
       {q:'どの麻雀も、かならず25000点ではじまる？',
         choices:['ルールによってちがう','かならず25000点'],a:0,
@@ -8568,7 +8616,7 @@ const CH1_LESSONS={
     ];
   },
   p1_4(){
-    const OYA='<ruby>親<rt>おや</rt></ruby>', KO='<ruby>子<rt>こ</rt></ruby>';
+    const OYA=RB_OYA, KO=RB_KO;
     const oyaFlag=(sw)=>{ const f={}; f[oyaPosAt(sw)]='oya'; return f; };
     return [
       ch1Teach('4人のうち、東家の人が'+OYA+'。のこりの3人が'+KO+'だったね。',
@@ -8642,7 +8690,7 @@ const CH1_LESSONS={
     ];
   },
   p2_2(){
-    const OYA='<ruby>親<rt>おや</rt></ruby>', KO='<ruby>子<rt>こ</rt></ruby>';
+    const OYA=RB_OYA, KO=RB_KO;
     const quiz=shuffle([
       {q:'ロンのとき、点をはらうのは なん人？',choices:['1人','3人'],a:0,
         exp:'アガリ牌を捨てた1人だけ。'},
@@ -9245,7 +9293,7 @@ const CH3_YAKU_META={
   haitei:{label:'海底摸月(ハイテイ)',closedHan:1,openHan:1,openAllowed:true,cond:'山のさいごの1枚でツモアガリ',lesson:'yx1_2',optional:true,
     situ:'山のラスト1枚をツモってアガる'},
   houtei:{label:'河底撈魚(ホウテイ)',closedHan:1,openHan:1,openAllowed:true,cond:'さいごの捨て牌でロン',lesson:'yx1_2',optional:true,
-    situ:'その<ruby>局<rt>きょく</rt></ruby>のいちばんさいごの捨て牌でロンする'},
+    situ:'その局のいちばんさいごの捨て牌でロンする'},
   shousangen:{label:'小三元',closedHan:2,openHan:2,openAllowed:true,cond:'三元牌2種コーツ＋のこり1種のアタマ',lesson:'yx1_3',optional:true,
     ex:{g:['BBB','GGG','RR','123m','456p'],ctx:{}}},
   honroutou:{label:'混老頭',closedHan:2,openHan:2,openAllowed:true,cond:'1・9・字牌だけ',lesson:'yx1_3',optional:true,
@@ -9261,11 +9309,11 @@ const CH3_YAKU_META={
   chuuren:{label:'九蓮宝燈',closedHan:null,openHan:null,openAllowed:false,yakuman:true,cond:'1種類の数牌で1112345678999＋1枚',lesson:'yx2_3',optional:true,
     /* R66: 牌姿ぜんぶが役の形。一覧では完成14枚を一続きで見せる */
     exWhole:true, ex:{g:['111m','2345678m','999m','5m'],ctx:{}}},
-  tenhou:{label:'天和',closedHan:null,openHan:null,openAllowed:false,yakuman:true,cond:'<ruby>親<rt>おや</rt></ruby>が配られた13枚でそのままアガリ',lesson:'yx2_3',optional:true,
-    situ:'<ruby>親<rt>おや</rt></ruby>が、配られた手がそのままアガリになっている'},
+  tenhou:{label:'天和',closedHan:null,openHan:null,openAllowed:false,yakuman:true,cond:rbx('親','おや')+'が配られた13枚でそのままアガリ',lesson:'yx2_3',optional:true,
+    situ:rbx('親','おや')+'が、配られた手がそのままアガリになっている'},
   /* R62追加: 地和。天和の子バージョン(鳴きが入っていない最初のツモでアガる) */
-  chiihou:{label:'地和',closedHan:null,openHan:null,openAllowed:false,yakuman:true,cond:'<ruby>子<rt>こ</rt></ruby>が、鳴きの入っていない最初のツモでアガリ',lesson:'yx2_4',optional:true,
-    situ:'<ruby>子<rt>こ</rt></ruby>が、だれも鳴いていない1回目のツモでアガる'},
+  chiihou:{label:'地和',closedHan:null,openHan:null,openAllowed:false,yakuman:true,cond:rbx('子','こ')+'が、鳴きの入っていない最初のツモでアガリ',lesson:'yx2_4',optional:true,
+    situ:rbx('子','こ')+'が、だれも鳴いていない1回目のツモでアガる'},
   /* R64追加: 三槓子。2翻・鳴いてもOK・鳴いても2翻(食い下がりなし)。
      カンの数は ctx.melds の中のカンの数から決まるので、牌姿に槓子が3組見えていないと成立しない。
      ex は牌姿例ではなく【槓子の組そのもの】なので exMelds に持たせる(役一覧もこれを描く) */
@@ -9447,9 +9495,12 @@ const SCORE_TIERS=[
     ko:{ron:32000,tsumo:[8000,16000]},  oya:{ron:48000, tsumoAll:16000}},
 ];
 /* 1字の「親」「子」は RUBY_TERMS に入れられない(子=面子/順子/刻子/調子/様子 へ誤爆する)。
-   そこで教材側で <ruby> を直接書く(R38-RUBY方針)。R61で使う場所が増えたので定数にした */
-const RB_OYA='<ruby>親<rt>おや</rt></ruby>';
-const RB_KO='<ruby>子<rt>こ</rt></ruby>';
+   そこで教材側で <ruby> を直接書く(R38-RUBY方針)。R61で使う場所が増えたので定数にした。
+   R78: 「親(おや)」「子(こ)」は ふつうに読める字。読みを教える s1_3 だけ本物のルビにして、
+        それより後は rbx(ルビなし。表示モード「すべて」のときだけルビになる目印)にした。
+        R77まで: 画面に出るルビ829個のうち 子288・親199 がこの2語だった(点数問題・Trainingのたびに付いていた) */
+const RB_OYA=rbx('親','おや');
+const RB_KO=rbx('子','こ');
 /* ===== よく出る点数のライン(R62 §10〜§13) =====
    符の計算はまだRoadで教えない。でも実際に打つには「麻雀の点ってだいたいこういう数字」という
    感覚がいる。そこで代表的な3本のラインだけを、子のロンを中心に覚えてもらう。
@@ -9510,7 +9561,9 @@ function lineStepMcq(id,i,exp,opt){
   /* R67 §8: 点は子/親・ロン/ツモで変わる。代表ラインは【子のロン】の数字なので、問いに書く */
   const base={q:RB_KO+'の<b>ロン</b>。<b>'+l.short+'</b>の<b>'+l.han[i]+'</b>。何点？',
     choices,a:choices.indexOf(right+'点'),exp};
-  if(e){ base.hand=e.hand; base.ctx3=scoreHandCtx(e); base.panel=scoreHandPanel(e,{}); }
+  /* R78: 点を答える問題なので、ほかの点数問題と同じ「牌姿 → 条件 → ヒント → 問い」のならびにする(捨て牌は出さない) */
+  if(e){ base.hand=e.hand; base.ctx3=scoreHandCtx(e); base.view=QV_SCORE; base.sqDora=e.doraInd||null;
+    base.panel=scoreHandPanel(e,{noDora:true}); }
   return Object.assign(base,opt||{});
 }
 function lineSeqMcq(id,i,exp,opt){
@@ -9738,14 +9791,15 @@ function scoreHandPanel(e,opt){
      実際のドラだけを出す。ドラ表示牌からドラを導くのはドラLesson(Teach)の仕事(§41・§42)。
      「ドラは役ではないけれど翻はふえる」という既習の説明も、問題中には常時出さない。 */
   const dv=(o.dora==='teach')?'teach':'now';
-  if(e.doraInd) h+=(dv==='teach'?doraPanelHTML([e.doraInd]):doraNowPanelHTML(e.doraInd));
+  /* R78: 牌姿ファーストの点数問題では、ドラの牌は【条件の行】に出す(o.noDora)。ここは役・翻・符のヒントだけ */
+  if(e.doraInd&&!o.noDora) h+=(dv==='teach'?doraPanelHTML([e.doraInd]):doraNowPanelHTML(e.doraInd));
   if(e.dora&&lv!=='C') h+='<div class="sh-note">＋ <b>ドラ'+e.dora+'枚</b></div>';
   if(o.han&&lv==='A') h+='<div class="sh-sum">合計 <b>'+scoreHandHan(e)+'翻</b></div>';
   const ln=scoreHandLine(e);
   /* 代表ラインは子のロンの数字。親やツモには当てはめない(R68 §6) */
   if(o.line&&ln&&scoreHandLineUsable(e)) h+='<div class="sh-line">この手は <b>'+scoreLine(ln).short+'</b></div>';
   else if(o.fu!==false&&scoreHandFu(e)!=null)
-    h+='<div class="sh-fu">この手は <b>'+scoreHandFu(e)+'符</b>（符はまだ自分で数えなくていいよ）</div>';
+    h+='<div class="sh-fu">この手は <b>'+scoreHandFu(e)+'符</b>'+(o.fuShort?'':'（符はまだ自分で数えなくていいよ）')+'</div>';
   return h;
 }
 /* ===== R68 §6・§14 答えの選択肢 =====
@@ -9790,9 +9844,9 @@ function scoreHandPointMcq(id,exp,opt){
     ?(scoreLine(ln).short+'の'+scoreHandHan(e)+'翻で'+right+'だよ。')
     :((scoreHandIsOya(e)?RB_OYA:RB_KO)+'の'+(ctx.win==='tsumo'?'ツモ':'ロン')
       +'で'+scoreHandHan(e)+'翻。'+right+'だよ。');
-  return Object.assign({q:ask,hand:e.hand,ctx3:ctx,view:QV_SCORE,
+  return Object.assign({q:ask,hand:e.hand,ctx3:ctx,view:QV_SCORE,sqDora:e.doraInd||null,
     choices,a:choices.indexOf(right),
-    panel:scoreHandPanel(e,{level:lv,han:true,line:lv==='A',dora:QV_SCORE.dora}),
+    panel:scoreHandPanel(e,{level:lv,han:true,line:lv==='A',dora:QV_SCORE.dora,noDora:true}),
     exp:exp||(base+e.why)},o);
 }
 /* 【中盤】役は見せるが、翻の合計は自分で出す */
@@ -9801,8 +9855,8 @@ function scoreHandHanMcq(id,exp,opt){
   const han=scoreHandHan(e), nY=e.keys.length;
   const wrong=(nY!==han)?nY:han+1;
   const vals=Array.from(new Set([han,wrong])).sort((a,b)=>a-b).map(v=>v+'翻');
-  return Object.assign({q:'このアガリ、<b>翻の合計</b>は？',hand:e.hand,ctx3:scoreHandCtx(e),view:QV_SCORE,
-    choices:vals,a:vals.indexOf(han+'翻'),panel:scoreHandPanel(e,{dora:QV_SCORE.dora}),
+  return Object.assign({q:'このアガリ、<b>翻の合計</b>は？',hand:e.hand,ctx3:scoreHandCtx(e),view:QV_SCORE,sqDora:e.doraInd||null,
+    choices:vals,a:vals.indexOf(han+'翻'),panel:scoreHandPanel(e,{dora:QV_SCORE.dora,noDora:true}),
     exp:exp||e.why},opt||{});
 }
 /* 【中盤】翻までは見せて、どの系統かを答えさせる(系統は点への橋) */
@@ -9811,8 +9865,8 @@ function scoreHandLineMcq(id,exp,opt){
   if(!e||!ln) return {q:'(定義エラー)',choices:['-','-'],a:-1,exp:exp||''};
   const right=scoreLine(ln).short;
   const vals=SCORE_LINES.map(l=>l.short);
-  return Object.assign({q:'このアガリは、どの<b>系統</b>？',hand:e.hand,ctx3:scoreHandCtx(e),view:QV_SCORE,
-    choices:vals,a:vals.indexOf(right),panel:scoreHandPanel(e,{han:true,dora:QV_SCORE.dora}),
+  return Object.assign({q:'このアガリは、どの<b>系統</b>？',hand:e.hand,ctx3:scoreHandCtx(e),view:QV_SCORE,sqDora:e.doraInd||null,
+    choices:vals,a:vals.indexOf(right),panel:scoreHandPanel(e,{han:true,dora:QV_SCORE.dora,noDora:true}),
     exp:exp||e.why},opt||{});
 }
 /* 【後半】役を自分で見つけるところからはじめる */
@@ -9822,27 +9876,53 @@ function scoreHandFind(id,cands,exp,opt){
   return ch3YakuFind(e.hand,scoreHandCtx(e),cands,exp||e.why,opt);
 }
 /* ツモ払いの問題。正解は TSUMO_KO_SAMPLES / TSUMO_OYA_SAMPLES から作る */
+/* R78: 答え(「500点・1000点」「2000点オール」など)が ちょうどそうなる牌姿を、Trainingの出題プールからさがす。
+   点は scoreHandAnswer(Road・Trainingと同じ計算)で出すので、牌姿と数字が食いちがうことは構造的に起きない。
+   ドラのない手を先にえらぶ(払い方を読む問題に、ドラという別の条件を足さない) */
+function scoreHandByAnswer(ans){
+  const pool=scoreTrainPool();
+  return pool.find(e=>scoreHandAnswer(e)===ans&&!e.doraInd&&!e.dora)||pool.find(e=>scoreHandAnswer(e)===ans)||null;
+}
+/* R78: 点数問題か(牌姿＋局面があり、点・払い・翻・系統を答える選択問題)。
+   こういう問題は【牌姿 → 条件 → ヒント → 短い問い → 選択肢】の順にならべる(TERMS §61) */
+function isScoreQ(q){
+  return !!(q&&q.hand&&q.ctx3&&q.view===QV_SCORE&&Array.isArray(q.choices));
+}
+/* 牌姿・条件・ヒント・問いまで(選択肢は呼び出し側)。盤面が作れない手は null(=ふつうのならびで出す) */
+function scoreQBodyHTML(q){
+  const bq=Object.assign({},q,{__sq:true,__boardRiver:true});
+  const bd=ch3BoardHTML(bq); if(!bd) return null;
+  const cond=ch3CtxHTML(Object.assign({},q.ctx3,{winTile:null}),bq);
+  return '<div class="sq-board">'+bd+'</div>'                                    // 【1】手牌・アガリ牌
+    +(cond?'<div class="sq-cond">'+cond+'</div>':'')                              // 【2】条件(局・自風・リーチ・ロン/ツモ・ドラ)
+    +(q.panel?'<div class="sq-help"><span class="sq-help-lab">ヒント</span>'+q.panel+'</div>':'')   // 【3】ヒント(役・翻・符)
+    +'<div class="q-text sq-q">'+q.q+'</div>';                                    // 【4】短い問い
+}
 function tsumoKoMcq(i,who,exp,opt){
   const t=TSUMO_KO_SAMPLES[i]; if(!t) return {q:'(定義エラー)',choices:['-','-'],a:-1,exp:exp||''};
   const right=who==='oya'?t.oya:t.ko, other=who==='oya'?t.ko:t.oya;
   const vals=[right,other].sort((a,b)=>a-b).map(v=>v+'点');
   /* R64 §11: 数字だけで聞かず、実際のアガリ牌姿といっしょに見せる。
      opt.hand に SCORE_HANDS のidを渡すと、その牌姿が盤面として出る */
-  const e=(opt&&opt.hand)?scoreHand(opt.hand):null;
+  /* R78: 見せる牌姿は【その払いになる手】を計算でさがす。
+     R77まで: opt.hand のid(tk)の手をそのまま出していたが、その手は 300・500 の手で、
+              問いの「500・1000」「1000・2000」「2000・4000」のどれとも合っていなかった */
+  const e=(opt&&opt.hand)?scoreHandByAnswer(t.ko+'点・'+t.oya+'点'):null;
   const base={q:RB_KO+'のツモアガリで「<b>'+t.ko+'・'+t.oya+'</b>」。'
       +(who==='oya'?RB_OYA:RB_KO+'1人')+'が払うのは？',
     choices:vals,a:vals.indexOf(right+'点'),exp,panel:tsumoPayHTML(t.ko,t.oya)};
-  if(e){ base.hand=e.hand; base.ctx3=scoreHandCtx(e); }
+  if(e){ base.hand=e.hand; base.ctx3=scoreHandCtx(e); base.view=QV_SCORE; base.sqDora=e.doraInd||null; }
   const o=Object.assign({},opt||{}); delete o.hand;
   return Object.assign(base,o);
 }
 function tsumoOyaMcq(i,exp,opt){
   const v=TSUMO_OYA_SAMPLES[i]; if(v==null) return {q:'(定義エラー)',choices:['-','-'],a:-1,exp:exp||''};
   const vals=[v,v*3].sort((a,b)=>a-b).map(x=>x+'点');
-  const e=(opt&&opt.hand)?scoreHand(opt.hand):null;
+  /* R78: こちらも【◯点オールになる手】をさがして出す(R77まで: to の手は 2600点オール で、問いの数字と合っていなかった) */
+  const e=(opt&&opt.hand)?scoreHandByAnswer(v+'点オール'):null;
   const base={q:RB_OYA+'のツモアガリで「<b>'+v+'点オール</b>」。'+RB_KO+'1人が払うのは？',
     choices:vals,a:vals.indexOf(v+'点'),exp,panel:tsumoPayHTML(v,null)};
-  if(e){ base.hand=e.hand; base.ctx3=scoreHandCtx(e); }
+  if(e){ base.hand=e.hand; base.ctx3=scoreHandCtx(e); base.view=QV_SCORE; base.sqDora=e.doraInd||null; }
   const o=Object.assign({},opt||{}); delete o.hand;
   return Object.assign(base,o);
 }
@@ -9855,7 +9935,7 @@ const TSUMO_OYA_SAMPLES=[1000,2000,4000];
 function tsumoPayHTML(ko,oya){
   // ko=子1人ぶん / oya=親1人ぶん。oyaがnullなら「親のツモ(子3人が同額)」の図
   const row=(who,read,pt,cls)=>'<div class="tp-row'+(cls?' '+cls:'')+'">'
-    +'<span class="tp-who"><ruby>'+who+'<rt>'+read+'</rt></ruby></span>'
+    +'<span class="tp-who">'+rbx(who,read)+'</span>'
     +'<span class="tp-arrow">→</span><span class="tp-pt">'+pt+'点</span></div>';
   if(oya==null){
     return '<div class="tp-box"><div class="tp-cap">'+ko+'点オール（'+RB_OYA+'のツモ）</div>'
@@ -10013,10 +10093,10 @@ const CH3_WIND_JP={E:'東',S:'南',W:'西',N:'北'};
    を1か所で導く。本場・供託は今回あつかわない(0本場固定) */
 function roundWind(round){ return String(round||'E1').charAt(0); }
 function roundLabel(round){ const r=String(round||'E1');
-  return CH3_WIND_JP[r.charAt(0)]+r.slice(1)+'<ruby>局<rt>きょく</rt></ruby>'; }
+  return CH3_WIND_JP[r.charAt(0)]+r.slice(1)+'局'; }   // R78: 条件タグにルビを付けない(「東1局」)
 function isOyaSeat(seat){ return seat==='E'; }
 function seatLabel(seat){
-  return CH3_WIND_JP[seat]+'<ruby>家<rt>チャ</rt></ruby>（'+(isOyaSeat(seat)?RB_OYA:RB_KO)+'）';
+  return CH3_WIND_JP[seat]+'家（'+(isOyaSeat(seat)?RB_OYA:RB_KO)+'）';   // R78: 「南家（子）」。ルビなし
 }
 /* 4人の席の図(R28): あなた(sw)を下に固定。麻雀の席は反時計回りに東→南→西→北なので、
    あなたの右どなり(下家)=つぎの風、向かい(対面)=2つ先、左どなり(上家)=3つ先。
@@ -10721,7 +10801,7 @@ const BT_SKEL={
   bt2:{
     ctx:{rw:'E',sw:'E'},          // 東場・自分は東家(親)。テストはこの条件で東が役になるか検算する
     keepHonor:['E'],
-    intro:'つぎは<b>鳴き</b>だよ。いまは<b>東1局</b>、あなたは<b><ruby>親<rt>おや</rt></ruby></b>（東家）。'
+    intro:'つぎは<b>鳴き</b>だよ。いまは<b>東1局</b>、あなたは<b>'+rbx('親','おや')+'</b>（東家）。'
       +'だから{E}を3枚そろえると、それだけで<b>役</b>になるんだ。'
       +'ほかの人の捨て牌をもらって、アガリまで いってみよう！',
     introLab:'★ ミニ実戦②',
@@ -11808,17 +11888,30 @@ function qView(q){
   const v=(q&&q.view)||null;
   return v?Object.assign({},QV_DEFAULT,v):QV_DEFAULT;
 }
+/* ===== R78 条件タグの箱(1か所で作る) =====
+   タグ(.ch3-chip)は inline-flex。中身をそのまま入れると、文字とルビが【べつべつの並び要素】になり、
+   それぞれが たて中央にそろえられる。ルビつきの字だけ箱が高いので、その字だけ下へずれる
+   (R77まで: 「東1局」の「局」、「南家（子）」の「家」「子」が となりの字より約4.5px下。実機でガタついて見えた)。
+   中身を1つの箱(.ch3-chip-t)に入れて、タグの中を【ふつうの1行】にする。
+   こうしておけば、ルビがあってもなくても 親文字のならぶ高さ(ベースライン)は1本にそろう。
+   標準の表示ではタグにルビを付けない(R78)。ルビが入るのは 表示モード「すべて」のときだけ */
+function ch3Chip(cls,html){
+  return '<span class="ch3-chip'+(cls?' '+cls:'')+'"><span class="ch3-chip-t">'+html+'</span></span>';
+}
 function ch3CtxHTML(c,q){
   if(!c) return '';
   const chips=[];
+  /* R78: 点数問題(牌姿ファースト)の条件の行。アガリ方は「ロン」「ツモ」と短く言い、
+     リーチ・ドラも【牌姿だけでは分からない条件】としてここに出す */
+  const sq=!!(q&&q.__sq);
   /* R68 §3・§4: 点を決める実戦の文脈は【局 → 自風(＝親子)】の順でコンパクトに出す。
      親子はここでも scoreHandIsOya でも isOyaSeat(自風) から導く＝二重管理にしない */
-  if(c.round) chips.push('<span class="ch3-chip situ">'+roundLabel(c.round)+'</span>');
-  if(c.rw&&!c.round) chips.push('<span class="ch3-chip">'+CH3_WIND_JP[c.rw]+'場</span>');
-  if(c.sw) chips.push('<span class="ch3-chip situ">あなた：'+(c.round?seatLabel(c.sw):CH3_WIND_JP[c.sw]+'家')+'</span>');
+  if(c.round) chips.push(ch3Chip('situ',roundLabel(c.round)));
+  if(c.rw&&!c.round) chips.push(ch3Chip('',CH3_WIND_JP[c.rw]+'場'));
+  if(c.sw) chips.push(ch3Chip('situ','あなた：'+(c.round?seatLabel(c.sw):CH3_WIND_JP[c.sw]+'家')));
   // 鳴いたかどうかはチップ(ラベル)ではなく牌の置き方で見せる(手の中＋右に鳴いた組・もらった牌は横向き)。
   // 鳴いた組データのない旧形式のmenzen:falseだけ、互換のためチップを残す(教材には残さない=テストで検出)
-  if(c.menzen===false&&!(Array.isArray(c.melds)&&c.melds.length)) chips.push('<span class="ch3-chip warn">鳴きあり</span>');
+  if(c.menzen===false&&!(Array.isArray(c.melds)&&c.melds.length)) chips.push(ch3Chip('warn','鳴きあり'));
   // R42: リーチも「文字チップ」から「実卓の見た目」へ。横向きの捨て牌がある河を出し、
   //      「リーチ中」という文字表示はやめる(D2-2で横向き牌＝リーチのしるしと学んでいる)
   /* R63: 盤面(ch3BoardHTML)が出るときは、自分の河も盤面側が
@@ -11831,17 +11924,23 @@ function ch3CtxHTML(c,q){
     /* R70 §9: 盤面の中に描く河と同じ大きさにそろえる(捨て牌は主役ではない) */
     river='<div class="ch3-sriver">'+ch3RiichiRiverHTML(hand,wt,!!c.dblRiichi)+'</div>';
   }
-  if(c.win==='tsumo') chips.push('<span class="ch3-chip">ツモでアガった</span>');
-  if(c.win==='ron') chips.push('<span class="ch3-chip">ロンでアガった</span>');
+  /* R78: 点数の画面では 捨て牌を出さない(R70)。そのためリーチしたことが画面のどこにも出ず、
+     役を自分でさがす段階(Lv3)では「リーチがつくのか」を知る手がかりがなかった。条件として出す */
+  if(sq&&(c.riichi||c.dblRiichi)) chips.push(ch3Chip('riichi',c.dblRiichi?'ダブルリーチ':'リーチ'));
+  if(c.win==='tsumo') chips.push(ch3Chip('',sq?'ツモ':'ツモでアガった'));
+  if(c.win==='ron') chips.push(ch3Chip('',sq?'ロン':'ロンでアガった'));
   /* R70 §2: アガリ牌は盤面で【手牌の右に分けて】見せている。文字でもう一度は言わない。
      盤面が出ない問題(牌姿がない・14枚でない)のときだけ、条件として文字で出す */
   if(c.winTile&&!(q&&q.hand&&c.win))
-    chips.push('<span class="ch3-chip">アガリ牌：'+tileLabel(c.winTile)+'</span>');
+    chips.push(ch3Chip('','アガリ牌：'+tileLabel(c.winTile)));
   /* R64: 一発がつくかどうかを決める状況を【画面に出す】。
      内部フラグだけで正解が決まる問題を作らないための共通表示。
      ここに出るのは ch3IppatsuOK が見ている状態そのもの(時間と鳴き)。 */
   ch3RiichiTimeChips(c).forEach(x=>chips.push(x));
-  if(c.note) chips.push('<span class="ch3-chip">'+c.note+'</span>');
+  if(c.note) chips.push(ch3Chip('',c.note));
+  /* R78: ドラは条件(どの牌がドラかは 牌姿からは分からない)。小さな牌1枚で、条件の行のさいごに置く */
+  if(sq&&q.sqDora){ const dc=doraFromIndicator(q.sqDora);
+    if(dc) chips.push('<span class="sq-dora"><span class="sq-dora-lab">ドラ</span>'+tileHTML(dc)+'</span>'); }
   return river+(chips.length?'<div class="ch3-ctx">'+chips.join('')+'</div>':'');
 }
 function ch3RiichiTimeChips(c){
@@ -11854,8 +11953,8 @@ function ch3RiichiTimeChips(c){
   if(!c||!(c.riichi||c.dblRiichi)) return [];
   if(!ch3IppatsuWindow(c)) return [];
   return [c.nakiAfterRiichi
-    ?'<span class="ch3-chip warn">リーチのあとに<b>鳴きが入った</b></span>'
-    :'<span class="ch3-chip time">リーチのあと、<b>鳴きは入っていない</b></span>'];
+    ?ch3Chip('warn','リーチのあとに<b>鳴きが入った</b>')
+    :ch3Chip('time','リーチのあと、<b>鳴きは入っていない</b>')];
 }
 /* ---- 第3章 ロン/ツモ盤面(UI自体を教材にする) ----
    ロン: 「相手の捨て牌」に今切られた牌(=アガリ牌)を置き、自分の手牌はロン前の13枚で見せる。
@@ -11964,7 +12063,9 @@ function ch3BoardHTML(q){
     let h='<div class="ch3-board">';
     if(!qView(q).river){
       /* R70 §11: 点数を出すのが目的の問題。捨て牌は判断に使わないので出さない */
-      h+='<div class="tc-lab">あなたの手牌（'+conc.length+'枚）＋'+(c.win==='tsumo'?'ツモった牌':'ロンした牌')
+      /* R78: 点数問題では見出しを短くする。アガリ牌は 牌の下の「ツモ」「ロン」が言っている(同じことを2回書かない) */
+      h+='<div class="tc-lab">'+(q.__sq?'あなたの手牌'
+            :'あなたの手牌（'+conc.length+'枚）＋'+(c.win==='tsumo'?'ツモった牌':'ロンした牌'))
           +(meldAreaNeeded(sp.melds)?'':'＋鳴いた組')+'</div>'
         +openHandHTML(conc,sp.melds,{cls:'ch3-tsumo-row',drawHTML:ch3WinTileHTML(c)});
       return h+'</div>';
@@ -11983,7 +12084,7 @@ function ch3BoardHTML(q){
   }
   let html='<div class="ch3-board">';
   if(!qView(q).river){
-    html+='<div class="tc-lab">あなたの手牌（13枚）＋'+(c.win==='tsumo'?'ツモった牌':'ロンした牌')+'</div>'
+    html+='<div class="tc-lab">'+(q.__sq?'あなたの手牌':'あなたの手牌（13枚）＋'+(c.win==='tsumo'?'ツモった牌':'ロンした牌'))+'</div>'
       +'<div class="hand ch3-tsumo-row">'+hand13.map(t=>tileHTML(t)).join('')
       +ch3WinTileHTML(c)+'</div>';
     return html+'</div>';
@@ -12317,8 +12418,9 @@ function scoreTrainQ(e,level,no){
   const lv=scoreTrainLevel(level), c=scoreHandCtx(e);
   const right=scoreHandAnswer(e), choices=scoreHandChoices(e);
   return {q:c.win==='tsumo'?'このアガリ、<b>払いは</b>？':'このアガリは<b>何点</b>？',
-    hand:e.hand,ctx3:c,view:QV_SCORE,choices,a:choices.indexOf(right),
-    panel:scoreHandPanel(e,{level:lv.lv,han:true,line:false,dora:QV_SCORE.dora}),
+    hand:e.hand,ctx3:c,view:QV_SCORE,sqDora:e.doraInd||null,choices,a:choices.indexOf(right),
+    /* R78: Trainingは符を習ったあとの反復なので「符はまだ自分で数えなくていいよ」は毎回は書かない(fuShort) */
+    panel:scoreHandPanel(e,{level:lv.lv,han:true,line:false,dora:QV_SCORE.dora,noDora:true,fuShort:true}),
     exp:scoreTrainRevealHTML(e),
     qnum:no+' / '+SCORE_TRAIN_N,
     stLevel:level,stVid:e.vid};
@@ -15366,7 +15468,7 @@ const CH3_LESSONS={
          答えがそのまま読めてしまう払いの図(tp-box)は出さない(§12) */
       (function(){ const e=scoreHand('to');
         return {q:'この'+RB_OYA+'のツモアガリ。払うのは？',
-          hand:e.hand,ctx3:scoreHandCtx(e),
+          hand:e.hand,ctx3:scoreHandCtx(e),view:QV_SCORE,
           choices:[RB_KO+'3人が<b>同じ額</b>',RB_OYA+'の下家だけ'],a:0,
           exp:RB_OYA+'のツモは'+RB_KO+'3人が同額。だから「◯点オール」なんだね。'}; })(),
     ];
@@ -15996,6 +16098,13 @@ const QFORMATS={
       /* R77: 図が【実卓】の問題は 見出し → 卓 → 問い → 選択肢 の順(R76でミニ実戦に入れた ならびを、卓のある問題ぜんぶへ)。
          卓のない問題(牌姿・図・文だけ)は これまでどおり 問いが先 */
       const tblQ=isTableQ(q);
+      /* R78: 点数問題は【牌姿 → 条件 → ヒント → 問い → 選択肢】。R77まで: 問い → ヒント → 条件 → 牌姿 → 選択肢 で、
+         役・翻・符の説明を読んでから やっと手牌が出てきた */
+      const sqBody=isScoreQ(q)?scoreQBodyHTML(q):null;
+      if(sqBody){
+        return html+sqBody+'<div class="choices">'+q.choices.map((ch,i)=>
+          '<button class="choice" id="ch-'+i+'" onpointerdown="selChoice('+i+')">'+ch+'</button>').join('')+'</div>';
+      }
       if(!tblQ) html+='<div class="q-text">'+q.q+'</div>';
       if(q.ctx) html+='<div class="q-ctx">'+q.ctx+'</div>';
       // 図(ヘルパー関数で生成。ドラ・カンなど)。
@@ -16833,6 +16942,9 @@ function renderFoot(){
   const multiSel=(L.sel instanceof Set)||(qNow&&qNow.full);
   if(!multiSel){
     if(isTableQ(qNow)){ footNone(foot); return; }     // R77: 卓つきの選択問題・卓のタップ問題も同じ
+    /* R78: 点数問題(牌姿ファースト)も同じ。選択肢がいちばん下に来るので、「えらんでこたえよう」だけの帯が
+       小さい画面で選択肢の上にかぶさる(320x568 で2つ目の選択肢)。何をするかは 選択肢のすぐ上の問いが言っている */
+    if(isScoreQ(qNow)){ footNone(foot); return; }
     foot.innerHTML='<div class="foot-wait">'+(L.judging?'…':'えらんでこたえよう')+'</div>';
     return;
   }
