@@ -4333,8 +4333,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.72.0';
-const BUILD_ID='20261007-01';
+const APP_VER='0.73.0';
+const BUILD_ID='20261007-02';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -16831,7 +16831,7 @@ function renderQ(){
   const q=L.qs[L.idx];
   btClearTimers();                // R54: 前の問題のタイマーを持ちこさない
   L.btRetry=false;
-  L.sel=null; L.checked=false; L.actDone=false; L.judging=false; L.autoTok=null;
+  L.sel=null; L.checked=false; L.actDone=false; L.judging=false; L.autoTok=null; L.btFlow=false;
   // 進捗バー: 復習ありレッスンは「基本問題の消化率」(復習問題ではバーを進めない。
   // 基本10問終了後の復習回収フェーズは満タンのまま、下の復習チップで残数を示す)
   const frac=L.review?Math.min(1,L.baseAnswered/(L.baseN||1)):(L.idx/L.qs.length);
@@ -16894,6 +16894,61 @@ function btSoftHint(){
   if(el&&el.scrollIntoView){ try{ el.scrollIntoView({block:'nearest'}); }catch(e){} }
   sndPlay('select');
 }
+/* ===== R81a ミニ実戦: 正しい牌を切っただけでは 止めない =====
+   R80の実測: 正しい牌を切るたびに「えらんだ音 → 220ms → 打牌 → せいかい！カード → スクロール → つづける → 問題ごと描きなおし」
+   で 局が止まっていた。1打牌を1問として出している作り(R54)を そのまま見せていたため。
+   R81a: 【ふつうの正しい打牌】だけ、タップした その場で切って、同じ卓のまま 次の場面(他家の打牌→ツモ)へ進む。
+     ・音は 打牌(discard)だけ。えらんだ音(select)と 正解音(correct)は鳴らさない
+     ・結果カード・「つづける」・スクロール・下の帯の出し入れ・問題ごとの描きなおし(renderQ)を通さない
+     ・採点は これまでと同じ check() → applyOutcome() → save() を通す(正解数・コンボ・保存は 1つも変えない)
+   止めるまま(これまでどおり)のもの:
+     ・まちがい / R79の「切らせないが まちがいにもしない」/ ポン・チー・リーチ・ロン・ツモの判断 / しめくくり
+     ・正しい打牌でも、その場で読んでもらう説明がつく場面(BT_STOP_EXP と リーチ宣言の1枚)。
+       はじめて出てくる決まりごと(テンパイ・フリテン・リーチ後はツモ切りだけ・鳴いたあとの手順・打つ順番)の説明は、
+       読まずに流れると 次の判断の前提がぬけるので、カードと「つづける」を残す
+   変えていないもの: BT_GAP(他家の間)・btApply/btDiscard/btReady/btPlay/btDraw・台本・自然化・R79の判定 */
+const BT_STOP_EXP=[/これでテンパイ/,/フリテン/,/宣言した牌は横向き/,/リーチしたあとは手牌を変えられない/,
+  /ポンのあとは/,/鳴いた組は/,/鳴いたあとも/,/下家 → 対面 → 上家/];
+function btMustRead(q){
+  if(!q||!q.bt) return false;
+  if(q.bt.riichi) return true;                                 // リーチ宣言の1枚(横向きになる説明)
+  const s=String(q.exp||'').replace(/<[^>]*>/g,'');
+  return BT_STOP_EXP.some(re=>re.test(s));
+}
+function btFlowOK(q,i){
+  if(!L||!q||!q.bt||q.bt.kind!=='discard'||!L.bt||L.bt.playing) return false;
+  if((q.bt.aSet||[]).indexOf(i)<0) return false;               // まちがいは これまでどおり
+  if(btMustRead(q)) return false;                              // その場で読む説明がある場面は 止める
+  const nq=L.qs[L.idx+1];                                      // つぎも 同じ局の場面のときだけ
+  return !!(nq&&nq.bt&&nq.bt.sc===q.bt.sc&&document.getElementById('bt-board'));
+}
+/* 正しい打牌のあと: next() と同じ順で1つ送り、同じ卓のまま つぎの場面を動かす。
+   renderQ() が持ちこし防止でやっていること(タイマー・選択・判定中の旗・進捗バー)は ここでも同じようにやる */
+function btFlowNext(q){
+  L.idx++;
+  if(L.review){
+    const rq=pickReview(L.idx>=L.qs.length);
+    if(rq){ L.qs.splice(L.idx,0,rq); renderQ(); return; }
+  }
+  const nq=L.qs[L.idx], area=document.getElementById('q-area');
+  if(!nq||!nq.bt||nq.bt.sc!==q.bt.sc||!area||!document.getElementById('bt-board')){
+    if(L.idx>=L.qs.length) finishLesson(); else renderQ();
+    return;
+  }
+  btClearTimers();
+  L.btRetry=false; L.sel=null; L.checked=false; L.actDone=false; L.judging=false; L.autoTok=null;
+  const frac=L.review?Math.min(1,L.baseAnswered/(L.baseN||1)):(L.idx/L.qs.length);
+  document.getElementById('pbar-fill').style.width=(frac*100)+'%';
+  document.getElementById('lesson-hearts').textContent='❤️'+(staminaFree()?'∞':S.hearts);
+  area.querySelectorAll('.fb-card,.bt-soft').forEach(e=>e.remove());   // まちがえたときのヒントを のこさない
+  const ty=area.querySelector('.q-type'); if(ty) ty.innerHTML=nq.tlab||'ミニ実戦';
+  const bq=document.getElementById('bt-q'); if(bq) bq.innerHTML=nq.q||'';
+  const ui=document.getElementById('bt-ui'); if(ui) ui.innerHTML='';
+  L.fxDefer=0; L.fxSnd=false;
+  L.bt.ui={};                 // 他家の打牌が終わるまでは何もタップさせない
+  L.qStart=Date.now();
+  btPlay(nq);
+}
 function selChoice(i){
   if(!L||L.checked||L.judging) return;
   if(L.bt&&L.bt.playing) return;      // R54: 他家が切っているあいだは操作できない
@@ -16901,6 +16956,8 @@ function selChoice(i){
   if(btSoftAlt(L.qs[L.idx],i)){ btSoftHint(); return; }      // R79: 合理的だが台本にない牌は、まちがいにしない
   L.sel=i;
   const q=L.qs[L.idx];
+  /* R81a: ミニ実戦のふつうの正しい打牌は、タップした その場で切る(えらんだ音・220msの溜め・結果カードを通さない) */
+  if(btFlowOK(q,i)){ L.btFlow=true; try{ check(); }finally{ if(L) L.btFlow=false; } return; }
   const n=(q.tchoices||q.choices).length;
   for(let k=0;k<n;k++){ const el=document.getElementById('ch-'+k); if(el) el.classList.toggle('sel',k===i); }
   sndPlay('select');
@@ -17423,6 +17480,8 @@ function check(){
       L.scoreTrain[w].n++; if(res.isCorrect) L.scoreTrain[w].ok++;
     }
   }
+  /* R81a: ミニ実戦のふつうの正しい打牌。採点(上)は すませたうえで、結果カードを出さずに 同じ卓のまま次へ */
+  if(L.btFlow){ L.btFlow=false; btFlowNext(q); return; }
   const fb=fmt.feedback(q,res);
   /* R60: 麻雀イベント演出(ポン！/ロン！など)が出ているあいだは、学習の結果カードを重ねない。
      演出が終わってから結果へ進める。
