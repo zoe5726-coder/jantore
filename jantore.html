@@ -4333,8 +4333,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.71.0';
-const BUILD_ID='20261006-02';
+const APP_VER='0.72.0';
+const BUILD_ID='20261007-01';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -10581,10 +10581,139 @@ function mjtAfterDiscard(o,selIdx){
     handPick:false, pick:[], myPick:false, rivers:keep, nowInRiver:!!mjtCurrent(o),
     myRiver:(o.myRiver||[]).concat([pk.tile]), myJust:true});
 }
+/* ================= R79 手牌の評価(打牌ごと) =================
+   「手牌(3k+2枚)を入れると、1枚切ったあとの状態を 打牌ごとに返す」小さな独立した関数。
+   画面にも Lesson にも 何も出さない。判定の中だけで使う(学習者に見せる言葉は 今までどおり かんたんなまま)。
+
+     tehaiEval(tiles, visible)
+       tiles   … いまの手牌(ツモ牌をふくむ。14枚・11枚・8枚・5枚…。鳴いた組は ふくめない)
+       visible … 手牌のほかに 見えている牌(河・鳴いた組)。のこり枚数を数えるのに使う
+       → { win, cands:[{t, sh, uke:[牌], n, bad, by}], ok:[牌] }
+            sh  … その牌を切ったあと、アガリまで あと何枚ぶんか(0＝テンパイ)
+            uke … つぎに引くと 1歩すすむ牌の種類(のこっている牌だけ)
+            n   … その のこり枚数の合計
+            bad … 明確に劣るときの理由。''なら 合理的な打牌
+            ok  … 合理的な打牌(bad が '' の牌)
+
+   ===== 「明確に劣る」の決め方(これ以外は ぜんぶ合理的＝正解にしてよい) =====
+     far    … ほかの打牌より アガリから遠くなる
+     subset … 同じ近さで、すすむ牌が ほかの打牌に【まるごと】ふくまれ、枚数も少ない
+     narrow … 同じ近さで、すすむ牌が ほかの打牌Yに ふくまれ(Yが切った牌そのものを引きなおす分はのぞく)、
+              枚数が Yの6割より少ない
+     half   … 同じ近さで、枚数が いちばん多い打牌の半分より少ない
+   すすむ牌が おたがいに ちがっていて 枚数も近いとき(＝優劣がつかない)は、どちらも合理的。
+   「いちばん良い1枚」は決めない。おすすめ順位も作らない(R73 の考え方を 13枚の手に広げたもの)。
+
+   narrow の 6割 について: 実戦シナリオ(BT_SKEL)の全場面で この比を測ると、
+     0.53以下 … できている形をこわす打牌(4566 の6、4567 の4 など)
+     0.62以上 … 字牌が手にあるときの、仲間のいない数牌(字牌を切るのと大差ない)
+   のあいだが空いている。その空きに線を引いた。字牌と孤立した数牌に 順位を付けないため。
+
+   R77 の「1枚だけで、同じ色の±2以内に仲間がいない牌」は 学習者への説明としては そのまま使えるが、
+   正誤の判定には使わない(手牌ぜんたいを見ていないので、形によっては合わなくなる)。
+   SECTION1ミニ麻雀(mg*)・ミニ実戦のエンジン(bt*)は この関数に置きかえていない。 */
+const TE_NAMES=(()=>{ const a=[]; 'mps'.split('').forEach(su=>{ for(let i=1;i<=9;i++) a.push(i+su); }); 'ESWNBGR'.split('').forEach(h=>a.push(h)); return a; })();
+const TE_YAO=[0,8,9,17,18,26,27,28,29,30,31,32,33];
+function teIdx(cd){ return cd.length===1?27+'ESWNBGR'.indexOf(cd):({m:0,p:9,s:18}[cd[1]])+(+cd[0]-1); }
+function teCount(tiles){ const c=new Array(34).fill(0); for(let i=0;i<tiles.length;i++) c[teIdx(tiles[i])]++; return c; }
+/* 1色ぶん(9種)から取れる「できた組の数・組のたねの数」の組み合わせを ぜんぶ挙げる */
+function teSuitCombos(c,s){
+  const seen={}, out=[];
+  const go=(i,m,t)=>{
+    while(i<9&&c[s*9+i]===0) i++;
+    if(i>=9){ const k=m*10+t; if(!seen[k]){ seen[k]=1; out.push([m,t]); } return; }
+    const k=s*9+i;
+    if(c[k]>=3){ c[k]-=3; go(i,m+1,t); c[k]+=3; }
+    if(i<=6&&c[k+1]>0&&c[k+2]>0){ c[k]--; c[k+1]--; c[k+2]--; go(i,m+1,t); c[k]++; c[k+1]++; c[k+2]++; }
+    if(c[k]>=2){ c[k]-=2; go(i,m,t+1); c[k]+=2; }
+    if(i<=7&&c[k+1]>0){ c[k]--; c[k+1]--; go(i,m,t+1); c[k]++; c[k+1]++; }
+    if(i<=6&&c[k+2]>0){ c[k]--; c[k+2]--; go(i,m,t+1); c[k]++; c[k+2]++; }
+    const keep=c[k]; c[k]=0; go(i+1,m,t); c[k]=keep;
+  };
+  go(0,0,0);
+  return out;
+}
+/* ふつうの形(組が need 個＋アタマ)まで あと何枚ぶんか。アタマにする牌を ぜんぶ試す */
+function teShStd(c,need){
+  let best=99;
+  const run=pair=>{
+    let hm=0, ht=0;
+    for(let k=27;k<34;k++){ if(c[k]>=3) hm++; else if(c[k]===2) ht++; }
+    const A=teSuitCombos(c,0), B=teSuitCombos(c,1), C=teSuitCombos(c,2);
+    for(let a=0;a<A.length;a++) for(let b=0;b<B.length;b++) for(let d=0;d<C.length;d++){
+      let m=hm+A[a][0]+B[b][0]+C[d][0], t=ht+A[a][1]+B[b][1]+C[d][1];
+      if(m>need) m=need;
+      if(m+t>need) t=need-m;
+      const sh=need*2-m*2-t-(pair?1:0);
+      if(sh<best) best=sh;
+    }
+  };
+  run(false);
+  for(let k=0;k<34;k++) if(c[k]>=2){ c[k]-=2; run(true); c[k]+=2; }
+  return best;
+}
+/* n 枚(3k+1 か 3k+2)の手が アガリまで あと何枚ぶんか。-1 ならアガリ形。
+   七対子と国士は 13枚・14枚のときだけ見る */
+function teShanten(c,n){
+  let s=teShStd(c,Math.floor(n/3));
+  if(n===13||n===14){
+    let p=0, k=0; for(let i=0;i<34;i++){ if(c[i]>=2) p++; if(c[i]>=1) k++; }
+    s=Math.min(s,6-p+Math.max(0,7-k));
+    let yk=0, yp=0; for(let i=0;i<TE_YAO.length;i++){ if(c[TE_YAO[i]]>=1) yk++; if(c[TE_YAO[i]]>=2) yp=1; }
+    s=Math.min(s,13-yk-yp);
+  }
+  return s;
+}
+const TE_CACHE=new Map();
+function tehaiEval(tiles,visible){
+  const key=tiles.slice().sort().join('')+'|'+(visible||[]).slice().sort().join('');
+  if(TE_CACHE.has(key)) return TE_CACHE.get(key);
+  const c=teCount(tiles), vis=teCount(tiles.concat(visible||[])), n=tiles.length-1, cands=[];
+  const win=teShanten(c,tiles.length)===-1;
+  for(let d=0;d<34;d++){
+    if(!c[d]) continue;
+    c[d]--;
+    const sh=teShanten(c,n), uke=[]; let cnt=0;
+    for(let x=0;x<34;x++){
+      const rem=4-vis[x];
+      if(rem<=0||c[x]>=4) continue;
+      c[x]++;
+      const s2=teShanten(c,n+1);
+      c[x]--;
+      if(s2<sh){ uke.push(TE_NAMES[x]); cnt+=rem; }
+    }
+    c[d]++;
+    cands.push({t:TE_NAMES[d],sh,uke,n:cnt,bad:'',by:''});
+  }
+  const minSh=Math.min.apply(null,cands.map(x=>x.sh));
+  const maxN=Math.max.apply(null,cands.filter(x=>x.sh===minSh).map(x=>x.n));
+  cands.forEach(X=>{
+    if(X.sh>minSh){ X.bad='far'; return; }
+    for(let i=0;i<cands.length;i++){
+      const Y=cands[i];
+      if(Y===X||Y.sh!==X.sh) continue;
+      if(X.uke.every(u=>Y.uke.indexOf(u)>=0)&&X.n<Y.n){ X.bad='subset'; X.by=Y.t; return; }
+      if(X.uke.every(u=>u===Y.t||Y.uke.indexOf(u)>=0)&&X.n*5<Y.n*3){ X.bad='narrow'; X.by=Y.t; return; }
+    }
+    if(X.n*2<maxN) X.bad='half';
+  });
+  const out={win,cands,ok:cands.filter(x=>!x.bad).map(x=>x.t)};
+  if(TE_CACHE.size>4000) TE_CACHE.clear();
+  TE_CACHE.set(key,out);
+  return out;
+}
+/* 合理的な打牌(牌の名前の配列)。「どれを切ったら○か」は ここだけで決める */
+function tehaiRational(tiles,visible){ return tehaiEval(tiles,visible).ok; }
 /* 1問ぶん。mode は junk(いらない牌ならどれでも) / tsumogiri(ツモ牌) / named(いわれた牌) / shape(形をくずさない)
    R77: free(14枚のどれでもよい)は Lesson では使わない。完成した組・アタマ・テンパイをくずす牌まで「正解」になり、
         「牌を選んで切る」(いらない牌を見つけて切る)の目的と合わないため。
-        junk は o.cuts に【いらない牌】をぜんぶ書く。その牌なら どれを切っても同じ正解(おすすめ順位は付けない) */
+   R79: junk と shape の正解は【手牌ぜんたいを評価して決める】(tehaiRational)。
+        R77は o.cuts に書いた牌だけを正解にしていた。書くときの基準が
+        「1枚だけで、同じ色の±2以内に仲間がいない牌」だったので、手の形によっては
+        合理的な打牌を×にしたり、明確に劣る打牌を○にしたりする(tu1_1 の3問目がそうだった)。
+        o.cuts / o.cut は「作る人が思っている答え」として残す。評価と食いちがえば テストが落ちる。
+        named(いわれた牌)と tsumogiri(ツモ切り)は、その牌を見分けて切ること自体が目的なので 正解は その牌だけ。
+        ただし その牌が 合理的な打牌であること・手がまだアガリ形でないことは ここで確かめる(問題として成立しない手を出さない) */
 function mjtDiscardQ(o){
   const hand=mjtHandTiles(o);
   if(hand.length!==13) throw new Error('mjtDiscardQ: 手牌は13枚 (got '+hand.length+')');
@@ -10593,9 +10722,16 @@ function mjtDiscardQ(o){
   const mode=o.mode||'free';
   let ok;
   if(mode==='free') ok=picks.map((p,i)=>i);
-  else if(mode==='junk') ok=picks.map((p,i)=>((o.cuts||[]).indexOf(p.tile)>=0)?i:-1).filter(i=>i>=0);
-  else if(mode==='tsumogiri') ok=picks.map((p,i)=>p.type==='tsumo'?i:-1).filter(i=>i>=0);
-  else ok=picks.map((p,i)=>(p.tile===o.cut&&(mode!=='named'||p.type==='hand'))?i:-1).filter(i=>i>=0);
+  else{
+    const ev=tehaiEval(hand.concat([o.tsumo]),o.myRiver||[]);
+    if(ev.win) throw new Error('mjtDiscardQ: ツモった時点でアガリ形 ('+o.hand+'+'+o.tsumo+')');
+    if(mode==='junk'||mode==='shape') ok=picks.map((p,i)=>(ev.ok.indexOf(p.tile)>=0)?i:-1).filter(i=>i>=0);
+    else if(mode==='tsumogiri') ok=picks.map((p,i)=>p.type==='tsumo'?i:-1).filter(i=>i>=0);
+    else ok=picks.map((p,i)=>(p.tile===o.cut&&(mode!=='named'||p.type==='hand'))?i:-1).filter(i=>i>=0);
+    const want=mode==='tsumogiri'?o.tsumo:o.cut;
+    if((mode==='named'||mode==='tsumogiri')&&ev.ok.indexOf(want)<0)
+      throw new Error('mjtDiscardQ: いわれた牌が合理的な打牌でない ('+o.hand+'+'+o.tsumo+' / '+want+')');
+  }
   if(!ok.length) throw new Error('mjtDiscardQ: 切る牌が盤面にない ('+mode+'/'+o.cut+')');
   return {td:{board,aSet:ok,mode},
     q:o.q||'どれか1枚えらんで切ろう', a:ok[0],
@@ -13506,7 +13642,12 @@ const CH2_LESSONS={
        ここは本格的な「何切る」ではない。牌効率・テンパイを考えさせない。
        のこる牌は ぜんぶ 3枚の組・同じ牌2枚・となりあう2枚 のどれか。いらない牌が2〜3枚あるときは どれを切っても正解 */
   tu1_1(){
-    const A='123m456m78p22s45sE', B='234p678p111s45m9mW', C='345m567s234p66p1sN';
+    /* R79: C は 345m567s234p66p1sN＋西 だった。できた組3つ＋アタマに 仲間のいない牌が3枚、という手で、
+       1ソー・北・西を どれも同じ正解にしていたが、評価すると 1ソーを切るのだけ 明確に劣る
+       (1ソーをのこせば 1・2・3ソーで進むのに、字牌2枚をのこすと その2種でしか進まない。16枚 対 8枚)。
+       「いらない牌が3枚あって どれを切っても同じ」と言える手にした: できた組1つ＋となりあう2枚が3組＋アタマ。
+       組の候補がもう足りているので、1ソーも 北も 西も ほんとうに余り(どれを切っても 進む牌は同じ22枚) */
+    const A='123m456m78p22s45sE', B='234p678p111s45m9mW', C='345m99m23p78p45s1sN';
     return [
       ch1Teach('自分の番がまわってきたら、山から牌を<b>1枚ツモる</b>よ。'
         +'ツモった牌は、手牌の右に<b>すこし はなして</b>置こう。',
@@ -13527,7 +13668,7 @@ const CH2_LESSONS={
           +'えらぶ→切る の2ステップにも慣れてきたね。'}),
       {q:'切った牌は、どこへ行く？',choices:['自分の河','山にもどす'],a:0,
         exp:'切った牌は自分の河へ。だれにでも見えるところに置かれるよ。'},
-      mjtDiscardQ({hand:C,tsumo:'W',myRiver:['1m','6s','3p','9p','2m'],mode:'junk',cuts:['1s','N','W'],
+      mjtDiscardQ({hand:C,tsumo:'W',myRiver:['E','8s','S','1m','B'],mode:'junk',cuts:['1s','N','W'],
         q:'<b>いらない牌</b>を1枚切ろう',tlab:'えらんで、切る',
         exp:'河の牌は、切った順に ひだりから ならんでいくよ。'}),
       ch1Teach('これが自分の番だよ。<b>1枚ツモって、1枚切る</b>。これのくりかえしで麻雀は進むんだ！',
@@ -13548,10 +13689,10 @@ const CH2_LESSONS={
       {q:'「ツモ切り」って、どういうこと？',
         choices:['ツモった牌をそのまま切る','手牌から1枚えらんで切る'],a:0,
         exp:'ツモった牌をそのまま河へ。手牌はまったく変わらないよ。'},
-      mjtDiscardQ({hand:B,tsumo:'N',myRiver:['2p','7s','E','4m','9p'],mode:'tsumogiri',
+      mjtDiscardQ({hand:B,tsumo:'N',myRiver:['2p','7s','E','9m','9p'],mode:'tsumogiri',
         q:inlineTile('N')+'を<b>ツモ切り</b>しよう',tlab:'ツモ牌をえらぶ',
         exp:'この'+inlineTile('N')+'も使えない牌。手牌はそのまま、ツモった1枚だけが河へ行ったね。'}),
-      mjtDiscardQ({hand:C,tsumo:'S',myRiver:['3m','8p','W','1s','6p','4s'],mode:'tsumogiri',
+      mjtDiscardQ({hand:C,tsumo:'S',myRiver:['7m','8p','W','1s','6p','4s'],mode:'tsumogiri',
         q:inlineTile('S')+'を<b>ツモ切り</b>しよう',tlab:'ツモ牌をえらぶ',
         exp:'河が7枚目になったから、2段目のさきあたまに置かれたね。'}),
       {q:'ツモ切りをしたあと、手牌の13枚はどうなる？',choices:['まったく変わらない','1枚へる'],a:0,
@@ -13576,7 +13717,7 @@ const CH2_LESSONS={
       mjtDiscardQ({hand:B,tsumo:'6p',myRiver:['9s','2m','W','5s'],mode:'named',cut:'1m',
         q:'手牌の中の'+inlineTile('1m')+'を切ろう',tlab:'手牌からえらぶ',
         exp:inlineTile('1m')+'が河へ。ツモった'+inlineTile('6p')+'は手牌の中だよ。'}),
-      mjtDiscardQ({hand:C,tsumo:'4s',myRiver:['1p','7m','N','3p','9s','2s'],mode:'named',cut:'8m',
+      mjtDiscardQ({hand:C,tsumo:'4s',myRiver:['1p','7m','N','3p','9s','8s'],mode:'named',cut:'8m',
         q:'手牌の中の'+inlineTile('8m')+'を切ろう',tlab:'手牌からえらぶ',
         exp:'ツモった'+inlineTile('4s')+'は手牌の中へ。切った牌は河の7枚目で、2段目のさきあたまに置かれたね。'}),
       {q:'14枚から1枚切ったあと、手牌は何枚？',choices:['13枚','14枚'],a:0,
@@ -13592,12 +13733,14 @@ const CH2_LESSONS={
      直し: いわれた牌が【その手で たった1枚の いらない牌】になる牌姿にした。ツモった牌は組になる牌。
        同じ種類の牌(ピンズならピンズ)を手にいくつか入れて、「数を見分けてさがす」ことは のこしてある */
   tu1_4(){
-    const A='123m456m2p66p78p45s', B='111m5m234p67p99s12s', C='345s789s34m11p6p99m',
+    /* R79: A は 123m456m2p66p78p45s＋3ソー だった。2ピンを切るのが いちばん良いが、6ピンを切っても
+       テンパイになる(2ピン待ち)。いわれた牌のほかに 合理的な打牌がない手にした(アタマを 9ソー2枚へ) */
+    const A='123m456m2p78p99s45s', B='111m5m234p67p99s12s', C='345s789s34m11p6p99m',
           D='111m456m78p55p3s66s';
     return [
       ch1Teach('つぎは<b>いわれた牌</b>を切るれんしゅう。'
         +'マンズ・ピンズ・ソーズ・字牌を、ちゃんと見分けられるかな？',{tlab:'牌を見つけて切る'}),
-      mjtDiscardQ({hand:A,tsumo:'3s',myRiver:['9p','1s','E'],mode:'named',cut:'2p',
+      mjtDiscardQ({hand:A,tsumo:'3s',myRiver:['1p','9m','E'],mode:'named',cut:'2p',
         q:'手牌の中の<b>2ピン</b>を切ろう',tlab:'ピンズをさがす',
         exp:'○がまるくならんでいるのがピンズ。2ピンを切れたね。1枚だけで仲間がいない牌だったよ。'}),
       mjtDiscardQ({hand:B,tsumo:'8p',myRiver:['1p','8s','S','4s'],mode:'named',cut:'5m',
@@ -13634,7 +13777,7 @@ const CH2_LESSONS={
       {q:'「もうできている3枚の組」は、どうするのがよさそう？',
         choices:['のこす','くずして切る'],a:0,
         exp:'そろっている組をくずすと、また作り直しになっちゃうよ。'},
-      mjtDiscardQ({hand:C,tsumo:'1m',myRiver:['3p','8s','E','2m','9p','4s'],mode:'shape',cut:'1m',
+      mjtDiscardQ({hand:C,tsumo:'1m',myRiver:['3p','8s','E','2m','9p','6s'],mode:'shape',cut:'1m',
         q:'<b>形をくずさず</b>に1枚切るなら、どれ？',tlab:'できている組はのこす',
         exp:inlineTiles(['4p','5p','6p'])+'も'+inlineTiles(['W','W','W'])+'も できている組。'
           +'ツモった'+inlineTile('1m')+'は仲間がいないから ツモ切りだね。'}),
@@ -16326,7 +16469,8 @@ const QFORMATS={
       const set=(q.td.aSet&&q.td.aSet.length)?q.td.aSet:[q.a];
       if(!res.isCorrect){
         return {ansText:'', expText: (q.td.mode==='shape'||q.td.mode==='junk')
-          ? 'その牌は のこしておきたいね。1枚だけで仲間がいない牌をさがしてタップしてみよう。'
+          /* R79: 判定は「±2以内に仲間がいるか」ではなく 手牌ぜんたいで決める。理由を1つに決めつけない言い方にした */
+          ? 'その牌は、まだ使い道がありそうだね。ほかの牌を見てみよう。'
           : 'その牌じゃないよ。もう一度さがしてタップしてみよう。'};
       }
       // R58: 回答のあとなので、切った牌を【絵】で見せる(文字→牌の変換をさせない)
@@ -16725,9 +16869,36 @@ function ch1AutoJudge(){
   const tok=++AUTO_SEQ; L.autoTok=tok;
   setTimeout(()=>{ if(L&&L.autoTok===tok&&!L.checked) check(); }, judgeDelay());
 }
+/* ===== R79 ミニ実戦の打牌: 合理的な打牌を「まちがい」にしない =====
+   ミニ実戦は 台本(BT_SKEL)どおりに進む。切ってよい牌(ok)は「どれを切っても 先の巡がこわれない牌」で、
+   台本にない牌を切らせると そのあとの ツモやリーチが つながらなくなる(動的な進行は まだ作っていない)。
+   いっぽう、ok にない牌の中に、評価すると 明確に劣るとは言えない牌が まれにある
+   (字牌が手にあるときの、仲間のいない数牌。実戦に挑戦の3本目で 場面の約4%)。
+   その牌は【切らせないが、まちがいにもしない】: ライフもコンボも記録も動かさず、ひとこと出して えらび直してもらう。
+   明確に劣る牌は これまでどおり まちがい(「その牌は のこしておきたいね」)。
+   判定に使うのは tehaiEval だけ。エンジン(btReady ほか)・台本・自然化は さわっていない */
+function btSoftAlt(q,i){
+  if(!q||!q.bt||q.bt.kind!=='discard'||!(q.bt.ok&&q.bt.ok.length)||btLocked()) return false;
+  if((q.bt.aSet||[]).indexOf(i)>=0) return false;
+  const b=L.bt, pk=mjtPicks(btBoard(b.ui))[i];
+  if(!pk) return false;
+  const vis=[].concat(b.rivers.left,b.rivers.top,b.rivers.right,b.myRiver,meldTilesAll(b.melds));
+  return tehaiRational(b.hand.concat(b.tsumo?[b.tsumo]:[]),vis).indexOf(pk.tile)>=0;
+}
+const BT_SOFT_MSG='その牌を切るのも ありだよ。ここでは、ほかの いらない牌から切ってみよう。';
+function btSoftHint(){
+  const area=document.getElementById('q-area'); if(!area) return;
+  area.querySelectorAll('.bt-soft,.fb-card').forEach(e=>e.remove());
+  area.insertAdjacentHTML('beforeend','<div class="wf-msg bt-soft">'+BT_SOFT_MSG+'</div>');
+  const el=area.querySelector('.bt-soft');
+  if(el&&el.scrollIntoView){ try{ el.scrollIntoView({block:'nearest'}); }catch(e){} }
+  sndPlay('select');
+}
 function selChoice(i){
   if(!L||L.checked||L.judging) return;
   if(L.bt&&L.bt.playing) return;      // R54: 他家が切っているあいだは操作できない
+  { const sf=document.querySelector('#q-area .bt-soft'); if(sf) sf.remove(); }
+  if(btSoftAlt(L.qs[L.idx],i)){ btSoftHint(); return; }      // R79: 合理的だが台本にない牌は、まちがいにしない
   L.sel=i;
   const q=L.qs[L.idx];
   const n=(q.tchoices||q.choices).length;
