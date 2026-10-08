@@ -411,6 +411,16 @@ html.ruby-full .mt-guide-card .tc-bub{height:86px;}
 /* 表示モード「すべて」: タグごとにルビがあったりなかったりしても、親文字の高さがタグどうしでそろうように、
    どのタグにも【ルビ1段ぶんの見えない柱】を立てる(ルビのないタグだけ字が上へ寄るのを防ぐ) */
 html.ruby-full .ch3-chip > .ch3-chip-t::before{content:''; display:inline-block; width:0; height:1.7em; vertical-align:baseline;}
+/* R82: ミニ実戦で止まる場面のカード。問いと選択肢の場所に出し、「つづける」を中に持つ(下の帯を出さない＝卓が動かない) */
+.fb-card.bt-fb{margin:6px 0 2px; padding:8px 12px;}
+.fb-card.bt-fb .fb-head{margin-bottom:0;}
+.fb-card.bt-fb .fb-title{font-size:15px; margin:0;}
+.fb-card.bt-fb .fb-exp{margin:2px 0; font-size:13.5px; line-height:1.45;}
+.fb-card.bt-fb .btn{margin-top:6px; width:100%; padding:9px 12px; min-height:0; font-size:15px;}
+/* R82: ミニ実戦の判断(ロンできる／できない など)は 横にならべる。たてに2つ積むと 小さい画面で はみ出して 卓がスクロールで動く */
+#bt-ui .choices{display:flex; flex-direction:row; gap:8px;}
+#bt-ui .choices .choice{flex:1 1 0; margin:0; min-width:0;}
+#bt-board .f-wait{margin:6px 0 0;}
 .q-ctx{font-size:clamp(12.5px, 3.5vw, 14.5px); color:var(--ink-soft); font-weight:700; background:var(--jade-soft);
   border-radius:10px; padding:8px 12px; margin-bottom:12px;}
 
@@ -4333,8 +4343,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.73.0';
-const BUILD_ID='20261007-02';
+const APP_VER='0.74.0';
+const BUILD_ID='20261008-01';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -10487,6 +10497,8 @@ function mjtPanelHTML(o){
       : o.hand;
     h+=fWaitHTML(fWaitsOf(h13),o.waitLab);
   }
+  /* R82: ミニ実戦では 待ちを卓の【下】に出す(waitBelow)。上に出すと、出たり消えたりするたびに 卓が上下に動く */
+  if(o.waitBelow) h=mjtHTML(o)+h; else
   h+=mjtHTML(o);
   if(o.note) h+='<p class="f-note">この手には役があるものとして考えよう</p>';
   return h;
@@ -11625,7 +11637,8 @@ function btVariant(id){
    tb1 は R75 で作りなおした(R74までの tb1 は bt3 と同じ進行だったため) */
 const BATTLES={bt1:btMake('bt1',0,{fix:true}),bt2:btMake('bt2',0,{fix:true}),
   bt3:btMake('bt3',0,{fix:true}),tb1:btMake('tb1',0,{fix:true})};
-let BT_GAP=620;                       // 他家が1枚切るあいだの間(ms)。速すぎて見えない状態にしない
+let BT_GAP=400;                       // 他家が1枚切るあいだの間(ms)。速すぎて見えない状態にしない(R82: 620→400)
+let BT_LEAD=140;                      // R82: 「つづける」や局のはじまりから さいしょの出来事までの ひと呼吸(ms)
                                       // (letなのはテストで早送りするため。ふだんは変えない)
 let BT_TIMERS=[];                     // 走っているタイマー。離脱・再描画で必ず止める
 function btClearTimers(){ BT_TIMERS.forEach(t=>clearTimeout(t)); BT_TIMERS=[]; }
@@ -11650,6 +11663,7 @@ function btBoard(extra){
     now:b.now, nowInRiver:!!b.now, myJust:b.just, tsumo:b.tsumo,
     // R57: 14枚目の置き場所はつねに確保する(13枚でも手牌がふくらまない)
     tsumoSlot:true,
+    waitBelow:true,          // R82: 待ちは卓の下(卓を動かさない)
     // R57: リーチ宣言牌は【河にあるその1枚】を横向きにする。別の場所へ写さない(R56bと同じ原則)
     riichi:(b.riichiIdx!=null?{bottom:b.riichiIdx}:null), rbou:!!b.riichi}, extra||{});
 }
@@ -11703,8 +11717,53 @@ function btDraw(){
   const host=document.getElementById('bt-board'); if(!host) return;
   host.innerHTML=mjtPanelHTML(btBoard(L.bt.ui||{}));
 }
+/* ===== R82 見出しと問いは【出来事のあと】に出す =====
+   R81a まで: 場面を出すとき(renderQ / btFlowNext)に、つぎの場面の見出しと問いを 先に書いていた。
+     そのあとで 他家の打牌やツモ(q.bt.pre)が流れるので、
+     「東もツモ切りしよう」が 東をツモる前に、「ロンできる？」が その牌が切られる前に 見えていた。
+   R82: 出来事が のこっているあいだ(ready=false)は、見出しは「○巡目」だけ(巡目のない場面は 前の見出しのまま)、問いは空。
+        出来事が ぜんぶ卓に出て 操作できるようになったとき(btReady)に、はじめて 見出しと問いを出す。
+   もうひとつ: 「□をツモ切りしよう」「□を切ろう」のように 切る牌を名ざしする場面のうち、
+     ツモって考える ふつうの番で、しかも その牌を切るのが ただ1つの合理的な打牌(R79 の tehaiRational)のときは、
+     名ざしをやめて「どの牌を切る？」と問う(見出しの「（ツモ切り）」も出さない)。答えを先に言わない。
+     ・リーチ後(ツモ牌しか切れない)・鳴いた直後(ツモらずに切る決まりを教える場面)・合理的な牌がほかにもある場面は、名ざしのまま
+     ・正誤の判定(aSet)は 変えない。変えるのは 見せる文だけ */
+const BT_Q_SELF='どの牌を切る？';
+function btTurnLab(q){ const m=/^(\d+巡目)/.exec(String((q&&q.tlab)||'').replace(/<[^>]*>/g,'')); return m?m[1]:null; }
+function btJudgeSelf(q){
+  try{
+    if(!q||!q.bt||q.bt.kind!=='discard'||q.bt.ok||!q.bt.cut||!L||!L.bt||!L.bt.tsumo||btLocked()) return false;
+    const b=L.bt, all=b.hand.concat([b.tsumo]), want=q.bt.cut;
+    if(all.filter(t=>t===want).length!==1) return false;
+    if(q.bt.cutTsumo&&b.tsumo!==want) return false;
+    const vis=[].concat(b.rivers.left,b.rivers.top,b.rivers.right,b.myRiver,meldTilesAll(b.melds));
+    const ok=tehaiRational(all,vis);
+    return ok.length===1&&ok[0]===want;
+  }catch(e){ return false; }
+}
+function btCueParts(q,ready){
+  const turn=btTurnLab(q);
+  if(turn&&L&&L.bt) L.bt.lab=turn;
+  if(!ready) return {lab:turn||((L&&L.bt&&L.bt.lab)||'ミニ実戦'), txt:'&nbsp;', wait:true};
+  if(btJudgeSelf(q)) return {lab:turn||q.tlab||'ミニ実戦', txt:BT_Q_SELF, wait:false, self:true};
+  return {lab:q.tlab||'ミニ実戦', txt:q.q||'', wait:false};
+}
+function btCue(q,ready){
+  const area=document.getElementById('q-area'); if(!area||!q||!q.bt) return;
+  const c=btCueParts(q,ready);
+  q.bt.selfQ=!!c.self;
+  const ty=area.querySelector('.q-type'); if(ty) ty.innerHTML=c.lab;
+  const bq=document.getElementById('bt-q'); if(bq){ bq.innerHTML=c.txt; bq.classList.toggle('bt-q-wait',!!c.wait); bq.style.display=''; }
+  const ui=document.getElementById('bt-ui'); if(ui) ui.style.display='';
+}
 /* --- 他家の自動打牌。判断が必要な牌のところで必ず止まる --- */
-function btPlay(q){
+/* R82 の間の決まり(BT_GAP の値と、どこで待つか):
+     自分が切った → BT_GAP → 他家 → BT_GAP → 他家 → BT_GAP → 他家 → BT_GAP → ツモ牌が出る → 【すぐ操作できる】
+     ・ツモ牌が見えているのに さわれない待ちは 作らない(さいごの出来事がツモなら、その場で btReady)
+     ・さいごの出来事が 他家の打牌(ロン・ポン・チーを問う牌)なら、その牌が河に見えてから BT_GAP おいて問う
+     ・「つづける」や局のはじまりのあとは BT_GAP を待たない(BT_LEAD だけ)。自分が切った直後(afterCut)だけ、
+       自分の捨て牌を見る間として BT_GAP をおく */
+function btPlay(q,afterCut){
   if(!L||!L.bt) return;
   const b=L.bt, pre=(q.bt.pre||[]).slice();
   btClearTimers();
@@ -11714,12 +11773,14 @@ function btPlay(q){
   const step=()=>{
     if(!L||!L.bt||L.bt.tok!==tok) return;                     // 古いタイマーは何もしない
     if(!pre.length){ btReady(q); return; }
-    btApply(pre.shift());
+    const ev=pre.shift();
+    btApply(ev);
     if(b.now) sndPlay('discard');
     btDraw();
+    if(!pre.length&&ev.t==='draw'){ btReady(q); return; }     // R82: ツモ牌が出たら すぐ自分の番
     BT_TIMERS.push(setTimeout(step,BT_GAP));
   };
-  if(b.playing) BT_TIMERS.push(setTimeout(step,BT_GAP));
+  if(b.playing) BT_TIMERS.push(setTimeout(step,afterCut?BT_GAP:BT_LEAD));
   else btReady(q);
 }
 /* 他家の打牌が終わった。ここではじめて操作できるようにし、正解もこの盤面から作る。
@@ -11784,6 +11845,7 @@ function btReady(q){
     if(q.bt.tenpai) b.ui.showWait=true;
     if(ui) ui.innerHTML='';
   }
+  btCue(q,true);             // R82: 見出しと問いは、出来事が卓に出たあと ここで出す
   btDraw(); renderFoot();
 }
 /* 指定された牌とちがう牌をタップしたとき: 盤面(14枚)はそのままで、同じ場面をやり直す。
@@ -16490,13 +16552,15 @@ const QFORMATS={
       if(!L.bt||L.bt.id!==q.bt.sc.id||q.bt.first) L.bt=btInit(q.bt.sc);
       /* R76: 問い(q.q)は 卓の下・選択肢のすぐ上に置く。画面の上には 小さな見出し(q-type)だけ。
          R75までは「長い説明 → 卓 → 選択肢」で、卓を見たあと 画面の上まで目をもどす必要があった */
-      let html='<div class="q-type">'+(q.tlab||'ミニ実戦')+'</div>';
+      /* R82: 出来事(q.bt.pre)が のこっているあいだは、見出しと問いを先に出さない(btCueParts)。出すのは btReady */
+      const cue=btCueParts(q,!((q.bt.pre||[]).length));
+      let html='<div class="q-type">'+cue.lab+'</div>';
       /* R60: 卓(#bt-board)と、その上にかぶせる演出レイヤー(#bt-fx)を1つの舞台にまとめる。
          btDraw() が書きかえるのは #bt-board だけなので、演出レイヤーは描きなおしで消えない
          ＝麻雀state(手牌/河/副露/ツモ)と演出stateが完全に分かれている */
       html+='<div class="bt-stage"><div id="bt-board"></div>'
         +'<div class="bt-fx" id="bt-fx" aria-hidden="true"></div></div>';
-      html+='<div class="q-text bt-q" id="bt-q">'+(q.q||'')+'</div>';
+      html+='<div class="q-text bt-q'+(cue.wait?' bt-q-wait':'')+'" id="bt-q">'+cue.txt+'</div>';
       html+='<div id="bt-ui"></div>';
       L.sel=null;
       L.fxDefer=0; L.fxSnd=false;   // R60: 前の問題の演出待ち・演出音のフラグを持ちこさない
@@ -16907,13 +16971,18 @@ function btSoftHint(){
        はじめて出てくる決まりごと(テンパイ・フリテン・リーチ後はツモ切りだけ・鳴いたあとの手順・打つ順番)の説明は、
        読まずに流れると 次の判断の前提がぬけるので、カードと「つづける」を残す
    変えていないもの: BT_GAP(他家の間)・btApply/btDiscard/btReady/btPlay/btDraw・台本・自然化・R79の判定 */
+/* R82 で見直した:
+     ・打つ順番(下家 → 対面 → 上家)の説明は 止めない。目の前で その順に切られるのを見れば分かる(ようすの説明)
+     ・リーチの2つ(宣言牌が横向き / リーチ後はツモ切りだけ)は、はじめて出る tb1 では止める。
+       あとの bt3 では もう習っているので 止めない(BT_STOP_SEEN)。リーチ宣言の1枚も 説明が要るときだけ止まる */
 const BT_STOP_EXP=[/これでテンパイ/,/フリテン/,/宣言した牌は横向き/,/リーチしたあとは手牌を変えられない/,
-  /ポンのあとは/,/鳴いた組は/,/鳴いたあとも/,/下家 → 対面 → 上家/];
+  /ポンのあとは/,/鳴いた組は/,/鳴いたあとも/];
+const BT_STOP_SEEN={bt3:[/宣言した牌は横向き/,/リーチしたあとは手牌を変えられない/]};
 function btMustRead(q){
   if(!q||!q.bt) return false;
-  if(q.bt.riichi) return true;                                 // リーチ宣言の1枚(横向きになる説明)
   const s=String(q.exp||'').replace(/<[^>]*>/g,'');
-  return BT_STOP_EXP.some(re=>re.test(s));
+  const seen=BT_STOP_SEEN[q.bt.sc&&q.bt.sc.id]||[];
+  return BT_STOP_EXP.some(re=>re.test(s)&&!seen.some(r2=>String(r2)===String(re)));
 }
 function btFlowOK(q,i){
   if(!L||!q||!q.bt||q.bt.kind!=='discard'||!L.bt||L.bt.playing) return false;
@@ -16941,13 +17010,12 @@ function btFlowNext(q){
   document.getElementById('pbar-fill').style.width=(frac*100)+'%';
   document.getElementById('lesson-hearts').textContent='❤️'+(staminaFree()?'∞':S.hearts);
   area.querySelectorAll('.fb-card,.bt-soft').forEach(e=>e.remove());   // まちがえたときのヒントを のこさない
-  const ty=area.querySelector('.q-type'); if(ty) ty.innerHTML=nq.tlab||'ミニ実戦';
-  const bq=document.getElementById('bt-q'); if(bq) bq.innerHTML=nq.q||'';
   const ui=document.getElementById('bt-ui'); if(ui) ui.innerHTML='';
+  btCue(nq,!((nq.bt.pre||[]).length));    // R82: 出来事が のこっているあいだは 見出しと問いを先に出さない
   L.fxDefer=0; L.fxSnd=false;
   L.bt.ui={};                 // 他家の打牌が終わるまでは何もタップさせない
   L.qStart=Date.now();
-  btPlay(nq);
+  btPlay(nq,true);            // R82: 自分が切った直後。捨て牌を見る間(BT_GAP)をおいてから 他家が切る
 }
 function selChoice(i){
   if(!L||L.checked||L.judging) return;
@@ -16956,8 +17024,11 @@ function selChoice(i){
   if(btSoftAlt(L.qs[L.idx],i)){ btSoftHint(); return; }      // R79: 合理的だが台本にない牌は、まちがいにしない
   L.sel=i;
   const q=L.qs[L.idx];
-  /* R81a: ミニ実戦のふつうの正しい打牌は、タップした その場で切る(えらんだ音・220msの溜め・結果カードを通さない) */
-  if(btFlowOK(q,i)){ L.btFlow=true; try{ check(); }finally{ if(L) L.btFlow=false; } return; }
+  /* R81a: ミニ実戦のふつうの正しい打牌は、タップした その場で切る(えらんだ音・220msの溜め・結果カードを通さない)
+     R82: ミニ実戦の打牌は ぜんぶ その場で判定する(止まる場面・まちがいも)。牌を切る前の えらんだ音と 220ms の溜めは 鳴らさない・入れない。
+          鳴るのは 麻雀の出来事の音: 切れたら 打牌の音、切れなければ まちがいの音 */
+  if(q&&q.bt&&q.bt.kind==='discard'&&L.bt&&(q.bt.aSet||[]).length){
+    L.btFlow=btFlowOK(q,i); try{ check(); }finally{ if(L) L.btFlow=false; } return; }
   const n=(q.tchoices||q.choices).length;
   for(let k=0;k<n;k++){ const el=document.getElementById('ch-'+k); if(el) el.classList.toggle('sel',k===i); }
   sndPlay('select');
@@ -17372,8 +17443,10 @@ function renderFeedback(q,cat,res,ratingRes,fb){
   /* 正誤音は正誤表示とこの場で同期(タップ時ではない)。
      R60: 直前に麻雀イベントの音(ポン/ロン等)が【実際に鳴った】ときだけ、正誤音を重ねない。
      音源が未設定のスロットでは何も鳴っていないので、これまでどおり正誤音を鳴らす */
+  /* R82: ミニ実戦で 正しく切れたときは 打牌の音だけ(reveal で鳴っている)。正解音を重ねない */
+  const btCut=!!(q.bt&&q.bt.kind==='discard');
   if(L&&L.fxSnd){ L.fxSnd=false; }
-  else sndPlay(res.isCorrect?'correct':'wrong');
+  else if(!(btCut&&res.isCorrect)) sndPlay(res.isCorrect?'correct':'wrong');
   document.getElementById('lesson-hearts').textContent='❤️'+(staminaFree()?'∞':S.hearts);
   let ratingLine='';
   if(ratingRes){
@@ -17412,12 +17485,20 @@ function renderFeedback(q,cat,res,ratingRes,fb){
   }
   // 復習クリア: さっき間違えた問題を取り返せたことを小さく示す(コンボ節目より弱い表示のみ)
   const rvClear=(!staminaOut&&q._rv&&res.isCorrect)?'<div class="rv-clear">🔁 復習クリア ✓</div>':'';
-  const card='<div class="fb-card '+(staminaOut?'ng':cls)+'" id="fb-card">'
-    +'<div class="fb-head"><p class="fb-title '+(staminaOut?'ng':cls)+'">'
-    +(staminaOut?'スタミナが切れた…':title)+'</p>'+comboChip+'</div>'
+  /* R82: ミニ実戦で止まる場面のカードは、卓を動かさない形にする(btStop)。
+       ・問いと選択肢の場所に カードを出す(答えたあとの問いと選択肢は たたむ)
+       ・「つづける」は カードの中に置く。下の帯は出さない(帯が出ると カードがかくれて スクロールが要る)
+       ・正しく切れたときは「せいかい！」の見出しを出さない(説明だけ)。判断(ロン・ポンなど)は見出しを出す
+     まちがえて えらび直す場面(L.btRetry)と スタミナ切れは これまでどおり */
+  const btStop=!!(q.bt)&&!staminaOut&&!(L&&L.btRetry);
+  const noHead=btStop&&btCut&&res.isCorrect;
+  const card='<div class="fb-card '+(staminaOut?'ng':cls)+(btStop?' bt-fb':'')+'" id="fb-card">'
+    +(noHead?'':'<div class="fb-head"><p class="fb-title '+(staminaOut?'ng':cls)+'">'
+    +(staminaOut?'スタミナが切れた…':title)+'</p>'+comboChip+'</div>')
     +rvClear+comboEnd+ratingLine+dbgLine
-    +(!staminaOut&&fb.ansText?'<p class="fb-exp"><b>'+fb.ansText+'</b></p>':'')
+    +(!staminaOut&&fb.ansText&&!(btStop&&res.isCorrect)?'<p class="fb-exp"><b>'+fb.ansText+'</b></p>':'')
     +'<p class="fb-exp">'+tileTokLesson(fb.expText)+'</p>'
+    +(btStop?'<button class="btn'+(cls==='ng'?' red':'')+'" onclick="next()">つづける</button>':'')
     +'</div>';
   const area=document.getElementById('q-area');
   area.querySelectorAll('.fb-card').forEach(e=>e.remove());   // R57: やり直しでカードを積み上げない
@@ -17431,6 +17512,23 @@ function renderFeedback(q,cat,res,ratingRes,fb){
     foot.className='lesson-foot '+cls;
     foot.innerHTML='<div class="foot-wait">べつの牌をタップしよう</div>';
     discardRearm();
+    return;
+  }
+  if(btStop){
+    const bq=document.getElementById('bt-q'), bu=document.getElementById('bt-ui');
+    if(bq) bq.style.display='none';
+    if(bu) bu.style.display='none';
+    footNone(foot);
+    // 入りきらない小さい画面のときだけ、カードが見えるところまで送る(入っていれば 卓は動かない)
+    requestAnimationFrame(()=>{
+      const fc=document.getElementById('fb-card'); if(!fc) return;
+      const over=fc.getBoundingClientRect().bottom-area.getBoundingClientRect().bottom;
+      if(over>1) area.scrollTop+=Math.ceil(over)+6;
+    });
+    if(milestone){
+      playFx('<div class="fx-ico">🔥</div><div class="fx-t">'+L.combo+' COMBO!</div>'
+        +'<div class="fx-s">'+COMBO_MILESTONES[L.combo]+'</div>','fx-combo',MOTION.comboMilestone);
+    }
     return;
   }
   foot.className='lesson-foot '+cls;
