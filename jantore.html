@@ -497,6 +497,20 @@ span.tv-riichi-tile{transform:rotate(-90deg);}
 .solo-res .sr-sub{margin:3px 2px 8px; font-size:clamp(12.5px,3.5vw,14px); color:var(--ink-soft); text-align:left; line-height:1.55;}
 .solo-res .sr-btns{display:flex; gap:8px; margin-top:10px;}
 .solo-res .sr-btns .btn{flex:1 1 0; padding:11px 10px;}
+/* R85: 符計算トレーニング(内訳の表・問いの中の小さな牌) */
+.fu-tl{display:inline-flex; gap:1px; vertical-align:middle; margin:0 3px;}
+.fu-tl .tile{width:20px; max-width:20px; flex:none; border-radius:2px;}
+.q-text .fu-tl .tile{width:24px; max-width:24px;}
+.fu-exp{margin:4px 0 0; text-align:left;}
+.fu-row{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:3px 2px; border-bottom:1px dashed var(--line,rgba(0,0,0,.12)); font-size:13px; font-weight:700;}
+.fu-row .fu-lab{display:flex; align-items:center; flex-wrap:wrap; gap:2px;}
+.fu-row .fu-v{font-variant-numeric:tabular-nums; white-space:nowrap;}
+.fu-row.fu-focus{background:var(--gold-soft,rgba(240,190,60,.18)); border-radius:6px;}
+.fu-sum{font-size:13px; font-weight:800; margin:6px 0 0;}
+.fu-sum b,.fu-ans b{color:var(--jade-ink);}
+.fu-ans{font-size:15px; font-weight:900; margin:4px 0 0;}
+.fu-note,.fu-tip{font-size:12px; line-height:1.55; margin:6px 0 0; text-align:left; color:var(--ink-soft); font-weight:700;}
+.fu-tip{color:var(--ink);}
 #bt-board .f-wait{margin:6px 0 0;}
 .q-ctx{font-size:clamp(12.5px, 3.5vw, 14.5px); color:var(--ink-soft); font-weight:700; background:var(--jade-soft);
   border-radius:10px; padding:8px 12px; margin-bottom:12px;}
@@ -4431,8 +4445,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.76.0';
-const BUILD_ID='20261009-01';
+const APP_VER='0.77.0';
+const BUILD_ID='20261010-01';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -4578,18 +4592,14 @@ function showCallEffect(kind){
   if(mjfxSound(kind)&&L) L.fxSnd=true;
   return dur;
 }
-/* ロン・ツモ。まず「ロン！」だけを出し、少し遅れて「アガリ！」を足す。
-   最初から1行で「ロン！ アガリ！」と出さない(アガった、というリズムを作るため) */
+/* ロン・ツモ。「ロン！」「ツモ！」だけを出す。
+   R85: R60〜R84 は 少し遅れて「アガリ！」を足していたが、「ロン！ アガリ！」と重ねて言うことになるのでやめた。
+   演出の長さ(dur・消えるまでの予定)は 変えていない(進行と結果カードのタイミングは そのまま) */
 function showWinEffect(kind){
   const d=MJFX[kind]; if(!d||d.kind!=='win') return 0;
   const red=reducedMotion();
   const dur=red?MJFX_MS.winR:MJFX_MS.win, at=red?MJFX_MS.agariAtR:MJFX_MS.agariAt;
   if(mjfxShow('<span class="mjfx-t">'+d.t+'</span>',d.cls)){
-    BT_TIMERS.push(setTimeout(()=>{
-      const el=mjfxLayer(), box=el&&el.querySelector('.mjfx');
-      if(box&&!box.querySelector('.mjfx-agari'))
-        box.insertAdjacentHTML('beforeend','<span class="mjfx-agari">アガリ！</span>');
-    },at));
     mjfxSchedule(Math.max(dur,at+MJFX_MS.fade+120));
   }
   if(mjfxSound(kind)&&L) L.fxSnd=true;
@@ -5303,7 +5313,7 @@ function soloYakuEval(tiles,o){
   /* 七対子 */
   if(kinds.length===7&&kinds.every(i=>c[i]===2)){
     const keys=base.concat(['chiitoi'],tileY); if(allYao) keys.push('honroutou');
-    cands.push(pack(keys,25,'chiitoi',0));
+    const fc=fuChiitoi(); const r=pack(keys,fc.fu,'chiitoi',0); r.fuItems=fc.items; r.fuRaw=fc.raw; cands.push(r);
   }
   /* ふつうの形: 分けかた × アガリ牌を どの組で待っていたか */
   soloDecomps(c).forEach(d=>{
@@ -5337,18 +5347,20 @@ function soloYakuEval(tiles,o){
       else if(win===x.i) spots.push(x.i%9===6?'penchan':'ryanmen');        // 789 を 7 で = ペンチャン
       else if(win===x.i+2) spots.push(x.i%9===0?'penchan':'ryanmen');      // 123 を 3 で = ペンチャン
     });
+    /* R85: 符は 共通エンジン(fuBreakdown / fuPinfu)で数える。Road・トレーニングと同じ計算 */
+    const nm=i=>TE_NAMES[i];
+    const fsets=d.sets.map(x=>({tiles:x.run?[nm(x.i),nm(x.i+1),nm(x.i+2)]:[nm(x.i),nm(x.i),nm(x.i)],meld:null}));
+    const fspot=sp=>{ if(sp==='tanki') return {head:true};
+      const ix=d.sets.findIndex(x=>{ const t=x.run?[x.i,x.i+1,x.i+2]:[x.i]; if(t.indexOf(win)<0) return false;
+        return (fuWaitPart(fsets[d.sets.indexOf(x)].tiles,o.winTile,false).type===sp); });
+      return ix>=0?{ix}:null; };
     [...new Set(spots)].forEach(sp=>{
       const pinfu=runs.length===4&&!soloIsYakuhaiIdx(d.head)&&sp==='ryanmen';
-      let fu;
-      if(pinfu) fu=20;
-      else{
-        fu=20+2;                                                           // 基本20符＋ツモ2符
-        trips.forEach(x=>{ fu+=soloIsYaochu(x.i)?8:4; });                  // 暗刻: 中の牌4符 / 1・9・字牌8符
-        if(soloIsYakuhaiIdx(d.head)) fu+=2;                                // 役牌のアタマ
-        if(sp==='tanki'||sp==='kanchan'||sp==='penchan') fu+=2;            // 待ちの形
-        fu=Math.ceil(fu/10)*10;
-      }
-      cands.push(pack(pinfu?keys0.concat(['pinfu']):keys0,fu,'std',nYakuhai));
+      const fr=pinfu?fuPinfu('tsumo')
+        :fuBreakdown({sets:fsets,headTile:nm(d.head),win:'tsumo',winTile:o.winTile,spot:fspot(sp),menzen:true,rw:SOLO_RW,sw:SOLO_SW});
+      const r=pack(pinfu?keys0.concat(['pinfu']):keys0,fr.fu,'std',nYakuhai);
+      r.fuItems=fr.items; r.fuRaw=fr.raw;
+      cands.push(r);
     });
   });
   if(!cands.length) return null;
@@ -5796,6 +5808,16 @@ function renderTraining(){
     +SCORE_TRAIN_N+'問1セット。何度でもくりかえせるよ</p>'
     +trainOptionsHTML('score')
     +'</div>'
+    /* R85 符計算トレーニング: 点数トレーニングとは べつのカード */
+    +'<div class="card" id="tr-fu-card">'
+    +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">'
+    +'<span style="font-size:30px;">🧮</span>'
+    +'<div style="flex:1;"><b style="font-size:15px;">符計算</b>'
+    +'<div style="font-size:12px;color:var(--ink-soft);font-weight:700;">アガリ形から符を計算しよう</div></div></div>'
+    +'<p style="font-size:11px;color:var(--ink-soft);margin:0 0 10px;font-weight:700;">'
+    +FU_TRAIN_N+'問1セット（約5分）。何度でもくりかえせるよ</p>'
+    +fuTrainPickHTML()
+    +'</div>'
     +'<p style="text-align:center;font-size:11px;color:var(--ink-soft);padding:0 24px;">他のカテゴリ（役判定・押し引き…）は学習ロードの進行で解放予定</p>';
 }
 /* tiles: 数値=その枚数形だけ / 'auto'=おまかせ(習った枚数からレーティングに合わせて選ぶ)
@@ -5809,6 +5831,20 @@ function startTraining(cat,tiles){
   }
   /* R69 点数トレーニング: 10問を先に作ってから始める(seedを渡せば同じセットになる＝テストできる)。
      点数のレーティングはまだ作らないので rcat は持たせない(§45) */
+  /* R85 符計算トレーニング: STEP(1〜4) か 'review'。10問を先に作ってから始める */
+  if(cat==='fu'){
+    const seed=(FU_SEED!=null?FU_SEED:(Date.now()^(Math.random()*0x7fffffff)))>>>0;
+    const step=tiles==='review'?'review':Math.max(1,Math.min(4,+tiles||1));
+    const qs=step==='review'?fuReviewSet(seed):fuTrainSet(step,seed);
+    if(!qs.length) return;
+    L={course:{id:'tr-fu',title:step==='review'?'符計算 復習':'符計算 STEP'+step,type:'fu',training:true},
+       qs,idx:0,correct:0,sel:null,checked:false,done:false,
+       rcat:null,ratingStart:null,bigMiss:0,startedAt:Date.now(),combo:0,maxCombo:0,
+       teachN:qs.filter(x=>x&&x.ch1t).length,fuTrain:{step,n:0,ok:0}};
+    document.getElementById('lesson').classList.add('show');
+    renderQ();
+    return;
+  }
   if(cat==='score'){
     const lv=scoreTrainLevel(tiles||1);
     const qs=scoreTrainSet(lv.id,(Date.now()^(Math.random()*0x7fffffff))>>>0);
@@ -6287,7 +6323,7 @@ function ch1MiniContains(big,small){  // bigのmultisetがsmallを包含する�
    4枚・7枚(judge==='target')は やさしさを保つため R71のままにしてある。 */
 function ch1MiniOk(i){
   const mg=L.mg, five=mg.hand.concat([mg.tsumo]);
-  if(mg.judge==='hand') return mgAllowedIdx(five,mg.wall).indexOf(i)>=0;
+  if(mg.judge==='hand') return mgAllowedIdxSeen(five,mg.disc).indexOf(i)>=0;   // R85: 見えている牌だけで決める
   const rest=five.slice(); rest.splice(i,1);
   return ch1MiniReachable(rest,mg.wall,mg.target);
 }
@@ -6421,6 +6457,7 @@ function ch1MiniDraw(){
   if(!L||!L.mg||L.checked) return;
   const mg=L.mg;
   if(mg.phase!=='draw'||mg.won||!mg.wall.length) return;
+  if(mg.judge==='hand') mg.repaired=(mg.repaired||0)+(mgRepairWall(mg.hand,mg.disc,mg.wall)?1:0);   // R85
   const t=mg.wall.shift();
   mg.tsumo=t;
   // 自動アガリはしない(手牌UI共通原則⑦): アガリ形でもユーザー自身が「アガリ！」を押して判定する
@@ -6440,7 +6477,7 @@ function ch1MiniRiichiCands(five){
      テンパイにすると近さは必ず最小になるので、候補が空になることはない
      (= リーチできなくなる局は作られない)。 */
   if(typeof L!=='undefined'&&L&&L.mg&&L.mg.judge==='hand'){
-    const al=mgAllowedIdx(five,L.mg.wall);
+    const al=mgAllowedIdxSeen(five,L.mg.disc);
     const keep=out.filter(i=>al.indexOf(i)>=0);
     if(keep.length) return keep;
   }
@@ -6541,7 +6578,7 @@ function ch1MiniDiscard(i){
     if(g){
       if(mg.judge!=='hand') g.innerHTML='その牌は組でつかえるよ！ペアや、ならんでいる牌はのこそう。';
       else{
-        const why=mgWhyBad(five,i,mg.wall);
+        const why=mgWhyBadSeen(five,i,mg.disc);
         g.innerHTML=why==='set'?'できている組は くずさずに のこそう！'
           :(why==='far'?'その牌を切ると、アガリから遠くなってしまうよ。ほかの牌をえらんでみよう！'
           :'こっちを切ると、つぎに使える牌が へってしまうよ。ほかの牌をえらんでみよう！');
@@ -7430,6 +7467,73 @@ function mgAllowedTiles(five,wall){
   if(!cand.length) return [];
   const keep=cand.filter(X=>!cand.some(Y=>Y!==X&&mgDominates(Y,X)));
   return (keep.length?keep:cand).map(c=>c.t);
+}
+/* ===== R85: 見えている牌だけで決める =====
+   R73〜R84 は「のこりの山(プレイヤーには見えない)」にある牌だけで すすむ牌を数えていた。
+   そのため 7m・9m のように 8m を待つ形でも、山に8mが入っていない局では「価値がない形」とされ、
+   それを残した合理的な打牌が【台本の山と合わないだけで】不正解になることがあった(実機で指摘)。
+   R85 からは、プレイヤーが知っている情報(手牌＋ツモ牌＋自分の捨て牌)だけで決める。
+     すすむ牌 = 34種類のうち、まだ見えていない枚数(4 − 見えている枚数)が のこっている牌
+   良し悪しの決めかた(mgDominates: 明確に劣る打牌だけを不正解)は R73 のまま。
+   出題の監査(mgAudit)は R73 のまま(山を見て「台本どおりの道で かならずアガれる」局をえらぶ)。
+   台本にない合理的な打牌をえらんだときは、ツモる直前に 山を そっと入れかえて(mgRepairWall)、アガリまでの道を のこす。
+   山は見えないので、入れかえてもプレイヤーから見て ふしぎなことは起きない。 */
+function mgSeenKinds(five,seen){
+  const c=mgCnt(five.concat(seen||[])), ki=[], cnt={};
+  for(let i=0;i<34;i++){ const r=4-c[i]; if(r>0){ ki.push(i); cnt[i]=r; } }
+  return {ki,cnt};
+}
+function mgCandsSeen(five,seen){
+  const c=mgCnt(five), nSets=mgSets(five.length-1);
+  const {ki,cnt}=mgSeenKinds(five,seen);
+  const done={}, cand=[];
+  for(let i=0;i<five.length;i++){
+    if(done[five[i]]) continue; done[five[i]]=1;
+    const ti=mgIdx(five[i]);
+    c[ti]--;
+    const sh=mgShantenC(c,nSets), u=mgUsefulC(c,nSets,ki,cnt);
+    c[ti]++;
+    cand.push({t:five[i],sh,u:u.slice(),n:u.n});
+  }
+  return cand;
+}
+function mgAllowedSeen(five,seen){
+  const cand=mgCandsSeen(five,seen);
+  if(!cand.length) return [];
+  const keep=cand.filter(X=>!cand.some(Y=>Y!==X&&mgDominates(Y,X)));
+  return (keep.length?keep:cand).map(c=>c.t);
+}
+function mgAllowedIdxSeen(five,seen){
+  const tiles=mgAllowedSeen(five,seen), out=[];
+  for(let i=0;i<five.length;i++) if(tiles.indexOf(five[i])>=0) out.push(i);
+  return out;
+}
+function mgWhyBadSeen(five,i,seen){
+  const cand=mgCandsSeen(five,seen), t=five[i];
+  const X=cand.filter(c=>c.t===t)[0];
+  if(!X) return '';
+  const Y=cand.filter(c=>c!==X&&mgDominates(c,X))[0];
+  if(!Y) return '';
+  if(Y.sh<X.sh) return mgBreaksSet(five,i)?'set':'far';
+  return 'narrow';
+}
+/* ツモる直前の 山の入れかえ。のこりのツモ回数に よゆうがない(ツモ回数 ≦ アガリまでの近さ＋1)ときだけ、
+   つぎの1枚を「手が すすむ牌」にする。合理的な打牌(明確に劣らない打牌)は 近さを悪くしないので、
+   これを毎回 くりかえせば、どの合理的な打牌をえらんでも 山がなくなる前に かならずアガれる。
+   すすむ牌は まず のこりの山の中からえらび(入れかえるだけ)、なければ まだ見えていない牌から1枚もってくる */
+function mgRepairWall(hand,disc,wall){
+  if(!wall.length) return false;
+  const s=mgShanten(hand);
+  if(wall.length>s+1) return false;
+  const nSets=mgSets(hand.length), c=mgCnt(hand);
+  const useful=t=>{ const i=mgIdx(t); if(c[i]>=4) return false; c[i]++; const v=mgShantenC(c,nSets)<s; c[i]--; return v; };
+  if(useful(wall[0])) return false;
+  const j=wall.findIndex(useful);
+  if(j>0){ const t=wall[0]; wall[0]=wall[j]; wall[j]=t; return true; }
+  const seen=mgCnt(hand.concat(disc,wall));
+  const pick=TILES34.find(t=>seen[mgIdx(t)]<4&&useful(t));
+  if(pick){ wall[0]=pick; return true; }
+  return false;
 }
 /* なぜその打牌が良くないか(画面の文言をここから作る=§7・§8)。
    ''なら不正解ではない。用語は使わない(§26) */
@@ -9715,65 +9819,127 @@ function ch3HasPinfu(tiles,ctx){
 
    ロンであがった牌でできたコーツは【明刻】としてかぞえる(自分で引いていないため)。
    分解が複数あるときは、いちばん符が高くなる分解をとる(標準ルール)。 */
-const FU_BASE=20, FU_MENZEN_RON=10, FU_TSUMO=2, FU_HEAD_YAKUHAI=2, FU_WAIT_BAD=2;
-function ch3FuSet(gt,opt){
-  // gt=その組の牌3枚 / opt={open:鳴いた組か, kan:カンの種類 or null, ronHere:ロン牌で完成した暗刻か}
-  if(!ch1IsTriplet(gt)) return 0;                       // シュンツは0符
-  const th=ch3IsTermHon(gt[0]);
-  if(opt.kan==='ankan') return th?32:16;
-  if(opt.kan) return th?16:8;                            // 大明槓・加槓
-  if(opt.open||opt.ronHere) return th?4:2;               // 明刻(ロンで完成したコーツも明刻)
-  return th?8:4;                                         // 暗刻
+/* ===== R85 符の共通エンジン =====
+   Road(ch3Fu)・点数トレーニング・符計算トレーニング・ひとり麻雀(soloYakuEval) は、ぜんぶ この1か所で符を数える。
+   同じ牌姿・同じ条件なら、どの画面でも同じ符になる(R84 まではひとり麻雀だけ べつに足し算していた)。
+   1つの「読みかた」(分けかた × アガリ牌をどの組で待っていたか)ごとに、内訳(items)つきで数える。
+     副底20 ＋ 門前ロン10 / ツモ2 ＋ 面子(下表) ＋ 役牌の雀頭2 ＋ 待ち(単騎・嵌張・辺張 2) → 10符単位に切り上げ
+     面子        中張牌  么九牌(1・9・字)
+       順子        0       0
+       明刻        2       4      ポン と【ロンした牌で完成した刻子】
+       暗刻        4       8
+       明槓        8      16      大明槓・加槓
+       暗槓       16      32
+     とくべつな形: 平和ツモ 20符(ツモの2符をつけない) / 平和ロン 30符 / 七対子 25符(固定) /
+                   副露していて 切り上げても20符(喰い平和形) → 30符
+   連風牌(場風と自風が同じ風。例: 東場の東家の東)の雀頭: ツモッピィは【2符】(4符にしない)。FU_HEAD_RENPU で決めている。
+   読みかたが2つ以上あるとき: 平和になる読みがあれば 平和(平和の1翻は 符の差より かならず大きい)。
+   それ以外は 符がいちばん高い読み(高点法)。 */
+const FU_BASE=20, FU_MENZEN_RON=10, FU_TSUMO=2, FU_HEAD_YAKUHAI=2, FU_WAIT_BAD=2, FU_HEAD_RENPU=2;
+/* 面子1つの符。gt=その組の牌3枚 / opt={open:鳴いた組か, kan:カンの種類 or null, ronHere:ロン牌で完成した刻子か} */
+function fuSetPart(gt,opt){
+  opt=opt||{};
+  if(!ch1IsTriplet(gt)) return {fu:0,key:opt.open?'chi':'run',label:opt.open?'順子（チー）':'順子'};
+  const th=ch3IsTermHon(gt[0]), yk=th?'yao':'chun';
+  if(opt.kan==='ankan') return {fu:th?32:16,key:'ankan-'+yk,label:'暗槓'};
+  if(opt.kan) return {fu:th?16:8,key:'minkan-'+yk,label:'明槓'};
+  if(opt.open) return {fu:th?4:2,key:'minko-'+yk,label:'明刻（ポン）'};
+  if(opt.ronHere) return {fu:th?4:2,key:'ronko-'+yk,label:'明刻（ロンで完成）'};
+  return {fu:th?8:4,key:'anko-'+yk,label:'暗刻'};
 }
-function ch3FuWait(gt,winTile,isHead){
-  if(isHead) return FU_WAIT_BAD;                         // 単騎
-  if(ch1IsTriplet(gt)) return 0;                         // シャンポン
+function ch3FuSet(gt,opt){ return fuSetPart(gt,opt).fu; }
+/* 待ちの形と符。isHead=アタマで待っていた(単騎) */
+function fuWaitPart(gt,winTile,isHead){
+  if(isHead) return {type:'tanki',label:'単騎待ち',fu:FU_WAIT_BAD};
+  if(ch1IsTriplet(gt)) return {type:'shanpon',label:'シャンポン待ち',fu:0};
   const ns=gt.map(t=>+t[0]).sort((a,b)=>a-b), w=+winTile[0];
-  if(w===ns[1]) return FU_WAIT_BAD;                      // 嵌張(まん中)
-  if(ns[0]===1&&w===3) return FU_WAIT_BAD;               // 辺張 12_3
-  if(ns[2]===9&&w===7) return FU_WAIT_BAD;               // 辺張 89_7
-  return 0;                                              // 両面
+  if(w===ns[1]) return {type:'kanchan',label:'嵌張待ち',fu:FU_WAIT_BAD};
+  if(ns[0]===1&&w===3) return {type:'penchan',label:'辺張待ち',fu:FU_WAIT_BAD};
+  if(ns[2]===9&&w===7) return {type:'penchan',label:'辺張待ち',fu:FU_WAIT_BAD};
+  return {type:'ryanmen',label:'両面待ち',fu:0};
+}
+function ch3FuWait(gt,winTile,isHead){ return fuWaitPart(gt,winTile,isHead).fu; }
+/* 雀頭の符。連風牌も 2符(FU_HEAD_RENPU) */
+function fuHeadPart(t,ctx){
+  const c=ctx||{}, dr=(t==='B'||t==='G'||t==='R'), r=t===c.rw, s=t===c.sw;
+  if(r&&s) return {fu:FU_HEAD_RENPU,key:'head-renpu',label:'雀頭（連風牌）'};
+  if(dr) return {fu:FU_HEAD_YAKUHAI,key:'head-dragon',label:'雀頭（三元牌）'};
+  if(r) return {fu:FU_HEAD_YAKUHAI,key:'head-rw',label:'雀頭（場風）'};
+  if(s) return {fu:FU_HEAD_YAKUHAI,key:'head-sw',label:'雀頭（自風）'};
+  return {fu:0,key:'head',label:'雀頭'};
+}
+/* 1つの読みかたの符と内訳。
+   o={sets:[{tiles:[3枚],meld:鳴いた組(ch3MeldList の形) or null}], headTile, win:'ron'|'tsumo', winTile,
+      spot:{head:true} | {ix:組の番号} | null, menzen, rw, sw}
+   items=[{key,label,fu,tiles?}]。tiles は 画面で その符がついた牌を見せるため */
+function fuBreakdown(o){
+  const items=[], ctx={rw:o.rw,sw:o.sw};
+  items.push({key:'base',label:'副底',fu:FU_BASE});
+  if(o.menzen&&o.win==='ron') items.push({key:'menzen-ron',label:'門前ロン',fu:FU_MENZEN_RON});
+  if(o.win==='tsumo') items.push({key:'tsumo',label:'ツモ',fu:FU_TSUMO});
+  o.sets.forEach((s,ix)=>{
+    const m=s.meld||null;
+    const p=fuSetPart(s.tiles,{open:!!(m&&!m.ankan),kan:m?m.kan:null,
+      ronHere:o.win==='ron'&&!!o.spot&&o.spot.ix===ix&&!m});
+    items.push({key:p.key,label:p.label,fu:p.fu,tiles:s.tiles.slice(),set:ix,kan:!!(m&&m.kan)});
+  });
+  const h=fuHeadPart(o.headTile,ctx);
+  items.push({key:h.key,label:h.label,fu:h.fu,tiles:[o.headTile,o.headTile],head:true});
+  let wait=null;
+  if(o.spot&&o.winTile){
+    wait=fuWaitPart(o.spot.head?[o.headTile,o.headTile]:o.sets[o.spot.ix].tiles,o.winTile,!!o.spot.head);
+    items.push({key:'wait-'+wait.type,label:wait.label,fu:wait.fu,
+      tiles:o.spot.head?[o.headTile,o.headTile]:o.sets[o.spot.ix].tiles.slice(),wait:true});
+  }
+  const raw=items.reduce((a,x)=>a+x.fu,0);
+  let fu=Math.ceil(raw/10)*10, adj=null;
+  if(!o.menzen&&fu<=20){ fu=30; adj='kuipinfu'; }                  // 喰い平和形は30符(20符は平和ツモだけ)
+  return {fu,raw,items,adj,wait:wait?wait.type:null,kind:'calc',menzen:!!o.menzen};
+}
+/* 平和の符。ツモ=20(ツモの2符をつけない) / ロン=30(副底＋門前ロン) */
+function fuPinfu(win){
+  const items=[{key:'base',label:'副底',fu:FU_BASE}];
+  if(win==='ron') items.push({key:'menzen-ron',label:'門前ロン',fu:FU_MENZEN_RON});
+  const fu=win==='tsumo'?20:30;
+  return {fu,raw:fu,items,adj:win==='tsumo'?'pinfu-tsumo':null,wait:'ryanmen',
+    kind:win==='tsumo'?'pinfu-tsumo':'pinfu-ron',menzen:true};
+}
+function fuChiitoi(){
+  return {fu:25,raw:25,items:[{key:'chiitoi',label:'七対子',fu:25}],adj:'chiitoi',wait:'tanki',kind:'chiitoi',menzen:true};
+}
+/* 14枚(鳴いた組の牌もふくむ)と条件から、読みかた ぜんぶの符を出す */
+function fuInterps(tiles,ctx){
+  ctx=ctx||{};
+  const ms=ch3MeldList(ctx), menzen=ctx.menzen!==false&&!ms.some(m=>!m.ankan);
+  const out=[];
+  ch3Decomps(tiles,ctx).forEach((d,di)=>{
+    const mkAt=d.mkAt||{}, mi=d.mi||[];
+    const sets=d.sets.map((g,ix)=>({tiles:sortTiles(g.map(k=>tiles[k])),meld:mkAt[ix]||null}));
+    const spots=[];
+    if(ctx.winTile){
+      if(d.headTile===ctx.winTile) spots.push({head:true});
+      sets.forEach((s,ix)=>{ if(!mi.includes(ix)&&s.tiles.includes(ctx.winTile)) spots.push({ix}); });
+    }
+    if(!spots.length) spots.push(null);
+    spots.forEach(sp=>{
+      const r=fuBreakdown({sets,headTile:d.headTile,win:ctx.win,winTile:ctx.winTile,spot:sp,menzen,rw:ctx.rw,sw:ctx.sw});
+      r.decomp=di; r.spot=sp;
+      out.push(r);
+    });
+  });
+  return out;
 }
 function ch3FuDetail(tiles,ctx){
   ctx=ctx||{};
-  const ms=ch3MeldList(ctx), hasM=ms.length>0;
-  const menzen=ctx.menzen!==false&&!hasM;
-  if(!hasM&&ch3IsChiitoi(tiles)) return {fu:25,kind:'chiitoi',menzen:true};
-  if(ch3HasPinfu(tiles,ctx))
-    return {fu:ctx.win==='tsumo'?20:30,kind:ctx.win==='tsumo'?'pinfu-tsumo':'pinfu-ron',menzen:true};
-  const decs=ch3Decomps(tiles,ctx);
-  if(!decs.length) return null;
+  const ms=ch3MeldList(ctx);
+  const interps=fuInterps(tiles,ctx);
+  /* 七対子: ふつうの形(二盃口)にも読める手は ふつうの形で数える(二盃口のほうが高い。ひとり麻雀と同じ) */
+  if(!ms.length&&ch3IsChiitoi(tiles)&&!interps.length) return Object.assign(fuChiitoi(),{interps:[]});
+  if(ch3HasPinfu(tiles,ctx)) return Object.assign(fuPinfu(ctx.win),{interps});
+  if(!interps.length) return null;
   let best=null;
-  for(const d of decs){
-    const mkAt=d.mkAt||{}, mi=d.mi||[];
-    const sets=d.sets.map(g=>g.map(k=>tiles[k]));
-    const headTile=d.headTile;
-    // ロン牌をどの組に割りあてるかで符が変わる。全パターンのうち最大をとる
-    const spots=[];
-    if(ctx.winTile){
-      if(headTile===ctx.winTile) spots.push({head:true});
-      sets.forEach((gt,ix)=>{ if(!mi.includes(ix)&&gt.includes(ctx.winTile)) spots.push({ix}); });
-    }
-    if(!spots.length) spots.push({none:true});
-    for(const sp of spots){
-      let fu=FU_BASE;
-      if(menzen&&ctx.win==='ron') fu+=FU_MENZEN_RON;
-      if(ctx.win==='tsumo') fu+=FU_TSUMO;
-      if(ch3IsYakuhaiTile(headTile,ctx)) fu+=FU_HEAD_YAKUHAI;
-      sets.forEach((gt,ix)=>{
-        const m=mkAt[ix]||null;
-        fu+=ch3FuSet(gt,{open:!!(m&&!m.ankan),kan:m?m.kan:null,
-          ronHere:ctx.win==='ron'&&sp.ix===ix});
-      });
-      if(ctx.winTile&&!sp.none)
-        fu+=ch3FuWait(sp.head?[headTile,headTile]:sets[sp.ix],ctx.winTile,!!sp.head);
-      fu=Math.ceil(fu/10)*10;
-      if(!hasM||menzen){ /* 門前の20符どまりはピンフ側で処理ずみ */ }
-      else if(fu<=20) fu=30;                 // 喰い平和形は30符(20符はピンフのツモだけ)
-      if(!best||fu>best.fu) best={fu,kind:'calc',menzen};
-    }
-  }
-  return best;
+  interps.forEach(r=>{ if(!best||r.fu>best.fu) best=r; });
+  return Object.assign({},best,{interps});
 }
 function ch3Fu(tiles,ctx){ const d=ch3FuDetail(tiles,ctx); return d?d.fu:null; }
 /* 符 → 代表ラインの系統。1000系=30符 / 1300系=40符 / 七対子系=25符。
@@ -10545,7 +10711,7 @@ function scoreHandByAnswer(ans){
 /* R78: 点数問題か(牌姿＋局面があり、点・払い・翻・系統を答える選択問題)。
    こういう問題は【牌姿 → 条件 → ヒント → 短い問い → 選択肢】の順にならべる(TERMS §61) */
 function isScoreQ(q){
-  return !!(q&&q.hand&&q.ctx3&&q.view===QV_SCORE&&Array.isArray(q.choices));
+  return !!(q&&q.hand&&q.ctx3&&(q.view===QV_SCORE||(typeof QV_FU!=='undefined'&&q.view===QV_FU))&&Array.isArray(q.choices));
 }
 /* 牌姿・条件・ヒント・問いまで(選択肢は呼び出し側)。盤面が作れない手は null(=ふつうのならびで出す) */
 function scoreQBodyHTML(q){
@@ -11483,8 +11649,8 @@ const BT_SKEL={
     intro:'ここからは<b>ミニ実戦</b>！　これまで習ったことを、本物の麻雀とおなじ<b>じゅんばん</b>で'
       +'やってみよう。ツモって、いらない牌を切って…<b>アガリまで</b>いってみよう！',
     introLab:'★ ミニ実戦①',
-    end:{t:'end',won:true,cap:'🀄 ロン！ アガリ！',
-      q:'🎉 <b>ロン！ アガリ！</b><br>少しずつ手を整えて、ロンまでできたね！'
+    end:{t:'end',won:true,cap:'🀄 ロン！',
+      q:'少しずつ手を整えて、ロンまでできたね！'
        +'<br><b>ツモって、いらない牌を切る</b>——これをくりかえすだけで'
        +'手はちゃんと近づいていくんだ。<br>これが麻雀の<b>時間の進みかた</b>だよ。',
       tlab:'ミニ実戦① クリア'},
@@ -11603,8 +11769,8 @@ const BT_SKEL={
       +'だから{E}を3枚そろえると、それだけで<b>役</b>になるんだ。'
       +'ほかの人の捨て牌をもらって、アガリまで いってみよう！',
     introLab:'★ ミニ実戦②',
-    end:{t:'end',won:true,cap:'🀄 ロン！ アガリ！',
-      q:'🎉 <b>ロン！ アガリ！</b><br>鳴くと 手牌から牌がなくなって<b>組が外に出る</b>。'
+    end:{t:'end',won:true,cap:'🀄 ロン！',
+      q:'鳴くと 手牌から牌がなくなって<b>組が外に出る</b>。'
        +'そして<b>ツモらずにすぐ1枚切る</b>。鳴いた組は<b>みぎはしから じゅんばんに</b>ならぶよ。'
        +'<br>ただし<b>鳴いた手ではリーチができない</b>。'
        +'だから鳴くときは、<b>アガれる役がのこるか</b>が大事なんだ。'
@@ -11713,8 +11879,8 @@ const BT_SKEL={
       +'ツモって、いらない牌を切って…テンパイしたら<b>リーチ</b>だ。'
       +'そして さいごは自分の手でアガりきるよ！',
     introLab:'★ ミニ実戦③',
-    end:{t:'end',won:true,cap:'🀄 ツモ！ アガリ！',
-      q:'🎉 <b>ツモ！ アガリ！</b><br>鳴かずに手を整えて、リーチしてツモまでできたね！'
+    end:{t:'end',won:true,cap:'🀄 ツモ！',
+      q:'鳴かずに手を整えて、リーチしてツモまでできたね！'
        +'<br>ツモって切って 少しずつ育てて、テンパイしたら<b>リーチ</b>。そして さいごは自分で<b>ツモ</b>！'
        +'<br>これが1局の流れだよ。自分の手で アガりきれたね！',
       tlab:'ミニ実戦③ クリア'},
@@ -11855,8 +12021,8 @@ const BT_SKEL={
     intro:'さいごは<b>何巡かつづけて</b>打ってみよう！　ツモって、手牌を見て、いらない牌を1枚切る。'
       +'これをくりかえすと、あなたの手はどこまで形になるかな？',
     introLab:'★ つづけて打つ',
-    end:{t:'end',won:true,cap:'🀄 ツモ！ アガリ！',
-      q:'🎉 <b>アガリ！</b>　ツモって、いらない牌を切って、手を整えて…'
+    end:{t:'end',won:true,cap:'🀄 ツモ！',
+      q:'ツモって、いらない牌を切って、手を整えて…'
        +'テンパイしたら<b>リーチ</b>。そして さいごは自分で<b>ツモ</b>！'
        +'<br>これが1局の流れだよ。自分の手で アガりきれたね！',
       tlab:'★ 捨て牌マスター クリア'},
@@ -13335,6 +13501,511 @@ function scoreTrainLog(q,selIdx,ok){
     if(arr.length>SCORE_LOG_MAX) arr.splice(0,arr.length-SCORE_LOG_MAX);
     localStorage.setItem(SCORE_LOG_KEY,JSON.stringify(arr));
   }catch(e){}                      // 保存できなくてもTrainingは続ける
+}
+/* ===== R85 符計算トレーニング =====
+   説明を読むだけでなく、くりかえし解いて 符を数えられるようにする場所。1セット10問(約5分)。
+   いちばん大事な決まり: 【答えの符を先に決めない】。
+     1) ただしいアガリ形を作る → 2) アガリ牌と待ち → 3) ツモ/ロン・門前/副露 → 4) 場風・自風
+     → 5) 共通エンジン(ch3FuDetail / fuInterps)で符を数える → 6) 正解と選択肢 → 7) 解説の内訳
+   解説の内訳(副底・門前ロン・どの面子に何符…)は、その牌姿の計算結果(items)から毎回作る。固定の文はつかわない。
+   読みかたで符が変わる手のうち、ルール(平和を優先・それ以外は高いほう)で決められないものは出さない(fuProbCheck)。 */
+const FU_TRAIN_N=10;
+let FU_SEED=null;   // テスト用: 数を入れると同じセットになる(本番は null = 毎回ちがう)
+const FU_STEPS=[
+  {id:1,title:'符の基本',desc:'副底・門前ロン・ツモ・切り上げ・平和ツモ・七対子'},
+  {id:2,title:'面子・雀頭の符',desc:'暗刻と明刻・么九牌・槓子・役牌の雀頭'},
+  {id:3,title:'待ちの符',desc:'両面・嵌張・辺張・単騎・シャンポン'},
+  {id:4,title:'総合',desc:'14枚のアガリ形から 符を最後まで'},
+];
+/* 符のきまり(復習の単位)。tip は まちがえたときの 短いひとこと */
+const FU_RULES={
+  base:{label:'副底 20符',tip:'どの手も 副底20符から 数えはじめるよ。'},
+  menzenRon:{label:'門前ロン 10符',tip:'鳴いていない手でロンしたら 10符たすよ。'},
+  tsumo:{label:'ツモ 2符',tip:'ツモでアガったら 2符たすよ（平和ツモだけは つけない）。'},
+  pinfuTsumo:{label:'平和ツモ 20符',tip:'平和ツモは ツモの2符をつけず、20符のままだよ。'},
+  pinfuRon:{label:'平和ロン 30符',tip:'平和のロンは 副底20符＋門前ロン10符で 30符だよ。'},
+  chiitoi:{label:'七対子 25符',tip:'七対子は いつでも25符。切り上げもしないよ。'},
+  kiriage:{label:'切り上げ',tip:'さいごに 10符単位へ切り上げるよ（32符 → 40符）。'},
+  anko:{label:'暗刻',tip:'手の中だけで そろえた刻子は 暗刻（中張牌4符・么九牌8符）。'},
+  minko:{label:'明刻（ポン）',tip:'ポンした刻子は 明刻（中張牌2符・么九牌4符）。'},
+  ronko:{label:'ロンで完成した刻子',tip:'ロンした牌で完成した刻子は 明刻あつかい（2符・4符）だよ。'},
+  yaochu:{label:'么九牌の刻子',tip:'1・9・字牌の刻子は 中張牌の2倍の符だよ。'},
+  kan:{label:'槓子',tip:'槓子は 刻子の4倍（明槓 8・16符／暗槓 16・32符）。'},
+  headYakuhai:{label:'役牌の雀頭',tip:'三元牌・場風・自風の雀頭は 2符だよ。'},
+  renpu:{label:'連風牌の雀頭',tip:'場風と自風が同じ風の雀頭も 2符（ツモッピィのルール）。'},
+  headPlain:{label:'役牌でない雀頭',tip:'役牌でない雀頭は 0符だよ。'},
+  waitRyanmen:{label:'両面待ち',tip:'両面待ちは 0符だよ。'},
+  waitShanpon:{label:'シャンポン待ち',tip:'シャンポン待ちは 0符だよ（刻子の符はつく）。'},
+  waitKanchan:{label:'嵌張待ち',tip:'まん中を待つ 嵌張待ちは 2符だよ。'},
+  waitPenchan:{label:'辺張待ち',tip:'12で3・89で7を待つ 辺張待ちは 2符だよ。'},
+  waitTanki:{label:'単騎待ち',tip:'雀頭を待つ 単騎待ちは 2符だよ。'},
+  multi:{label:'読みかたが2つ',tip:'待ちの読みかたが2つあるときは、符が高いほうで数えるよ（平和になる読みがあれば平和）。'},
+  kuipinfu:{label:'副露した平和形 30符',tip:'鳴いていて 20符になる手は 30符にするよ。'},
+};
+const FU_WAIT_RULE={ryanmen:'waitRyanmen',shanpon:'waitShanpon',kanchan:'waitKanchan',penchan:'waitPenchan',tanki:'waitTanki'};
+const FU_WAIT_LABEL={ryanmen:'両面待ち',kanchan:'嵌張待ち',penchan:'辺張待ち',tanki:'単騎待ち',shanpon:'シャンポン待ち'};
+/* 内訳の1行 → 復習の単位 */
+function fuItemRules(it){
+  const k=it.key, out=[];
+  if(k==='menzen-ron') out.push('menzenRon');
+  else if(k==='tsumo') out.push('tsumo');
+  else if(/^anko-/.test(k)) out.push('anko');
+  else if(/^minko-/.test(k)) out.push('minko');
+  else if(/^ronko-/.test(k)) out.push('ronko');
+  else if(/^(ankan|minkan)-/.test(k)) out.push('kan');
+  else if(k==='head-renpu') out.push('renpu');
+  else if(/^head-(dragon|rw|sw)$/.test(k)) out.push('headYakuhai');
+  else if(k==='head') out.push('headPlain');
+  else if(/^wait-/.test(k)) out.push(FU_WAIT_RULE[k.slice(5)]);
+  else if(k==='chiitoi') out.push('chiitoi');
+  if(/-yao$/.test(k)) out.push('yaochu');
+  return out;
+}
+/* 1問の答え(det)に 出てくる きまり ぜんぶ */
+function fuDetRules(det){
+  const r=new Set();
+  if(det.kind==='pinfu-tsumo') r.add('pinfuTsumo');
+  else if(det.kind==='pinfu-ron') r.add('pinfuRon');
+  else if(det.kind==='chiitoi') r.add('chiitoi');
+  else{
+    det.items.forEach(it=>{ if(it.fu>0||it.wait) fuItemRules(it).forEach(x=>r.add(x)); });
+    if(det.raw%10) r.add('kiriage');
+    if(det.adj==='kuipinfu') r.add('kuipinfu');
+  }
+  if(fuMultiWait(det)) r.add('multi');
+  return [...r];
+}
+/* 同じ分けかたの中で 待ちの読みかたが2つ以上あるか(どちらも アガリ牌をふくむ) */
+function fuMultiWait(det){
+  if(!det||!det.interps) return false;
+  const w=new Set(det.interps.filter(x=>x.decomp===(det.decomp!=null?det.decomp:0)).map(x=>x.wait));
+  return w.size>1;
+}
+/* ---- 乱数(テストは seed を固定する) ---- */
+function fuRnd(seed){ return scoreTrainRnd(seed); }
+function fuPick(a,rnd){ return a[Math.min(a.length-1,Math.floor(rnd()*a.length))]; }
+function fuShuffle(a,rnd){ for(let i=a.length-1;i>0;i--){ const j=Math.min(i,Math.floor(rnd()*(i+1))); const t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+const FU_ALL=TILES34;
+const FU_YAO=t=>ch3IsTermHon(t);
+/* ---- アガリ形を作る ----
+   o={kind:'std'|'pinfu'|'chiitoi', win:'ron'|'tsumo'|null, open:true/false/null, trip:刻子の出やすさ, kan:槓子を使うか,
+      head:'yakuhai'|'plain'|null} */
+function fuBuild(rnd,o){
+  o=o||{};
+  const rw=fuPick(['E','S'],rnd), sw=fuPick(['E','S','W','N'],rnd);
+  const win=o.win||(rnd()<0.5?'ron':'tsumo');
+  const isYh=t=>t==='B'||t==='G'||t==='R'||t===rw||t===sw;
+  if(o.kind==='chiitoi'){
+    const ks=fuShuffle(FU_ALL.slice(),rnd).slice(0,7);
+    const tiles=sortTiles([].concat(...ks.map(k=>[k,k])));
+    return {tiles,melds:[],win,winTile:fuPick(ks,rnd),rw,sw};
+  }
+  const sets=[], melds=[];
+  const pinfu=o.kind==='pinfu';
+  for(let s=0;s<4;s++){
+    let t;
+    if(!pinfu&&rnd()<(o.trip!=null?o.trip:0.42)){ const v=fuPick(FU_ALL,rnd); t=[v,v,v]; }
+    else{ const su=fuPick(['m','p','s'],rnd), a=1+Math.floor(rnd()*7); t=[a+su,(a+1)+su,(a+2)+su]; }
+    sets.push(t);
+  }
+  let head;
+  if(o.head==='yakuhai') head=fuPick(['B','G','R',rw,sw],rnd);
+  else if(o.head==='plain'||pinfu){ do{ head=fuPick(FU_ALL,rnd); }while(isYh(head)); }
+  else head=fuPick(FU_ALL,rnd);
+  /* 鳴き: open=true なら1〜2組を鳴く。槓子は kan のときだけ */
+  const openN=o.open===true?1+(rnd()<0.4?1:0):(o.open===false?0:(rnd()<0.4?1+(rnd()<0.3?1:0):0));
+  const order=fuShuffle([0,1,2,3],rnd);
+  const meldOf={};
+  for(let k=0;k<4&&Object.keys(meldOf).length<openN;k++){
+    const ix=order[k], t=sets[ix];
+    if(t[0]===t[1]){
+      if(o.kan&&rnd()<0.5){ const kind=fuPick(['minkan','kakan'],rnd); meldOf[ix]={type:'kan',kan:kind,tiles:t.concat([t[0]]).join(''),called:t[0],from:fuPick(['left','opposite','right'],rnd)}; }
+      else meldOf[ix]={type:'pon',tiles:t.join(''),called:t[0],from:fuPick(['left','opposite','right'],rnd)};
+    }else meldOf[ix]={type:'chi',tiles:t.join(''),called:fuPick(t,rnd),from:'left'};
+  }
+  /* 暗槓(鳴いたことにならない) */
+  if(o.kan&&!pinfu){ const tr=order.filter(ix=>!meldOf[ix]&&sets[ix][0]===sets[ix][1]);
+    if(tr.length&&rnd()<0.55){ const ix=tr[0]; meldOf[ix]={type:'kan',kan:'ankan',tiles:sets[ix].concat([sets[ix][0]]).join(''),called:sets[ix][0]}; } }
+  Object.keys(meldOf).sort().forEach(ix=>melds.push(meldOf[ix]));
+  /* アガリ牌は 鳴いていない組かアタマから */
+  const conc=[]; sets.forEach((t,ix)=>{ if(!meldOf[ix]) conc.push(...t); }); conc.push(head,head);
+  const winTile=fuPick(conc,rnd);
+  const tiles=sortTiles([].concat(...sets,[head,head]));
+  return {tiles,melds,win,winTile,rw,sw};
+}
+/* 作った手から 問題データ(画面と計算が見る形)を作る */
+function fuProbOf(b){
+  const menzenAll=!b.melds.some(m=>!(m.type==='kan'&&m.kan==='ankan'));
+  const c={win:b.win,winTile:b.winTile,rw:b.rw,sw:b.sw,melds:b.melds.map(m=>Object.assign({},m))};
+  /* 鳴いていないロンは リーチしていることにする(役がないとアガれないため。リーチは符を変えない) */
+  if(menzenAll&&b.win==='ron') c.riichi=true;
+  c.note=menzenAll?'門前':'副露あり';
+  return {hand:b.tiles.join(''),ctx3:ch3Ctx(c)};
+}
+/* 牌の枚数(槓子の4枚目もふくむ) */
+function fuTileCount(p){
+  const cnt=ch3Cnt(sortTiles(parseHand(p.hand)));
+  (p.ctx3.melds||[]).forEach(m=>{ if(m.type==='kan'){ const t=meldNorm(m).tiles[0]; cnt[t]=(cnt[t]||0)+1; } });
+  return cnt;
+}
+/* 出題してよいか。''なら出せる。理由はテストが 1つずつ見られるように文字で返す */
+function fuProbCheck(p,opt){
+  const o=opt||{};
+  const tiles=sortTiles(parseHand(p.hand)), c=p.ctx3;
+  if(tiles.length!==14) return 'size';
+  if(Object.values(fuTileCount(p)).some(v=>v>4)) return 'tile-over-4';
+  if((c.melds||[]).some(m=>meldCheck(m)!=='')) return 'meld';
+  if(ch3IsKokushi(tiles)) return 'kokushi';
+  const keys=ch3YakuList(tiles,c);
+  if(!keys.length) return 'no-yaku';                                   // 役がなければアガれない
+  if(keys.some(k=>CH3_YAKU_META[k]&&CH3_YAKU_META[k].yakuman)) return 'yakuman';
+  const det=ch3FuDetail(tiles,c);
+  if(!det) return 'no-fu';
+  const chii=ch3IsChiitoi(tiles)&&!(c.melds||[]).length;
+  if(chii&&det.interps.length) return 'chiitoi-or-std';               // 七対子とふつうの形の両方に読める手は出さない
+  if(!chii){
+    /* 分けかたが2つ以上あって、分けかたごとの いちばん高い符がちがう手は出さない(役もかわりうるため) */
+    const per={}; det.interps.forEach(r=>{ per[r.decomp]=Math.max(per[r.decomp]||0,r.fu); });
+    const vals=new Set(Object.values(per));
+    if(det.kind==='calc'&&vals.size>1) return 'decomp-ambiguous';
+    if(o.single&&Object.keys(per).length>1) return 'decomp-many';
+    /* 平和の手で、平和でない読みのほうが符が高い…は「平和を優先」で決まる。ただし平和は門前だけ */
+  }
+  try{ if(ch3BoardHTML({hand:p.hand,ctx3:c,view:QV_FU})===null) return 'board'; }catch(x){ return 'board'; }
+  return '';
+}
+/* 1問ぶんの計算結果をそろえる(問題・解説・テストが みな同じものを見る) */
+function fuSolve(p){
+  const tiles=sortTiles(parseHand(p.hand)), det=ch3FuDetail(tiles,p.ctx3);
+  if(det&&det.kind==='calc'){ const best=det.interps.find(r=>r.fu===det.fu&&r.wait===det.wait); if(best){ det.decomp=best.decomp; det.spot=best.spot; } }
+  if(det&&det.kind==='chiitoi'){ const w=p.ctx3.winTile;
+    det.items=det.items.concat([{key:'wait-tanki',label:'単騎待ち（七対子は 待ちの符をつけない）',fu:0,tiles:[w,w],wait:true}]); }
+  if(det&&(det.kind==='pinfu-tsumo'||det.kind==='pinfu-ron')){ const best=det.interps.find(r=>r.wait==='ryanmen'&&r.items.every(it=>!/^(anko|ronko|minko)-/.test(it.key))); if(best){ det.decomp=best.decomp; det.spot=best.spot;
+    det.items=det.items.concat(best.items.filter(it=>it.wait)); } }   // 解説で「両面待ち 0符」を見せる(合計は変わらない)
+  return det;
+}
+/* ===== 画面 ===== */
+const QV_FU={river:false,dora:false,note:false};
+function fuTilesHTML(ts){ return '<span class="fu-tl">'+ts.map(t=>tileHTML(t)).join('')+'</span>'; }
+/* 解説: 内訳の表。focus=その問題で聞いた行(太字にする)。答えたあとにだけ出る */
+function fuExpHTML(det,opt){
+  const o=opt||{};
+  let rows='';
+  const row=(lab,ts,fu,cls)=>'<div class="fu-row'+(cls?' '+cls:'')+'"><span class="fu-lab">'+lab+(ts?fuTilesHTML(ts):'')+'</span><b class="fu-v">'+fu+'符</b></div>';
+  det.items.forEach(it=>{
+    const focus=o.focus&&o.focus(it);
+    if(it.fu===0&&!focus&&!it.wait) return;                            // 0符の行は 聞いたときと 待ちだけ出す
+    rows+=row(it.label,it.tiles||null,it.fu,focus?'fu-focus':'');
+  });
+  let foot='';
+  if(det.kind==='chiitoi') foot='<div class="fu-sum">七対子は <b>25符</b>（切り上げない）</div>';
+  else if(det.kind==='pinfu-tsumo') foot='<div class="fu-sum">平和ツモは ツモの2符をつけず <b>20符</b></div>';
+  else{
+    foot='<div class="fu-sum">合計 <b>'+det.raw+'符</b>'
+      +(det.raw%10?' → 切り上げ <b>'+Math.ceil(det.raw/10)*10+'符</b>':'')+'</div>';
+    if(det.adj==='kuipinfu') foot+='<div class="fu-sum">鳴いていて20符の手は <b>30符</b>にする</div>';
+  }
+  let note='';
+  if(fuMultiWait(det)){
+    const alt=det.interps.filter(x=>x.decomp===det.decomp&&x.wait!==det.wait).map(x=>FU_WAIT_LABEL[x.wait]);
+    if(alt.length) note='<p class="fu-note">'+[...new Set(alt)].join('・')+'とも読めるけど、'
+      +(det.kind==='pinfu-tsumo'||det.kind==='pinfu-ron'?'平和になる 両面待ちで':'符が高い '+FU_WAIT_LABEL[det.wait]+'で')+' 数えるよ。</p>';
+  }
+  return '<div class="fu-exp">'+rows+foot+'<div class="fu-ans">→ <b>'+det.fu+'符</b></div>'+note+'</div>';
+}
+function fuTipHTML(rule){ const r=FU_RULES[rule]; return r?'<p class="fu-tip">💡 '+r.tip+'</p>':''; }
+/* ===== 選択肢 =====
+   正解は1つだけ。まちがえやすい数(わすれ・数えまちがい)から作り、足りなければ となりの数で うめる。
+   ならびは乱数でまぜる(毎回 同じ位置に正解が来ない)。choices[i] ごとに「どのきまりを まちがえたか」を持つ */
+function fuMistakes(det){
+  const out=[], push=(v,rule)=>{ if(v>0&&!out.some(x=>x.v===v)) out.push({v,rule}); };
+  if(det.kind==='chiitoi'){ push(20,'chiitoi'); push(30,'chiitoi'); push(50,'chiitoi'); return out; }
+  if(det.kind==='pinfu-tsumo'){ push(22,'pinfuTsumo'); push(30,'pinfuTsumo'); push(40,'pinfuTsumo'); return out; }
+  if(det.kind==='pinfu-ron'){ push(20,'menzenRon'); push(40,'pinfuRon'); push(32,'pinfuRon'); return out; }
+  const r10=v=>Math.ceil(v/10)*10, fin=v=>{ let f=r10(v); if(!det.menzen&&f<=20) f=30; return f; };
+  const has=k=>det.items.some(it=>it.key===k||it.key.indexOf(k)===0);
+  if(det.raw%10) push(det.raw,'kiriage');
+  if(has('menzen-ron')) push(fin(det.raw-10),'menzenRon');
+  if(has('tsumo')) push(fin(det.raw-2),'tsumo');
+  det.items.forEach(it=>{
+    if(/^ronko-/.test(it.key)) push(fin(det.raw+it.fu),'ronko');                 // 暗刻と数えた
+    else if(/^minko-/.test(it.key)) push(fin(det.raw+it.fu),'minko');
+    else if(/^anko-/.test(it.key)) push(fin(det.raw-it.fu/2),'anko');            // 明刻と数えた
+    else if(/^(ankan|minkan)-/.test(it.key)) push(fin(det.raw-it.fu*3/4),'kan'); // 刻子と数えた
+    else if(it.head&&it.fu>0) push(fin(det.raw-it.fu),it.key==='head-renpu'?'renpu':'headYakuhai');
+    else if(it.wait&&it.fu>0) push(fin(det.raw-it.fu),FU_WAIT_RULE[it.key.slice(5)]);
+    if(/-yao$/.test(it.key)) push(fin(det.raw-it.fu/2),'yaochu');               // 么九牌を中張牌と数えた
+  });
+  if(det.adj==='kuipinfu') push(20,'kuipinfu');
+  if(!det.menzen&&!has('tsumo')) push(fin(det.raw+10),'menzenRon');            // 鳴いているのに門前ロンを足した
+  return out.filter(x=>x.v!==det.fu);
+}
+/* 選択肢の数が「まちがえやすい数」から作れず うめた数だったとき、ひとことに使う きまり。その手で 見落としやすい順 */
+const FU_FALLBACK_ORDER=['ronko','menzenRon','kan','anko','minko','yaochu','renpu','headYakuhai','waitKanchan','waitPenchan','waitTanki','tsumo','kuipinfu','kiriage','pinfuTsumo','pinfuRon','chiitoi'];
+function fuFallbackRule(rules){ return FU_FALLBACK_ORDER.find(k=>(rules||[]).indexOf(k)>=0)||'kiriage'; }
+function fuChoices(answer,mist,rnd,fmt,pool){
+  const picked=[];
+  fuShuffle(mist.slice(),rnd).forEach(m=>{ if(picked.length<3&&m.v!==answer&&!picked.some(x=>x.v===m.v)) picked.push(m); });
+  (pool||[answer-10,answer+10,answer+20,answer-20,answer+30,30,40,50]).forEach(v=>{
+    if(picked.length<3&&v>0&&v!==answer&&!picked.some(x=>x.v===v)) picked.push({v,rule:null}); });
+  const all=fuShuffle(picked.concat([{v:answer,rule:null,ok:true}]),rnd);
+  return {choices:all.map(x=>fmt(x.v)),a:all.findIndex(x=>x.ok),rules:all.map(x=>x.ok?null:x.rule)};
+}
+/* ===== 問題を作る ===== */
+function fuQBase(p,det,step,no,total){
+  return {hand:p.hand,ctx3:p.ctx3,view:QV_FU,fuQ:true,fuStep:step,fuFu:det.fu,
+    fuP:{h:p.hand,c:fuCtxPlain(p.ctx3)},qnum:no+' / '+total};
+}
+function fuCtxPlain(c){ const o={win:c.win,winTile:c.winTile,rw:c.rw,sw:c.sw};
+  if(c.melds&&c.melds.length) o.melds=c.melds.map(m=>Object.assign({},m)); if(c.riichi) o.riichi=true; if(c.note) o.note=c.note; return o; }
+/* 総合(STEP1の牌姿の問題・STEP4): この手は何符？ */
+function fuQTotal(p,step,rnd,no,total){
+  const det=fuSolve(p);
+  const ch=fuChoices(det.fu,fuMistakes(det),rnd,v=>v+'符');
+  const rules=fuDetRules(det);
+  ch.rules=ch.rules.map((r,i)=>i===ch.a?null:(r||fuFallbackRule(rules)));
+  return Object.assign(fuQBase(p,det,step,no,total),{q:'この手は <b>何符</b>？',
+    choices:ch.choices,a:ch.a,exp:fuExpHTML(det),
+    expWrong:ch.rules.map(r=>r?fuTipHTML(r):''),fuMiss:ch.rules,fuRules:rules});
+}
+/* 面子・雀頭(STEP2): 聞く組を1つえらぶ。 target=内訳の行(items の index) */
+function fuQPart(p,step,rnd,no,total,ti){
+  const det=fuSolve(p), it=det.items[ti];
+  const isHead=!!it.head;
+  const vals=isHead?[0,2,4,8]:[2,4,8,16,32,0];
+  /* まちがえやすい数: 暗刻⇔明刻・中張⇔么九・槓子⇔刻子 */
+  const mist=[], push=(v,rule)=>{ if(v!==it.fu&&!mist.some(x=>x.v===v)) mist.push({v,rule}); };
+  const yao=/-yao$/.test(it.key), fu=it.fu, k=it.key;
+  if(isHead){ push(0,it.fu?(k==='head-renpu'?'renpu':'headYakuhai'):'headPlain'); push(4,k==='head-renpu'?'renpu':'headYakuhai'); push(2,'headPlain'); }
+  else{
+    const r0=fuItemRules(it)[0];
+    if(/^anko-/.test(k)) push(fu/2,'anko');                         // 明刻と数えた
+    if(/^(minko|ronko)-/.test(k)) push(fu*2,r0);                    // 暗刻と数えた
+    push(yao?fu/2:fu*2,'yaochu');                                   // 中張牌・么九牌を とりちがえた
+    if(/^(ankan|minkan)-/.test(k)){ push(fu/4,'kan'); push(/^ankan-/.test(k)?fu/2:fu*2,'kan'); }
+    else push(fu*4,'kan');
+  }
+  const ch=fuChoices(it.fu,mist,rnd,v=>v+'符',vals);
+  ch.rules=ch.rules.map((r,i)=>i===ch.a?null:(r||fuItemRules(it)[0]));
+  const lab=isHead?'アタマの '+fuTilesHTML(it.tiles):fuTilesHTML(it.tiles.concat(it.kan?[it.tiles[0]]:[]));
+  return Object.assign(fuQBase(p,det,step,no,total),{q:lab+' は <b>何符</b>？',fuPart:ti,fuFu:it.fu,
+    choices:ch.choices,a:ch.a,exp:fuExpHTML(det,{focus:x=>x===it}),
+    expWrong:ch.rules.map(r=>r?fuTipHTML(r):''),fuMiss:ch.rules,fuRules:fuItemRules(it)});
+}
+/* 待ち(STEP3): アガリ牌でどう待っていたか と その符 */
+function fuQWait(p,step,rnd,no,total){
+  const det=fuSolve(p);
+  const right=det.wait;
+  const alts=new Set(det.interps.filter(x=>x.decomp===det.decomp).map(x=>x.wait));   // ほかに読める形は 選択肢に入れない
+  const fuOf=w=>(w==='ryanmen'||w==='shanpon')?0:2;
+  const fmt=w=>FU_WAIT_LABEL[w]+' '+fuOf(w)+'符';
+  const others=fuShuffle(['ryanmen','kanchan','penchan','tanki','shanpon'].filter(w=>!alts.has(w)),rnd).slice(0,3);
+  const all=fuShuffle(others.map(w=>({w,rule:FU_WAIT_RULE[right]})).concat([{w:right,ok:true}]),rnd);
+  const rules=[FU_WAIT_RULE[right]].concat(fuMultiWait(det)?['multi']:[]);
+  return Object.assign(fuQBase(p,det,step,no,total),{q:'アガリ牌 '+fuTilesHTML([p.ctx3.winTile])+' の <b>待ちの形と符</b>は？',
+    fuWait:right,choices:all.map(x=>fmt(x.w)),a:all.findIndex(x=>x.ok),
+    exp:fuExpHTML(det,{focus:x=>!!x.wait}),
+    expWrong:all.map(x=>x.ok?'':(fuMultiWait(det)?fuTipHTML('multi'):fuTipHTML(FU_WAIT_RULE[right]))),
+    fuMiss:all.map(x=>x.ok?null:(fuMultiWait(det)?'multi':FU_WAIT_RULE[right])),fuRules:rules});
+}
+/* STEP1 のきまりの問題(牌姿なし) */
+function fuQRule(kind,rnd,no,total){
+  let q, ans, vals, rule;
+  if(kind==='base'){ q='符の計算は、まず <b>副底</b> から。副底は何符？'; ans=20; vals=[10,25,30]; rule='base'; }
+  else if(kind==='menzenRon'){ q='鳴いていない手で <b>ロン</b>したときに たす符は？'; ans=10; vals=[0,2,20]; rule='menzenRon'; }
+  else if(kind==='tsumo'){ q='<b>ツモ</b>でアガったときに たす符は？（平和ツモはのぞく）'; ans=2; vals=[0,4,10]; rule='tsumo'; }
+  else{ /* 切り上げ */
+    const x=fuPick([22,24,26,28,32,34,36,38,42,44,46,48,52,54,56,58,62,64],rnd);
+    q='<b>'+x+'符</b>を 切り上げると 何符？'; ans=Math.ceil(x/10)*10; vals=[Math.floor(x/10)*10,ans+10,x]; rule='kiriage'; }
+  const all=fuShuffle(vals.map(v=>({v})).concat([{v:ans,ok:true}]),rnd);
+  const note=FU_RULES[rule].tip;
+  return {q,choices:all.map(x=>x.v+'符'),a:all.findIndex(x=>x.ok),exp:'<div class="fu-exp"><div class="fu-ans">→ <b>'+ans+'符</b></div><p class="fu-note">'+note+'</p></div>',
+    expWrong:all.map(()=>''),fuMiss:all.map(x=>x.ok?null:rule),fuRules:[rule],
+    fuQ:true,fuStep:1,fuRule:kind,qnum:no+' / '+total,questionType:'multiple_choice'};
+}
+/* ほしい形が出るまで 作りなおす。作れなければ null(テストで落とす) */
+function fuFind(rnd,o,want,tries){
+  for(let i=0;i<(tries||400);i++){
+    const b=fuBuild(rnd,o), p=fuProbOf(b);
+    if(fuProbCheck(p,{single:!!o.single})!=='') continue;
+    const det=fuSolve(p);
+    if(want&&!want(det,p)) continue;
+    return p;
+  }
+  return null;
+}
+/* STEP2 で聞く組。kind に合う行の index。なければ -1 */
+const FU_PART_KINDS=['anko-chun','anko-yao','minko','ronko','kan','head-yakuhai','head-renpu','head-plain'];
+function fuPartIndex(det,kind){
+  return det.items.findIndex(it=>{
+    if(kind==='anko-chun') return it.key==='anko-chun';
+    if(kind==='anko-yao') return it.key==='anko-yao';
+    if(kind==='minko') return /^minko-/.test(it.key);
+    if(kind==='ronko') return /^ronko-/.test(it.key);
+    if(kind==='kan') return /^(ankan|minkan)-/.test(it.key);
+    if(kind==='head-yakuhai') return /^head-(dragon|rw|sw)$/.test(it.key);
+    if(kind==='head-renpu') return it.key==='head-renpu';
+    if(kind==='head-plain') return it.key==='head';
+    return false; });
+}
+const FU_PART_OPT={
+  'anko-chun':{open:false,trip:0.6},'anko-yao':{open:false,trip:0.7},'minko':{open:true,trip:0.7},
+  'ronko':{open:false,trip:0.6,win:'ron'},'kan':{trip:0.7,kan:true},
+  'head-yakuhai':{head:'yakuhai'},'head-renpu':{head:'yakuhai'},'head-plain':{head:'plain'}};
+/* 待ち(STEP3)で ほしい形 */
+const FU_WAIT_KINDS=['ryanmen','kanchan','penchan','tanki','shanpon'];
+function fuStepQ(step,rnd,no,total,want){
+  /* want = {part:種類} / {wait:種類} / {rule:きまり} / {kind:'pinfu'|'chiitoi', win} */
+  const w=want||{};
+  if(step===2){
+    const kind=w.part||fuPick(FU_PART_KINDS,rnd);
+    const o=Object.assign({single:true},FU_PART_OPT[kind]||{});
+    const p=fuFind(rnd,o,(det,pp)=>{ if(det.kind!=='calc') return false; const ix=fuPartIndex(det,kind); if(ix<0) return false;
+      if(kind==='head-renpu'&&pp.ctx3.rw!==pp.ctx3.sw) return false;
+      /* ロンで完成した刻子は「その刻子でしか待てない」ときだけ(シャンポン1つの読み) */
+      if(kind==='ronko'&&det.interps.length!==1) return false;
+      return true; },1500);
+    if(!p) return null;
+    return fuQPart(p,2,rnd,no,total,fuPartIndex(fuSolve(p),kind));
+  }
+  if(step===3){
+    const kind=w.wait||fuPick(FU_WAIT_KINDS,rnd), multi=!!w.multi;
+    const o={single:true,open:rnd()<0.25?null:false,trip:kind==='shanpon'?0.6:0.3,head:kind==='tanki'?null:'plain'};
+    const p=fuFind(rnd,o,det=>det.wait===kind&&(det.kind==='calc'||det.kind==='pinfu-tsumo'||det.kind==='pinfu-ron')&&(!multi||fuMultiWait(det)),2000);
+    if(!p) return null;
+    return fuQWait(p,3,rnd,no,total);
+  }
+  if(step===1){
+    const kind=w.kind||fuPick(['pinfu','chiitoi'],rnd);
+    const p=fuFind(rnd,{kind,win:w.win||null,open:false},det=>kind==='chiitoi'?det.kind==='chiitoi':(det.kind==='pinfu-tsumo'||det.kind==='pinfu-ron'),800);
+    if(!p) return null;
+    return fuQTotal(p,1,rnd,no,total);
+  }
+  /* STEP4: 総合 */
+  const o={open:w.open!=null?w.open:null,win:w.win||null,trip:w.trip!=null?w.trip:0.45,kan:w.kan!=null?w.kan:rnd()<0.25};
+  if(w.kind) o.kind=w.kind;
+  const p=fuFind(rnd,o,det=>(!w.rule||fuDetRules(det).indexOf(w.rule)>=0),2500);
+  if(!p) return null;
+  return fuQTotal(p,4,rnd,no,total);
+}
+/* 1セット(10問)。枠を先に決めてから中身をつくる(同じ形ばかりにしない) */
+const FU_TEACH={
+  1:'符は <b>副底20符</b> から数えはじめるよ。鳴いていない手の <b>ロンは＋10符</b>、<b>ツモは＋2符</b>。さいごに <b>10符単位へ切り上げ</b>。平和ツモは20符、七対子は25符のまま！',
+  2:'<b>刻子</b>は 手の中でそろえた暗刻なら 中張牌4符・么九牌8符、ポンした明刻なら その半分。<b>槓子は4倍</b>。三元牌・場風・自風の <b>雀頭は2符</b>（連風牌も2符）。',
+  3:'<b>嵌張・辺張・単騎</b>は 2符、<b>両面・シャンポン</b>は 0符。待ちの読みかたが2つあるときは 符が高いほうで数えるよ（平和になる読みがあれば平和）。',
+  4:'ここまでを ぜんぶ合わせよう！ 副底 → ロン/ツモ → 面子 → 雀頭 → 待ち → 切り上げ の順に数えると まちがえにくいよ。'};
+function fuTrainPlan(step,rnd){
+  if(step===1) return fuShuffle([{rule:'base'},{rule:'menzenRon'},{rule:'tsumo'},{rule:'kiriage'},
+    {kind:'pinfu',win:'tsumo'},{kind:'pinfu',win:'tsumo'},{kind:'pinfu',win:'ron'},{kind:'pinfu',win:'ron'},{kind:'chiitoi',win:'tsumo'},{kind:'chiitoi',win:'ron'}],rnd);
+  if(step===2) return fuShuffle(['anko-chun','anko-yao','minko','minko','ronko','kan','kan','head-yakuhai','head-renpu','head-plain'].map(k=>({part:k})),rnd);
+  if(step===3) return fuShuffle(['ryanmen','kanchan','kanchan','penchan','penchan','tanki','tanki','shanpon','shanpon'].map(k=>({wait:k})).concat([{wait:'tanki',multi:true}]),rnd);
+  return fuShuffle([{open:false,win:'ron'},{open:false,win:'ron'},{open:false,win:'ron'},{open:false,win:'tsumo'},{open:false,win:'tsumo'},
+    {open:true,win:'ron'},{open:true,win:'ron'},{open:true,win:'tsumo'},{open:null,kan:true},{rule:'kuipinfu',open:true,win:'ron',trip:0}],rnd);
+}
+function fuTrainSet(step,seed,opt){
+  const rnd=fuRnd(seed), plan=fuTrainPlan(step,rnd), out=[];
+  plan.forEach((w,i)=>{
+    const no=i+1;
+    const q=(step===1&&w.rule)?fuQRule(w.rule,rnd,no,FU_TRAIN_N):fuStepQ(step,rnd,no,FU_TRAIN_N,w);
+    if(q) out.push(q);
+  });
+  out.forEach((q,i)=>{ q.qnum=(i+1)+' / '+out.length; });
+  if(!(opt&&opt.noTeach)) out.unshift(ch1Teach(FU_TEACH[step],{tlab:'STEP'+step+' '+FU_STEPS[step-1].title}));
+  return out;
+}
+/* ===== 記録(S.fuTrain) =====
+   {n, ok, streak, maxStreak, steps:{1:{n,ok}…}, rules:{きまり:{miss,ok,streak}}, missed:[{s,p,part,wait,rule}], lastDay}
+   あそんだときに はじめて作る。ほかの保存データ(Road・ひとり麻雀・XP・ライフ)には さわらない */
+const FU_MISSED_MAX=20;
+function fuRecOf(){
+  const r=(S.fuTrain&&typeof S.fuTrain==='object')?S.fuTrain:{};
+  const steps={}; [1,2,3,4].forEach(k=>{ const x=(r.steps&&r.steps[k])||{}; steps[k]={n:x.n||0,ok:x.ok||0}; });
+  return {n:r.n||0,ok:r.ok||0,streak:r.streak||0,maxStreak:r.maxStreak||0,steps,
+    rules:Object.assign({},r.rules||{}),missed:Array.isArray(r.missed)?r.missed.slice():[],lastDay:r.lastDay||null};
+}
+function fuTrainRecord(q,selIdx,ok){
+  const r=fuRecOf();
+  r.n++; if(ok){ r.ok++; r.streak++; if(r.streak>r.maxStreak) r.maxStreak=r.streak; } else r.streak=0;
+  const st=r.steps[q.fuStep]||(r.steps[q.fuStep]={n:0,ok:0}); st.n++; if(ok) st.ok++;
+  /* きまりごと: まちがえたら そのきまりの miss。正解なら その問題に出たきまりの ok と 連続 */
+  const missRule=(!ok&&q.fuMiss)?q.fuMiss[selIdx]:null;
+  const touched=ok?(q.fuRules||[]):(missRule?[missRule]:(q.fuRules||[]).slice(0,1));
+  touched.forEach(k=>{ const e=r.rules[k]||(r.rules[k]={miss:0,ok:0,streak:0});
+    if(ok){ e.ok++; e.streak++; } else { e.miss++; e.streak=0; } });
+  /* まちがえた問題(同じ牌姿をあとで出す)。復習で正解したら消す */
+  if(!ok&&q.fuP&&!q.fuRv){ r.missed.push({s:q.fuStep,p:q.fuP,part:q.fuPart!=null?q.fuPart:null,wait:q.fuWait||null,rule:missRule});
+    if(r.missed.length>FU_MISSED_MAX) r.missed.splice(0,r.missed.length-FU_MISSED_MAX); }
+  if(ok&&q.fuRv&&q.fuRv.same){ const i=r.missed.findIndex(m=>JSON.stringify(m.p)===JSON.stringify(q.fuP)); if(i>=0) r.missed.splice(i,1); }
+  r.lastDay=todayStr();
+  S.fuTrain={n:r.n,ok:r.ok,streak:r.streak,maxStreak:r.maxStreak,steps:r.steps,rules:r.rules,missed:r.missed,lastDay:r.lastDay};
+  save();
+  if(L&&L.fuTrain){ L.fuTrain.n++; if(ok) L.fuTrain.ok++; }
+  return r;
+}
+/* 復習の優先度: まちがえた数が多く、そのあとの連続正解が少ない きまりほど先。2回つづけて正解したら外す */
+function fuReviewRules(){
+  const r=fuRecOf();
+  return Object.keys(r.rules).filter(k=>FU_RULES[k]&&r.rules[k].miss>0&&r.rules[k].streak<2)
+    .sort((a,b)=>(r.rules[b].miss*2-r.rules[b].streak*3)-(r.rules[a].miss*2-r.rules[a].streak*3)||a.localeCompare(b));
+}
+function fuReviewCount(){ return fuReviewRules().length+fuRecOf().missed.length; }
+/* きまり → そのきまりを使う 別の牌姿の問題 */
+function fuRuleWant(rule){
+  const part={anko:'anko-chun',minko:'minko',ronko:'ronko',kan:'kan',yaochu:'anko-yao',headYakuhai:'head-yakuhai',renpu:'head-renpu',headPlain:'head-plain'}[rule];
+  if(part) return {step:2,want:{part}};
+  const wait={waitRyanmen:'ryanmen',waitShanpon:'shanpon',waitKanchan:'kanchan',waitPenchan:'penchan',waitTanki:'tanki'}[rule];
+  if(wait) return {step:3,want:{wait}};
+  if(rule==='multi') return {step:3,want:{wait:'tanki',multi:true}};
+  if(rule==='pinfuTsumo') return {step:1,want:{kind:'pinfu',win:'tsumo'}};
+  if(rule==='pinfuRon') return {step:1,want:{kind:'pinfu',win:'ron'}};
+  if(rule==='chiitoi') return {step:1,want:{kind:'chiitoi'}};
+  if(rule==='menzenRon') return {step:4,want:{open:false,win:'ron',rule}};
+  if(rule==='tsumo') return {step:4,want:{win:'tsumo',rule}};
+  if(rule==='kuipinfu') return {step:4,want:{open:true,win:'ron',trip:0,rule}};
+  if(rule==='base') return {step:4,want:{}};
+  return {step:4,want:{rule}};
+}
+/* まちがえた問題を もう一度(同じ牌姿) */
+function fuQAgain(m,rnd,no,total){
+  const p={hand:m.p.h,ctx3:ch3Ctx(Object.assign({},m.p.c,{melds:(m.p.c.melds||[]).map(x=>Object.assign({},x))}))};
+  if(fuProbCheck(p)!=='') return null;
+  let q;
+  if(m.s===2&&m.part!=null) q=fuQPart(p,2,rnd,no,total,m.part);
+  else if(m.s===3) q=fuQWait(p,3,rnd,no,total);
+  else q=fuQTotal(p,m.s===1?1:4,rnd,no,total);
+  q.fuRv={same:true}; return q;
+}
+function fuReviewSet(seed){
+  const rnd=fuRnd(seed), r=fuRecOf(), out=[];
+  r.missed.slice(-4).forEach(m=>{ if(out.length<4){ const q=fuQAgain(m,rnd,out.length+1,FU_TRAIN_N); if(q) out.push(q); } });
+  const rules=fuReviewRules();
+  for(let k=0;out.length<FU_TRAIN_N&&k<40;k++){
+    const rule=rules.length?rules[k%rules.length]:fuPick(Object.keys(FU_RULES),rnd);
+    const w=fuRuleWant(rule);
+    const q=fuStepQ(w.step,rnd,out.length+1,FU_TRAIN_N,w.want);
+    if(q){ q.fuRv={rule}; out.push(q); }
+  }
+  out.forEach((q,i)=>{ q.qnum=(i+1)+' / '+out.length; });
+  return out;
+}
+/* ===== 入口 ===== */
+function fuTrainPickHTML(){
+  const r=fuRecOf(), rv=fuReviewCount();
+  const pct=x=>x.n?Math.round(x.ok/x.n*100)+'%':'—';
+  return '<div class="tr-opt"><p class="tr-opt-h">どのSTEPを練習する？</p>'
+    +'<div class="tr-grid tr-grid1">'
+    +FU_STEPS.map(s=>'<button class="tr-pick tr-lv" id="fu-step-'+s.id+'" onclick="startTraining(\'fu\','+s.id+')">'
+      +'<b>STEP'+s.id+' '+s.title+'</b><small>'+s.desc+(r.steps[s.id].n?'（正答率 '+pct(r.steps[s.id])+'）':'')+'</small></button>').join('')
+    +'<button class="tr-pick tr-lv" id="fu-review" '+(rv?'':'disabled ')+'onclick="startTraining(\'fu\',\'review\')">'
+      +'<b>🔁 復習</b><small>'+(rv?'まちがえた形を もう一度（'+rv+'）':'まちがえた問題は まだないよ')+'</small></button>'
+    +'</div>'
+    +(r.n?'<p class="tr-note" id="fu-rec">ぜんぶで '+r.n+'問・正答率 '+pct(r)+'・連続正解 '+r.streak+'（最長 '+r.maxStreak+'）</p>':'')
+    +'</div>';
+}
+function fuTrainAgain(step){
+  document.getElementById('lesson').classList.remove('show');
+  L=null; renderHUD();
+  startTraining('fu',step);
 }
 function ch3AgariMcq(handStr,ctx3,exp,opt){
   // 役あり/なし: 形が完成していても役がなければアガれない(第1章D2-1の実戦定着)
@@ -16998,7 +17669,9 @@ const QFORMATS={
       if(!res.isCorrect){ const w=document.getElementById('ch-'+ans.index); if(w) w.classList.add('wrong'); }
       if(q.rel) mjtRelate(q);   // 盤面つきの問題だけ。正解前には絶対につけない
     },
-    feedback(q,res){ return {ansText:'正解： '+q.choices[q.a], expText:q.exp||''}; },
+    feedback(q,res){ /* R85: まちがえた選択肢ごとの ひとこと(符計算トレーニング) */
+      const w=(!res.isCorrect&&q.expWrong&&L&&q.expWrong[L.sel])||'';
+      return {ansText:'正解： '+q.choices[q.a], expText:w+(q.exp||'')}; },
   },
   /* ===== 第1章フォーマット(v1.0) =====
      teach: イソピィが教えるページ。回答なし・スコア外(teachNext()で進む。check()は通らない)。
@@ -17262,7 +17935,7 @@ const QFORMATS={
         /* R60: アガリは卓の上の演出(ロン！→アガリ！)で見せる。
            同じことを卓の下の見出しでもう一度言うと「ロン！→アガリ！→せいかい！」と重なるので、
            演出が出るときは見出しを出さない。動きを減らす設定で演出がほぼ出ない場合だけ残す */
-        if(reducedMotion()) b.ui.cap=(q.bt.ask==='tsumo')?'🀄 ツモ！ アガリ！':'🀄 ロン！ アガリ！';
+        if(reducedMotion()) b.ui.cap=(q.bt.ask==='tsumo')?'🀄 ツモ！':'🀄 ロン！';   // R85: 「ロン！ アガリ！」と重ねない
         b.ui.winHit=true;    // R60: アガリ牌(ロン=相手が切った1枚 / ツモ=右はしのツモ牌)を一瞬強調
       }
       if(q.bt.ask==='tsumo') b.ui.tsumoSlot=true;
@@ -18221,6 +18894,8 @@ function check(){
   }
   /* R69: 点数トレーニングの回答を記録する(将来の弱点分析のため)。
      保存に失敗してもTrainingは止まらない(scoreTrainLog が中でtry/catchしている) */
+  /* R85: 符計算トレーニングの記録(S.fuTrain) */
+  if(q.fuQ) fuTrainRecord(q,(ans&&ans.index!=null)?ans.index:-1,res.isCorrect);
   if(q.stVid){
     scoreTrainLog(q,(ans&&ans.index!=null)?ans.index:-1,res.isCorrect);
     if(L.scoreTrain){
@@ -18419,7 +19094,20 @@ function renderResult(ctx){
     +'<div class="v">'+v+'</div><div class="k">'+k+'</div></div>';
   const noteStyle='color:var(--ink-soft);font-size:12px;margin:2px 0 0;';
   let stats;
-  if(L.scoreTrain){
+  if(L.fuTrain){
+    /* R85: 符計算トレーニングの結果。正解・正解率・連続正解(最長)・このSTEPの正答率(これまでの合計) */
+    const fr=fuRecOf(), st=L.fuTrain, sr=typeof st.step==='number'?fr.steps[st.step]:null;
+    stats='<div class="res-grid">'
+      +statBox(L.correct+' / '+quizN,'正解')
+      +statBox(accuracy+'%','正解率')
+      +statBox(fr.streak+'（最長 '+fr.maxStreak+'）','連続正解')
+      +(sr&&sr.n?statBox(Math.round(sr.ok/sr.n*100)+'%','STEP'+st.step+' 通算'):'')
+      +'</div>'
+      +'<p class="stag" style="'+noteStyle+'animation-delay:'+(SI++)*MOTION.resultStagger+'ms">'
+      +'🧮 '+(st.step==='review'?'復習':'STEP'+st.step+'　'+FU_STEPS[st.step-1].title)
+      +(fuReviewCount()?'　／　復習できる形: '+fuReviewCount():'')+'</p>'
+      +'<div class="stag"'+stagStyle(SI++)+'><span class="xp-chip" style="font-size:12px;padding:6px 12px;">+'+xp+' EXP</span></div>';
+  }else if(L.scoreTrain){
     /* R69 §22: 点数トレーニングの結果。正解率と、ロン/ツモの内わけだけ。
        大きな分析ダッシュボードにはしない(弱点分析はログを土台に将来つくる) */
     const st=L.scoreTrain, lv=scoreTrainLevel(st.level);
@@ -18471,7 +19159,12 @@ function renderResult(ctx){
   const foot=document.getElementById('lesson-foot');
   foot.className='lesson-foot';
   /* R69: 点数トレーニングは「何度でもくりかえせる」場所。もう一度/トレーニングへ戻る の2つを出す */
-  foot.innerHTML=L.scoreTrain
+  foot.innerHTML=L.fuTrain
+    ?'<button class="btn" id="fu-again" onclick="fuTrainAgain('+(L.fuTrain.step==='review'?'\'review\'':L.fuTrain.step)+')">'
+      +(L.fuTrain.step==='review'?'もう一度 復習する':'もう一度（'+FU_TRAIN_N+'問）')+'</button>'
+      +(fuReviewCount()&&L.fuTrain.step!=='review'?'<button class="btn gray" id="fu-go-review" style="margin-top:8px;" onclick="fuTrainAgain(\'review\')">まちがえた形を復習する</button>':'')
+      +'<button class="btn gray" style="margin-top:8px;" onclick="afterLesson()">トレーニングに戻る</button>'
+    :L.scoreTrain
     ?'<button class="btn" onclick="scoreTrainAgain('+L.scoreTrain.level+')">もう一度（'+SCORE_TRAIN_N+'問）</button>'
       +'<button class="btn gray" style="margin-top:8px;" onclick="afterLesson()">トレーニングに戻る</button>'
     :'<button class="btn" onclick="afterLesson()">つづける</button>';
