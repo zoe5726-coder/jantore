@@ -511,6 +511,45 @@ span.tv-riichi-tile{transform:rotate(-90deg);}
 .fu-ans{font-size:15px; font-weight:900; margin:4px 0 0;}
 .fu-note,.fu-tip{font-size:12px; line-height:1.55; margin:6px 0 0; text-align:left; color:var(--ink-soft); font-weight:700;}
 .fu-tip{color:var(--ink);}
+/* R86: 今日のミッション(押せる行)・7日の記録・コンプリートのアバター */
+#dm-card .mc-date{font-size:clamp(10.5px,3vw,12px); color:var(--ink-soft); font-weight:700; margin-left:4px;}
+.mission-card button.mc-item{width:100%; min-height:38px; border:none; background:transparent; text-align:left; padding:4px 2px; margin:0;
+  font-family:inherit; cursor:pointer; border-top:1px solid var(--line); border-radius:0; -webkit-tap-highlight-color:transparent;}
+.mission-card button.mc-item:first-of-type{border-top:none;}
+.mission-card button.mc-item:active{background:var(--jade-soft);}
+.mission-card button.mc-item .mc-ic{width:22px; text-align:center; flex:none;}
+.mission-card button.mc-item .mc-t{flex:1; min-width:0;}
+.mission-card button.mc-item .mc-prog{margin-left:0;}
+.mission-card button.mc-item.done .mc-ic{color:var(--on-accent); background:var(--jade); border-radius:50%; width:20px; height:20px; line-height:20px; font-size:12px; font-weight:900;}
+.mission-card button.mc-item.done .mc-t{color:var(--jade-ink);}
+.mission-card .mc-xp{flex:none; width:clamp(36px,12vw,64px); text-align:right; color:var(--gold-ink,var(--jade-ink)); font-weight:900; font-size:clamp(10.5px,3vw,12px);}
+.mission-card .mc-foot{display:flex; justify-content:space-between; align-items:center; gap:6px; margin-top:4px; padding-top:4px; border-top:1px dashed var(--line);
+  font-size:clamp(10.5px,3vw,12px); color:var(--ink-soft); font-weight:700; cursor:pointer;}
+.mission-card .mc-foot b{color:var(--jade-ink);}
+.mission-card .mc-comp{color:var(--jade-ink); font-weight:900;}
+.dm-sub{margin:0 0 8px; color:var(--ink-soft); font-weight:700; font-size:13px;}
+.dm-note{margin:8px 0; font-size:12px; line-height:1.6; color:var(--ink-soft); font-weight:700; text-align:left;}
+.dm-h{display:block; font-size:13px; margin:6px 0 2px;}
+.dm-week{display:grid; grid-template-columns:repeat(7,1fr); gap:2px; margin:6px 0 0; text-align:center;}
+.dm-wd{display:flex; flex-direction:column; align-items:center; gap:1px; padding:3px 0; border-radius:8px; font-size:11px; font-weight:800; color:var(--ink-soft);}
+.dm-wd i{font-style:normal;}
+.dm-wd small{font-size:10px; font-weight:700;}
+.dm-wd.today{outline:2px solid var(--jade-deep); outline-offset:-2px; color:var(--ink);}
+.dm-dot{display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; font-size:12px; line-height:1;
+  border:2px solid var(--line); color:transparent; background:transparent;}
+.dm-dot.study{background:var(--jade); border-color:var(--jade); color:var(--on-accent);}
+.dm-dot.perfect{background:var(--gold); border-color:var(--gold-deep); color:var(--on-accent);}
+.dm-legend{display:flex; gap:12px; justify-content:center; font-size:11px; color:var(--ink-soft); font-weight:700; margin:4px 0 8px;}
+.dm-legend .dm-dot{width:16px; height:16px; font-size:9px; margin-right:3px; vertical-align:middle;}
+.stat-grid.dm-stats{grid-template-columns:repeat(3,1fr); gap:6px;}
+.dm-stats .stat-box,.dm-stats3 .stat-box{padding:8px 4px;}
+.dm-stats .stat-box .v,.dm-stats3 .stat-box .v{font-size:17px;}
+.stat-grid.dm-stats3{grid-template-columns:repeat(3,1fr); gap:6px;}
+#dm-card .mc-bar,.dm-detail .mc-bar{width:clamp(36px,12vw,64px);}
+.dm-stats3 .stat-box .k,.dm-stats .stat-box .k{font-size:10.5px;}
+.fx .dm-av{display:flex; justify-content:center; margin:0 0 4px;}
+.fx .dm-av .dm-av-img{width:72px; height:72px; display:block;}
+.fx .dm-av .dm-av-img img{width:100%; height:100%; object-fit:contain;}
 #bt-board .f-wait{margin:6px 0 0;}
 .q-ctx{font-size:clamp(12.5px, 3.5vw, 14.5px); color:var(--ink-soft); font-weight:700; background:var(--jade-soft);
   border-radius:10px; padding:8px 12px; margin-bottom:12px;}
@@ -4109,12 +4148,8 @@ function appUpdateAfterBoot(){
 }
 // ローカル(端末)の年月日でYYYY-MM-DD。旧実装はUTC日付だったため日本の朝にストリークがずれた。
 // 保存形式は同じYYYY-MM-DD文字列なので既存localStorageと互換。
-function todayStr(){
-  const d=new Date();
-  return [d.getFullYear(),
-          String(d.getMonth()+1).padStart(2,'0'),
-          String(d.getDate()).padStart(2,'0')].join('-');
-}
+/* R86: 日本時間(Asia/Tokyo)の年月日。日本の端末なら これまでと同じ値になる(保存の形も同じ YYYY-MM-DD) */
+function todayStr(){ return jstDay(Date.now()); }
 
 /* ================= 正式ブランド名称（2026-09-18確定） =================
    サービス=ツモッピィ(TSUMOPPY) / ブランド表記=TSUMOPPY by ZOE /
@@ -4445,8 +4480,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.77.0';
-const BUILD_ID='20261010-01';
+const APP_VER='0.78.0';
+const BUILD_ID='20261011-01';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -4606,49 +4641,255 @@ function showWinEffect(kind){
   return dur;
 }
 
-/* ================= Daily Engagement（第8段階） ================= */
-/* デイリーミッション定義: 条件は必ずここに集約(画面各所へベタ書きしない)。
-   追加・変更はこの配列を書き換えるだけ。rewardは将来の報酬用フィールド(通貨経済は未実装) */
-const DAILY_MISSIONS=[
- {id:'dm_lesson', icon:'📗', title:'レッスンを1回クリア', type:'lesson', target:1,
-  desc:'学習ロードのレッスンを完了する(トレーニングは対象外)', reward:null},
- {id:'dm_xp', icon:'⚡', title:'100 EXPかせぐ', type:'xp', target:100,
-  desc:'学習ロードのレッスンで実際に獲得したEXPのみ(宝箱ボーナスは対象外)', reward:null},
- {id:'dm_combo', icon:'🔥', title:'5 COMBOを達成', type:'combo', target:1,
-  desc:'レッスン中に5連続正解(復習問題での到達もOK)', reward:null},
-];
-/* 進捗はローカル日付(todayStr・第5段階でローカルY-M-D化済み)単位。日付が変われば新規初期化し、
-   過去日の進捗は持ち越さない。保存先はS.daily(jantore-v1内)={date,progress,completed,completedAt} */
+/* ================= R86 デイリーミッション・継続学習 =================
+   毎日3つのミッション(A=あそぶ / B=練習 / C=正解・学習)。1日およそ5分。
+   ・日付は日本時間(Asia/Tokyo。うるう年・月末・年末も Date.UTC で計算)。同じ日のミッションは固定(保存する)。
+   ・出すのは「もう ひらいている・習いおえた」ものだけ(Road の進み=roadProgress から毎回しらべる)。
+   ・進むのは じっさいに答えた・おえた・あそんだ ときだけ(画面を開く・描きなおす では進まない)。
+   ・XP: 1つ達成 +10、3つ ぜんぶ +20(1日 最大50)。同じミッションの報酬は 1回だけ(claimed に しるす)。ライフは使わない。
+   ・学習日: レッスン・トレーニングを おえた日 / ひとり麻雀を1局おえた日。ひらいただけの日は 学習日にしない。
+   保存: S.daily = {v:2,date,missions:[{id,target}],progress,claimed,bonusClaimed,xp,prev}
+         S.dailyArchive = {日付: S.daily}(直近14日。日付が もどっても 同じ日の報酬を2回もらわない。サーバーがないので 14日より前へ わざと もどす改ざんまでは ふせがない)
+         S.studyHistory = {v:1,totalDays,completedMissions,perfectDays,missionXp,perfect:[日付…直近14件],maxDay} */
+const JST_MS=9*3600*1000, DM_XP=10, DM_BONUS=20, DM_KEEP_DAYS=14;
+const DAY_RE=/^\d{4}-\d{2}-\d{2}$/;
+function jstDay(ms){
+  const d=new Date((ms==null?Date.now():ms)+JST_MS);
+  return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0');
+}
+function dayUTC(day){ return Date.UTC(+day.slice(0,4),+day.slice(5,7)-1,+day.slice(8,10)); }
+function dayAdd(day,n){ const d=new Date(dayUTC(day)+n*86400000);
+  return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0'); }
+function dayDiff(a,b){ return Math.round((dayUTC(b)-dayUTC(a))/86400000); }
+function dayDow(day){ return new Date(dayUTC(day)).getUTCDay(); }
+const DOW_JP='日月火水木金土';
+function dayLabel(day){ return (+day.slice(5,7))+'/'+(+day.slice(8,10))+'（'+DOW_JP[dayDow(day)]+'）'; }
+/* ---- ミッションの種類 ----
+   kind = どの出来事で進むか / min = だいたいの分 / go = 押したときに ひらく場所 / req = 出してよいか(習いおえたか) */
+const DM_DEFS={
+  soloPlay1:{cat:'A',kind:'solo',target:1,icon:'🀄',title:'ひとり麻雀を1局あそぶ',min:2,go:'solo',w:3,req:()=>dmSoloOpen()},
+  soloPlay2:{cat:'A',kind:'solo',target:2,icon:'🀄',title:'ひとり麻雀を2局あそぶ',min:4,go:'solo',w:1,req:()=>dmSoloOpen()},
+  solo13:{cat:'A',kind:'solo13',target:1,icon:'🀄',title:'13枚麻雀を1局あそぶ',min:4,go:'solo',w:2,req:()=>soloUnlocked(13)},
+  lessonA:{cat:'A',kind:'lesson',target:1,icon:'📗',title:'レッスンを1回クリア',min:4,go:'road',w:2,req:()=>!dmRoadAllDone()},
+  answer5:{cat:'B',kind:'answer',target:5,icon:'✏️',title:'練習問題に5問答える',min:2,go:'practice',w:2,req:()=>true},
+  train5:{cat:'B',kind:'trainAnswer',target:5,icon:'🎯',title:'トレーニングで5問答える',min:2,go:'training',w:2,req:()=>dmTrainOpen()},
+  fu3:{cat:'B',kind:'fu',target:3,icon:'🧮',title:'符計算を3問練習',min:2,go:'fu',w:2,req:()=>dmScoreLearned()},
+  score3:{cat:'B',kind:'score',target:3,icon:'💰',title:'点数トレーニングを3問',min:2,go:'score',w:2,req:()=>dmScoreLearned()},
+  correct3:{cat:'C',kind:'correct',target:3,icon:'⭕',title:'練習問題に3問正解する',min:2,go:'practice',w:3,req:()=>true},
+  lessonC:{cat:'C',kind:'lesson',target:1,icon:'📗',title:'レッスンを1回クリア',min:4,go:'road',w:2,req:()=>!dmRoadAllDone()},
+  fuReview:{cat:'C',kind:'fuReview',target:1,icon:'🔁',title:'符計算の復習を1回',min:3,go:'fuReview',w:2,req:()=>dmScoreLearned()&&fuReviewCount()>0},
+};
+const DM_MAX_MIN=9;      // 3つの合計が これ以下(だいたい5分〜)
+function dmSoloOpen(){ return SOLO_ORDER.some(n=>soloUnlocked(n)); }
+function dmRoadAllDone(){ return !nextLessonInfo(); }
+function dmTrainOpen(){ const st=waitsTileSteps()[0]; return !!st&&((S.roadProgress&&S.roadProgress.th_waits)||0)>=st.need&&st.need>0; }
+function dmScoreLearned(){ const t=themeOf('th_ch3y'); return !!t&&themeFrontier(t)>=themeLessons(t).length; }
+function dmHash(s){ let h=2166136261>>>0; for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619)>>>0; } return h>>>0; }
+/* その日の3つを決める。同じ日・同じ進みなら いつも同じ(日付から作る乱数)。前の日と同じものは なるべく出さない */
+function dmGenerate(day,prev){
+  prev=prev||[];
+  const rnd=scoreTrainRnd(dmHash('dm|'+day));
+  const pick=(cat,ban)=>{
+    let list=Object.keys(DM_DEFS).filter(id=>DM_DEFS[id].cat===cat&&DM_DEFS[id].req()&&!ban.some(b=>DM_DEFS[b]&&DM_DEFS[b].kind===DM_DEFS[id].kind));
+    if(!list.length) return null;
+    const fresh=list.filter(id=>prev.indexOf(id)<0);
+    if(fresh.length) list=fresh;
+    const tot=list.reduce((a,id)=>a+DM_DEFS[id].w,0); let r=rnd()*tot;
+    for(const id of list){ r-=DM_DEFS[id].w; if(r<0) return id; }
+    return list[list.length-1];
+  };
+  for(let k=0;k<6;k++){
+    const out=[];
+    const a=pick('A',[]); if(a) out.push(a);
+    const b=pick('B',out); if(b) out.push(b);
+    const c=pick('C',out); if(c) out.push(c);
+    /* 足りないときは どの区分からでも(まだ ほとんど習っていない人) */
+    ['answer5','correct3','lessonA'].forEach(id=>{ if(out.length<3&&out.indexOf(id)<0&&DM_DEFS[id].req()&&!out.some(x=>DM_DEFS[x].kind===DM_DEFS[id].kind)) out.push(id); });
+    if(out.length<3) ['answer5','correct3'].forEach(id=>{ if(out.length<3&&out.indexOf(id)<0) out.push(id); });
+    const min=out.reduce((s,id)=>s+DM_DEFS[id].min,0);
+    if(min<=DM_MAX_MIN||k===5) return out.slice(0,3).map(id=>({id,target:DM_DEFS[id].target}));
+  }
+}
+function dmHist(){
+  if(!S.studyHistory||typeof S.studyHistory!=='object'||S.studyHistory.v!==1){
+    /* はじめて: これまでの学習日(learningDays)から 累計日数を数えて はじめる(消さない・作りなおさない) */
+    const ld=S.learningDays||{};
+    S.studyHistory={v:1,totalDays:Object.keys(ld).filter(k=>DAY_RE.test(k)&&ld[k]==='completed').length,
+      completedMissions:0,perfectDays:0,missionXp:0,perfect:[],maxDay:null};
+  }
+  const h=S.studyHistory; if(!Array.isArray(h.perfect)) h.perfect=[];
+  return h;
+}
+/* 今日の S.daily。日付が変わっていれば 作りなおす(画面に もどったとき・何か操作したときに 気づく) */
 function ensureDaily(){
   const today=todayStr();
-  if(!S.daily||S.daily.date!==today){
-    S.daily={date:today,progress:{},completed:false,completedAt:null};
-    DAILY_MISSIONS.forEach(m=>S.daily.progress[m.id]=0);
-    save();
+  const d=S.daily;
+  if(d&&d.v===2&&d.date===today&&Array.isArray(d.missions)) return d;
+  if(!S.dailyArchive||typeof S.dailyArchive!=='object') S.dailyArchive={};
+  if(d&&d.v===2&&DAY_RE.test(d.date)) S.dailyArchive[d.date]=d;           // きのう(まで)の分を とっておく
+  const h=dmHist();
+  let nd=S.dailyArchive[today];
+  if(!nd||nd.v!==2){
+    const prev=(d&&d.v===2&&Array.isArray(d.missions))?d.missions.map(m=>m.id):[];
+    nd={v:2,date:today,missions:dmGenerate(today,prev),progress:{},claimed:{},bonusClaimed:false,xp:0,prev};
   }
-  if(!S.daily.progress) S.daily.progress={};
-  return S.daily;
+  S.daily=nd;
+  if(!h.maxDay||today>h.maxDay) h.maxDay=today;
+  Object.keys(S.dailyArchive).forEach(k=>{ if(!DAY_RE.test(k)||dayDiff(k,today)>DM_KEEP_DAYS||k===today) delete S.dailyArchive[k]; });
+  dmSave();
+  return nd;
 }
-function missionProgress(m){ return Math.min(ensureDaily().progress[m.id]||0,m.target); }
+function dmDef(m){ return DM_DEFS[m.id]||null; }
+/* 保存: レッスン・トレーニングの とちゅうは 採点(applyOutcome)と 完了(finishLesson)の保存に まかせる(1問につき保存は1回のまま) */
+function dmSave(){ if(!(typeof L!=='undefined'&&L)) save(); }
+function missionProgress(m){ const d=ensureDaily(); return Math.min(d.progress[m.id]||0,m.target); }
 function missionDone(m){ return missionProgress(m)>=m.target; }
-function missionDoneCount(){ return DAILY_MISSIONS.filter(missionDone).length; }
-let DAILY_FX_PENDING=false;  // DAILY COMPLETE演出の予約(解説を邪魔しないタイミング=リザルトで再生)
-function bumpMission(id,amt){
-  const d=ensureDaily();
-  const m=DAILY_MISSIONS.find(x=>x.id===id); if(!m||amt<=0) return;
-  const before=d.progress[id]||0;
-  if(before>=m.target) return;                 // 二重達成防止
-  d.progress[id]=Math.min(m.target,before+amt);
-  if(d.progress[id]>=m.target){
-    queueToast('✓ デイリーミッション達成！',m.title);
-    // 3つ全達成→DAILY COMPLETE(1日1回のみ。completedフラグで再表示を防ぐ)
-    if(!d.completed&&DAILY_MISSIONS.every(missionDone)){
-      d.completed=true; d.completedAt=new Date().toISOString();
-      DAILY_FX_PENDING=true;
+function missionDoneCount(){ return ensureDaily().missions.filter(missionDone).length; }
+let DAILY_FX_PENDING=false;  // コンプリートの演出の予約(レッスン中は 結果の画面で出す)
+/* 出来事 → ミッションを進める。kind は DM_DEFS の kind。n は ふやす数 */
+function dmEvent(kind,n){
+  n=n||1; if(n<=0) return [];
+  const d=ensureDaily(), done=[];
+  d.missions.forEach(m=>{
+    const def=dmDef(m); if(!def) return;
+    if(def.kind!==kind) return;
+    const before=d.progress[m.id]||0; if(before>=m.target) return;
+    d.progress[m.id]=Math.min(m.target,before+n);
+    if(d.progress[m.id]>=m.target&&!d.claimed[m.id]){
+      d.claimed[m.id]=true;
+      const h=dmHist(); h.completedMissions++;
+      S.xp+=DM_XP; d.xp=(d.xp||0)+DM_XP; h.missionXp+=DM_XP;
+      done.push(m);
+      queueToast('✓ ミッション達成！ +'+DM_XP+' EXP',def.title);
     }
+  });
+  if(done.length&&!d.bonusClaimed&&d.missions.every(m=>d.claimed[m.id])){
+    d.bonusClaimed=true;
+    const h=dmHist(); h.perfectDays++;
+    if(h.perfect.indexOf(d.date)<0){ h.perfect.push(d.date); h.perfect.sort(); while(h.perfect.length>DM_KEEP_DAYS) h.perfect.shift(); }
+    S.xp+=DM_BONUS; d.xp=(d.xp||0)+DM_BONUS; h.missionXp+=DM_BONUS;
+    d.completedAt=new Date().toISOString();
+    if(typeof L!=='undefined'&&L) DAILY_FX_PENDING=true; else dmCompleteFx();   // レッスン中は 結果の画面で出す
   }
-  save();
+  if(done.length){ dmSave(); if(typeof renderHUD==='function') renderHUD(); }
+  return done;
 }
+/* 旧版の呼び出し口(第8段階)。dm_lesson だけ レッスンの完了として受ける */
+function bumpMission(id,amt){ if(id==='dm_lesson') dmEvent('lesson',amt||1); }
+/* 答えた1問(check から1回だけ呼ぶ) */
+function dmAnswer(q,ok){
+  if(!q||q.ch1t) return;
+  dmEvent('answer'); if(ok) dmEvent('correct');
+  if(L&&L.course&&L.course.training) dmEvent('trainAnswer');
+  if(q.fuQ) dmEvent('fu');
+  if(q.stVid) dmEvent('score');
+}
+/* ひとり麻雀の1局(おわったとき1回だけ) */
+function dmSoloEnd(g){
+  if(!g||g.dmCounted) return; g.dmCounted=true;
+  dmEvent('solo'); if(g.n===13) dmEvent('solo13');
+  studyDayUpdate();
+}
+function dmCompleteFx(){
+  playFx('<div class="dm-av">'+avatarImgHTML(S.avatarId,'dm-av-img')+'</div>'
+    +'<div class="fx-t">今日のミッション コンプリート！</div>'
+    +'<div class="fx-s">ボーナス +'+DM_BONUS+' EXP'+(S.streak?'　🔥 '+S.streak+'日連続':'')+'</div>','fx-daily',MOTION.dailyComplete);
+}
+/* ---- 学習日(連続日数) ----
+   レッスン・トレーニング(finishLesson)と ひとり麻雀の1局(dmSoloEnd)から呼ぶ。もどり値=今日はじめての学習か */
+function studyDayUpdate(){
+  const today=todayStr();
+  const firstToday=!(S.lastDay===today&&S.streak>0);
+  if(S.lastDay&&DAY_RE.test(S.lastDay)&&S.lastDay>today){ /* 端末の時計が もどった: 連続日数は さわらない */ }
+  else if(S.lastDay!==today){
+    if(S.lastDay&&DAY_RE.test(S.lastDay)){
+      const gap=dayDiff(S.lastDay,today);
+      if(gap===1){ S.streak++; }
+      else if(gap>1&&S.freeze>0){ S.freeze--; S.streak++; }
+      else if(gap>1){ S.streak=1; }
+    }else{ S.streak=Math.max(1,S.streak||0); }
+    S.lastDay=today;
+  }else if(S.streak===0){ S.streak=1; }
+  if(S.streak>(S.bestStreak||0)) S.bestStreak=S.streak;
+  const h=dmHist();
+  if(S.learningDays[today]!=='completed'&&S.learningDays[today]!=='protected') h.totalDays++;
+  if(S.learningDays[today]!=='protected') S.learningDays[today]='completed';
+  dmSave();   // レッスンの完了では finishLesson が保存する
+  return firstToday;
+}
+/* 直近7日(今日をふくむ)。study=学習した日 / perfect=3つ ぜんぶ達成した日 */
+function dmWeek(){
+  const today=todayStr(), h=dmHist(), out=[];
+  for(let i=6;i>=0;i--){ const day=dayAdd(today,-i);
+    out.push({day,dow:DOW_JP[dayDow(day)],d:+day.slice(8,10),study:S.learningDays[day]==='completed',perfect:h.perfect.indexOf(day)>=0,today:i===0}); }
+  return out;
+}
+function dmWeekHTML(){
+  return '<div class="dm-week" role="list">'+dmWeek().map(w=>'<span class="dm-wd'+(w.today?' today':'')+'" role="listitem" data-day="'+w.day+'" data-st="'+(w.perfect?2:(w.study?1:0))+'">'
+    +'<i>'+w.dow+'</i><b class="dm-dot '+(w.perfect?'perfect':(w.study?'study':'none'))+'">'+(w.perfect?'★':(w.study?'●':''))+'</b><small>'+w.d+'</small></span>').join('')+'</div>';
+}
+/* ---- 画面 ---- */
+function dmGo(id){
+  const def=DM_DEFS[id]; if(!def) return;
+  if(typeof closeModal==='function') closeModal();
+  const g=def.go;
+  if(g==='solo'){ soloOpen(); return; }
+  if(g==='road'||(g==='practice'&&!dmRoadAllDone())){ goContinue(); return; }
+  showScreen('training');
+  const card=g==='fu'||g==='fuReview'?document.getElementById('tr-fu-card'):(g==='score'?document.querySelector('#training-body .tr-lv')&&document.querySelector('#training-body .tr-lv').closest('.card'):null);
+  if(card) try{ card.scrollIntoView({block:'start'}); }catch(e){}
+}
+function dmMissionRowHTML(m,compact){
+  const def=dmDef(m); if(!def) return '';
+  const cur=missionProgress(m), done=cur>=m.target, pct=Math.round(cur/m.target*100);
+  return '<button class="mc-item'+(done?' done':'')+'" data-dm="'+m.id+'" onclick="dmGo(\''+m.id+'\')">'
+    +'<span class="mc-ic">'+(done?'✓':def.icon)+'</span>'
+    +'<span class="mc-t">'+def.title+'</span>'
+    +'<span class="mc-prog">'+cur+' / '+m.target+'</span>'
+    +(done?'<span class="mc-xp">+'+DM_XP+'</span>':'<span class="mc-bar"><i style="width:'+pct+'%"></i></span>')
+    +'</button>';
+}
+function dmCardHTML(){
+  const d=ensureDaily(), n=missionDoneCount();
+  return '<div class="mission-card" id="dm-card">'
+    +'<div class="mc-head" onclick="dmOpenDetail()"><span>🎯 今日のミッション <small class="mc-date">'+dayLabel(d.date)+'</small></span>'
+    +'<span class="mc-count'+(d.bonusClaimed?' comp':'')+'">'+(d.bonusClaimed?'コンプリート ✓':n+' / '+d.missions.length)+'</span></div>'
+    +d.missions.map(m=>dmMissionRowHTML(m)).join('')
+    +'<div class="mc-foot" onclick="dmOpenDetail()">'
+    +(d.bonusClaimed?'<span class="mc-comp">🎉 今日のミッション コンプリート！</span>'
+      :'<span>3つ達成で ボーナス <b>+'+DM_BONUS+' EXP</b></span>')
+    +'<span class="mc-today">今日 <b>+'+(d.xp||0)+'</b> EXP ›</span></div>'
+    +'</div>';
+}
+function dmOpenDetail(){
+  const d=ensureDaily(), h=dmHist();
+  openModal('<h3 style="margin:0 0 2px;">🎯 今日のミッション</h3>'
+    +'<p class="dm-sub">'+dayLabel(d.date)+'　今日の獲得 <b>+'+(d.xp||0)+' EXP</b>（最大 '+(DM_XP*3+DM_BONUS)+'）</p>'
+    +'<div class="mission-card dm-detail">'+d.missions.map(m=>dmMissionRowHTML(m)).join('')+'</div>'
+    +'<p class="dm-note">ミッションは 毎日かわるよ（日本時間の0時）。1つ達成で +'+DM_XP+' EXP、3つぜんぶで さらに +'+DM_BONUS+' EXP。ライフは へらないよ。</p>'
+    +'<b class="dm-h">この7日間</b>'+dmWeekHTML()
+    +'<p class="dm-legend"><span><b class="dm-dot study">●</b>学習した日</span><span><b class="dm-dot perfect">★</b>3つ達成した日</span></p>'
+    +dmStatsHTML()
+    +'<button class="btn" style="margin-top:12px;" onclick="closeModal()">とじる</button>');
+}
+function dmStatsHTML(){
+  const h=dmHist();
+  return '<div class="stat-grid dm-stats">'
+    +'<div class="stat-box"><div class="v">'+S.streak+'🔥</div><div class="k">連続学習</div></div>'
+    +'<div class="stat-box"><div class="v">'+(S.bestStreak||0)+'日</div><div class="k">最長連続</div></div>'
+    +'<div class="stat-box"><div class="v">'+h.totalDays+'日</div><div class="k">累計学習</div></div>'
+    +'<div class="stat-box"><div class="v">'+h.completedMissions+'</div><div class="k">ミッション達成</div></div>'
+    +'<div class="stat-box"><div class="v">'+h.perfectDays+'日</div><div class="k">3つ達成</div></div>'
+    +'</div>';
+}
+/* 画面に もどったとき 日付が変わっていたら 作りなおす(アプリの再起動はいらない) */
+function dmOnResume(){
+  if(typeof document!=='undefined'&&document.hidden) return;
+  const before=S.daily&&S.daily.date;
+  ensureDaily();
+  if(S.daily.date!==before){ const home=document.getElementById('screen-home'); if(home&&home.classList.contains('show')) renderHome(); }
+}
+try{ document.addEventListener('visibilitychange',dmOnResume); window.addEventListener('focus',dmOnResume); }catch(e){}
 /* ミッション達成トースト: 画面上部の小さなチップ。pointer-events:noneでレッスン進行・
    コンボ演出・解説と共存し、順番に1つずつ約1.3秒で自然に消える(全画面演出にしない) */
 let TOAST_Q=[],TOAST_ON=false;
@@ -5090,23 +5331,8 @@ function renderHome(){
     +'<span class="ts-state'+(learnedToday?' done':'')+'">'
     +(learnedToday?'✓ 今日の学習完了':'今日の学習はまだです')+'</span>'
     +'<span class="ts-cal">📅</span></div>';
-  // ②今日のミッション(第8段階のロジックそのまま・表示場所のみホームへ)
-  const dDone=missionDoneCount();
-  const missionCard='<div class="mission-card">'
-    +'<div class="mc-head"><span>🎯 今日のミッション</span>'
-    +'<span class="mc-count'+(S.daily.completed?' comp':'')+'">'
-    +(S.daily.completed?'COMPLETE ✓':dDone+'/'+DAILY_MISSIONS.length)+'</span></div>'
-    +DAILY_MISSIONS.map(m=>{
-      const cur=missionProgress(m), done=missionDone(m);
-      if(done) return '<div class="mc-item done">✓ '+m.title+'</div>';
-      const pct=Math.round(cur/m.target*100);
-      return '<div class="mc-item">'+m.icon+' '+m.title
-        +(m.target>1?'<span class="mc-prog">'+cur+'/'+m.target+'</span>'
-          +'<span class="mc-bar"><i style="width:'+pct+'%"></i></span>':'')
-        +'</div>';
-    }).join('')
-    +(S.daily.completed?'<div class="mc-tomorrow">今日のミッション達成！ロードはこのまま続けて遊べるよ。また明日！</div>':'')
-    +'</div>';
+  // ②今日のミッション(R86: 日ごとに3つ。押すと そのモードへ)
+  const missionCard=dmCardHTML();
   // ③つづきから(次に進む 大テーマ─小テーマ Lesson を明示。タップでコースの対象マスへ)
   const nx=nextLessonInfo();
   const contCard='<button class="hc-continue" onclick="goContinue()">'
@@ -5136,6 +5362,7 @@ function renderHome(){
     +'<span class="hy-txt"><b>ひとり麻雀</b>'
     +'<span>'+(soloN?'ツモって切って、じぶんの力でアガリを作ろう（4枚・7枚・10枚・13枚）':'4枚のアガリの形を習うと あそべるよ')+'</span></span></button>';
   el.innerHTML=streakCard+missionCard+contCard+soloCard+yakuCard+scoreCard;
+  if(DAILY_FX_PENDING&&!L){ DAILY_FX_PENDING=false; dmCompleteFx(); }   // R86: レッスンを とちゅうで やめたとき
 }
 
 /* ================= R83 ひとり麻雀 =================
@@ -5595,6 +5822,7 @@ function soloEnd(won){
   g.over=won?'win':'out'; g.done=true; g.busy=true; g.hint=null; g.confirm=false; g.riichiSel=false;
   soloModalClose();
   g.fl=soloRecord(g.n,won,g.draws,g.res);
+  dmSoloEnd(g);                                          // R86: デイリーミッション・学習日(1局につき1回)
   if(won&&(g.fl.newBest||g.fl.newStreak||g.fl.newScore)) sndPlay('streak');
   soloPaint();
 }
@@ -18896,6 +19124,7 @@ function check(){
      保存に失敗してもTrainingは止まらない(scoreTrainLog が中でtry/catchしている) */
   /* R85: 符計算トレーニングの記録(S.fuTrain) */
   if(q.fuQ) fuTrainRecord(q,(ans&&ans.index!=null)?ans.index:-1,res.isCorrect);
+  dmAnswer(q,res.isCorrect);   // R86: デイリーミッション(答えた1問ぶん)
   if(q.stVid){
     scoreTrainLog(q,(ans&&ans.index!=null)?ans.index:-1,res.isCorrect);
     if(L.scoreTrain){
@@ -18981,17 +19210,8 @@ function finishLesson(){
   const duration=Date.now()-(L.startedAt||Date.now());
   // streak: 「この完了でその日の学習を初達成したか」を更新前に判定(当日初回のみ祝う)
   const today=todayStr();
-  const firstToday=!(S.lastDay===today&&S.streak>0);
-  if(S.lastDay!==today){
-    if(S.lastDay){
-      const gap=Math.round((new Date(today)-new Date(S.lastDay))/86400000);
-      if(gap===1){ S.streak++; }
-      else if(gap>1&&S.freeze>0){ S.freeze--; S.streak++; }
-      else if(gap>1){ S.streak=1; }
-    }else{ S.streak=1; }
-    S.lastDay=today;
-  }else if(S.streak===0){ S.streak=1; }
-  if(S.streak>(S.bestStreak||0)) S.bestStreak=S.streak;  // 最長連続記録
+  /* R86: 連続日数・学習日の計算は studyDayUpdate(ひとり麻雀と共通)。中身は これまでと同じ決めかた */
+  const firstToday=studyDayUpdate();
   // ストリーク達成演出イベント(2026-09-21): 計算(上)と演出(showStreakFx)を分離。
   // firstToday=更新前判定の「当日初達成」。streakFxDay(保存)で同日再演出を恒久防止
   // (リロード/PWA再起動でも再発火しない)。既存ユーザーの過去分をまとめて再生することもない
@@ -19000,15 +19220,14 @@ function finishLesson(){
     S.streakFxDay=today;
     streakEvent={type:'personal',days:S.streak};
   }
-  // 日別学習履歴(カレンダー用)。将来'protected'(連続記録ブロック)と区別するため状態文字列で保存
-  if(S.learningDays[today]!=='protected') S.learningDays[today]='completed';
+  // 日別学習履歴(カレンダー用)は studyDayUpdate の中で つける(R86)
   // デイリーミッション進行(第8段階): 学習ロードのレッスンのみ対象(トレーニング/Compareは対象外)。
   // EXPミッションは実際に付与された学習EXP(復習水増しなし・宝箱ボーナス対象外)。
   // ストリークとは独立: ミッション未達成でもストリークは上の既存処理どおり継続する
   if(L.themeId!=null){
-    bumpMission('dm_lesson',1);
-    bumpMission('dm_xp',xp);
+    bumpMission('dm_lesson',1);      // R86: レッスンを1回クリア(dm_xp は R86 で なくした)
   }
+  if(L.fuTrain&&L.fuTrain.step==='review') dmEvent('fuReview');   // R86: 符計算の復習を1回
   // トレーニング自己ベスト(完走時のみ・種別ごとに分離。将来waits_4等の粒度キーも同じ器で持てる)
   let bestInfo=null;
   if(L.course.training&&L.rcat){
@@ -19170,12 +19389,7 @@ function renderResult(ctx){
     :'<button class="btn" onclick="afterLesson()">つづける</button>';
   // DAILY COMPLETE(第8段階): 3ミッション全達成のその日1回だけ、解説を邪魔しない
   // リザルト表示のタイミングで再生(COMPLETE/MASTER演出の後に順番に流れる。操作は塞がない)
-  if(DAILY_FX_PENDING){
-    DAILY_FX_PENDING=false;
-    playFx('<div class="fx-ico">🎯</div><div class="fx-t">DAILY COMPLETE!</div>'
-      +'<div class="fx-s">今日のミッション達成！　🔥 '+S.streak+'日連続</div>'
-      +'<div class="fx-s2">また明日！</div>','fx-daily',MOTION.dailyComplete);
-  }
+  if(DAILY_FX_PENDING){ DAILY_FX_PENDING=false; dmCompleteFx(); }   // R86: えらんでいるアバターで お祝い
 }
 /* R69: 同じLvで新しい10問をすぐ始める。進捗(roadProgress)には一切さわらない */
 function scoreTrainAgain(level){
@@ -19307,6 +19521,13 @@ function renderProfile(){
     +'<div class="stat-box"><div class="v">'+crownsTotal+'👑</div><div class="k">クラウン</div></div>'
     +'<div class="stat-box"><div class="v">'+rate+'%</div><div class="k">正解率</div></div>'
     +'</div></div>'
+    /* R86: これまでの学習(直近7日・累計)。ホームは今日のこと、ここは これまでのこと */
+    +'<div class="card" id="dm-me"><b style="font-size:14px;">📅 学習の記録</b>'+dmWeekHTML()
+    +'<div class="stat-grid dm-stats3" style="margin-top:8px;">'
+    +'<div class="stat-box"><div class="v">'+dmHist().totalDays+'日</div><div class="k">累計学習</div></div>'
+    +'<div class="stat-box"><div class="v">'+dmHist().completedMissions+'</div><div class="k">ミッション達成</div></div>'
+    +'<div class="stat-box"><div class="v">'+dmHist().perfectDays+'日</div><div class="k">3つ達成</div></div>'
+    +'</div></div>'
     +ratingSectionHTML()
     +'<div class="card"><b style="font-size:14px;">⚙️ 設定</b>'
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">'
@@ -19403,8 +19624,8 @@ function closeTvPrev(){ document.getElementById('tvprev').classList.remove('show
 let CAL_OFFSET=0;  // 表示中の月(0=今月, -1=先月, ...)
 function showStreakDetail(off){
   CAL_OFFSET=(off===undefined)?0:CAL_OFFSET+off;
-  const now=new Date();
-  const base=new Date(now.getFullYear(), now.getMonth()+CAL_OFFSET, 1);
+  const tk=todayStr();   // R86: 日本時間の月
+  const base=new Date(+tk.slice(0,4), +tk.slice(5,7)-1+CAL_OFFSET, 1);
   const y=base.getFullYear(), m=base.getMonth();
   const todayKey=todayStr();
   const dayKey=d=>[y,String(m+1).padStart(2,'0'),String(d).padStart(2,'0')].join('-');
