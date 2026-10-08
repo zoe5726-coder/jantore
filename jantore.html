@@ -420,6 +420,44 @@ html.ruby-full .ch3-chip > .ch3-chip-t::before{content:''; display:inline-block;
 /* R82: ミニ実戦の判断(ロンできる／できない など)は 横にならべる。たてに2つ積むと 小さい画面で はみ出して 卓がスクロールで動く */
 #bt-ui .choices{display:flex; flex-direction:row; gap:8px;}
 #bt-ui .choices .choice{flex:1 1 0; margin:0; min-width:0;}
+/* R83: ひとり麻雀(ミニ実戦の卓の部品を使う。他家の河は出さない) */
+.solo-title{flex:1; font-weight:800; font-size:clamp(15px,4.2vw,17px); color:var(--ink);}
+.q-area.solo-area{padding-bottom:calc(24px + env(safe-area-inset-bottom));}
+.solo-lead{margin:4px 2px 10px; font-size:clamp(13px,3.6vw,14.5px); line-height:1.6; color:var(--ink);}
+.solo-mode{display:flex; align-items:center; gap:10px; background:var(--card); border:2px solid var(--line); border-radius:14px; padding:12px 12px; margin:0 0 10px;}
+.solo-mode.locked{opacity:.72;}
+.solo-mode .sm-txt{flex:1 1 auto; min-width:0;}
+.solo-mode .sm-txt b{display:block; font-size:clamp(15px,4.2vw,17px);}
+.solo-mode .sm-txt span{display:block; font-size:clamp(11.5px,3.2vw,13px); color:var(--ink-soft); line-height:1.45;}
+.solo-mode .sm-go{flex:none; width:auto; padding:10px 20px;}
+.solo-info{display:flex; justify-content:space-between; align-items:baseline; margin:0 4px 4px; font-size:clamp(11.5px,3.2vw,13px); font-weight:700; color:var(--ink-soft);}
+.solo-info .solo-wall b{color:var(--ink); font-size:1.15em;}
+.solo-info .solo-uses{display:block; font-weight:700; font-size:.92em; opacity:.85;}
+.solo-mjt .solo-riv{padding:2px 2px 0;}
+.solo-riv-grid{display:grid; grid-template-columns:repeat(var(--solo-per,10), var(--mjt-rt)); justify-content:center; gap:2px 1px;}
+.solo-cell{display:block; width:var(--mjt-rt); height:calc(var(--mjt-rt) * 1.4);}
+.solo-cell > .tile{width:100%; height:100%; border-radius:3px;}
+.solo-cell.solo-last > .tile{outline:1.5px solid rgba(255,255,255,.62); outline-offset:1px;}
+.solo-mjt .mjt-me{margin-top:14px;}
+.solo-mjt .hand{justify-content:center;}
+/* 少ない枚数のモードで 牌を大きくしすぎない: 13枚のときの牌より 少し大きいところで止める */
+.solo-mjt.solo-n4 button.mjt-pick.mjt-hp,.solo-mjt.solo-n4 .mjt-hs,
+.solo-mjt.solo-n7 button.mjt-pick.mjt-hp,.solo-mjt.solo-n7 .mjt-hs,
+.solo-mjt.solo-n10 button.mjt-pick.mjt-hp,.solo-mjt.solo-n10 .mjt-hs{flex:0 1 var(--mjt-tt);}
+.solo-mjt .mjt-pick.solo-hint > .tile{outline:2.5px solid var(--now-ring); outline-offset:1px;}
+.solo-mjt .mjt-me .mjt-name{margin-bottom:5px;}
+.solo-msg{min-height:1.5em; margin:8px 4px 6px; text-align:center; font-weight:800; font-size:clamp(14px,4vw,16px); color:var(--ink);}
+.solo-acts{display:flex; gap:8px;}
+.solo-acts .btn{flex:1 1 0; padding:11px 10px;}
+.btn.solo-sub{background:var(--card); color:var(--ink); border:2px solid var(--line); box-shadow:0 3px 0 var(--line);}
+.btn.solo-sub:disabled{opacity:.5; color:var(--ink-soft);}
+.btn.solo-tsumo.off{visibility:hidden;}
+.solo-res{border:2px solid var(--line); border-radius:16px; padding:10px 12px; margin:8px 0 0; background:var(--card); text-align:center;}
+.solo-res.win{border-color:var(--jade); background:var(--jade-soft);}
+.solo-res .sr-title{margin:0; font-weight:800; font-size:clamp(17px,4.8vw,20px);}
+.solo-res .sr-sub{margin:3px 0 8px; font-size:clamp(12.5px,3.5vw,14px); color:var(--ink-soft);}
+.solo-res .sr-btns{display:flex; gap:8px;}
+.solo-res .sr-btns .btn{flex:1 1 0; padding:11px 10px;}
 #bt-board .f-wait{margin:6px 0 0;}
 .q-ctx{font-size:clamp(12.5px, 3.5vw, 14.5px); color:var(--ink-soft); font-weight:700; background:var(--jade-soft);
   border-radius:10px; padding:8px 12px; margin-bottom:12px;}
@@ -1839,6 +1877,17 @@ button.mjt-pick.mjt-hp,
     <button id="nav-training" onclick="showScreen('training')"><span class="i">🎯</span>トレーニング</button>
     <button id="nav-shop" onclick="showScreen('shop')"><span class="i">🛍️</span>ショップ</button>
     <button id="nav-profile" onclick="showScreen('profile')"><span class="i" id="nav-av"></span>マイページ</button>
+  </div>
+</div>
+
+<!-- R83 ひとり麻雀: レッスンと同じ全画面の枠(.lesson)を使う。中身は soloRenderMenu / soloPaint が作る -->
+<div class="lesson solo" id="solo">
+  <div class="lesson-inner">
+    <div class="lesson-top">
+      <button class="x" id="solo-x" onclick="soloBack()">✕</button>
+      <div class="solo-title" id="solo-title">ひとり麻雀</div>
+    </div>
+    <div class="q-area solo-area" id="solo-body"></div>
   </div>
 </div>
 
@@ -4343,8 +4392,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.74.0';
-const BUILD_ID='20261008-01';
+const APP_VER='0.75.0';
+const BUILD_ID='20261008-02';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -5030,7 +5079,276 @@ function renderHome(){
     +'<span class="hy-txt"><b>点数表</b>'
     +'<span>このアガリは何点？ '+RB_KO+'と'+RB_OYA+'・ロンとツモをすぐ引ける</span></span></button>';
   // 将来カード(今日の復習・おすすめトレーニング・週間目標等)は下へ追記するだけで拡張できる
-  el.innerHTML=streakCard+missionCard+contCard+yakuCard+scoreCard;
+  /* ⑥ひとり麻雀(R83): じぶんで自由に打つ遊び。Road の「つづきから」の下に置く(学習の導線が先)。
+     ひらいている枚数が1つもないあいだは「まだ」と小さく出すだけ(押せば 何を学ぶと ひらくかが見える) */
+  const soloN=SOLO_ORDER.filter(n=>soloUnlocked(n)).length;
+  const soloCard='<button class="hc-yaku hc-solo" id="hc-solo" onclick="soloOpen()">'
+    +'<span class="hy-ico">🀄</span>'
+    +'<span class="hy-txt"><b>ひとり麻雀</b>'
+    +'<span>'+(soloN?'ツモって切って、じぶんの力でアガリを作ろう（4枚・7枚・10枚・13枚）':'4枚のアガリの形を習うと あそべるよ')+'</span></span></button>';
+  el.innerHTML=streakCard+missionCard+contCard+soloCard+yakuCard+scoreCard;
+}
+
+/* ================= R83 ひとり麻雀 =================
+   4枚・7枚・10枚・13枚の手牌で、山からツモって 1枚切る を くりかえし、アガリ形(メンツ＋アタマ)を作る遊び。
+   ミニ実戦(BATTLE)とは べつのモード:
+     ・台本がない。山をまぜて 配って、山の上から じゅんにツモる(同じ牌は4枚まで。手牌＋河＋山 で数が合う)
+     ・1打牌ごとの 正解・不正解 を出さない。どの牌でも自由に切れる。「この牌を切ろう」と言わない
+     ・ライフ・コンボ・XP・ミッション・Road の進みは 1つも動かさない
+   つくり:
+     SOLO(状態) … soloDeal(配る) → soloDraw(ツモ) → soloCut(切る) → … → soloTsumo(アガる) / 山がなくなる → soloEnd
+     卓は ミニ実戦の部品(.mjt の手牌・ツモ牌の置き場所・牌の大きさ・アガリの演出・打牌の音)を そのまま使う。他家3人の河は出さない。
+   アガリは【ふつうの形だけ】(メンツ×n＋アタマ)。七対子・国士無双は 見ない(teShStd)。役・翻・点数は 数えない。
+   ヒント(押したときだけ): soloEval。R79 の tehaiEval と同じ決めかた(明確に劣る打牌だけ外す)を、
+     ①ふつうの形だけで ②そのモードの山に入っている牌だけを数えて 計算する。
+     tehaiEval そのものを使わない理由: 14枚のとき 七対子・国士も見てしまう／山に入っていない牌(4枚麻雀の字牌など)まで「来る牌」に数えてしまう。
+     決めかたが tehaiEval と ずれていないことは テスト(r83-check)が 山が全種類のときに突き合わせて見る。 */
+/* モードの定義。枚数がふえるにつれて、使う牌の種類もふえる(しぜんに むずかしくなる)。
+   key    = そのアガリ形を習う Lesson(Road の diff.ch1。c1_1=4枚 / c2_1=7枚 / c3_1=10枚 / d1_1=13枚 の「アガリの形」を教える さいしょの Lesson)
+   nSuits = 使う色の数。マンズ・ピンズ・ソーズから その数だけ、1局のはじめに くじで決める(局のとちゅうでは変えない。もう一度 で引きなおす)
+   honors = 字牌を使うか。13枚だけが ふつうの麻雀と同じ 34種類・136枚
+   draws  = ツモれる回数(山の枚数)
+   start  = 配ったときの「アガリまでの近さ」の出やすさ [あと何枚ぶん, 重み]。0 = テンパイ。毎回テンパイからは始めない
+   draws と start は、ヒントどおりに打ったときに アガれる局が 7割前後になるように 決めた(4枚は9割ちかく) */
+const SOLO_MODES={
+  4: {n:4, sets:1, label:'4枚麻雀', form:'1メンツ＋1アタマ', key:'c1_1', nSuits:1, honors:false, draws:10, start:[[0,3],[1,7]]},
+  7: {n:7, sets:2, label:'7枚麻雀', form:'2メンツ＋1アタマ', key:'c2_1', nSuits:2, honors:false, draws:18, start:[[1,7],[2,3]]},
+  10:{n:10,sets:3, label:'10枚麻雀',form:'3メンツ＋1アタマ', key:'c3_1', nSuits:3, honors:false, draws:27, start:[[1,7],[2,3]]},
+  13:{n:13,sets:4, label:'13枚麻雀',form:'4メンツ＋1アタマ', key:'d1_1', nSuits:3, honors:true,  draws:36, start:[[1,5],[2,5]]},
+};
+const SOLO_SUIT_NAME={m:'マンズ',p:'ピンズ',s:'ソーズ'};
+const SOLO_ORDER=[4,7,10,13];
+let SOLO=null;                 // いまの1局。あそんでいないときは null
+let SOLO_GAP=280;              // 切ってから つぎのツモまでの間(ms)。let なのはテストで早送りするため
+let SOLO_SEED=null;            // テスト用: 数を入れると その種で配る(入れるたびに1ずつ進む)。ふだんは null = 毎回ちがう
+let SOLO_TIMERS=[];
+function soloClearTimers(){ SOLO_TIMERS.forEach(t=>clearTimeout(t)); SOLO_TIMERS=[]; }
+function soloRng(seed){ let a=seed>>>0; return ()=>{ a=(a+0x6D2B79F5)|0; let t=Math.imul(a^(a>>>15),1|a); t=(t+Math.imul(t^(t>>>7),61|t))^t; return ((t^(t>>>14))>>>0)/4294967296; }; }
+/* その局で使う色を くじで決める(mps の順にならべて返す) */
+function soloPickSuits(n,rnd){
+  const m=SOLO_MODES[n], a=['m','p','s']; rnd=rnd||Math.random;
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(rnd()*(i+1)); const t=a[i]; a[i]=a[j]; a[j]=t; }
+  return a.slice(0,m.nSuits).sort((x,y)=>'mps'.indexOf(x)-'mps'.indexOf(y)).join('');
+}
+/* その局の山に入る牌(同じ牌は4枚ずつ)。suits = soloPickSuits の結果 */
+function soloUniverse(n,suits){
+  const m=SOLO_MODES[n], out=[];
+  suits.split('').forEach(su=>{ for(let i=1;i<=9;i++) for(let k=0;k<4;k++) out.push(i+su); });
+  if(m.honors) 'ESWNBGR'.split('').forEach(h=>{ for(let k=0;k<4;k++) out.push(h); });
+  return out;
+}
+function soloKinds(n,suits){ const c=teCount(soloUniverse(n,suits)); return c.map(x=>x>0); }
+/* アガリまで あと何枚ぶんか(ふつうの形だけ)。-1 ならアガリ形 */
+function soloSh(tiles,sets){ return teShStd(teCount(tiles),sets); }
+function soloIsWin(tiles,sets){ return tiles.length===sets*3+2&&soloSh(tiles,sets)===-1; }
+/* 配る: 山をまぜて、上から n 枚が手牌、つづく draws 枚が ツモる山。
+   手牌の近さが ねらい(start)に合うまで まぜなおす。合わせるのは 配った手だけで、ツモの順番には さわらない */
+function soloDeal(n,rnd){
+  const m=SOLO_MODES[n]; rnd=rnd||Math.random;
+  const tot=m.start.reduce((a,x)=>a+x[1],0); let r=rnd()*tot, want=m.start[0][0];
+  for(const x of m.start){ if(r<x[1]){ want=x[0]; break; } r-=x[1]; }
+  const suits=soloPickSuits(n,rnd);
+  let best=null;
+  for(let tryN=0;tryN<600;tryN++){
+    const u=soloUniverse(n,suits);
+    for(let i=u.length-1;i>0;i--){ const j=Math.floor(rnd()*(i+1)); const t=u[i]; u[i]=u[j]; u[j]=t; }
+    const hand=u.slice(0,n), sh=soloSh(hand,m.sets);
+    const d={hand:sortTiles(hand), wall:u.slice(n,n+m.draws), sh, want, suits, tries:tryN+1};
+    if(sh===want) return d;
+    if(!best||Math.abs(sh-want)<Math.abs(best.sh-want)) best=d;
+  }
+  return best;
+}
+/* 打牌ごとの評価(ヒント用)。tiles = 手牌＋ツモ牌、visible = 河、kinds = 山に入っている牌の種類 */
+function soloEval(tiles,visible,sets,kinds){
+  const c=teCount(tiles), vis=teCount(tiles.concat(visible||[])), cands=[];
+  for(let d=0;d<34;d++){
+    if(!c[d]) continue;
+    c[d]--;
+    const sh=teShStd(c,sets), uke=[]; let cnt=0;
+    for(let x=0;x<34;x++){
+      const rem=4-vis[x];
+      if((kinds&&!kinds[x])||rem<=0||c[x]>=4) continue;
+      c[x]++;
+      const s2=teShStd(c,sets);
+      c[x]--;
+      if(s2<sh){ uke.push(TE_NAMES[x]); cnt+=rem; }
+    }
+    c[d]++;
+    cands.push({t:TE_NAMES[d],sh,uke,n:cnt,bad:''});
+  }
+  const minSh=Math.min.apply(null,cands.map(x=>x.sh));
+  const maxN=Math.max.apply(null,cands.filter(x=>x.sh===minSh).map(x=>x.n));
+  cands.forEach(X=>{
+    if(X.sh>minSh){ X.bad='far'; return; }
+    for(let i=0;i<cands.length;i++){
+      const Y=cands[i];
+      if(Y===X||Y.sh!==X.sh) continue;
+      if(X.uke.every(u=>Y.uke.indexOf(u)>=0)&&X.n<Y.n){ X.bad='subset'; return; }
+      if(X.uke.every(u=>u===Y.t||Y.uke.indexOf(u)>=0)&&X.n*5<Y.n*3){ X.bad='narrow'; return; }
+    }
+    if(X.n*2<maxN) X.bad='half';
+  });
+  return {win:teShStd(c,sets)===-1, cands, ok:cands.filter(x=>!x.bad).map(x=>x.t)};
+}
+/* ---- 解放: そのアガリ形を習う Lesson を 1回 さいごまでやったら ひらく(Road の進みから毎回 計算する。保存しない) ---- */
+function soloUnlockInfo(n){
+  const m=SOLO_MODES[n];
+  for(const t of THEMES){
+    const list=themeLessons(t), idx=list.findIndex(l=>l.diff&&l.diff.ch1===m.key);
+    if(idx<0) continue;
+    const ls=list[idx];
+    return {n, open:((S.roadProgress&&S.roadProgress[t.id])||0)>idx, theme:t.id, idx, key:m.key,
+      where:'「'+t.title+'」の '+(ls.sub&&ls.sub.title?'「'+ls.sub.title+'」':'')+(ls.isLast?'まとめ':'Lesson '+((ls.subIdx||0)+1))};
+  }
+  return {n, open:false, theme:null, idx:-1, key:m.key, where:''};
+}
+function soloUnlocked(n){ return soloUnlockInfo(n).open; }
+/* ---- 記録: 1局おわるごとに 回数だけ のこす(将来の デイリーなどが読めるように)。XP・ライフ・コンボ・ミッションは動かさない。
+        S.solo は あそんだときに はじめて作る(あそんでいない人の保存データの形は 1つも変わらない) ---- */
+function soloRecord(n,won,draws){
+  if(!S.solo||typeof S.solo!=='object') S.solo={};
+  const r=S.solo[n]||{plays:0,wins:0,best:null,lastDay:null};
+  r.plays++; if(won){ r.wins++; if(r.best==null||draws<r.best) r.best=draws; }
+  r.lastDay=todayStr();
+  S.solo[n]=r; save();
+}
+/* ---- 画面 ---- */
+function soloEl(id){ return document.getElementById(id); }
+function soloOpen(){
+  if(typeof L!=='undefined'&&L) return;         // レッスン中は ひらかない
+  soloClearTimers(); SOLO=null;
+  soloEl('solo').classList.add('show');
+  soloRenderMenu();
+}
+function soloClose(){
+  soloClearTimers(); SOLO=null;
+  soloEl('solo').classList.remove('show');
+  soloEl('solo-body').innerHTML='';
+  if(typeof renderHome==='function') renderHome();
+}
+function soloBack(){ if(SOLO){ soloClearTimers(); SOLO=null; soloRenderMenu(); } else soloClose(); }
+function soloRenderMenu(){
+  soloEl('solo-title').textContent='ひとり麻雀';
+  let h='<p class="solo-lead">山からツモって、いらない牌を1枚切る。じぶんで考えて、<b>アガリの形</b>を作ろう！ まちがいは ないよ。</p>';
+  SOLO_ORDER.forEach(n=>{
+    const m=SOLO_MODES[n], u=soloUnlockInfo(n), r=(S.solo&&S.solo[n])||null;
+    h+='<div class="solo-mode'+(u.open?'':' locked')+'" id="solo-mode-'+n+'">'
+      +'<div class="sm-txt"><b>'+m.label+'</b><span>'+m.form+'でアガリ ・ '+(m.honors?'ぜんぶの牌':m.nSuits===3?'数の牌 3色':'数の牌 '+m.nSuits+'色')+'</span>'
+      +(u.open?(r&&r.plays?'<span class="sm-rec">あそんだ回数 '+r.plays+'・アガリ '+r.wins+'</span>':'')
+              :'<span class="sm-lock">🔒 '+(u.where?u.where+' を学ぶと ひらくよ':'まだ ひらいていないよ')+'</span>')
+      +'</div>'
+      +(u.open?'<button class="btn sm-go" onclick="soloStart('+n+')">遊ぶ</button>':'')
+      +'</div>';
+  });
+  soloEl('solo-body').innerHTML=h;
+  soloEl('solo-body').scrollTop=0;
+}
+function soloStart(n){
+  if(!SOLO_MODES[n]||!soloUnlocked(n)) return;
+  soloClearTimers();
+  const rnd=(SOLO_SEED!=null)?soloRng(SOLO_SEED++):Math.random;
+  const d=soloDeal(n,rnd), m=SOLO_MODES[n];
+  SOLO={n, sets:m.sets, hand:d.hand, wall:d.wall, total:d.wall.length, river:[], tsumo:null, draws:0,
+    over:null, busy:true, canWin:false, hint:null, hints:0, startSh:d.sh, suits:d.suits, kinds:soloKinds(n,d.suits), fx:''};
+  soloEl('solo-title').textContent=m.label;
+  soloEl('solo-body').innerHTML='<div class="solo-info" id="solo-info"></div>'
+    +'<div class="bt-stage"><div id="solo-board"></div><div class="bt-fx" id="solo-fx" aria-hidden="true"></div></div>'
+    +'<div id="solo-ui"></div>';
+  soloEl('solo-body').scrollTop=0;
+  soloPaint();
+  soloDraw();
+}
+/* 山の上から1枚ツモる。ツモ牌が出たら すぐ切れる */
+function soloDraw(){
+  const g=SOLO; if(!g||g.over) return;
+  if(!g.wall.length){ soloEnd(false); return; }
+  g.tsumo=g.wall.shift(); g.draws++; g.hint=null;
+  g.canWin=soloIsWin(g.hand.concat([g.tsumo]),g.sets);
+  g.busy=false;
+  soloPaint();
+}
+/* 1枚切る。i = 手牌の左から(0〜n-1)、n = ツモ牌。どの牌でも切れる */
+function soloCut(i){
+  const g=SOLO; if(!g||g.over||g.busy||!g.tsumo) return;
+  const all=g.hand.concat([g.tsumo]); if(i<0||i>=all.length) return;
+  const tile=all.splice(i,1)[0];
+  g.hand=sortTiles(all); g.tsumo=null; g.river.push(tile);
+  g.busy=true; g.canWin=false; g.hint=null;
+  sndPlay('discard');
+  soloPaint();
+  SOLO_TIMERS.push(setTimeout(()=>{ if(SOLO===g) soloDraw(); },SOLO_GAP));
+}
+/* 「ツモ！」: アガリ形ができているときだけ押せる */
+function soloTsumo(){
+  const g=SOLO; if(!g||g.over||g.busy||!g.canWin) return;
+  g.busy=true; g.over='win'; g.hint=null;
+  const red=reducedMotion(), dur=red?MJFX_MS.winR:MJFX_MS.win, at=red?MJFX_MS.agariAtR:MJFX_MS.agariAt;
+  const fx=soloEl('solo-fx');
+  if(fx){ fx.className='bt-fx'; fx.innerHTML='<div class="mjfx mjfx-win"><span class="mjfx-t">ツモ！</span></div>'; }
+  if(!mjfxSound('tsumo')) sndPlay('correct');
+  soloPaint();
+  SOLO_TIMERS.push(setTimeout(()=>{ const b=fx&&fx.querySelector('.mjfx'); if(SOLO===g&&b&&!b.querySelector('.mjfx-agari')) b.insertAdjacentHTML('beforeend','<span class="mjfx-agari">アガリ！</span>'); },at));
+  SOLO_TIMERS.push(setTimeout(()=>{ if(SOLO!==g) return; if(fx){ fx.className='bt-fx'; fx.innerHTML=''; } soloEnd(true); },Math.max(dur,at+MJFX_MS.fade+120)));
+}
+function soloEnd(won){
+  const g=SOLO; if(!g||g.done) return;
+  g.over=won?'win':'out'; g.done=true; g.busy=true; g.hint=null;
+  soloRecord(g.n,won,g.draws);
+  soloPaint();
+}
+/* ヒント(押したときだけ)。切る候補の牌を光らせる。使っても何も へらない */
+function soloHint(){
+  const g=SOLO; if(!g||g.over||g.busy||!g.tsumo||g.canWin) return;
+  const ev=soloEval(g.hand.concat([g.tsumo]),g.river,g.sets,g.kinds);
+  g.hint=ev.ok.slice(); g.hints++;
+  soloPaint();
+}
+function soloBoardHTML(g){
+  const m=SOLO_MODES[g.n], per=12, rows=Math.ceil(g.total/per);
+  const hint=g.hint||[];
+  let riv='';
+  for(let i=0;i<rows*per;i++){
+    const t=g.river[i];
+    riv+='<span class="solo-cell'+(t&&i===g.river.length-1&&!g.over?' solo-last':'')+'">'+(t?mjtTileHTML(t):'')+'</span>';
+  }
+  const pick=!g.over&&!g.busy&&!!g.tsumo;
+  const tileBtn=(t,i,cls)=> pick
+    ? '<button class="mjt-pick '+cls+(hint.indexOf(t)>=0?' solo-hint':'')+'" id="so-'+i+'" onpointerdown="soloCut('+i+')">'+mjtTileHTML(t)+'</button>'
+    : (cls==='mjt-hp'?'<span class="mjt-hs">'+mjtTileHTML(t)+'</span>':mjtTileHTML(t));
+  const handLab=g.over==='win'?'完成した手牌':g.over==='out'?'さいごの手牌':'あなたの手牌';
+  return '<div class="mjt solo-mjt solo-n'+g.n+(g.over==='win'?' mjt-win':'')+'">'
+    +'<div class="solo-riv"><span class="mjt-name">あなたの河</span><div class="solo-riv-grid" style="--solo-per:'+per+'">'+riv+'</div></div>'
+    +'<div class="mjt-me'+(pick?' mjt-me-pick':'')+'"><span class="mjt-name">'+handLab+'</span><div class="hand">'
+    +g.hand.map((t,i)=>tileBtn(t,i,'mjt-hp')).join('')
+    +(g.tsumo?'<span class="mjt-tsumo">'+tileBtn(g.tsumo,g.hand.length,'mjt-tp')+'<span class="mjt-nlab">ツモ</span></span>'
+             :'<span class="mjt-tsumo mjt-tsumo-empty"><span class="mjt-tslot" aria-hidden="true"></span></span>')
+    +'</div></div></div>';
+}
+function soloPaint(){
+  const g=SOLO; if(!g) return;
+  const m=SOLO_MODES[g.n];
+  const info=soloEl('solo-info'), board=soloEl('solo-board'), ui=soloEl('solo-ui');
+  if(!info||!board||!ui) return;
+  const uses=g.suits.split('').map(x=>SOLO_SUIT_NAME[x]).join('・')+(m.honors?'・字牌':'');
+  info.innerHTML='<span>'+m.form+'でアガリ<small class="solo-uses" id="solo-uses">つかう牌: '+uses+'</small></span><span class="solo-wall" id="solo-wall">山 のこり <b>'+g.wall.length+'</b>枚</span>';
+  board.innerHTML=soloBoardHTML(g);
+  if(g.done){
+    const won=g.over==='win';
+    ui.innerHTML='<div class="solo-res '+(won?'win':'out')+'" id="solo-res">'
+      +'<p class="sr-title">'+(won?'🎉 アガリ！':'山がなくなったよ')+'</p>'
+      +'<p class="sr-sub">'+(won?g.draws+'回目のツモで アガリ！ '+m.form+'が できたね。':'こんどは アガれなかったね。もう一度 やってみよう！')+'</p>'
+      +'<div class="sr-btns"><button class="btn" id="solo-again" onclick="soloStart('+g.n+')">もう一度</button>'
+      +'<button class="btn solo-sub" id="solo-menu" onclick="soloBack()">枚数をえらぶ</button></div></div>';
+    return;
+  }
+  const canHint=!g.over&&!g.busy&&!!g.tsumo&&!g.canWin;
+  ui.innerHTML='<div class="solo-msg" id="solo-msg">'
+      +(g.over==='win'?'':g.canWin?'アガリの形が できているよ！':g.hint?'ひかっている牌が、切る候補だよ。':(g.tsumo?'いらない牌を1枚 切ろう':'&nbsp;'))+'</div>'
+    +'<div class="solo-acts">'
+      +'<button class="btn solo-sub" id="solo-hint"'+(canHint?'':' disabled')+' onclick="soloHint()">💡 ヒント</button>'
+      +'<button class="btn solo-tsumo'+(g.canWin&&!g.over?'':' off')+'" id="solo-tsumo"'+(g.canWin&&!g.over&&!g.busy?'':' disabled')+' onclick="soloTsumo()">ツモ！</button>'
+    +'</div>';
 }
 
 /* ================= トレーニングハブ ================= */
