@@ -464,6 +464,44 @@ span.tv-riichi-tile{transform:rotate(-90deg);}
 .btn.solo-sub:disabled{opacity:.5; color:var(--ink-soft);}
 .btn.solo-agaru2.off{visibility:hidden;}
 .solo-acts .solo-rbtn.on{border-color:var(--verm); color:var(--verm);}
+/* R93 ひとり麻雀のサポート: 3つのボタン・ひらく箱・形の分解・アガリの形の解説 */
+.solo-sup{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; margin:0 0 6px;}
+.solo-sup .btn{min-height:42px; padding:9px 2px; font-size:clamp(12px,3.4vw,13.5px); white-space:nowrap;}
+.solo-sup .btn.on{border-color:var(--jade); color:var(--jade-ink); background:var(--jade-soft);}
+.sp-panel{border:2px solid var(--jade); border-radius:14px; background:var(--card); padding:8px 10px 10px; margin:0 0 8px; text-align:left;}
+.sp-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;}
+.sp-head b{font-size:clamp(13.5px,3.8vw,15px);}
+.sp-x{background:none; border:0; font-size:20px; line-height:1; color:var(--ink-soft); padding:4px 6px; cursor:pointer;}
+.sp-lead{margin:2px 0 6px; font-weight:800; font-size:clamp(13px,3.6vw,14.5px); line-height:1.5;}
+.sp-note{margin:4px 0 0; font-size:clamp(11px,3vw,12px); color:var(--ink-soft); font-weight:700; line-height:1.5;}
+.sp-waits{display:flex; flex-direction:column; gap:4px; margin:2px 0 4px;}
+.sp-w{display:flex; align-items:center; gap:8px;}
+.sp-w .tile{flex:none; width:clamp(26px,7.4vw,30px);}
+.sp-wt{display:flex; flex-wrap:wrap; align-items:baseline; gap:0 8px; font-size:clamp(12px,3.4vw,13.5px); font-weight:700;}
+.sp-wt small{font-size:.85em; color:var(--ink-soft);}
+.sp-un{color:var(--ink-soft); font-size:.9em;}
+.sp-opt{border-top:1px dashed var(--line); padding-top:4px; margin-top:4px;}
+.sp-cut{margin:0 0 2px; font-weight:800; font-size:clamp(12.5px,3.5vw,14px);}
+.sp-exp{margin:4px 0 0; padding-left:1.1em; font-size:clamp(11.5px,3.2vw,12.5px); line-height:1.5; color:var(--ink);}
+.sp-step{border-top:1px dashed var(--line); padding:4px 0 2px;}
+.sp-step:first-of-type{border-top:0;}
+.sp-step p{margin:2px 0; font-size:clamp(12.5px,3.5vw,14px); line-height:1.55;}
+.sp-sn{font-size:11px; color:var(--jade-ink); letter-spacing:.06em;}
+.sp-panel .sp-next{margin-top:6px; padding:9px 10px; font-size:clamp(12.5px,3.5vw,14px);}
+.sp-dec{display:flex; flex-wrap:wrap; gap:8px 8px; align-items:flex-start; margin:4px 0;}
+.sp-g{display:inline-flex; flex-direction:column; align-items:center; flex:none;}
+.sp-gt{display:inline-flex; gap:1px; padding:2px; border-radius:6px; background:var(--paper);}
+.sp-g.k-run .sp-gt,.sp-g.k-set3 .sp-gt{background:var(--jade-soft);}
+.sp-g.k-head .sp-gt{background:#fdeccc;}
+.sp-g.k-single .sp-gt{background:transparent; outline:1px dashed var(--line);}
+.sp-gt .tile{flex:none; width:clamp(24px,6.8vw,28px); max-width:none; min-width:0;}
+.sp-gt .tile.sp-win{box-shadow:0 0 0 2px var(--verm);}
+.sp-gl{margin-top:2px; font-size:10.5px; font-weight:800; line-height:1.2; text-align:center; color:var(--ink-soft);}
+.sr-exp{margin:10px 0 0; padding:8px 0 0; border-top:2px dashed var(--line); text-align:left;}
+.sr-exp .sr-bh{margin:0 0 2px; font-weight:900; font-size:clamp(13.5px,3.8vw,15px);}
+.sr-exp .sr-ex{margin:3px 0; font-size:clamp(12.5px,3.5vw,14px); line-height:1.6;}
+.sr-exp .sr-alt{display:flex; flex-wrap:wrap; align-items:center; gap:6px;}
+.sr-exp .sp-next{width:auto; padding:7px 12px; font-size:clamp(12px,3.4vw,13px);}
 .solo-mjt .mjt-pick.solo-rz > .tile{outline:2.5px solid var(--now-ring); outline-offset:1px;}
 .solo-mjt .solo-dim > .tile{opacity:.45;}
 .solo-mjt .solo-tp-off{display:block; line-height:0;}
@@ -4730,8 +4768,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.84.0';
-const BUILD_ID='20261017-01';
+const APP_VER='0.85.0';
+const BUILD_ID='20261018-01';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -6027,6 +6065,226 @@ function soloBingoBtnPaint(){
   b.style.display=on?'':'none';
   if(on){ const st=soloBingoState(g.n); b.innerHTML='🎯 <b>'+st.cnt+'</b>/9'; }
 }
+/* ===== R93 ひとり麻雀の 初心者サポート(待ちを見る・段階的ヒント・形を分解・アガリの形の解説) =====
+   ・どれも【押したときだけ】出す(g.sp = いま ひらいているサポート。表示だけの状態・保存しない)。ひらいても とじても 局は進まない:
+     手牌・山・ツモ牌・河・ツモ回数・アガリの判定・EXP・ビンゴ・ライフ・学習の進みは 変えない(変えるのは ヒント STEP2 の「光らせる」= R83 の soloHint と同じ)
+   ・計算は 既存の部品だけ: アガリまでの近さ soloSh / soloShC(4・7・10枚は ふつうの形だけ・13枚は 七対子と国士も = teShanten)・
+     打牌の評価 soloEval(R83 のヒント。見えている牌=手牌＋ツモ牌＋河 だけで数える)・アガリ形 soloIsWin・待ちの形 soloWaitKinds(R92)・アガリ形の分けかた soloDecomps
+   ・山(g.wall)は 見ない。のこり枚数は「見えていない枚数」(4枚 −(手牌＋ツモ牌＋河 に見えている数))。山に あるとは かぎらない
+   ・つかったら g.sup が ふえる。7・10枚の ビンゴ「ヒントなし」は ヒント(g.hints)と サポート(g.sup)の どちらも 0 のときだけ。g は 局ごとに 作りなおすので 次の局に のこらない */
+const SOLO_SH_WORD=['テンパイ','イーシャンテン','リャンシャンテン','サンシャンテン','スーシャンテン'];
+/* 見えている牌(手牌＋ツモ牌＋河)の数。山は ふくめない */
+function soloVisCount(g){ return teCount(g.hand.concat(g.tsumo?[g.tsumo]:[]).concat(g.river)); }
+/* 待ちの形の名前。七対子・国士は ふつうの形の分けかたが ないので べつに名づける(13枚だけ) */
+function soloWaitKindsAny(hand,w){
+  const k=soloWaitKinds(hand,w); if(k.length) return k;
+  const c=teCount(hand); let p=0; for(let i=0;i<34;i++) if(c[i]>=2) p++;
+  return [p===6?'chiitoi':'kokushi'];
+}
+const SOLO_WAIT_LABEL=Object.assign({chiitoi:'タンキ（七対子）',kokushi:'国士無双'},SOLO_WAIT_NAME);
+const SOLO_WAIT_EXP={ryanmen:'となりあう2枚の 両はしの どちらかで 順子が完成する形',kanchan:'あいだが あいた2枚の まん中で 順子が完成する形',
+  penchan:'1・2 なら 3、8・9 なら 7 の 1つだけで 順子が完成する形',tanki:'1枚の牌と 同じ牌を引くと 雀頭が完成する形',
+  shanpon:'対子2組の どちらかを引くと 刻子が完成する形（のこりの対子が 雀頭）',chiitoi:'対子6組と 1枚。その1枚と 同じ牌で 7組目の対子',kokushi:'1・9・字牌を そろえる 国士無双の形'};
+/* テンパイの手(n枚)の 待ち。kinds = その局で使う牌の種類(つかう牌として画面に出している)。unseen = 見えていない枚数 */
+function soloWaitsOf(hand,sets,kinds,vis){
+  const out=[], c=teCount(hand);
+  for(let x=0;x<34;x++){
+    if(kinds&&!kinds[x]) continue;
+    if(c[x]>=4) continue;
+    const t=TE_NAMES[x];
+    if(!soloIsWin(hand.concat([t]),sets)) continue;
+    out.push({t, kinds:soloWaitKindsAny(hand,t), unseen:Math.max(0,4-vis[x])});
+  }
+  return out;
+}
+/* いまの局の「待ち」。
+   ・アガリ形 → {win:true}
+   ・リーチ中 / ツモ牌のない間 → いまの手牌(n枚)の待ち
+   ・ツモ牌がある(n＋1枚)→ 1枚 切って テンパイになる牌ごとに その待ち(soloEval の「切ったあとの近さ」が 0 の牌)
+   ・テンパイになれない → sh = 切ったあとの いちばん近い「あと何枚」 */
+function soloWaitInfo(g){
+  const vis=soloVisCount(g);
+  if(g.tsumo&&soloIsWin(g.hand.concat([g.tsumo]),g.sets)) return {win:true};
+  if(g.riichi||!g.tsumo){
+    const sh=soloSh(g.hand,g.sets);
+    return {base:'hand', sh, opts:sh===0?[{cut:null, waits:soloWaitsOf(g.hand,g.sets,g.kinds,vis)}]:[]};
+  }
+  const ev=soloEval(g.hand.concat([g.tsumo]),g.river,g.sets,g.kinds);
+  const minSh=Math.min.apply(null,ev.cands.map(x=>x.sh));
+  const opts=[];
+  if(minSh===0) ev.cands.filter(x=>x.sh===0).forEach(x=>{
+    const all=g.hand.concat([g.tsumo]); all.splice(all.indexOf(x.t),1);
+    opts.push({cut:x.t, waits:soloWaitsOf(all,g.sets,g.kinds,vis)});
+  });
+  return {base:'cut', sh:minSh, opts};
+}
+/* ---- 形を分解(テンパイ前の手も) ----
+   既存の teSuitCombos(アガリまでの近さの計算)と 同じ取りかた(3枚組・順子・対子・となり2枚・1つあき2枚・のこりは1枚ずつ)で、
+   組の【中身】まで のこして ぜんぶ挙げる。近さは teShStd と 同じ式(組 m・たね t・雀頭 p: 2k−2m−min(t,k−m)−p)。
+   いちばん近い分けかた(= soloSh と同じ値)だけを えらび、同じ中身は 1つにまとめる。どの牌も ちょうど1回だけ どこかの組に入る */
+function soloPartDecomps(tiles,sets,max){
+  const c=teCount(tiles), raw=[], LIM=40000;
+  const go=(k,gs)=>{
+    if(raw.length>=LIM) return;
+    while(k<34&&c[k]===0) k++;
+    if(k>=34){ raw.push(gs.slice()); return; }
+    const i=k%9, num=k<27;
+    const put=(kind,ix)=>{ ix.forEach(x=>c[x]--); gs.push({kind,ix}); go(k,gs); gs.pop(); ix.forEach(x=>c[x]++); };
+    if(c[k]>=3) put('set3',[k,k,k]);
+    if(num&&i<=6&&c[k+1]>0&&c[k+2]>0) put('run',[k,k+1,k+2]);
+    if(c[k]>=2) put('pair',[k,k]);
+    if(num&&i<=7&&c[k+1]>0) put((i===0||i===7)?'penchan':'ryanmen',[k,k+1]);
+    if(num&&i<=6&&c[k+2]>0) put('kanchan',[k,k+2]);
+    const keep=c[k]; c[k]=0; for(let r=0;r<keep;r++) gs.push({kind:'single',ix:[k]}); go(k+1,gs); for(let r=0;r<keep;r++) gs.pop(); c[k]=keep;
+  };
+  go(0,[]);
+  const K=sets, rank={run:0,set3:0,head:1,pair:2,ryanmen:3,kanchan:4,penchan:4,single:5};
+  const seen={}, out=[];
+  raw.forEach(gs=>{
+    const m=gs.filter(x=>x.kind==='run'||x.kind==='set3').length, pairs=gs.filter(x=>x.kind==='pair'), ta=gs.filter(x=>x.kind==='ryanmen'||x.kind==='kanchan'||x.kind==='penchan').length;
+    const mm=Math.min(m,K), f=(t,p)=>2*K-2*mm-Math.min(t,K-mm)-p;
+    const s0=f(pairs.length+ta,0), s1=pairs.length?f(pairs.length-1+ta,1):99;
+    const head=s1<=s0&&pairs.length>0;
+    const groups=gs.map(x=>({kind:x.kind,tiles:x.ix.map(i=>TE_NAMES[i])}));
+    if(head){ const h=groups.find(x=>x.kind==='pair'); h.kind='head'; }
+    groups.sort((a,b)=>rank[a.kind]-rank[b.kind]||teIdx(a.tiles[0])-teIdx(b.tiles[0]));
+    const sig=groups.map(x=>x.kind+':'+x.tiles.join('')).join('|');
+    if(seen[sig]) return; seen[sig]=1;
+    out.push({groups, sh:Math.min(s0,s1), m, head, singles:groups.filter(x=>x.kind==='single').length, ry:groups.filter(x=>x.kind==='ryanmen').length});
+  });
+  const best=Math.min.apply(null,out.map(x=>x.sh));
+  return out.filter(x=>x.sh===best).sort((a,b)=>b.m-a.m||(b.head-a.head)||(a.singles-b.singles)||(b.ry-a.ry)).slice(0,max||3);
+}
+/* アガリ形の分けかた(soloDecomps)を 表示用の組に。アガリ牌の入る組に しるし */
+function soloWinDecomps(tiles){
+  return soloDecomps(teCount(tiles)).map(d=>({groups:[{kind:'head',tiles:[TE_NAMES[d.head],TE_NAMES[d.head]]}].concat(d.sets.map(x=>({kind:x.run?'run':'set3',
+    tiles:x.run?[TE_NAMES[x.i],TE_NAMES[x.i+1],TE_NAMES[x.i+2]]:[TE_NAMES[x.i],TE_NAMES[x.i],TE_NAMES[x.i]]}))).sort((a,b)=>(a.kind==='head')-(b.kind==='head')||teIdx(a.tiles[0])-teIdx(b.tiles[0])), sh:-1}));
+}
+const SOLO_GROUP_LAB={run:'順子',set3:'刻子',head:'雀頭',pair:'対子',ryanmen:'搭子（リャンメン形）',kanchan:'搭子（カンチャン形）',penchan:'搭子（ペンチャン形）',single:'孤立牌'};
+function soloGroupsHTML(groups,o){
+  o=o||{}; let winDone=false;
+  return '<div class="sp-dec"'+(o.id?' id="'+o.id+'"':'')+'>'+groups.map(gr=>{
+    const tl=gr.tiles.map(t=>{ const w=!winDone&&o.win===t&&gr.hasWin; if(w) winDone=true; return tileHTML(t,w?'sp-win':''); }).join('');
+    return '<span class="sp-g k-'+gr.kind+'" data-kind="'+gr.kind+'" data-tiles="'+gr.tiles.join('')+'"><span class="sp-gt">'+tl+'</span><small class="sp-gl">'+SOLO_GROUP_LAB[gr.kind].replace('（','<br>（')+'</small></span>';
+  }).join('')+'</div>';
+}
+/* ---- サポートの 開け閉め(局は進めない) ---- */
+function soloSupportOk(g){ return !!g&&!g.over&&!g.done&&!g.confirm&&!!(g.tsumo||g.riichi); }
+function soloSupport(kind){
+  const g=SOLO; if(!soloSupportOk(g)) return;
+  if(kind==='hint'&&(g.riichi||g.riichiSel||(g.canWin&&!g.passed))) return;
+  if(g.sp&&g.sp.k===kind){ g.sp=null; soloPaint(); return; }
+  g.sp={k:kind, step:1, alt:0}; g.sup=(g.sup||0)+1;
+  soloPaint();
+}
+function soloSupportClose(){ const g=SOLO; if(!g||!g.sp) return; g.sp=null; soloPaint(); }
+function soloHintNext(){ const g=SOLO; if(!g||!g.sp||g.sp.k!=='hint'||g.sp.step>=3) return;
+  g.sp.step++; if(g.sp.step===2&&!g.hint) soloHint(); else soloPaint(); }
+function soloDecNext(){ const g=SOLO; if(!g||!g.sp||g.sp.k!=='dec') return; g.sp.alt++; soloPaint(); }
+/* ---- 中身 ---- */
+function soloSpWaitHTML(g){
+  const w=soloWaitInfo(g);
+  if(w.win) return '<p class="sp-lead">アガリ形が できているよ！</p>';
+  const unseen=x=>'<span class="sp-un">見えていない '+x.unseen+'枚</span>';
+  const kindTxt=ks=>ks.map(k=>SOLO_WAIT_LABEL[k]).join('・')+(ks.length>1?' <small>（2つの読みかたが できる）</small>':'');
+  const waitRows=ws=>'<div class="sp-waits">'+ws.map(x=>'<div class="sp-w" data-t="'+x.t+'" data-kinds="'+x.kinds.join(',')+'" data-unseen="'+x.unseen+'">'+tileHTML(x.t)
+    +'<span class="sp-wt"><b>'+tileLabel(x.t)+'</b><span>'+kindTxt(x.kinds)+'</span>'+unseen(x)+'</span></div>').join('')+'</div>';
+  let h='';
+  if(w.sh===0){
+    if(w.base==='hand') h+='<p class="sp-lead">テンパイ！ 待ちは '+w.opts[0].waits.length+'種類。</p>'+waitRows(w.opts[0].waits);
+    else { h+='<p class="sp-lead">'+(w.opts.length===1?'この牌を 切ると テンパイ':'どれかを 切ると テンパイ')+'（アガリを待つ形）に なるよ。</p>';
+      h+=w.opts.map(o=>'<div class="sp-opt" data-cut="'+o.cut+'"><p class="sp-cut">'+inlineTile(o.cut)+' を切ると 待ちは '+o.waits.length+'種類</p>'+waitRows(o.waits)+'</div>').join(''); }
+    const ks=[...new Set([].concat(...w.opts.map(o=>[].concat(...o.waits.map(x=>x.kinds)))))];
+    h+='<ul class="sp-exp">'+ks.map(k=>'<li><b>'+SOLO_WAIT_LABEL[k]+'</b>: '+SOLO_WAIT_EXP[k]+'</li>').join('')+'</ul>';
+  }else{
+    h+='<p class="sp-lead">まだ テンパイしていないよ。'+(w.base==='cut'?'いちばん よく切っても ':'')+'あと <b>'+w.sh+'枚</b> そろうと テンパイ（'+(SOLO_SH_WORD[w.sh]||(w.sh+'シャンテン'))+'）。</p>'
+      +'<p class="sp-note">「ヒント」や「形を分解」で 考えてみよう。</p>';
+  }
+  return h+'<p class="sp-note">「見えていない枚数」は 4枚から 手牌・河に 見えている数を ひいた数。山に のこっているとは かぎらないよ。</p>';
+}
+function soloSpHintHTML(g){
+  const all=g.hand.concat([g.tsumo]), ev=soloEval(all,g.river,g.sets,g.kinds), st=g.sp.step;
+  const minSh=Math.min.apply(null,ev.cands.map(x=>x.sh)), ok=ev.cands.filter(x=>!x.bad);
+  const dec=soloPartDecomps(all,g.sets,1)[0]||{groups:[]};
+  const nSet=dec.groups.filter(x=>x.kind==='run'||x.kind==='set3').length, nSingle=dec.groups.filter(x=>x.kind==='single').length;
+  let s1;
+  if(minSh===0) s1='1枚 切れば テンパイ（アガリを待つ形）に なれるよ。どの牌が いらないか さがしてみよう。';
+  else s1='あと '+minSh+'枚 そろうと テンパイ。'+(nSet?'完成している組（'+nSet+'つ）は のこそう。':'')
+    +(nSingle?'どの組にも ならない牌（孤立牌）が '+nSingle+'枚 あるよ。そこから 考えてみよう。':'孤立牌は ないね。搭子（あと1枚で 組になる2枚）と 対子の どれを のこすか 考えよう。');
+  let h='<div class="sp-step" data-step="1"><b class="sp-sn">STEP 1</b><p>'+s1+'</p></div>';
+  if(st>=2) h+='<div class="sp-step" data-step="2"><b class="sp-sn">STEP 2</b><p>'+(ok.length===1?'この牌に 注目。切ると 受け入れが 広いよ。':'この '+ok.length+'種類の どれかを 切ると、受け入れが 広いよ（手牌の中で 光っている牌）。')+'</p>'
+    +'<div class="sp-dec sp-tl">'+ok.map(x=>'<span class="sp-g"><span class="sp-gt">'+tileHTML(x.t)+'</span></span>').join('')+'</div></div>';
+  if(st>=3){
+    const maxN=Math.max.apply(null,ok.map(x=>x.n)), best=ok.filter(x=>x.n===maxN);
+    const why=x=>x.sh===0?'切ると テンパイ。'+inlineTiles(x.uke)+' を引けば アガリ（'+x.uke.length+'種類・見えていない '+x.n+'枚）。'
+      :inlineTiles(x.uke)+'（'+x.uke.length+'種類・見えていない '+x.n+'枚）を 引くと '+(x.sh===1?'テンパイ':'あと '+(x.sh-1)+'枚で テンパイ')+' に 近づくよ。';
+    h+='<div class="sp-step" data-step="3"><b class="sp-sn">STEP 3</b>'
+      +(best.length>1?'<p>受け入れが 同じくらいの 牌が '+best.length+'つ あるよ。どれを切っても いい。</p>':'')
+      +best.map(x=>'<p class="sp-rec" data-cut="'+x.t+'" data-uke="'+x.uke.join(',')+'" data-n="'+x.n+'" data-sh="'+x.sh+'">'+inlineTile(x.t)+' を切るのが おすすめ。'+why(x)+'</p>').join('')
+      +'<p class="sp-note">受け入れ = 引くと アガリに 近づく牌。見えていない枚数で 数えたよ'+(SOLO_MODES[g.n].yaku?'（役は 考えていない）':'')+'。</p></div>';
+  }
+  if(st<3) h+='<button class="btn solo-sub sp-next" id="sp-next" onclick="soloHintNext()">つぎのヒント（STEP '+(st+1)+'）</button>';
+  return h;
+}
+function soloSpDecHTML(g){
+  const all=g.hand.concat(g.tsumo?[g.tsumo]:[]);
+  const win=g.tsumo&&soloIsWin(all,g.sets);
+  let list=win?soloWinDecomps(all):soloPartDecomps(all,g.sets,3);
+  if(win&&!list.length) return '<p class="sp-lead">七対子・国士無双の アガリ形だよ（組に 分けない形）。</p>';
+  if(!list.length) return '<p class="sp-lead">分けかたが 見つからなかったよ。</p>';
+  const i=g.sp.alt%list.length, d=list[i];
+  const sh=win?-1:teShStd(teCount(all),g.sets);   // 分けかたは ふつうの形(組＋雀頭)なので 近さも ふつうの形で(4・7・10枚は soloSh と同じ)
+  let h='<p class="sp-lead">'+(win?'アガリ形の 分けかた':'いまの手牌'+(g.tsumo?'（ツモ牌も ふくむ）':'')+'の 分けかた')
+    +(list.length>1?' <small>'+(i+1)+' / '+list.length+'</small>':'')+'</p>'+soloGroupsHTML(d.groups,{id:'sp-dec-cur'});
+  if(!win) h+='<p class="sp-note">'+(sh===0?'テンパイの形':sh===-1?'アガリ形':'テンパイまで あと '+sh+'枚')+'。'+(list.length>1?'どの分けかたも 近さは 同じだよ。':'')
+    +(SOLO_MODES[g.n].yaku&&teShanten(teCount(all),all.length)<teShStd(teCount(all),g.sets)?'（七対子・国士無双の形なら もっと近い）':'')+'</p>';
+  if(list.length>1) h+='<button class="btn solo-sub sp-next" id="sp-alt" onclick="soloDecNext()">ほかの分けかたを見る</button>';
+  return h;
+}
+function soloSpPanelHTML(g){
+  if(!g.sp) return '';
+  const T={wait:'👀 待ち',hint:'💡 ヒント',dec:'🧩 形を分解'}[g.sp.k];
+  const body=g.sp.k==='wait'?soloSpWaitHTML(g):g.sp.k==='hint'?soloSpHintHTML(g):soloSpDecHTML(g);
+  return '<div class="sp-panel" id="sp-panel" data-kind="'+g.sp.k+'"><div class="sp-head"><b>'+T+'</b><button class="sp-x" id="sp-close" onclick="soloSupportClose()" aria-label="とじる">✕</button></div>'+body+'</div>';
+}
+/* ---- アガリの形の解説(結果のカード) ---- */
+function soloExplainHTML(g){
+  const all=g.hand.concat([g.tsumo]), w=g.tsumo;
+  const list=soloWinDecomps(all), kinds=soloWaitKinds(g.hand,w);
+  const form=g.res&&g.res.form;
+  let h='<div class="sr-exp" id="sr-exp"><p class="sr-bh">🧩 アガリの形</p>';
+  if(!list.length){
+    h+='<p class="sr-ex">'+(form==='kokushi'?'1・9・字牌を そろえた <b>国士無双</b>の形。':'対子 7組の <b>七対子</b>の形。')+inlineTile(w)+' で 完成したよ。</p>';
+  }else{
+    const i=(g.expAlt||0)%list.length; let d=list[i], pick=null;
+    const y13=!!SOLO_MODES[g.n].yaku;
+    /* 13枚: 上の「数えたアガリの形」(R89: ch3BestInterp が えらんだ 読みかた)と 同じ読みかたで 説明する。絵は 上に あるので ここでは 出さない */
+    if(y13&&!g.expAlt){ try{
+      const ctx=ch3Ctx({win:'tsumo',winTile:w,round:SOLO_RW+'1',rw:SOLO_RW,sw:SOLO_SW,riichi:!!g.riichi,dblRiichi:!!g.dblRiichi,drawsAfterRiichi:(g.riichi||g.dblRiichi)?g.draws-g.riichiAt:undefined});
+      const tl=sortTiles(all.slice()), best=ch3BestInterp(tl,ctx), r=(best&&best.interp)||{}, dd=ch3Decomps(tl,ctx)[r.decomp||0];
+      if(dd){ const sets=dd.sets.map(gg=>sortTiles(gg.map(k=>tl[k]))), hd={kind:'head',tiles:[dd.headTile,dd.headTile]};
+        const gs=sets.map(t=>({kind:t[0]===t[1]?'set3':'run',tiles:t})).concat([hd]);
+        const sp=r.spot||{}; const pk=sp.head?hd:(sp.ix!=null?gs[sp.ix]:null);
+        if(pk&&pk.tiles.indexOf(w)>=0){ d={groups:gs}; pick=pk; } }
+    }catch(e){} }
+    if(!pick){ const wg=d.groups.filter(x=>x.tiles.indexOf(w)>=0); pick=wg.find(x=>x.kind!=='head')||wg[0]; }
+    d.groups.forEach(x=>{ x.hasWin=(x===pick); });
+    if(!y13||g.expAlt) h+=soloGroupsHTML(d.groups,{win:w,id:'sr-dec'});
+    const head=d.groups.find(x=>x.kind==='head');
+    const done=pick.kind==='head'?'雀頭':(pick.kind==='run'?'順子':'刻子');
+    const myKind=pick.kind==='head'?'tanki':(pick.kind==='set3'?'shanpon':fuWaitPart(pick.tiles,w,false).type);
+    h+='<p class="sr-ex">アガリ牌 '+inlineTile(w)+' で '+inlineTiles(pick.tiles)+' の '+done+'が 完成。雀頭は '+inlineTiles(head.tiles)+'。</p>'
+      +'<p class="sr-ex" id="sr-wait" data-kinds="'+kinds.join(',')+'">'+inlineTile(w)+' を待つ <b>'+kinds.map(k=>SOLO_WAIT_NAME[k]).join('・')+'待ち</b>'
+      +(kinds.length>1?'（この分けかたでは '+SOLO_WAIT_NAME[myKind]+'）':'')+'でした。</p>';
+    if(list.length>1) h+='<p class="sr-ex sr-alt">分けかたは '+list.length+'とおり（'+(i+1)+' / '+list.length+'）<button class="btn solo-sub sp-next" id="sr-alt" onclick="soloExpNext()">ほかの分けかたを見る</button></p>';
+  }
+  if(g.res&&g.res.yaku&&g.res.yaku.length){
+    h+='<ul class="sp-exp sr-yk">'+g.res.yaku.map(y=>{ const m=soloYakuMeta(y.key)||{}; return '<li data-yaku="'+y.key+'"><b>'+y.label+'</b>'+(m.cond?': '+m.cond:'')+'</li>'; }).join('')+'</ul>'
+      +'<button class="btn solo-sub sp-next" id="sr-yaku-ref" onclick="openRef(\'yaku\')">📚 役一覧で くわしく見る</button>';
+  }
+  return h+'</div>';
+}
+function soloExpNext(){ const g=SOLO; if(!g||!g.done) return; g.expAlt=(g.expAlt||0)+1; soloPaint(); }
 /* ---- 画面 ---- */
 function soloEl(id){ return document.getElementById(id); }
 function soloOpen(){
@@ -6089,7 +6347,7 @@ function soloStart(n){
 function soloDraw(){
   const g=SOLO; if(!g||g.over) return;
   if(!g.wall.length){ soloEnd(false); return; }
-  g.tsumo=g.wall.shift(); g.draws++; g.hint=null; g.passed=false; g.riichiSel=false;
+  g.tsumo=g.wall.shift(); g.draws++; g.hint=null; g.passed=false; g.riichiSel=false; g.sp=null;   // R93: サポートは 手が変わったら とじる
   g.canWin=soloIsWin(g.hand.concat([g.tsumo]),g.sets);
   g.busy=false;
   if(g.canWin){ g.confirm=true; g.confirmAt=performance.now(); }
@@ -6133,7 +6391,7 @@ function soloCut(i){
   if(g.riichiSel){ if(soloRiichiTiles(g).indexOf(all[i])<0) return; declare=true; }
   const tile=all.splice(i,1)[0];
   g.hand=sortTiles(all); g.tsumo=null; g.river.push(tile);
-  g.busy=true; g.canWin=false; g.hint=null; g.passed=false;
+  g.busy=true; g.canWin=false; g.hint=null; g.passed=false; g.sp=null;   // R93: サポートは 手が変わったら とじる
   if(declare){
     g.riichi=true; g.riichiSel=false; g.riichiIdx=g.river.length-1; g.riichiAt=g.draws; g.dblRiichi=(g.draws===1);
     const fx=soloEl('solo-fx');
@@ -6202,7 +6460,7 @@ function soloEnd(won){
   dmSoloEnd(g);                                          // R86: デイリーミッション・学習日(1局につき1回)
   /* R92: ミッションビンゴ(4・7・10枚)。アガった1局につき1回だけ数える。待ちの形は アガる前の手(g.hand)と アガリ牌(g.tsumo)から */
   if(won&&soloHasBingo(g.n)&&!g.bingoCounted){ g.bingoCounted=true;
-    g.bingo=soloBingoApply(g.n,{draws:g.draws,kinds:soloWaitKinds(g.hand,g.tsumo),hints:g.hints}); }
+    g.bingo=soloBingoApply(g.n,{draws:g.draws,kinds:soloWaitKinds(g.hand,g.tsumo),hints:(g.hints||0)+(g.sup||0)}); }   // R93: 「ヒントなし」は サポート(待ち・分解・ヒント)も 0 のとき
   const bingoUp=!!(g.bingo&&(g.bingo.newLines.length||g.bingo.comp));
   if(won&&(g.fl.newBest||g.fl.newStreak||g.fl.newScore||bingoUp)) sndPlay('streak');   // 音は これまでの「自己ベスト」と同じもの
   soloPaint();
@@ -6285,6 +6543,7 @@ function soloResultHTML(g){
       +'<div class="sr-row"><span>アガリ</span><b>'+r.wins+'/'+r.plays+'（'+soloRate(r)+'%）</b></div>';
   }
   if(won&&(fl.newBest||fl.newStreak||fl.newScore)) h+='<p class="sr-cheer" id="sr-cheer">✨ 自己ベスト更新！</p>';
+  if(won) h+=soloExplainHTML(g);                                     // R93: アガリの形の解説
   if(won&&soloHasBingo(g.n)) h+=soloBingoResHTML(g);                 // R92
   return h+'<div class="sr-btns"><button class="btn" id="solo-again" onclick="soloStart('+g.n+')">もう一度</button>'
     +'<button class="btn solo-sub" id="solo-menu" onclick="soloBack()">枚数をえらぶ</button></div></div>';
@@ -6309,9 +6568,16 @@ function soloPaint(){
     :g.hint?'ひかっている牌が、切る候補だよ。'
     :g.riichi?(g.tsumo?'リーチ中。ツモった牌を切ろう':'&nbsp;')
     :(g.tsumo?'いらない牌を1枚 切ろう':'&nbsp;');
+  /* R93: サポート(待ちを見る・ヒント・形を分解)。押したときだけ 下に ひらく(g.sp)。💡 ヒントは STEP1 から 段階的に(STEP2 で R83 の「光らせる」) */
+  const supOk=soloSupportOk(g), on=k=>g.sp&&g.sp.k===k?' on':'';
   ui.innerHTML='<div class="solo-msg" id="solo-msg">'+msg+'</div>'
+    +'<div class="solo-sup" id="solo-sup">'
+      +'<button class="btn solo-sub'+on('wait')+'" id="solo-wait-btn"'+(supOk?'':' disabled')+' onclick="soloSupport(\'wait\')">👀 待ちを見る</button>'
+      +'<button class="btn solo-sub'+on('hint')+'" id="solo-hint"'+(canHint||(g.sp&&g.sp.k==='hint')?'':' disabled')+' onclick="soloSupport(\'hint\')">💡 ヒント</button>'
+      +'<button class="btn solo-sub'+on('dec')+'" id="solo-dec-btn"'+(supOk?'':' disabled')+' onclick="soloSupport(\'dec\')">🧩 形を分解</button>'
+    +'</div>'
+    +soloSpPanelHTML(g)
     +'<div class="solo-acts">'
-      +'<button class="btn solo-sub" id="solo-hint"'+(canHint?'':' disabled')+' onclick="soloHint()">💡 ヒント</button>'
       +(m.yaku?'<button class="btn solo-sub solo-rbtn'+(g.riichiSel?' on':'')+'" id="solo-riichi"'+((rzN||g.riichiSel)&&free?'':' disabled')+' onclick="soloRiichi()">'+(g.riichiSel?'やめる':g.riichi?'リーチ中':'リーチ')+'</button>':'')
       +'<button class="btn solo-agaru2'+(g.canWin&&g.passed&&idle?'':' off')+'" id="solo-agaru2"'+(g.canWin&&g.passed&&idle?'':' disabled')+' onclick="soloWin()">アガる</button>'
     +'</div>';
