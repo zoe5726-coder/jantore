@@ -501,10 +501,21 @@ span.tv-riichi-tile{transform:rotate(-90deg);}
 .fu-tl{display:inline-flex; gap:1px; vertical-align:middle; margin:0 3px;}
 .fu-tl .tile{width:20px; max-width:20px; flex:none; border-radius:2px;}
 .q-text .fu-tl .tile{width:24px; max-width:24px;}
-.fu-exp{margin:4px 0 0; text-align:left;}
-.fu-row{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:3px 2px; border-bottom:1px dashed var(--line,rgba(0,0,0,.12)); font-size:13px; font-weight:700;}
-.fu-row .fu-lab{display:flex; align-items:center; flex-wrap:wrap; gap:2px;}
-.fu-row .fu-v{font-variant-numeric:tabular-nums; white-space:nowrap;}
+/* R88: 内訳は3列(項目 / 牌姿 / 符)。左の列の幅を そろえるので、まん中の牌は どの行も 同じ位置から はじまる。
+   牌のない行も 3列のまま(まん中は「―」)。行の高さは 牌のある行に そろえる */
+.fu-exp{--fu-c1:96px; --fu-tw:22px; margin:4px 0 0; text-align:left;}
+.fu-row{display:grid; grid-template-columns:var(--fu-c1) minmax(0,1fr) auto; align-items:center; column-gap:8px;
+  min-height:calc(var(--fu-tw) * 1.4 + 6px); box-sizing:border-box; padding:3px 2px; border-bottom:1px dashed var(--line,rgba(0,0,0,.12)); font-size:13px; font-weight:700;}
+.fu-row .fu-lab{margin:0; line-height:1.3; min-width:0; word-break:keep-all; overflow-wrap:anywhere;}
+.fu-row .fu-cell{display:flex; align-items:center; flex-wrap:nowrap; min-width:0;}
+.fu-row .fu-cell .fu-tl{margin:0;}
+.fu-row .fu-cell .tile{width:var(--fu-tw); max-width:var(--fu-tw);}
+.fu-row .fu-pl{flex:none; margin:0 4px; font-size:12px; font-weight:900; color:var(--ink-soft);}
+.fu-row .fu-none{color:var(--ink-soft); font-weight:700;}
+.fu-row .fu-v{font-variant-numeric:tabular-nums; white-space:nowrap; text-align:right; min-width:2.6em;}
+.fu-row.fu-hd{min-height:0; padding:0 2px 2px; border-bottom:2px solid var(--line); font-size:11px; font-weight:800; color:var(--ink-soft);}
+.fu-row.fu-hd span:last-child{text-align:right; min-width:2.6em;}
+.fu-sum .fu-final{font-size:1.18em;}
 .fu-row.fu-focus{background:var(--gold-soft,rgba(240,190,60,.18)); border-radius:6px;}
 .fu-sum{font-size:13px; font-weight:800; margin:6px 0 0;}
 .fu-sum b,.fu-ans b{color:var(--jade-ink);}
@@ -550,19 +561,34 @@ span.tv-riichi-tile{transform:rotate(-90deg);}
 .fx .dm-av{display:flex; justify-content:center; margin:0 0 4px;}
 .fx .dm-av .dm-av-img{width:72px; height:72px; display:block;}
 .fx .dm-av .dm-av-img img{width:100%; height:100%; object-fit:contain;}
+/* R88: 牌姿の共通部品(pzHTML)。牌とラベルは別の行。牌の大きさは 枚数で決める(ラベルでは変わらない) */
+.pz{--pz-w:30px; margin:4px 0; max-width:100%;}
+.pz.pz-s{--pz-w:clamp(30px,9vw,34px);}
+.pz.pz-m{--pz-w:clamp(24px,7.4vw,28px);}
+.pz.pz-l{--pz-w:clamp(20px,6.2vw,26px);}
+.pz.pz-q.pz-s{--pz-w:clamp(36px,11.5vw,44px);}
+.pz.pz-q.pz-m{--pz-w:clamp(28px,8.6vw,34px);}
+.pz-row{display:flex; flex-wrap:wrap; align-items:flex-start; gap:6px 6px;}
+.pz-g{display:inline-flex; gap:1px; flex:none;}
+.pz .tile{flex:none; width:var(--pz-w); max-width:none; min-width:0;}
+.pz-plus{flex:none; display:flex; align-items:center; height:calc(var(--pz-w) * 1.4); font-size:13px; font-weight:900; color:var(--ink-soft);}
+.pz-win{display:inline-flex; flex-direction:column; align-items:center; flex:none; margin-left:4px;}
+.pz-plus + .pz-win{margin-left:0;}
+.pz-wt{display:block; line-height:0;}
+.pz-lab{display:block; margin-top:3px; font-size:10.5px; font-weight:800; line-height:1.2; white-space:nowrap; color:var(--jade-ink);}
+.hand.fu-ex.pz-s{--tile-w:clamp(30px,9vw,34px);}
+.hand.fu-ex.pz-s.pz-q{--tile-w:clamp(36px,11.5vw,44px);}
+/* 確認問題(符計算を学ぶ): 問い ↔ 牌姿 16〜24px / 牌姿 ↔ 選択肢 32〜40px / 選択肢どうし 14px。
+   低い画面では 余白を へらして ボタンが画面の外へ出ないようにする(vh で しばる) */
+.fu-qp{padding-top:clamp(4px,1.2vh,10px);}
+.fu-qp .pz-row{justify-content:center;}
+.fu-qp .hand.fu-ex{justify-content:center;}
+.choices.fu-cq{margin-top:clamp(14px,4.6vh,34px); gap:14px;}
 /* R87: 符計算を学ぶ・符一覧 */
 .hand.fu-ex{--tile-w:24px; justify-content:flex-start; margin:2px 0; gap:1px; align-items:flex-end;}
 .hand.fu-ex .tile{flex:0 0 var(--tile-w); width:var(--tile-w);}
 .hand.fu-ex .mld-side{flex:0 0 calc(var(--tile-w) * 1.4); width:calc(var(--tile-w) * 1.4); height:calc(var(--tile-w) * 1.4);}
 .hand.fu-ex .mld-kan{display:inline-flex; gap:1px; align-items:flex-end;}
-.fu-ex-gap{display:inline-block; width:8px; flex:none;}
-.hand.fu-ex.full .tile{flex:1 1 0; width:auto; min-width:0; max-width:24px;}
-.hand.fu-ex.full .fu-ex-win{flex:1 1 0; min-width:0; max-width:24px;}
-.hand.fu-ex.full .fu-ex-win .tile{width:100%;}
-.hand.fu-ex.full .fu-ex-gap{width:5px;}
-.fu-ex-win{display:inline-flex; flex-direction:column; align-items:center; flex:none;}
-.fu-ex-win .tile{width:var(--tile-w);}
-.fu-ex-win small{font-size:9.5px; font-weight:800; color:var(--ink-soft); line-height:1.2;}
 .fu-list{text-align:left;}
 .fu-list .fl-lead{font-size:13px; line-height:1.6; font-weight:700; margin:6px 2px;}
 .fu-list .fl-row{border-bottom:1px solid var(--line); padding:6px 2px;}
@@ -648,7 +674,7 @@ span.tv-riichi-tile{transform:rotate(-90deg);}
 .hand .mld-side{position:relative; flex:1.4 1 2.8px; min-width:0; max-width:calc(var(--tile-w) * 1.4);
   aspect-ratio:1/1; align-self:flex-start;}   /* 牌の最小幅=枠線2px。1.4倍の基準に枠線分(2.8px)をたして立てた牌と同じ大きさに */
 .hand .mld-side>.tile{position:absolute; left:50%; top:64.2857%; width:71.4286%; max-width:none; min-width:0;
-  flex:none; transform:translate(-50%,-50%) rotate(90deg); box-shadow:3px 0 0 var(--tile-shadow);}
+  flex:none; transform:translate(-50%,-50%) rotate(-90deg); box-shadow:-3px 0 0 var(--tile-shadow);}
 .hand-open{align-items:flex-start;}
 .hand .mld-gap{flex:0 0 clamp(8px, 3vw, 16px);}
 .hand .mld-sep{flex:0 0 clamp(3px, 1.2vw, 6px);}
@@ -662,8 +688,8 @@ span.tv-riichi-tile{transform:rotate(-90deg);}
   aspect-ratio:1/1.4286; align-self:flex-end;}
 .hand .mld-side.kakan-side>.ks-cell{position:relative; flex:1 1 0; width:100%; min-height:0;}
 .hand .mld-side.kakan-side>.ks-cell>.tile{position:absolute; left:50%; top:50%; width:71.4286%;
-  max-width:none; min-width:0; flex:none; transform:translate(-50%,-50%) rotate(90deg);
-  box-shadow:3px 0 0 var(--tile-shadow);}
+  max-width:none; min-width:0; flex:none; transform:translate(-50%,-50%) rotate(-90deg);
+  box-shadow:-3px 0 0 var(--tile-shadow);}
 /* 副露エリア: 手牌の下。牌は小さくせず、入りきらないときは折り返す。
    足もと(下端)をそろえるので、加槓の2段も自然に見える */
 .hand.oh-split{--tile-w:clamp(19px,6.4vw,28px); margin-bottom:4px;}
@@ -686,12 +712,16 @@ span.tv-riichi-tile{transform:rotate(-90deg);}
 .fuuro-area .mld-side{position:relative; flex:0 0 auto; width:calc(var(--tile-w) * 1.4);
   max-width:none; aspect-ratio:1/1; align-self:flex-end;}
 .fuuro-area .mld-side>.tile{position:absolute; left:50%; top:64.2857%; width:71.4286%;
-  transform:translate(-50%,-50%) rotate(90deg); box-shadow:3px 0 0 var(--tile-shadow);}
+  transform:translate(-50%,-50%) rotate(-90deg); box-shadow:-3px 0 0 var(--tile-shadow);}
 .fuuro-area .mld-side.kakan-side{display:flex; flex-direction:column; justify-content:flex-end;
   aspect-ratio:1/1.4286;}
 .fuuro-area .mld-side.kakan-side>.ks-cell{position:relative; flex:1 1 0; width:100%; min-height:0;}
 .fuuro-area .mld-side.kakan-side>.ks-cell>.tile{position:absolute; left:50%; top:50%; width:71.4286%;
-  transform:translate(-50%,-50%) rotate(90deg);}
+  transform:translate(-50%,-50%) rotate(-90deg);}
+/* R88: 横向きの牌は ぜんぶ【反時計回りに90度】(牌の上が左)。リーチ宣言牌(R84)と そろえた。R87 までは 鳴いた牌だけ 時計回りだった。
+   回転しても 箱(横1.4枚ぶん×立てた牌と同じ高さ)の大きさは同じなので、となりの牌との間は変わらない。
+   加槓の2段の箱(.ks-cell)は、局の表(KYOKU8)の .ks-cell と名前が同じで 枠・すきま・背景が かかっていた(R64〜R87)。ここで消す */
+.mld-side.kakan-side>.ks-cell{padding:0; border:0; border-radius:0; background:none; box-shadow:none; min-height:0;}
 .mld-demo{display:grid; grid-template-columns:1fr 1fr; gap:2px 14px;}
 /* R62: カンを4つならべると、2列では1つぶんの幅(4枚＋横向き)が320px幅に入りきらない。
    4つ以上見せるときは1列にする(見せる内容は減らさず、はみ出しだけをなくす) */
@@ -766,10 +796,12 @@ button.tile.off:active{transform:none;}
 .tv-call .tile{width:17px;}
 .tv-call i{font-style:normal; font-size:10px; font-weight:800; color:var(--ink-soft); margin-left:2px;}
 .tv-river{display:flex; flex-wrap:wrap; gap:2px; align-items:center;}
-.tv-river .tile{width:19px;}
-.tv-river.tvr-s .tile{width:17px;}
-.tv-river.tvr-xs .tile{width:15px;}
-.tv-riichi-tile{display:inline-flex; transform:rotate(90deg); margin:0 5px;}
+.tv-river{--tvw:19px;}
+.tv-river.tvr-s{--tvw:17px;}
+.tv-river.tvr-xs{--tvw:15px;}
+.tv-river .tile{width:var(--tvw);}
+/* R88: 向きは反時計回り(上の span.tv-riichi-tile と同じ)。左右のすきまは 横にした牌の はみ出し(牌のはば×0.2)＋1px */
+.tv-riichi-tile{display:inline-flex; transform:rotate(-90deg); margin:0 calc(var(--tvw,19px) * .2 + 1px);}
 .tv-myriver{background:var(--card); border:2px dashed var(--line); border-radius:12px; padding:6px 10px;}
 .tv-lab{font-size:10.5px; font-weight:800; color:var(--ink-soft); margin-bottom:3px;}
 .tv-me{background:var(--jade-soft); border:2px solid var(--jade); border-radius:12px; padding:8px 10px;}
@@ -2307,9 +2339,9 @@ const U1_PATTERNS={
  1:{name:'2面子＋2ターツ',
     exp:'2面子＋雀頭＋ターツ2つ。どちらかのターツが完成すればテンパイ。余り牌がターツと複合しているぶん、単純な形より受け入れが広い。'},
  2:{name:'3面子＋雀頭＋くっつき',
-    exp:'3面子＋雀頭は完成していて、浮き牌の周りに引けばターツができてテンパイ。浮き牌の近く（±2まで）と浮き牌自身の重なりに加えて、見落としやすいのが雀頭の重なり——雀頭が刻子になると4面子目が完成して浮き牌の単騎テンパイになる。見た目よりずっと広い形。'},
+    exp:'3面子＋雀頭は完成していて、浮き牌の周りに引けばターツができてテンパイ。浮き牌の近く（±2まで）と浮き牌自身の重なりに加えて、見落としやすいのが雀頭の重なり——雀頭が刻子になると4面子目が完成して浮き牌のタンキテンパイになる。見た目よりずっと広い形。'},
  3:{name:'雀頭なし',
-    exp:'面子3つ＋ターツ2つで雀頭がない形。ターツが完成すれば単騎テンパイ、手牌のどれかが重なれば雀頭ができてテンパイ。「雀頭がない」と気づけるかがポイント。'},
+    exp:'面子3つ＋ターツ2つで雀頭がない形。ターツが完成すればタンキテンパイ、手牌のどれかが重なれば雀頭ができてテンパイ。「雀頭がない」と気づけるかがポイント。'},
  4:{name:'七対子',
     exp:'対子5つ＋浮き牌3枚の七対子1シャンテン。浮き牌のどれかが重なればテンパイ。受け入れは浮き牌の3種だけと狭い。'},
 };
@@ -3157,8 +3189,8 @@ const SR_RIICHI_QUESTIONS=[
  {"qid": "p4b_a1b1_1", "sr": "sr_sente_a1b_1", "srName": "カンチャン2-8・3-7待ちはリーチ", "lv": 3, "questionType": "action", "q": "リーチする？", "context": {"reveal": "T0", "hand": "345m 678m 24p 567s 88s", "round": "東1局", "turn": 7, "seat": null, "isDealer": false, "doraIndicators": ["9p"], "draw": "N"}, "choices": ["リーチ", "ダマ"], "a": 0, "exp": "基本は先制テンパイならリーチ寄り。①打点: ダマ1300点は境界未満。②巡目: 7巡目。③待ち形: カンチャンだが待ち牌は3p——端に寄ったカンチャンは実測でリーチの優位がはっきり残る待ちだ。④残り枚数: 3枚。ダマ要因が基本則を覆すほど強くない。リーチ。"},
  {"qid": "p4b_a1b1_2", "sr": "sr_sente_a1b_1", "srName": "カンチャン2-8・3-7待ちはリーチ", "lv": 3, "questionType": "action", "q": "リーチする？", "context": {"reveal": "T0", "hand": "79m BBB 234p 567p 22s", "round": "東1局", "turn": 9, "seat": null, "isDealer": true, "doraIndicators": ["1p"], "draw": "N"}, "choices": ["リーチ", "ダマ"], "a": 0, "exp": "基本は先制テンパイならリーチ寄り。①打点: ダマ3900点は境界未満。②巡目: 9巡目。③待ち形: カンチャンだが待ち牌は8m——端に寄ったカンチャンは実測でリーチの優位がはっきり残る待ちだ。④残り枚数: 3枚。ダマ要因が基本則を覆すほど強くない。リーチ。"},
  {"qid": "p4b_a1b1_3", "sr": "sr_sente_a1b_1", "srName": "カンチャン2-8・3-7待ちはリーチ", "lv": 3, "questionType": "action", "q": "リーチする？", "context": {"reveal": "T0", "hand": "456m 234p 678p 68s 55m", "round": "東3局", "turn": 5, "seat": null, "isDealer": false, "doraIndicators": ["9p"], "draw": "N"}, "choices": ["リーチ", "ダマ"], "a": 0, "exp": "基本は先制テンパイならリーチ寄り。①打点: ダマ1300点は境界未満。②巡目: 5巡目。③待ち形: カンチャンだが待ち牌は7s——端に寄ったカンチャンは実測でリーチの優位がはっきり残る待ちだ。④残り枚数: 4枚。ダマ要因が基本則を覆すほど強くない。リーチ。"},
- {"qid": "p4b_a1c1_1", "sr": "sr_sente_a1c_1", "srName": "字牌・端牌単騎は強リーチ", "lv": 3, "questionType": "action", "q": "リーチする？", "context": {"reveal": "T0", "hand": "22m 44m 33p 55p 66s 88s B", "round": "東1局", "turn": 8, "seat": null, "isDealer": false, "doraIndicators": ["2m"], "draw": "N"}, "choices": ["リーチ", "ダマ"], "a": 0, "exp": "基本は先制テンパイならリーチ寄り。①打点: ダマ1600点は境界未満。②巡目: 8巡目。③待ち形: 白の単騎——字牌・端牌の単騎は、リーチをかけても出和了り(ロン)がほとんど減らないことが実測で確認されており、リーチのデメリットが小さい。④残り枚数: 2枚(2枚以上)。リーチ。"},
- {"qid": "p4b_a1c1_2", "sr": "sr_sente_a1c_1", "srName": "字牌・端牌単騎は強リーチ", "lv": 3, "questionType": "action", "q": "リーチする？", "context": {"reveal": "T0", "hand": "33m 66m 55p 77p 44s 99s W", "round": "東1局", "turn": 6, "seat": null, "isDealer": true, "doraIndicators": ["2p"], "draw": "N"}, "choices": ["リーチ", "ダマ"], "a": 0, "exp": "基本は先制テンパイならリーチ寄り。①打点: ダマ2400点は境界未満。②巡目: 6巡目。③待ち形: 西の単騎——字牌・端牌の単騎は、リーチをかけても出和了り(ロン)がほとんど減らないことが実測で確認されており、リーチのデメリットが小さい。④残り枚数: 3枚(2枚以上)。リーチ。"},
+ {"qid": "p4b_a1c1_1", "sr": "sr_sente_a1c_1", "srName": "字牌・端牌タンキは強リーチ", "lv": 3, "questionType": "action", "q": "リーチする？", "context": {"reveal": "T0", "hand": "22m 44m 33p 55p 66s 88s B", "round": "東1局", "turn": 8, "seat": null, "isDealer": false, "doraIndicators": ["2m"], "draw": "N"}, "choices": ["リーチ", "ダマ"], "a": 0, "exp": "基本は先制テンパイならリーチ寄り。①打点: ダマ1600点は境界未満。②巡目: 8巡目。③待ち形: 白のタンキ——字牌・端牌のタンキは、リーチをかけても出和了り(ロン)がほとんど減らないことが実測で確認されており、リーチのデメリットが小さい。④残り枚数: 2枚(2枚以上)。リーチ。"},
+ {"qid": "p4b_a1c1_2", "sr": "sr_sente_a1c_1", "srName": "字牌・端牌タンキは強リーチ", "lv": 3, "questionType": "action", "q": "リーチする？", "context": {"reveal": "T0", "hand": "33m 66m 55p 77p 44s 99s W", "round": "東1局", "turn": 6, "seat": null, "isDealer": true, "doraIndicators": ["2p"], "draw": "N"}, "choices": ["リーチ", "ダマ"], "a": 0, "exp": "基本は先制テンパイならリーチ寄り。①打点: ダマ2400点は境界未満。②巡目: 6巡目。③待ち形: 西のタンキ——字牌・端牌のタンキは、リーチをかけても出和了り(ロン)がほとんど減らないことが実測で確認されており、リーチのデメリットが小さい。④残り枚数: 3枚(2枚以上)。リーチ。"},
  {"qid": "p4b_a2_1", "sr": "sr_sente_a2", "srName": "13-15巡でも良形安打点はリーチ", "lv": 4, "questionType": "action", "q": "リーチする？", "context": {"reveal": "T0", "hand": "234m 456p 789p 33s 56s", "round": "東2局", "turn": 13, "seat": null, "isDealer": false, "doraIndicators": ["9m"], "draw": "N"}, "choices": ["リーチ", "ダマ"], "a": 0, "exp": "基本は先制テンパイならリーチ寄り。①巡目: 13巡目とやや終盤だが、②待ち形がリャンメン(良形)で③残り枚数6枚と和了が十分見込め、④打点: ダマ1000点は境界未満でリーチによる打点上昇の価値が大きい。終盤でも「良形×安手」はダマに寄せる理由がなく、実測でもリーチの収支が上回る。リーチ。"},
  {"qid": "p4b_a2_2", "sr": "sr_sente_a2", "srName": "13-15巡でも良形安打点はリーチ", "lv": 4, "questionType": "action", "q": "リーチする？", "context": {"reveal": "T0", "hand": "GGG 234m 567p 45s 99m", "round": "東1局", "turn": 14, "seat": null, "isDealer": true, "doraIndicators": ["1p"], "draw": "N"}, "choices": ["リーチ", "ダマ"], "a": 0, "exp": "基本は先制テンパイならリーチ寄り。①巡目: 14巡目とやや終盤だが、②待ち形がリャンメン(良形)で③残り枚数6枚と和了が十分見込め、④打点: ダマ2000点は境界未満でリーチによる打点上昇の価値が大きい。終盤でも「良形×安手」はダマに寄せる理由がなく、実測でもリーチの収支が上回る。リーチ。"},
  {"qid": "p4b_a2_3", "sr": "sr_sente_a2", "srName": "13-15巡でも良形安打点はリーチ", "lv": 4, "questionType": "action", "q": "リーチする？", "context": {"reveal": "T0", "hand": "234s 678s 22m 34567p", "round": "東3局", "turn": 15, "seat": null, "isDealer": false, "doraIndicators": ["1s"], "draw": "N"}, "choices": ["リーチ", "ダマ"], "a": 0, "exp": "基本は先制テンパイならリーチ寄り。①巡目: 15巡目とやや終盤だが、②待ち形が多面の複合良形(良形)で③残り枚数7枚と和了が十分見込め、④打点: ダマ3900点は境界未満でリーチによる打点上昇の価値が大きい。終盤でも「良形×安手」はダマに寄せる理由がなく、実測でもリーチの収支が上回る。リーチ。"},
@@ -3245,7 +3277,7 @@ const COURSES=[
  {id:'nk1',lv:3,fs:'nk:sh0:mg4',hand:'234556m456p678s88s',a:'5m',exp:'打5萬で23456萬の形が残り、1・4・7萬の三面張（受け11枚）。打2萬（4・7萬の7枚）より圧倒的に広いテンパイです。'},
  {id:'nk2',lv:4,fs:'nk:sh0:mg4',hand:'2224567m345p6788s',a:'8s',exp:'打8索で222萬を暗刻として活かし、4567萬＋雀頭88索…ではなく222萬＋456萬(or 567萬)の形で3・4・7萬待ち（受け10枚）。手の中の暗刻はくっつけて使うと強い！'},
  {id:'nk3',lv:5,fs:'nk:sh0:mg5',hand:'46677888m678p666s',a:'4m',exp:'打4萬で667788萬＋888…の複合形が残り、なんと5・6・7・8萬の4種待ち（受け9枚）。浮いた4萬を切るだけですが、残る形の強さを見抜けるかがポイント。'},
- {id:'nk4',lv:5,fs:'nk:sh0:mg5',hand:'12367m234777p678s',a:'7p',exp:'打7筒！777筒の暗刻を崩す勇気。77筒を雀頭にして67萬のリャンメン（5・8萬、受け8枚）が残ります。67萬を切ると7萬・6萬の単騎系しか残りません。'},
+ {id:'nk4',lv:5,fs:'nk:sh0:mg5',hand:'12367m234777p678s',a:'7p',exp:'打7筒！777筒の暗刻を崩す勇気。77筒を雀頭にして67萬のリャンメン（5・8萬、受け8枚）が残ります。67萬を切ると7萬・6萬のタンキ系しか残りません。'},
 ]},
 {id:'riichi',title:'リーチ判断',icon:'📣',section:4,desc:'局面を見て、曲げるかダマか。鳳凰卓の実測データで検証済み。',questions:SR_RIICHI_QUESTIONS},
 {id:'naki',title:'鳴き判断',icon:'🙋',section:null,desc:'ポン・チーの損得を見極めよう。',questions:[
@@ -3269,9 +3301,9 @@ const COURSES=[
 ]},
 {id:'anzen',title:'安全度',icon:'🛡️',section:null,desc:'現物・スジ・壁。牌の危険度を読む。',questions:[
  {q:'リーチに対して最も安全な牌はどれ？',tchoices:[{t:'2m',lab:'現物'},{t:'4p',lab:'スジ'},{t:'W',lab:'2枚切れ'},{t:'5s',lab:'無スジ'}],a:0,exp:'リーチ者自身が捨てた牌（現物）はフリテンのルールにより絶対にロンされません。安全度は 現物 ＞ スジ・2枚切れ字牌 ＞ 無スジ の順。'},
- {q:'1筒がリーチ者の現物。「スジの4筒」が比較的安全な理由は？',choices:['2-3筒のリャンメン待ちならフリテンになるから','4筒は使いにくい牌だから','1筒と4筒は同じ牌扱いだから','カンチャン待ちが存在しないから'],a:0,exp:'4筒がリャンメンで当たるのは「2-3筒」持ちのときだけ。その待ちは1筒（現物）でフリテンなので、リャンメンには当たりません。ただしシャンポン・カンチャン・単騎には当たり得ます。'},
- {q:'7筒が場に4枚見えている。安全度が大きく上がる牌は？',tchoices:[{t:'6p'},{t:'8p'},{t:'9p'},{t:'5p'}],a:2,exp:'9筒がリャンメンで当たるには相手が「7-8筒」を持つ必要がありますが、7筒は4枚全部見えているので不可能（ノーチャンス）。残るはシャンポン・単騎などのみです。'},
- {q:'場に2枚切れの字牌が比較的安全な理由は？',choices:['シャンポン待ちがなくなり、残りは単騎だけだから','字牌は点数が安いから','鳴かれないから','ドラにならないから'],a:0,exp:'残り2枚が見えていればトイツで待たれる（シャンポン）ことがなく、当たるのはラス1枚の単騎待ちのみ。かなり安全です。'},
+ {q:'1筒がリーチ者の現物。「スジの4筒」が比較的安全な理由は？',choices:['2-3筒のリャンメン待ちならフリテンになるから','4筒は使いにくい牌だから','1筒と4筒は同じ牌扱いだから','カンチャン待ちが存在しないから'],a:0,exp:'4筒がリャンメンで当たるのは「2-3筒」持ちのときだけ。その待ちは1筒（現物）でフリテンなので、リャンメンには当たりません。ただしシャンポン・カンチャン・タンキには当たり得ます。'},
+ {q:'7筒が場に4枚見えている。安全度が大きく上がる牌は？',tchoices:[{t:'6p'},{t:'8p'},{t:'9p'},{t:'5p'}],a:2,exp:'9筒がリャンメンで当たるには相手が「7-8筒」を持つ必要がありますが、7筒は4枚全部見えているので不可能（ノーチャンス）。残るはシャンポン・タンキなどのみです。'},
+ {q:'場に2枚切れの字牌が比較的安全な理由は？',choices:['シャンポン待ちがなくなり、残りはタンキだけだから','字牌は点数が安いから','鳴かれないから','ドラにならないから'],a:0,exp:'残り2枚が見えていればトイツで待たれる（シャンポン）ことがなく、当たるのはラス1枚のタンキ待ちのみ。かなり安全です。'},
  {q:'安全度が高い順に並んでいるのはどれ？',choices:['現物 ＞ スジ・2枚切れ字牌 ＞ 無スジ2・8 ＞ 無スジ4〜6','無スジ4〜6 ＞ スジ ＞ 現物','スジ ＞ 現物 ＞ 字牌','どれも同じ'],a:0,exp:'現物が絶対安全。次にスジや枚数の切れた字牌、無スジでも端に近いほど当たる形が少なく、真ん中の4〜6が最も危険です。'},
 ]},
 {id:'betaori',title:'ベタオリ手順',icon:'🏃',section:null,desc:'降りると決めたら完璧に降りる。',questions:[
@@ -4541,8 +4573,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.79.0';
-const BUILD_ID='20261012-01';
+const APP_VER='0.80.0';
+const BUILD_ID='20261013-01';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -9792,7 +9824,7 @@ const CH1_LESSONS={
    ・「5種類だけが全て」とは断言しない(「まずは基本の5つ」)
    ============================================================ */
 /* ---- 待ちの形の決定論判定(教材用の単純形のみ。判定できない形はnull=テストで検出) ---- */
-const CH2_SHAPE_LABEL={ryanmen:'リャンメン',kanchan:'カンチャン',penchan:'ペンチャン',shanpon:'シャンポン',tanki:'単騎'};
+const CH2_SHAPE_LABEL={ryanmen:'リャンメン',kanchan:'カンチャン',penchan:'ペンチャン',shanpon:'シャンポン',tanki:'タンキ'};
 function ch2ShapeOf(hand){
   const waits=ch1MiniWaits(hand);
   const cnt={}; hand.forEach(t=>cnt[t]=(cnt[t]||0)+1);
@@ -9952,7 +9984,7 @@ function ch2IsShapeMcq(handStr,shape,exp){
   return {q:'この手牌の待ちの形は、'+CH2_SHAPE_LABEL[shape]+'？',hand:handStr,
     choices:[CH2_SHAPE_LABEL[shape]+'になっている','なっていない'],a:ok?0:1,exp,ghand:true};
 }
-const CH2_SHAPES5=['リャンメン','カンチャン','ペンチャン','シャンポン','単騎'];
+const CH2_SHAPES5=['リャンメン','カンチャン','ペンチャン','シャンポン','タンキ'];
 
 /* ============================================================
    第3章「役がわかる」— 役判定エンジン(決定論・純粋関数。AI判定禁止)
@@ -9972,6 +10004,8 @@ function ch3IsTermHon(t){ return ch3IsTerm(t)||ch3IsHonor(t); }
 function ch3Cnt(tiles){ const c={}; tiles.forEach(t=>c[t]=(c[t]||0)+1); return c; }
 /* 14枚の「アタマ+4メンツ」全分解を列挙(牌構成で重複除去・各段で同型枝を刈る) */
 function ch3Decomps(tiles,ctx){
+  /* R88: ctx._dk = 「この分けかただけ」で役を見る(読みかたごとに 役・符・点をそろえて比べるため)。番号は ここで返す配列の番号 */
+  if(ctx&&ctx._dk!=null){ const all2=ch3Decomps(tiles,Object.assign({},ctx,{_dk:null})); return all2[ctx._dk]?[all2[ctx._dk]]:[]; }
   const all=ch3DecompsRaw(tiles);
   const ms=ch3MeldList(ctx);
   if(!ms.length) return all;
@@ -10003,8 +10037,18 @@ function ch3MeldList(ctx){
       type:m.type,kan:meldKanKind(m)}))
     .filter(x=>x.tiles.length===3);
 }
+/* R88: 読みかたごとに役を見るようになって 同じ14枚を何度も分けるので、結果を おぼえておく(中身は変えない) */
+const CH3_DECOMP_MEMO=new Map();
 function ch3DecompsRaw(tiles){
   if(!tiles||tiles.length!==14) return [];
+  const mk=tiles.join(',');
+  if(CH3_DECOMP_MEMO.has(mk)) return CH3_DECOMP_MEMO.get(mk);
+  const r=ch3DecompsRaw0(tiles);
+  if(CH3_DECOMP_MEMO.size>800) CH3_DECOMP_MEMO.clear();
+  CH3_DECOMP_MEMO.set(mk,r);
+  return r;
+}
+function ch3DecompsRaw0(tiles){
   const out=[], seen=new Set(), headTried=new Set();
   for(let i=0;i<14;i++)for(let j=i+1;j<14;j++){
     if(tiles[i]!==tiles[j]) continue;
@@ -10073,7 +10117,10 @@ function ch3HasPinfu(tiles,ctx){
     const sets=d.sets.map(g=>g.map(k=>tiles[k]));
     if(!sets.every(gt=>ch1IsRun(gt))) continue;
     if(ch3IsYakuhaiTile(d.headTile,ctx)) continue;
-    for(const gt of sets){
+    const sp=ctx._spot;                                   // R88: 読みかた(アガリ牌をどの組で待ったか)が決まっているときは その組だけ
+    if(sp&&sp.head) continue;
+    for(const [gi,gt] of sets.entries()){
+      if(sp&&sp.ix!==gi) continue;
       if(!gt.includes(ctx.winTile)) continue;
       const rest=gt.slice(); rest.splice(rest.indexOf(ctx.winTile),1);
       const ns=rest.map(t=>+t[0]).sort((a,b)=>a-b);
@@ -10144,13 +10191,13 @@ function fuSetPart(gt,opt){
 function ch3FuSet(gt,opt){ return fuSetPart(gt,opt).fu; }
 /* 待ちの形と符。isHead=アタマで待っていた(単騎) */
 function fuWaitPart(gt,winTile,isHead){
-  if(isHead) return {type:'tanki',label:'単騎待ち',fu:FU_WAIT_BAD};
+  if(isHead) return {type:'tanki',label:'タンキ待ち',fu:FU_WAIT_BAD};
   if(ch1IsTriplet(gt)) return {type:'shanpon',label:'シャンポン待ち',fu:0};
   const ns=gt.map(t=>+t[0]).sort((a,b)=>a-b), w=+winTile[0];
-  if(w===ns[1]) return {type:'kanchan',label:'嵌張待ち',fu:FU_WAIT_BAD};
-  if(ns[0]===1&&w===3) return {type:'penchan',label:'辺張待ち',fu:FU_WAIT_BAD};
-  if(ns[2]===9&&w===7) return {type:'penchan',label:'辺張待ち',fu:FU_WAIT_BAD};
-  return {type:'ryanmen',label:'両面待ち',fu:0};
+  if(w===ns[1]) return {type:'kanchan',label:'カンチャン待ち',fu:FU_WAIT_BAD};
+  if(ns[0]===1&&w===3) return {type:'penchan',label:'ペンチャン待ち',fu:FU_WAIT_BAD};
+  if(ns[2]===9&&w===7) return {type:'penchan',label:'ペンチャン待ち',fu:FU_WAIT_BAD};
+  return {type:'ryanmen',label:'リャンメン待ち',fu:0};
 }
 function ch3FuWait(gt,winTile,isHead){ return fuWaitPart(gt,winTile,isHead).fu; }
 /* 雀頭の符。連風牌も 2符(FU_HEAD_RENPU) */
@@ -10183,7 +10230,7 @@ function fuBreakdown(o){
   if(o.spot&&o.winTile){
     wait=fuWaitPart(o.spot.head?[o.headTile,o.headTile]:o.sets[o.spot.ix].tiles,o.winTile,!!o.spot.head);
     items.push({key:'wait-'+wait.type,label:wait.label,fu:wait.fu,
-      tiles:o.spot.head?[o.headTile,o.headTile]:o.sets[o.spot.ix].tiles.slice(),wait:true});
+      tiles:o.spot.head?[o.headTile,o.headTile]:o.sets[o.spot.ix].tiles.slice(),wait:true,win:o.winTile});   // R88: win=アガリ牌(説明で「待っていた形＋アガリ牌」を見せる)
   }
   const raw=items.reduce((a,x)=>a+x.fu,0);
   let fu=Math.ceil(raw/10)*10, adj=null;
@@ -10229,6 +10276,13 @@ function ch3FuDetail(tiles,ctx){
   const interps=fuInterps(tiles,ctx);
   /* 七対子: ふつうの形(二盃口)にも読める手は ふつうの形で数える(二盃口のほうが高い。ひとり麻雀と同じ) */
   if(!ms.length&&ch3IsChiitoi(tiles)&&!interps.length) return Object.assign(fuChiitoi(),{interps:[]});
+  /* R88: 読みかたが2つ以上あるときは 役・翻・符・点を そろえて比べ、点がいちばん高い読みかたの符(ch3BestInterp)。
+     役が1つもない手(符だけの練習)は これまでどおり: 平和 → 符がいちばん高い読みかた */
+  const bi=interps.length>1?ch3BestInterp(tiles,ctx):null;
+  if(bi&&!bi.yakuman&&bi.pts>0&&bi.form==='std'){
+    if(bi.keys.includes('pinfu')) return Object.assign(fuPinfu(ctx.win),{interps,decomp:bi.interp.decomp,spot:bi.interp.spot});
+    return Object.assign({},bi.interp,{interps});
+  }
   if(ch3HasPinfu(tiles,ctx)) return Object.assign(fuPinfu(ctx.win),{interps});
   if(!interps.length) return null;
   let best=null;
@@ -10296,7 +10350,11 @@ function ch3AnkouMax(tiles,ctx){
     // 鳴いた組は暗刻に数えない。ただし暗槓(mAnkan)は自分の手の中だけで作った組なので数える
     const trips=d.sets.filter((g,ix)=>(!mi.includes(ix)||mAnkan.includes(ix))&&ch1IsTriplet(g.map(k=>tiles[k])));
     let n=trips.length;
-    if(ctx&&ctx.win==='ron'&&ctx.winTile){
+    if(ctx&&ctx.win==='ron'&&ctx.winTile&&ctx._spot){
+      /* R88: 読みかたが決まっているとき: アガリ牌で完成した組が刻子なら その刻子は暗刻にならない */
+      const sp=ctx._spot;
+      if(!sp.head&&trips.includes(d.sets[sp.ix])) n-=1;
+    }else if(ctx&&ctx.win==='ron'&&ctx.winTile){
       const w=ctx.winTile;
       const inRun=d.sets.some((g,ix)=>{const gt=g.map(k=>tiles[k]);return !mi.includes(ix)&&!ch1IsTriplet(gt)&&gt.includes(w);});
       const inHead=tiles[d.head[0]]===w;
@@ -11139,15 +11197,29 @@ function tierTableHTML(ids,oya){
       +'</span></div>').join('')
     +'</div>';
 }
-/* 役の一覧(決定論)。教材の正解は必ずこの関数から作る */
+/* 役の一覧(決定論)。教材の正解は必ずこの関数から作る
+   R88: 分けかた・待ちかたが2つ以上ある手は、読みかた ごとに 役・翻・符・点を出して、
+        【点がいちばん高い読みかた】の役を返す(ch3BestInterp)。
+        R87 までは「どれかの分けかたで成り立つ役」を ぜんぶ足していたので、
+        同時には成り立たない役(例: 平和と三暗刻)が いっしょに並ぶことがあった。 */
 function ch3YakuList(tiles,ctx){
+  ctx=ctx||{};
+  if(ctx._dk!=null) return ch3YakuListAt(tiles,ctx,'std');
+  const b=ch3BestInterp(tiles,ctx);
+  return b?b.keys.slice():ch3YakuListAt(tiles,ctx);
+}
+/* 鳴いている(門前でない)か。R88: 暗槓は鳴きではない＝暗槓だけの手は門前(リーチ・門前ツモ・一発がつく) */
+function ch3IsOpenCtx(ctx){ return !!ctx&&(ctx.menzen===false||ch3MeldList(ctx).some(m=>!m.ankan)); }
+/* mode: なし=どれかの分けかたで成り立つ役(R87までの ch3YakuList) / 'std'=ctx._dk・_spot の読みかただけ / 'chiitoi'=七対子として */
+function ch3YakuListAt(tiles,ctx,mode){
   ctx=ctx||{};
   const hasM=ch3MeldList(ctx).length>0;
   // 鳴いた組があるときは「鳴いた組がそのまま1メンツ」の分解ができるときだけ基本形。七対子・国士は鳴いて作れない
-  const std=hasM?ch3Decomps(tiles,ctx).length>0:!!ch1MiniWin(tiles);
-  const chii=!hasM&&ch3IsChiitoi(tiles), kok=!hasM&&ch3IsKokushi(tiles);
+  const std=mode==='chiitoi'?false:(hasM?ch3Decomps(tiles,ctx).length>0:(mode==='std'?ch3Decomps(tiles,ctx).length>0:!!ch1MiniWin(tiles)));
+  const chii=mode==='std'?false:(!hasM&&ch3IsChiitoi(tiles)), kok=mode?false:(!hasM&&ch3IsKokushi(tiles));
   if(!std&&!chii&&!kok) return [];
-  const menzen=ctx.menzen!==false&&!hasM;
+  /* R88: 暗槓だけなら門前のまま(R87 までは 暗槓も「鳴いた組」として門前から外していた) */
+  const menzen=!ch3IsOpenCtx(ctx);
   const ym=[];
   if(std&&ch3HasDaisangen(tiles)) ym.push('daisangen');
   if(std&&ch3HasSuuankou(tiles,ctx)) ym.push('suuankou');
@@ -11180,7 +11252,7 @@ function ch3YakuList(tiles,ctx){
   if(ctx.haitei&&ctx.win==='tsumo') out.push('haitei');
   if(ctx.houtei&&ctx.win==='ron') out.push('houtei');
   if(std&&ch3HasYakuhai(tiles,ctx)) out.push('yakuhai');
-  if(std&&ch3HasPinfu(tiles,ctx)) out.push('pinfu');
+  if(std&&menzen&&ch3HasPinfu(tiles,ctx)) out.push('pinfu');
   if(ch3HasTanyao(tiles)) out.push('tanyao');
   const si=ch3SuitInfo(tiles);
   if(si.nSuits===1&&si.honors) out.push('honitsu');
@@ -11188,10 +11260,10 @@ function ch3YakuList(tiles,ctx){
   if(std&&ch3HasToitoi(tiles,ctx)) out.push('toitoi');
   /* 三槓子(R64): 槓子がちょうど3組。4組は四槓子(役満)なので、ここには来ない */
   if(std&&ch3KanCount(ctx)===3) out.push('sankantsu');
-  const rp=std&&ch3HasRyanpeikou(tiles,ctx);
+  const rp=std&&menzen&&ch3HasRyanpeikou(tiles,ctx);
   if(chii&&!rp) out.push('chiitoi');                       // 二盃口に取れる形は二盃口を優先(七対子と複合しない)
   if(rp) out.push('ryanpeikou');
-  else if(std&&ch3HasIipeiko(tiles,ctx)) out.push('iipeiko');
+  else if(std&&menzen&&ch3HasIipeiko(tiles,ctx)) out.push('iipeiko');
   const ck=std?ch3ChantaKind(tiles,ctx):null;
   if(ck==='junchan') out.push('junchan'); else if(ck==='chanta') out.push('chanta');
   if(std&&ch3HasSanshoku(tiles,ctx)) out.push('sanshoku');
@@ -11200,6 +11272,48 @@ function ch3YakuList(tiles,ctx){
   if(std&&ch3HasShousangen(tiles)) out.push('shousangen');
   if((std||chii)&&ch3HasHonroutou(tiles)) out.push('honroutou');
   return out;
+}
+/* ===== R88 読みかたごとの 役・翻・符・点 =====
+   同じ牌姿でも 分けかた(面子の組みかた)と 待ちかた(アガリ牌をどの組で待ったか)で
+   役も符も変わる。ここで読みかたを ぜんぶ数えて、
+     点(ロン点 / ツモの合計) → 翻 → 符 の順に いちばん高いものを えらぶ(高点法)。
+   「平和を優先」「符が最大」を 無条件には使わない(例: 平和にも三暗刻にも読める手)。
+   役・符・点数トレーニング・Road・符計算 は みな この結果を使う＝画面ごとに食いちがわない。 */
+function ch3HanOfKeys(keys,ctx){
+  const open=ch3IsOpenCtx(ctx);
+  return keys.reduce((a,k)=>{ const m=CH3_YAKU_META[k]; if(!m||m.yakuman) return a; return a+((open?m.openHan:m.closedHan)||0); },0);
+}
+function ch3InterpValue(keys,fu,ctx){
+  const han=ch3HanOfKeys(keys,ctx);
+  if(!(han>0)||fu==null) return {han:han||0,pts:0};
+  const oya=isOyaSeat((ctx||{}).sw), sc=scoreByFuHan(fu,han,oya);
+  const pts=(ctx&&ctx.win==='tsumo')?(oya?sc.tsumo[0]*3:sc.tsumo[0]*2+sc.tsumo[1]):sc.ron;
+  return {han,pts};
+}
+function ch3BestInterp(tiles,ctx){
+  ctx=ctx||{};
+  if(!tiles||tiles.length!==14) return null;
+  const union=ch3YakuListAt(tiles,ctx);
+  if(union.some(k=>CH3_YAKU_META[k]&&CH3_YAKU_META[k].yakuman)) return {keys:union,yakuman:true,fu:null,han:0,pts:0};
+  const cands=[];
+  const interps=fuInterps(tiles,ctx);
+  interps.forEach(r=>{
+    const c2=Object.assign({},ctx,{_dk:r.decomp,_spot:r.spot||undefined});
+    const keys=ch3YakuListAt(tiles,c2,'std');
+    const pin=keys.includes('pinfu');
+    const fd=pin?Object.assign(fuPinfu(ctx.win),{decomp:r.decomp,spot:r.spot}):r;
+    const v=ch3InterpValue(keys,fd.fu,ctx);
+    cands.push({keys,fu:fd.fu,han:v.han,pts:v.pts,det:fd,interp:r,form:'std'});
+  });
+  if(!ch3MeldList(ctx).length&&ch3IsChiitoi(tiles)){
+    const keys=ch3YakuListAt(tiles,ctx,'chiitoi'), fd=fuChiitoi(), v=ch3InterpValue(keys,fd.fu,ctx);
+    cands.push({keys,fu:fd.fu,han:v.han,pts:v.pts,det:fd,interp:null,form:'chiitoi'});
+  }
+  if(!cands.length) return null;
+  let best=null;
+  cands.forEach(c=>{ if(!best||c.pts>best.pts||(c.pts===best.pts&&(c.han>best.han||(c.han===best.han&&c.fu>best.fu)))) best=c; });
+  best.cands=cands;
+  return best;
 }
 /* ---- 第3章 状況表示(場風/自風/鳴き/リーチ/アガリ方)。用語は導入済みのものだけ使う ---- */
 const CH3_WIND_JP={E:'東',S:'南',W:'西',N:'北'};
@@ -13808,7 +13922,7 @@ let FU_SEED=null;   // テスト用: 数を入れると同じセットになる(
 const FU_STEPS=[
   {id:1,title:'符の基本',desc:'副底・門前ロン・ツモ・切り上げ・平和ツモ・七対子'},
   {id:2,title:'面子・雀頭の符',desc:'暗刻と明刻・么九牌・槓子・役牌の雀頭'},
-  {id:3,title:'待ちの符',desc:'両面・嵌張・辺張・単騎・シャンポン'},
+  {id:3,title:'待ちの符',desc:'リャンメン・カンチャン・ペンチャン・タンキ・シャンポン'},
   {id:4,title:'総合',desc:'14枚のアガリ形から 符を最後まで'},
 ];
 /* 符のきまり(復習の単位)。tip は まちがえたときの 短いひとこと */
@@ -13828,16 +13942,16 @@ const FU_RULES={
   headYakuhai:{label:'役牌の雀頭',tip:'三元牌・場風・自風の雀頭は 2符だよ。'},
   renpu:{label:'連風牌の雀頭',tip:'場風と自風が同じ風の雀頭も 2符（ツモッピィのルール）。'},
   headPlain:{label:'役牌でない雀頭',tip:'役牌でない雀頭は 0符だよ。'},
-  waitRyanmen:{label:'両面待ち',tip:'両面待ちは 0符だよ。'},
+  waitRyanmen:{label:'リャンメン待ち',tip:'リャンメン待ちは 0符だよ。'},
   waitShanpon:{label:'シャンポン待ち',tip:'シャンポン待ちは 0符だよ（刻子の符はつく）。'},
-  waitKanchan:{label:'嵌張待ち',tip:'まん中を待つ 嵌張待ちは 2符だよ。'},
-  waitPenchan:{label:'辺張待ち',tip:'12で3・89で7を待つ 辺張待ちは 2符だよ。'},
-  waitTanki:{label:'単騎待ち',tip:'雀頭を待つ 単騎待ちは 2符だよ。'},
+  waitKanchan:{label:'カンチャン待ち',tip:'まん中を待つ カンチャン待ちは 2符だよ。'},
+  waitPenchan:{label:'ペンチャン待ち',tip:'12で3・89で7を待つ ペンチャン待ちは 2符だよ。'},
+  waitTanki:{label:'タンキ待ち',tip:'雀頭を待つ タンキ待ちは 2符だよ。'},
   multi:{label:'読みかたが2つ',tip:'待ちの読みかたが2つあるときは、符が高いほうで数えるよ（平和になる読みがあれば平和）。'},
   kuipinfu:{label:'副露した平和形 30符',tip:'鳴いていて 20符になる手は 30符にするよ。'},
 };
 const FU_WAIT_RULE={ryanmen:'waitRyanmen',shanpon:'waitShanpon',kanchan:'waitKanchan',penchan:'waitPenchan',tanki:'waitTanki'};
-const FU_WAIT_LABEL={ryanmen:'両面待ち',kanchan:'嵌張待ち',penchan:'辺張待ち',tanki:'単騎待ち',shanpon:'シャンポン待ち'};
+const FU_WAIT_LABEL={ryanmen:'リャンメン待ち',kanchan:'カンチャン待ち',penchan:'ペンチャン待ち',tanki:'タンキ待ち',shanpon:'シャンポン待ち'};
 /* 内訳の1行 → 復習の単位 */
 function fuItemRules(it){
   const k=it.key, out=[];
@@ -13971,9 +14085,9 @@ function fuProbCheck(p,opt){
 /* 1問ぶんの計算結果をそろえる(問題・解説・テストが みな同じものを見る) */
 function fuSolve(p){
   const tiles=sortTiles(parseHand(p.hand)), det=ch3FuDetail(tiles,p.ctx3);
-  if(det&&det.kind==='calc'){ const best=det.interps.find(r=>r.fu===det.fu&&r.wait===det.wait); if(best){ det.decomp=best.decomp; det.spot=best.spot; } }
+  if(det&&det.kind==='calc'&&det.decomp==null){ const best=det.interps.find(r=>r.fu===det.fu&&r.wait===det.wait); if(best){ det.decomp=best.decomp; det.spot=best.spot; } }
   if(det&&det.kind==='chiitoi'){ const w=p.ctx3.winTile;
-    det.items=det.items.concat([{key:'wait-tanki',label:'単騎待ち（七対子は 待ちの符をつけない）',fu:0,tiles:[w,w],wait:true}]); }
+    det.items=det.items.concat([{key:'wait-tanki',label:'タンキ待ち（七対子は つけない）',fu:0,tiles:[w,w],wait:true,win:w}]); }
   if(det&&(det.kind==='pinfu-tsumo'||det.kind==='pinfu-ron')){ const best=det.interps.find(r=>r.wait==='ryanmen'&&r.items.every(it=>!/^(anko|ronko|minko)-/.test(it.key))); if(best){ det.decomp=best.decomp; det.spot=best.spot;
     det.items=det.items.concat(best.items.filter(it=>it.wait)); } }   // 解説で「両面待ち 0符」を見せる(合計は変わらない)
   return det;
@@ -13981,31 +14095,38 @@ function fuSolve(p){
 /* ===== 画面 ===== */
 const QV_FU={river:false,dora:false,note:false};
 function fuTilesHTML(ts){ return '<span class="fu-tl">'+ts.map(t=>tileHTML(t)).join('')+'</span>'; }
-/* 解説: 内訳の表。focus=その問題で聞いた行(太字にする)。答えたあとにだけ出る */
+/* 解説: 内訳の表。focus=その問題で聞いた行(太字にする)。答えたあとにだけ出る
+   R88: 3列にそろえる(左=項目 / まん中=牌姿 / 右=符)。牌のない行も 列の位置は同じ。
+        待ちの行は【アガる前の形 ＋ アガリ牌】で見せる(完成した順子を見せると 何を待っていたか わからない)。
+        さいごの符は 合計の行に1回だけ(R87 は「→ 40符」を もう1行 出していた) */
+function fuWaitShape(it){ const ts=it.tiles.slice(), w=it.win; if(w&&ts.indexOf(w)>=0) ts.splice(ts.indexOf(w),1); return ts; }
+function fuExpTilesHTML(it){
+  if(!it.tiles) return '<span class="fu-none">―</span>';
+  if(it.wait&&it.win) return '<span class="fu-tl">'+fuWaitShape(it).map(t=>tileHTML(t)).join('')+'</span><span class="fu-pl">＋</span><span class="fu-tl fu-tl-w">'+tileHTML(it.win)+'</span>';
+  return fuTilesHTML(it.tiles.concat(it.kan?[it.tiles[0]]:[]));
+}
 function fuExpHTML(det,opt){
   const o=opt||{};
   let rows='';
-  const row=(lab,ts,fu,cls)=>'<div class="fu-row'+(cls?' '+cls:'')+'"><span class="fu-lab">'+lab+(ts?fuTilesHTML(ts):'')+'</span><b class="fu-v">'+fu+'符</b></div>';
+  const row=(lab,cell,fu,cls)=>'<div class="fu-row'+(cls?' '+cls:'')+'"><span class="fu-lab">'+String(lab).replace('（','<wbr>（')+'</span><span class="fu-cell">'+cell+'</span><b class="fu-v">'+fu+'符</b></div>';
   det.items.forEach(it=>{
     const focus=o.focus&&o.focus(it);
     if(it.fu===0&&!focus&&!it.wait) return;                            // 0符の行は 聞いたときと 待ちだけ出す
-    rows+=row(it.label,it.tiles||null,it.fu,focus?'fu-focus':'');
+    rows+=row(it.label,fuExpTilesHTML(it),it.fu,focus?'fu-focus':'');
   });
+  const fin=v=>'<b class="fu-final" data-fu="'+v+'">'+v+'符</b>';
   let foot='';
-  if(det.kind==='chiitoi') foot='<div class="fu-sum">七対子は <b>25符</b>（切り上げない）</div>';
-  else if(det.kind==='pinfu-tsumo') foot='<div class="fu-sum">平和ツモは ツモの2符をつけず <b>20符</b></div>';
-  else{
-    foot='<div class="fu-sum">合計 <b>'+det.raw+'符</b>'
-      +(det.raw%10?' → 切り上げ <b>'+Math.ceil(det.raw/10)*10+'符</b>':'')+'</div>';
-    if(det.adj==='kuipinfu') foot+='<div class="fu-sum">鳴いていて20符の手は <b>30符</b>にする</div>';
-  }
+  if(det.kind==='chiitoi') foot='<div class="fu-sum">七対子は '+fin(det.fu)+'（切り上げない）</div>';
+  else if(det.kind==='pinfu-tsumo') foot='<div class="fu-sum">平和ツモは ツモの2符をつけず '+fin(det.fu)+'</div>';
+  else if(det.adj==='kuipinfu') foot='<div class="fu-sum">合計 <b>'+det.raw+'符</b> → 鳴いていて20符の手は '+fin(det.fu)+'</div>';
+  else foot='<div class="fu-sum">合計 '+(det.raw%10?'<b>'+det.raw+'符</b> → 切り上げ '+fin(det.fu):fin(det.fu))+'</div>';
   let note='';
   if(fuMultiWait(det)){
     const alt=det.interps.filter(x=>x.decomp===det.decomp&&x.wait!==det.wait).map(x=>FU_WAIT_LABEL[x.wait]);
     if(alt.length) note='<p class="fu-note">'+[...new Set(alt)].join('・')+'とも読めるけど、'
-      +(det.kind==='pinfu-tsumo'||det.kind==='pinfu-ron'?'平和になる 両面待ちで':'符が高い '+FU_WAIT_LABEL[det.wait]+'で')+' 数えるよ。</p>';
+      +(det.kind==='pinfu-tsumo'||det.kind==='pinfu-ron'?'平和になる リャンメン待ちで':'点が高くなる '+FU_WAIT_LABEL[det.wait]+'で')+' 数えるよ。</p>';
   }
-  return '<div class="fu-exp">'+rows+foot+'<div class="fu-ans">→ <b>'+det.fu+'符</b></div>'+note+'</div>';
+  return '<div class="fu-exp"><div class="fu-row fu-hd"><span>項目</span><span>牌姿</span><span>符</span></div>'+rows+foot+note+'</div>';
 }
 function fuTipHTML(rule){ const r=FU_RULES[rule]; return r?'<p class="fu-tip">💡 '+r.tip+'</p>':''; }
 /* ===== 選択肢 =====
@@ -14186,7 +14307,7 @@ function fuStepQ(step,rnd,no,total,want){
 const FU_TEACH={
   1:'符は <b>副底20符</b> から数えはじめるよ。鳴いていない手の <b>ロンは＋10符</b>、<b>ツモは＋2符</b>。さいごに <b>10符単位へ切り上げ</b>。平和ツモは20符、七対子は25符のまま！',
   2:'<b>刻子</b>は 手の中でそろえた暗刻なら 中張牌4符・么九牌8符、ポンした明刻なら その半分。<b>槓子は4倍</b>。三元牌・場風・自風の <b>雀頭は2符</b>（連風牌も2符）。',
-  3:'<b>嵌張・辺張・単騎</b>は 2符、<b>両面・シャンポン</b>は 0符。待ちの読みかたが2つあるときは 符が高いほうで数えるよ（平和になる読みがあれば平和）。',
+  3:'<b>カンチャン・ペンチャン・タンキ</b>は 2符、<b>リャンメン・シャンポン</b>は 0符。待ちの読みかたが2つあるときは 点が高くなるほうで数えるよ（ふつうは 符が高いほう。平和になる読みがあれば たいてい平和）。',
   4:'ここまでを ぜんぶ合わせよう！ 副底 → ロン/ツモ → 面子 → 雀頭 → 待ち → 切り上げ の順に数えると まちがえにくいよ。'};
 function fuTrainPlan(step,rnd){
   if(step===1) return fuShuffle([{rule:'base'},{rule:'menzenRon'},{rule:'tsumo'},{rule:'kiriage'},
@@ -14309,8 +14430,29 @@ function fuTrainAgain(step){
 const FU_COURSE_N=7;
 /* ---- 例のための 小さな部品 ---- */
 const FU_EX_CTX={rw:'E',sw:'S'};
-function fuExTiles(ts,o){ o=o||{}; return '<div class="hand fu-ex'+(o.cls?' '+o.cls:'')+'">'+ts.map(t=>tileHTML(t)).join('')+(o.win?'<span class="fu-ex-gap"></span><span class="fu-ex-win">'+tileHTML(o.win)+'<small>'+(o.winLab||'アガリ牌')+'</small></span>':'')+'</div>'; }
-function fuExMeld(m){ return '<div class="hand fu-ex">'+renderMeld(meldNorm(m))+'</div>'; }
+/* ===== R88 牌姿の共通部品(説明・一覧・確認問題) =====
+   ・牌の領域 と ラベル(アガリ牌・ツモ・ロン)の領域を 分ける。ラベルは アガリ牌の【下の別の行】。
+     ラベルの文字数で 牌の大きさは変わらない(牌は 決まった大きさ。ラベルが長ければ 箱のほうが広がる)。
+   ・アガリ牌は 手から すこし離し、「＋」で つなぐこともできる(待ちの説明: 待っていた形 ＋ アガリ牌)。
+   ・牌の大きさは 枚数で決める: 2〜5枚=大 / 6〜10枚=中 / 11枚以上=小(画面の幅に合わせる)。
+     11枚以上の手は 面子のまとまり(groups)ごとに折り返す。面子の途中では 折り返さない。
+   groups = 牌の配列 か 配列の配列(まとまり)。o={win, winLab, plus, q(確認問題で もう少し大きく), cls} */
+function pzSizeOf(n){ return n<=5?'s':(n<=10?'m':'l'); }
+function pzHTML(groups,o){
+  o=o||{};
+  const gs=(groups.length&&Array.isArray(groups[0]))?groups:[groups];
+  const n=gs.reduce((a,g)=>a+g.length,0)+(o.win?1:0);
+  const sz=o.size||pzSizeOf(n);
+  let h='<div class="pz pz-'+sz+(o.q?' pz-q':'')+(o.cls?' '+o.cls:'')+'" data-n="'+n+'"><div class="pz-row">';
+  h+=gs.map(g=>'<span class="pz-g">'+g.map(t=>tileHTML(t)).join('')+'</span>').join('');
+  if(o.win) h+=(o.plus?'<span class="pz-plus" aria-hidden="true">＋</span>':'')
+    +'<span class="pz-win"><span class="pz-wt">'+tileHTML(o.win)+'</span><span class="pz-lab">'+(o.winLab||'アガリ牌')+'</span></span>';
+  return h+'</div></div>';
+}
+function fuExTiles(ts,o){ o=o||{}; return pzHTML(ts,Object.assign({plus:!!o.win},o)); }
+/* 鳴いた組(卓と同じ見た目)。大きさは 立てた牌の枚数で決める */
+function fuExMeld(m,o){ o=o||{}; const n=meldNorm(m);
+  return '<div class="hand fu-ex pz-'+(o.size||pzSizeOf(n.tiles.length))+(o.q?' pz-q':'')+'">'+renderMeld(n)+'</div>'; }
 const FU_SET_KINDS=[
   {k:'minko',label:'明刻',sub:'ポンした刻子',opt:{open:true},ex:t=>fuExMeld({type:'pon',tiles:t+t+t,called:t,from:'left'})},
   {k:'anko',label:'暗刻',sub:'手の中で そろえた刻子',opt:{},ex:t=>fuExTiles([t,t,t])},
@@ -14323,7 +14465,7 @@ function fuSetFu(kind,t){ const s=FU_SET_KINDS.find(x=>x.k===kind); return fuSet
 const FU_HEAD_EX=[
   {k:'num',label:'数牌',t:'5s',ctx:FU_EX_CTX},
   {k:'ota',label:'オタ風（場風でも自風でもない風）',t:'W',ctx:FU_EX_CTX},
-  {k:'dragon',label:'三元牌（白・發・中）',t:'B',ctx:FU_EX_CTX},
+  {k:'dragon',label:'三元牌（白・發・中）',t:'R',ctx:FU_EX_CTX},   // R88: 例は 中(白は 絵のない牌なので 空白に見える)
   {k:'rw',label:'場風（東場なら 東）',t:'E',ctx:FU_EX_CTX},
   {k:'sw',label:'自風（あなたが南家なら 南）',t:'S',ctx:FU_EX_CTX},
   {k:'renpu',label:'連風牌（東場の東家の 東）',t:'E',ctx:{rw:'E',sw:'E'},note:'ツモッピィの採用ルール'},
@@ -14331,11 +14473,11 @@ const FU_HEAD_EX=[
 function fuHeadFu(h){ return fuHeadPart(h.t,h.ctx).fu; }
 /* 待ち: 形(のこっていた牌)・アガリ牌・その組 */
 const FU_WAIT_EX=[
-  {k:'ryanmen',label:'両面',shape:['3m','4m'],win:'5m',set:['3m','4m','5m']},
+  {k:'ryanmen',label:'リャンメン',shape:['3m','4m'],win:'5m',set:['3m','4m','5m']},
   {k:'shanpon',label:'シャンポン',shape:['5s','5s','7p','7p'],win:'5s',set:['5s','5s','5s']},
-  {k:'kanchan',label:'嵌張',shape:['4m','6m'],win:'5m',set:['4m','5m','6m']},
-  {k:'penchan',label:'辺張',shape:['1p','2p'],win:'3p',set:['1p','2p','3p']},
-  {k:'tanki',label:'単騎',shape:['E'],win:'E',head:true},
+  {k:'kanchan',label:'カンチャン',shape:['4m','6m'],win:'5m',set:['4m','5m','6m']},
+  {k:'penchan',label:'ペンチャン',shape:['1p','2p'],win:'3p',set:['1p','2p','3p']},
+  {k:'tanki',label:'タンキ',shape:['E'],win:'E',head:true},
 ];
 function fuWaitFu(w){ return fuWaitPart(w.head?[w.win,w.win]:w.set,w.win,!!w.head).fu; }
 /* 牌姿の例(手ぜんぶ)。ctx は ch3Ctx に渡す形。fu は かならず エンジンで出す */
@@ -14344,9 +14486,9 @@ const FU_EX={
   ronPinfu:{hand:'2m3m4m5m6m7m3p4p5p6s7s8s9s9s',ctx:{win:'ron',winTile:'8s',rw:'E',sw:'S',riichi:true}},   // 平和ロン 30
   tsumoPinfu:{hand:'2m3m4m5m6m7m3p4p5p6s7s8s9s9s',ctx:{win:'tsumo',winTile:'8s',rw:'E',sw:'S'}},          // 平和ツモ 20
   ronko:{hand:'2m3m4m6m7m8m5p5p5p3s4s5s7s7s',ctx:{win:'ron',winTile:'5p',rw:'W',sw:'N',riichi:true}},        // ロンで完成した刻子
-  ankan:{hand:'5m5m5m2p3p4p2p2p6s7s8s3s4s5s',ctx:{win:'ron',winTile:'5s',rw:'W',sw:'N',riichi:true,melds:[{type:'kan',kan:'ankan',tiles:'5555m'}]}},   // 役は断么九(暗槓の手のリーチは 役の判定(ch3YakuList)が まだ数えないため)
+  ankan:{hand:'5m5m5m2p3p4p2p2p6s7s8s7s8s9s',ctx:{win:'ron',winTile:'9s',rw:'W',sw:'N',riichi:true,melds:[{type:'kan',kan:'ankan',tiles:'5555m'}]}},   // R88: 役は リーチだけ(暗槓だけなら門前)。20+10+16=46→50
   total2:{hand:'1m1m1m9m9m2p3p4p4p5p6p7s8s9s',ctx:{win:'tsumo',winTile:'9m',rw:'E',sw:'S'}},             // 20+2+8+2=32→40
-  chiitoi:{hand:'1m1m3m3m5p5p7p7p2s2sEEBB',ctx:{win:'tsumo',winTile:'B',rw:'E',sw:'S'}},
+  chiitoi:{hand:'1m1m3m3m5p5p7p7p2s2sEERR',ctx:{win:'tsumo',winTile:'R',rw:'E',sw:'S'}},   // R88: アガリ牌を 白(絵のない牌)にしない。空白の牌に見えるため
   kuipinfu:{hand:'2m3m4m5p6p7p3s4s5s6s7s8s2p2p',ctx:{win:'ron',winTile:'5s',rw:'E',sw:'S',melds:[{type:'chi',tiles:'234m',called:'3m',from:'left'}]}},
 };
 function fuExProb(key){ const e=FU_EX[key]; return {hand:e.hand,ctx3:ch3Ctx(Object.assign({},e.ctx,{melds:(e.ctx.melds||[]).map(m=>Object.assign({},m))}))}; }
@@ -14381,12 +14523,12 @@ function fuListHTML(){
     +'<p class="fl-note">例は 東場・あなたが南家のとき（連風牌は 東場の東家）。</p>';
   h+='<div class="yl-grp">待ち</div>'
     +FU_WAIT_EX.map(w=>fuRow(w.label+'待ち',fuWaitFu(w)+'符',fuExTiles(w.shape,{win:w.win}))).join('')
-    +'<p class="fl-note">読みかたが2つあるときは 符が高いほう（平和になる読みがあれば 平和）。</p>';
+    +'<p class="fl-note">読みかたが2つあるときは 点が高くなるほうで 数える（ふつうは 符が高いほう。平和になる読みがあれば たいてい 平和）。</p>';
   const pt=fuExDet('tsumoPinfu'), pr=fuExDet('ronPinfu'), ch=fuExDet('chiitoi'), kp=fuExDet('kuipinfu');
   h+='<div class="yl-grp">特別な形</div>'
-    +fuRow('平和ツモ',pt.fu+'符',fuExTiles(fuExHand13('tsumoPinfu'),{win:FU_EX.tsumoPinfu.ctx.winTile,winLab:'ツモ',cls:'full'}),'ツモの'+FU_TSUMO+'符を 足さない')
+    +fuRow('平和ツモ',pt.fu+'符',pzHTML(fuExGroups('tsumoPinfu'),{win:FU_EX.tsumoPinfu.ctx.winTile,winLab:'ツモ'}),'ツモの'+FU_TSUMO+'符を 足さない')
     +fuRow('平和ロン',pr.fu+'符','',FU_BASE+'符＋門前ロン'+FU_MENZEN_RON+'符')
-    +fuRow('七対子',ch.fu+'符',fuExTiles(fuExHand13('chiitoi'),{win:FU_EX.chiitoi.ctx.winTile,winLab:'ツモ',cls:'full'}),'いつも '+ch.fu+'符。切り上げない')
+    +fuRow('七対子',ch.fu+'符',pzHTML(fuExGroups('chiitoi'),{win:FU_EX.chiitoi.ctx.winTile,winLab:'ツモ'}),'いつも '+ch.fu+'符。切り上げない')
     +fuRow('鳴いて20符になるロン',kp.fu+'符','',FU_BASE+'符のままなら '+kp.fu+'符にする');
   h+='<div class="yl-grp">切り上げ</div>'
     +'<p class="fl-lead">ふつうは 合計を <b>10符単位に切り上げ</b>（例: '+fuRoundEx(32)+'）。七対子の'+ch.fu+'符は 切り上げない。</p>';
@@ -14394,6 +14536,23 @@ function fuListHTML(){
 }
 function fuRoundEx(v){ return v+'符 → '+Math.ceil(v/10)*10+'符'; }
 function fuExHand13(key){ const t=sortTiles(parseHand(FU_EX[key].hand)), i=t.indexOf(FU_EX[key].ctx.winTile); t.splice(i,1); return t; }
+/* R88: アガる前の13枚を 面子のまとまりで返す(アガリ牌で完成した組からは アガリ牌を抜く)。
+   分けかたは 符の計算(fuSolve)が えらんだもの＝説明と計算が かならず同じ */
+function fuExGroups(key){
+  const e=FU_EX[key], p=fuExProb(key), det=fuSolve(p), tiles=sortTiles(parseHand(e.hand)), w=e.ctx.winTile;
+  const ord=t=>sortTiles(tiles.slice()).indexOf(t);
+  let gs;
+  if(det.kind==='chiitoi'){
+    const c=ch3Cnt(tiles); gs=Object.keys(c).map(t=>[t,t]);
+    const g=gs.find(x=>x[0]===w); g.splice(0,1);
+  }else{
+    const d=ch3Decomps(tiles,p.ctx3)[det.decomp||0];
+    gs=d.sets.map(g=>sortTiles(g.map(k=>tiles[k]))); const hd=[d.headTile,d.headTile];
+    const sp=det.spot||{}; const tgt=sp.head?hd:gs[sp.ix];
+    tgt.splice(tgt.indexOf(w),1); gs.push(hd);
+  }
+  return gs.filter(g=>g.length).sort((a,b)=>ord(a[0])-ord(b[0]));
+}
 function renderFuList(){
   const fb=document.getElementById('yl-filt'), bd=document.getElementById('yl-body');
   if(!fb||!bd) return;
@@ -14416,7 +14575,7 @@ function fuCQ(o){
   const q={q:o.q,choices:idx.map(i=>o.choices[i]),a:idx.indexOf(0),exp:'<div class="fu-exp">'+(o.exp||'')+'</div>',
     expWrong:idx.map(i=>i===0?'':'<p class="fu-tip">💡 '+(o.wrong&&o.wrong[i]||o.tip||'')+'</p>'),
     questionType:'multiple_choice',fuCourseQ:true,fuTopic:o.topic};
-  if(o.panel) q.panel=o.panel;
+  if(o.panel) q.panel='<div class="fu-qp">'+o.panel+'</div>';
   if(o.ex){ const p=fuExProb(o.ex); q.hand=p.hand; q.ctx3=p.ctx3; q.view=QV_FU; }
   return q;
 }
@@ -14447,10 +14606,10 @@ const FU_COURSE=[
       fuT('見た目で わかるよ。ポンは 1枚横向き、明槓は 4枚で1枚横向き、暗槓は 両はしを伏せる。',
         {tlab:'LESSON 3 見わけかた',panel:'<div class="fu-exrow">'+FU_SET_KINDS.map(s=>'<div><small>'+s.label+'</small>'+s.ex(FU_EX_CHUN)+'</div>').join('')+'</div>'}),
       fuT('<b>ロンした牌で完成した刻子</b>は 明刻あつかい（この手の '+tileLabel('5p')+'）。',{tlab:'LESSON 3 例',panel:fuExBoardHTML('ronko')+fuExpHTML(dr,{focus:it=>/^ronko-/.test(it.key)})}),
-      fuT('<b>暗槓</b>は 自分の手の中だけで作ったカン。鳴いたことにならないので 門前のまま（門前ロンの'+FU_MENZEN_RON+'符も つく）。',{tlab:'LESSON 3 例',panel:fuExBoardHTML('ankan')+fuExpHTML(dk,{focus:it=>/^ankan-/.test(it.key)})}),
-      fuCQ({q:'ポンした この刻子は 何符？',panel:fuExMeld({type:'pon',tiles:'5p5p5p',called:'5p',from:'left'}),
+      fuT('<b>暗槓</b>は 自分の手の中だけで作ったカン。鳴いたことにならないので 門前のまま（リーチも できて、門前ロンの'+FU_MENZEN_RON+'符も つく）。',{tlab:'LESSON 3 例',panel:fuExBoardHTML('ankan')+fuExpHTML(dk,{focus:it=>/^ankan-/.test(it.key)})}),
+      fuCQ({q:'ポンした この刻子は 何符？',panel:fuExMeld({type:'pon',tiles:'5p5p5p',called:'5p',from:'left'},{q:true}),
         choices:[fuSetFu('minko',FU_EX_CHUN)+'符',fuSetFu('anko',FU_EX_CHUN)+'符',fuSetFu('minkan',FU_EX_CHUN)+'符',fuSetFu('ankan',FU_EX_CHUN)+'符'],topic:3,tip:'ポンした中張牌の刻子(明刻)は '+fuSetFu('minko',FU_EX_CHUN)+'符だよ。'}),
-      fuCQ({q:'手の中で そろえた この刻子は 何符？',panel:fuExTiles(['9m','9m','9m']),
+      fuCQ({q:'手の中で そろえた この刻子は 何符？',panel:fuExTiles(['9m','9m','9m'],{q:true}),
         choices:[fuSetFu('anko',FU_EX_YAO)+'符',fuSetFu('anko',FU_EX_CHUN)+'符',fuSetFu('minkan',FU_EX_YAO)+'符',fuSetFu('ankan',FU_EX_YAO)+'符'],topic:3,tip:'9は么九牌。手の中の么九牌の刻子(暗刻)は '+fuSetFu('anko',FU_EX_YAO)+'符だよ。'}),
     ]; }},
   {n:4,title:'雀頭の符',sub:'三元牌・場風・自風',qs:()=>{
@@ -14458,24 +14617,24 @@ const FU_COURSE=[
       fuT('<b>場風</b>は その場の風（東場なら 東）、<b>自風</b>は あなたの席の風（南家なら 南）。三元牌・場風・自風の雀頭は <b>'+FU_HEAD_YAKUHAI+'符</b>。ふつうの数牌や オタ風は 0符。',
         {tlab:'LESSON 4 雀頭の符',panel:'<div class="fu-list fl-mini">'+FU_HEAD_EX.filter(x=>x.k!=='renpu').map(x=>fuRow(x.label,fuHeadFu(x)+'符',fuExTiles([x.t,x.t]))).join('')+'</div>'}),
       fuT('場風と自風が 同じ風（東場の東家の 東）を <b>連風牌</b>というよ。ツモッピィでは 連風牌の雀頭も <b>'+fuHeadFu(FU_HEAD_EX.find(x=>x.k==='renpu'))+'符</b>（4符にしない）。',{tlab:'LESSON 4 連風牌'}),
-      fuCQ({q:'東場・あなたは南家。アタマ '+fuTilesHTML(['S','S'])+' は 何符？',choices:[fuHeadPart('S',FU_EX_CTX).fu+'符','0符','4符','8符'],topic:4,tip:'南家の自風は 南。自風の雀頭は '+fuHeadPart('S',FU_EX_CTX).fu+'符だよ。'}),
-      fuCQ({q:'東場・あなたは南家。アタマ '+fuTilesHTML(['W','W'])+' は 何符？',choices:[fuHeadPart('W',FU_EX_CTX).fu+'符','2符','4符','8符'],topic:4,tip:'西は 場風でも自風でもない オタ風。0符だよ。'}),
+      fuCQ({q:'東場・あなたは南家。この アタマは 何符？',panel:fuExTiles(['S','S'],{q:true}),choices:[fuHeadPart('S',FU_EX_CTX).fu+'符','0符','4符','8符'],topic:4,tip:'南家の自風は 南。自風の雀頭は '+fuHeadPart('S',FU_EX_CTX).fu+'符だよ。'}),
+      fuCQ({q:'東場・あなたは南家。この アタマは 何符？',panel:fuExTiles(['W','W'],{q:true}),choices:[fuHeadPart('W',FU_EX_CTX).fu+'符','2符','4符','8符'],topic:4,tip:'西は 場風でも自風でもない オタ風。0符だよ。'}),
     ]; }},
-  {n:5,title:'待ちの符',sub:'両面・嵌張・辺張・単騎・シャンポン',qs:()=>{ const d=fuExDet('basic');
+  {n:5,title:'待ちの符',sub:'リャンメン・カンチャン・ペンチャン・タンキ・シャンポン',qs:()=>{ const d=fuExDet('basic');
     const W=k=>FU_WAIT_EX.find(x=>x.k===k), lab=k=>W(k).label+'待ち '+fuWaitFu(W(k))+'符';
     return [
-      fuT('どの形で アガリ牌を待っていたかで 符が つくよ。<b>嵌張・辺張・単騎は '+FU_WAIT_BAD+'符</b>、両面・シャンポンは 0符。',
+      fuT('どの形で アガリ牌を待っていたかで 符が つくよ。<b>カンチャン・ペンチャン・タンキは '+FU_WAIT_BAD+'符</b>、リャンメン・シャンポンは 0符。',
         {tlab:'LESSON 5 待ちの符',panel:'<div class="fu-list fl-mini">'+FU_WAIT_EX.map(w=>fuRow(w.label+'待ち',fuWaitFu(w)+'符',fuExTiles(w.shape,{win:w.win}))).join('')+'</div>'}),
-      fuT('この手は '+tileLabel('7m')+'と'+tileLabel('9m')+'の あいだを待って '+tileLabel('8m')+'で アガったので <b>嵌張待ち</b>。読みかたが2つあるときは 符が高いほうで数えるよ（平和になるなら 平和）。',
+      fuT('この手は アガる前、'+tileLabel('7m')+'と'+tileLabel('9m')+'で あいだの '+tileLabel('8m')+'を 待っていた。だから <b>カンチャン待ち</b>（表では 待っていた形 ＋ アガリ牌）。読みかたが2つあるときは 点が高くなるほうで 数えるよ。',
         {tlab:'LESSON 5 例',panel:fuExBoardHTML('basic')+fuExpHTML(d,{focus:it=>!!it.wait})}),
-      fuCQ({q:'この待ちは？',panel:fuExTiles(['4m','6m'],{win:'5m'}),choices:[lab('kanchan'),lab('ryanmen'),lab('penchan'),lab('tanki')],topic:5,tip:'4と6の あいだ(5)を待つ形は 嵌張待ち。'+fuWaitFu(W('kanchan'))+'符だよ。'}),
-      fuCQ({q:'この待ちは？',panel:fuExTiles(['1p','2p'],{win:'3p'}),choices:[lab('penchan'),lab('ryanmen'),lab('kanchan'),lab('shanpon')],topic:5,tip:'12で 3しか待てない形は 辺張待ち。'+fuWaitFu(W('penchan'))+'符だよ。'}),
+      fuCQ({q:'この待ちは？',panel:fuExTiles(['4m','6m'],{win:'5m',q:true}),choices:[lab('kanchan'),lab('ryanmen'),lab('penchan'),lab('tanki')],topic:5,tip:'4と6の あいだ(5)を待つ形は カンチャン待ち。'+fuWaitFu(W('kanchan'))+'符だよ。'}),
+      fuCQ({q:'この待ちは？',panel:fuExTiles(['1p','2p'],{win:'3p',q:true}),choices:[lab('penchan'),lab('ryanmen'),lab('kanchan'),lab('shanpon')],topic:5,tip:'12で 3しか待てない形は ペンチャン待ち。'+fuWaitFu(W('penchan'))+'符だよ。'}),
     ]; }},
   {n:6,title:'符の合計と切り上げ',sub:'1つずつ足して 切り上げ',qs:()=>{ const d=fuExDet('basic'), d2=fuExDet('total2');
     return [
       fuT('これまでの符を ぜんぶ足そう。副底 → アガリ方 → 面子 → 雀頭 → 待ち の順に足して、さいごに 切り上げ。',{tlab:'LESSON 6 合計',panel:fuExBoardHTML('basic')+'<div class="fu-step">'+fuExpHTML(d)+'</div>'}),
       fuCQ({q:'合計 '+d.raw+'符。切り上げると？',choices:[Math.ceil(d.raw/10)*10+'符',d.raw+'符',Math.floor(d.raw/10)*10+'符',(Math.ceil(d.raw/10)*10+10)+'符'],topic:6,tip:'1の位が 0でなければ 10符単位に切り上げ。'+fuRoundEx(d.raw)}),
-      fuCQ({q:'この手は 何符？',ex:'total2',choices:[d2.fu+'符',d2.raw+'符',(d2.fu-10)+'符',(d2.fu+10)+'符'],topic:6,tip:'副底'+FU_BASE+'＋ツモ'+FU_TSUMO+'＋么九牌の暗刻'+fuSetFu('anko',FU_EX_YAO)+'＋単騎'+FU_WAIT_BAD+' ＝ '+d2.raw+'符 → 切り上げ。',exp:fuExpHTML(d2)}),
+      fuCQ({q:'この手は 何符？',ex:'total2',choices:[d2.fu+'符',d2.raw+'符',(d2.fu-10)+'符',(d2.fu+10)+'符'],topic:6,tip:'副底'+FU_BASE+'＋ツモ'+FU_TSUMO+'＋么九牌の暗刻'+fuSetFu('anko',FU_EX_YAO)+'＋タンキ'+FU_WAIT_BAD+' ＝ '+d2.raw+'符 → 切り上げ。',exp:fuExpHTML(d2)}),
     ]; }},
   {n:7,title:'特別な符計算',sub:'平和・七対子',qs:()=>{ const pt=fuExDet('tsumoPinfu'), pr=fuExDet('ronPinfu'), ch=fuExDet('chiitoi'), kp=fuExDet('kuipinfu');
     return [
@@ -15206,7 +15365,7 @@ const CH2_LESSONS={
       ch2ShapeGenMcq('kanchan',4,['リャンメン','カンチャン','ペンチャン','シャンポン'],'あいだ空きの真ん中待ち。カンチャンだ！'),
     ];
   },
-  /* C2-1 アタマがない！(単騎の仕組みの体験。まだ名前は出さない) */
+  /* C2-1 アタマがない！(タンキの仕組みの体験。まだ名前は出さない) */
   wc2_1(){
     return [
       ch1Teach('この手牌…メンツは<b>2つともできあがり</b>。でも、たいへんだ！<b>アタマがない！</b>',
@@ -15222,19 +15381,19 @@ const CH2_LESSONS={
        exp:'おなじ牌が来ればアタマ完成でアガリ！'},
     ];
   },
-  /* C2-2 単騎(名前の初出) */
+  /* C2-2 タンキ(名前の初出) */
   wc2_2(){
     return [
-      ch1Teach('1枚でアタマを待つこの形の名前は<span class="term-chip">単騎（タンキ）</span>！「1枚だけで待つ」という意味だよ。',
-        {tlab:'単騎',hands:[{label:'メンツ2つ＋単騎の1枚',hand:'1m2m3m4p5p6p7s',g:true}]}),
-      ch2ShapeGenMcq('tanki',7,['シャンポン','単騎'],'のこりは1枚だけ。単騎だ！'),
-      ch2ShapeGenMcq('shanpon',7,['シャンポン','単騎'],'トイツが2組。シャンポンだ！'),
+      ch1Teach('1枚でアタマを待つこの形の名前は<span class="term-chip">タンキ</span>！「1枚だけで待つ」という意味だよ。',
+        {tlab:'タンキ',hands:[{label:'メンツ2つ＋タンキの1枚',hand:'1m2m3m4p5p6p7s',g:true}]}),
+      ch2ShapeGenMcq('tanki',7,['シャンポン','タンキ'],'のこりは1枚だけ。タンキだ！'),
+      ch2ShapeGenMcq('shanpon',7,['シャンポン','タンキ'],'トイツが2組。シャンポンだ！'),
       ch2WfGen('tanki',7),
-      ch2ShapeMcq('2p2p3s4s5sEE',['シャンポン','単騎'],'2ピンと東、トイツが2組。シャンポンだよ！'),
-      {q:'単騎の<b>待ち牌</b>は何種類？',choices:['1種類(のこった1枚とおなじ牌)','2種類'],a:0,
+      ch2ShapeMcq('2p2p3s4s5sEE',['シャンポン','タンキ'],'2ピンと東、トイツが2組。シャンポンだよ！'),
+      {q:'タンキの<b>待ち牌</b>は何種類？',choices:['1種類(のこった1枚とおなじ牌)','2種類'],a:0,
        exp:'1枚でアタマを待つから、待ち牌はその1枚とおなじ牌だけ！'},
       ch2WaitFind('1m1m1m9p9p9pG',['R','B','E'],
-        {exp:'發とおなじ牌が来ればアタマ完成！メンツがコーツでも、のこりが1枚なら単騎だよ。'}),
+        {exp:'發とおなじ牌が来ればアタマ完成！メンツがコーツでも、のこりが1枚ならタンキだよ。'}),
     ];
   },
   /* C2-3 ★5つの待ち総まとめ(初めて5種を整理。「まずは基本の5つ」・節目) */
@@ -15244,7 +15403,7 @@ const CH2_LESSONS={
       ch2ShapeGenMcq('kanchan',4,CH2_SHAPES5,'あいだ空きの真ん中待ち。カンチャン！'),
       ch2ShapeGenMcq('penchan',4,CH2_SHAPES5,'12か89のはしっこ待ち。ペンチャン！'),
       ch2ShapeGenMcq('shanpon',7,CH2_SHAPES5,'トイツ2組の待ち。シャンポン！'),
-      ch2ShapeGenMcq('tanki',7,CH2_SHAPES5,'1枚でアタマを待つ。単騎！'),
+      ch2ShapeGenMcq('tanki',7,CH2_SHAPES5,'1枚でアタマを待つ。タンキ！'),
       ch2WfGen('shanpon',7),
       ch2WfGen('kanchan',7),
     ]);
@@ -15252,9 +15411,9 @@ const CH2_LESSONS={
       ch1Teach('ならび2枚の3つ: <b>リャンメン</b>(両側)・<b>カンチャン</b>(真ん中)・<b>ペンチャン</b>(はしっこ)。',
         {tlab:'ならび2枚の3つ',hands:[{label:'リャンメン(45)',hand:'4s5sWW',g:true},
           {label:'カンチャン(46)',hand:'4p6pWW',g:true},{label:'ペンチャン(12)',hand:'1m2mWW',g:true}]}),
-      ch1Teach('トイツと1枚の2つ: <b>シャンポン</b>(トイツ2組)・<b>単騎</b>(1枚でアタマ待ち)。これで<b>まずは基本の5つ</b>がそろった！',
+      ch1Teach('トイツと1枚の2つ: <b>シャンポン</b>(トイツ2組)・<b>タンキ</b>(1枚でアタマ待ち)。これで<b>まずは基本の5つ</b>がそろった！',
         {tlab:'基本の5つ',hands:[{label:'シャンポン',hand:'5p5p6s6s',g:true},
-          {label:'単騎(メンツ1つ＋1枚)',hand:'1m2m3m7s',g:true}]}),
+          {label:'タンキ(メンツ1つ＋1枚)',hand:'1m2m3m7s',g:true}]}),
     ].concat(quiz).concat([
       ch1Teach('🎉 <b>基本の5つの待ちの形、マスター！</b>つぎはいよいよ、<b>本物の13枚</b>から待ち牌をさがすよ！',
         {tlab:'つぎへ！'}),
@@ -15305,7 +15464,7 @@ const CH2_LESSONS={
       ch2ShapeGenMcq('ryanmen',13,CH2_SHAPES5,'のこりはならんだ2枚。両側待ちのリャンメン！',{ghand:false}),
       ch2ShapeGenMcq('kanchan',13,CH2_SHAPES5,'あいだ空きの2枚。真ん中待ちのカンチャン！',{ghand:false}),
       ch2ShapeGenMcq('shanpon',13,CH2_SHAPES5,'トイツが2組のこっている。シャンポン！',{ghand:false}),
-      ch2ShapeGenMcq('tanki',13,CH2_SHAPES5,'メンツ4つ＋1枚。アタマを待つ単騎！',{ghand:false}),
+      ch2ShapeGenMcq('tanki',13,CH2_SHAPES5,'メンツ4つ＋1枚。アタマを待つタンキ！',{ghand:false}),
       ch2WfGen('kanchan',13,{grouped:false}),
       ch2WfGen('shanpon',13,{grouped:false}),
     ];
@@ -16079,13 +16238,13 @@ const CH3_LESSONS={
     return [
       ch1Teach('さいごのきまりは<b>待ちの形</b>！第2章で覚えた5つの形、おぼえてる？“きれいな形”の役は<b>リャンメン待ち</b>でアガったときだけつくんだ。',
         {tlab:'きれいな形③'}),
-      ch1Teach('カンチャン・ペンチャン・シャンポン・単騎で待ってアガっても、この役はつかない。<b>両側で待つリャンメン</b>だけ！',
+      ch1Teach('カンチャン・ペンチャン・シャンポン・タンキで待ってアガっても、この役はつかない。<b>両側で待つリャンメン</b>だけ！',
         {tlab:'リャンメンだけ',hands:[{label:'リャンメン待ちならOK',hand:'6s7sWW',g:true}]}),
       {q:'“きれいな形”の役の、待ちのきまりは？',choices:['リャンメン待ちでアガる','どの待ちでもよい'],a:0,
        exp:'第2章の待ちの形が、役のきまりにつながった！リャンメンだけだよ。'},
       ch2ShapeMcq('4m5m9p9p',CH2_SHAPES5,'45の両側で待つリャンメン。この待ちならきまりクリア！',{ghand:false}),
       ch2ShapeMcq('4m6m9p9p',CH2_SHAPES5,'真ん中待ちのカンチャン。この待ちだと、“きれいな形”の役はつかないんだ。',{ghand:false}),
-      {q:'単騎待ちでアガったら、“きれいな形”の役は？',choices:['つかない','つく'],a:0,
+      {q:'タンキ待ちでアガったら、“きれいな形”の役は？',choices:['つかない','つく'],a:0,
        exp:'リャンメンではない待ちでは、この役はつかないよ。'},
     ];
   },
@@ -17207,7 +17366,7 @@ const CH3_LESSONS={
          「アタマが2枚だから単騎待ち」という言い方はしない(待っているときは1枚しかない) */
       ch1Teach('四槓子の<b>待ち</b>を見てみよう。カンを4回すると、手の中にのこるのは'
         +'<b>たった1枚</b>。その1枚とおなじ牌が来るのを待つんだ。これが'
-        +'<span class="term-chip">単騎待ち（タンキまち）</span>だよ。',
+        +'<span class="term-chip">タンキ待ち</span>だよ。',
         {tlab:'テンパイ：手の中は1枚',
          panel:'<div class="tc-lab">テンパイ（まだアガっていない）</div>'
            +handHTML('9s')+fuuroAreaHTML(K4,{lab:'槓子が4組'})
@@ -17826,7 +17985,7 @@ const CH3_LESSONS={
       /* R62 §8: ダブル役満の定義。ここが唯一の教材上の説明 */
       ch1Teach('さいごに大事なルール。<b>役満が2つ同時に成立したら</b><span class="term-chip">ダブル役満</span>！たとえば<b>字一色</b>と<b>大三元</b>がいっしょにできたときだね。3つそろえば3倍役満だよ。',
         {tlab:'ダブル役満',hands:[{label:'字一色＋大三元＝ダブル役満',hand:'BBBGGGRRREEESS',g:true}]}),
-      ch1Teach('気をつけて！<b>特別な待ち方や形だけでは、ダブル役満にはならない</b>よ（このアプリのルール）。国士無双でぜんぶの牌を待てる形も、四暗刻の単騎待ちも、きれいにそろった九蓮宝燈も、大四喜も、<b>どれも役満1つぶん</b>なんだ。',
+      ch1Teach('気をつけて！<b>特別な待ち方や形だけでは、ダブル役満にはならない</b>よ（このアプリのルール）。国士無双でぜんぶの牌を待てる形も、四暗刻のタンキ待ちも、きれいにそろった九蓮宝燈も、大四喜も、<b>どれも役満1つぶん</b>なんだ。',
         {tlab:'特別な待ちは2倍にしない'}),
       {q:'ダブル役満になるのは？',choices:['役満が2種類そろったとき','特別な待ち方でアガったとき'],a:0,
        exp:'役満の倍数＝そろった役満の数。待ち方では倍にならないルールだよ。'},
@@ -18193,7 +18352,7 @@ const QFORMATS={
       /* R77: 卓つきの みじかい2択(「ロンできる／ロンできない」など)は、低い画面(高さ700px以下)だけ 横に2つならべる。
          たてに積むと「あなたの待ち」の行が画面の上へ出てしまうため(卓・待ち・問い・2択を 1画面に入れる)。CSSの .c2s を参照 */
       const c2s=chShort&&q.choices.length===2;
-      html+='<div class="choices'+(c2?' c2':'')+(c2s?' c2s':'')+'">'+q.choices.map((ch,i)=>
+      html+='<div class="choices'+(c2?' c2':'')+(c2s?' c2s':'')+(q.fuCourseQ?' fu-cq':'')+'">'+q.choices.map((ch,i)=>
         '<button class="choice" id="ch-'+i+'" onpointerdown="selChoice('+i+')">'+ch+'</button>').join('')+'</div>';
       return html;
     },
