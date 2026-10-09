@@ -501,6 +501,40 @@ span.tv-riichi-tile{transform:rotate(-90deg);}
 .solo-res .sr-sub{margin:3px 2px 8px; font-size:clamp(12.5px,3.5vw,14px); color:var(--ink-soft); text-align:left; line-height:1.55;}
 .solo-res .sr-btns{display:flex; gap:8px; margin-top:10px;}
 .solo-res .sr-btns .btn{flex:1 1 0; padding:11px 10px;}
+/* R92 ミッションビンゴ: 3×3 の盤(達成は 色＋✓)・メニューの ひらく箱・上のバーの 🎯・結果のカード */
+.sb-grid{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:5px; margin:6px 0 2px;}
+.sb-cell{position:relative; min-height:52px; padding:6px 2px 5px; border:2px solid var(--line); border-radius:11px; background:var(--paper);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; line-height:1.2; color:var(--ink-soft);}
+.sb-cell .sb-t{font-size:clamp(11.5px,3.3vw,13px); font-weight:800; color:var(--ink); word-break:keep-all; overflow-wrap:anywhere;}
+.sb-cell .sb-s{font-size:clamp(10px,2.8vw,11px); font-weight:700; margin-top:2px;}
+.sb-cell .sb-mark{position:absolute; top:2px; right:5px; font-size:12px; font-weight:900; color:var(--jade-ink);}
+.sb-cell.on{background:var(--jade-soft); border-color:var(--jade);}
+.sb-cell.on .sb-t{color:var(--jade-ink);}
+.sb-cell.line{border-color:var(--jade-ink);}
+.sb-cell.new{box-shadow:0 0 0 2px var(--gold, #e0b23a);}
+.sb-cell .sb-new{position:absolute; top:-7px; left:50%; transform:translateX(-50%); padding:0 5px; border-radius:7px; background:var(--verm); color:#fff;
+  font-style:normal; font-size:9.5px; font-weight:900; line-height:14px;}
+.sb-sum{display:block; font-size:clamp(11.5px,3.2vw,12.5px); font-weight:700; color:var(--ink-soft);}
+.sb-sum b{color:var(--ink);}
+.sb-sum .sb-comp{font-style:normal; margin-left:6px; color:var(--verm); font-weight:900;}
+.solo-mode.has-sb{flex-wrap:wrap;}
+.solo-mode.has-sb .sm-txt{flex:1 1 0;}
+.solo-mode .sb-det{flex:1 0 100%; margin-top:2px; border-top:1px dashed var(--line); padding-top:6px;}
+.solo-mode .sb-det summary{cursor:pointer; font-size:clamp(11.5px,3.2vw,13px); font-weight:800; color:var(--jade-ink); list-style-position:inside;}
+.solo-mode .sb-det summary .sb-sum{display:inline; margin-left:4px;}
+.sb-btn{flex:none; background:var(--card); border:2px solid var(--line); border-radius:10px; padding:4px 7px; font-size:13px; font-weight:800; color:var(--ink); cursor:pointer; white-space:nowrap;}
+.sb-btn b{color:var(--jade-ink);}
+.sb-pop{padding:12px;}
+.sb-dlg{max-width:360px; padding:14px 10px 12px; text-align:left;}
+.sb-dlg .sd-title{margin:0 0 4px;}
+.sb-dlg .sd-title small{margin-left:6px; font-size:.7em; color:var(--ink-soft);}
+.sr-bingo{margin:10px 0 0; padding:8px 0 0; border-top:2px dashed var(--line); text-align:left;}
+.sr-bingo .sr-bh{margin:0 0 2px; font-weight:900; font-size:clamp(13.5px,3.8vw,15px);}
+.sr-bingo .sb-plus{margin-left:6px; font-size:.85em; color:var(--jade-ink);}
+.sr-bingo .sb-msg{margin:2px 0 4px; display:flex; flex-wrap:wrap; gap:6px;}
+.sr-bingo .sb-hit{padding:1px 8px; border-radius:9px; background:var(--jade); color:var(--on-accent); font-weight:900; font-size:clamp(12px,3.4vw,13px);}
+.sr-bingo .sb-hit.comp{background:var(--verm);}
+.sr-bingo .sb-xp{font-weight:900; color:var(--gold-ink); font-size:clamp(12px,3.4vw,13px); align-self:center;}
 /* R85: 符計算トレーニング(内訳の表・問いの中の小さな牌) */
 .fu-tl{display:inline-flex; gap:1px; vertical-align:middle; margin:0 3px;}
 .fu-tl .tile{width:20px; max-width:20px; flex:none; border-radius:2px;}
@@ -2162,6 +2196,7 @@ button.mjt-pick.mjt-hp,
     <div class="lesson-top">
       <button class="x" id="solo-x" onclick="soloBack()">✕</button>
       <div class="solo-title" id="solo-title">ひとり麻雀</div>
+      <button class="sb-btn" id="solo-bingo-btn" style="display:none" onclick="soloBingoPop()" aria-label="ミッションビンゴを見る"></button>
       <button class="lt-ref" id="solo-ref" onclick="openRefNow()" aria-label="資料集をひらく">📚</button>
     </div>
     <div class="q-area solo-area" id="solo-body"></div>
@@ -4695,8 +4730,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.83.0';
-const BUILD_ID='20261016-01';
+const APP_VER='0.84.0';
+const BUILD_ID='20261017-01';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -5868,6 +5903,130 @@ function soloRecord(n,won,draws,res){
   return fl;
 }
 function soloRate(r){ return r.plays?Math.round(r.wins/r.plays*100):0; }
+/* ===== R92 ミッションビンゴ(4枚・7枚・10枚。13枚には ない) =====
+   ひとり麻雀で アガると、そのアガリの中身で マスが うまる。縦・横・ななめの 3マスで ビンゴ(8本)。9マスで コンプリート。
+   ・アガリの判定・待ちの形は 既存の部品だけで決める: アガリ=soloIsWin(=アガったときだけ ここに来る) /
+     待ち=soloWaitKinds(分けかた soloDecomps × 待ちの形 fuWaitPart。符計算・13枚の役と同じ部品。ビンゴ専用の判定は 作らない)
+   ・ひとり麻雀は ツモアガリだけ(ロンはない)。だから「ロンでアガる」「ツモでアガる」は マスにしない(ツモは かならず成り立つ)
+   ・マスは 枚数ごとに 固定(毎回 入れかえない)。マスの中身と えらんだ理由は TERMS §74
+   ・保存: S.soloBingo[n] = {done:{マスのid:日付}, wins:ビンゴを はじめてからの アガリ回数, kinds:[アガった待ちの形], lines:[報酬を出したラインの番号], comp:コンプリート報酬を出したか, xp:もらったEXP}
+     4・7・10枚は べつべつ。はじめて アガるまで 作らない(遊んでいない人の保存データの形は 変わらない)。古いデータに ない項目は 0 / 空 として読む
+   ・EXP: ラインが はじめて そろったとき SOLO_BINGO_LINE_XP、9マス はじめて そろったとき SOLO_BINGO_COMP_XP。
+     どのラインに 出したかを 保存するので、もう一度 そろっても・画面を 出しなおしても・読みこみなおしても 2回は出ない。
+     ビンゴの計算は 保存した done から(画面の見た目からではない)。1局で 1回だけ(g.bingoCounted)
+   ・ひとり麻雀の これまでの決まり(1局ごとの EXP なし・ライフ・コンボ・Road は 動かさない)は そのまま。ビンゴの報酬だけ EXP になる */
+const SOLO_BINGO_LINE_XP=15, SOLO_BINGO_COMP_XP=50;
+const SOLO_BINGO_LINES=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];   // 横3・縦3・ななめ2
+const SOLO_WAIT_NAME={ryanmen:'リャンメン',kanchan:'カンチャン',penchan:'ペンチャン',tanki:'タンキ',shanpon:'シャンポン'};
+/* マス: t=マスの短い名前 / s=マスの下の小さい字 / d=説明 / lv=1 やさしい・2 ふつう・3 むずかしい / ok(e,b)=このアガリで うまるか
+   e = {draws:ツモの回数, kinds:待ちの形の配列, hints:ヒントを押した回数} / b = このアガリを数えたあとの記録(wins) */
+const sbWait=k=>({t:SOLO_WAIT_NAME[k],s:'待ちでアガる',d:SOLO_WAIT_NAME[k]+'待ちで アガる',ok:e=>e.kinds.indexOf(k)>=0});
+const sbWin=n=>({t:n+'回アガる',s:'累計',d:'この枚数で 合計'+n+'回 アガる',goal:n,ok:(e,b)=>b.wins>=n});
+const sbFast=n=>({t:'ツモ'+n+'回以内',s:'でアガる',d:n+'回目までの ツモで アガる',ok:e=>e.draws<=n});
+const sbNoHint={t:'ヒントなし',s:'でアガる',d:'ヒントを1回も 使わずに アガる',ok:e=>!e.hints};
+const sbFirst={t:'アガる',s:'はじめての1回',d:'この枚数で アガる',ok:()=>true};
+const SOLO_BINGO={
+  4:[Object.assign({id:'win1',lv:1},sbFirst),Object.assign({id:'ryanmen',lv:1},sbWait('ryanmen')),Object.assign({id:'fast3',lv:2},sbFast(3)),
+     Object.assign({id:'tanki',lv:1},sbWait('tanki')),Object.assign({id:'kanchan',lv:2},sbWait('kanchan')),Object.assign({id:'shanpon',lv:3},sbWait('shanpon')),
+     Object.assign({id:'win3',lv:2},sbWin(3)),Object.assign({id:'penchan',lv:3},sbWait('penchan')),Object.assign({id:'win10',lv:3},sbWin(10))],
+  7:[Object.assign({id:'win1',lv:1},sbFirst),Object.assign({id:'ryanmen',lv:1},sbWait('ryanmen')),Object.assign({id:'kanchan',lv:2},sbWait('kanchan')),
+     Object.assign({id:'nohint',lv:1},sbNoHint),Object.assign({id:'tanki',lv:2},sbWait('tanki')),Object.assign({id:'shanpon',lv:3},sbWait('shanpon')),
+     Object.assign({id:'win5',lv:2},sbWin(5)),Object.assign({id:'penchan',lv:3},sbWait('penchan')),Object.assign({id:'fast6',lv:3},sbFast(6))],
+  10:[Object.assign({id:'win1',lv:1},sbFirst),Object.assign({id:'ryanmen',lv:1},sbWait('ryanmen')),Object.assign({id:'kanchan',lv:2},sbWait('kanchan')),
+     Object.assign({id:'nohint',lv:1},sbNoHint),Object.assign({id:'shanpon',lv:2},sbWait('shanpon')),Object.assign({id:'tanki',lv:3},sbWait('tanki')),
+     Object.assign({id:'win5',lv:2},sbWin(5)),Object.assign({id:'penchan',lv:3},sbWait('penchan')),Object.assign({id:'fast8',lv:3},sbFast(8))],
+};
+function soloHasBingo(n){ return !!SOLO_BINGO[n]; }
+/* アガる前の手(hand)と アガリ牌(win)から、待ちの形を ぜんぶ出す。
+   アガった形の 分けかた(soloDecomps)ごとに、アガリ牌が アタマなら タンキ、組に入っていれば その組の待ちの形(fuWaitPart: 符計算と同じ判定)。
+   分けかたが 2つ以上あれば、成り立つ形を ぜんぶ返す(例: 1123 に 1 → タンキ と リャンメン)。成り立たない分けかたの形は 入らない */
+function soloWaitKinds(hand,win){
+  const c=teCount(hand.concat([win])), w=teIdx(win), out=[];
+  const add=k=>{ if(out.indexOf(k)<0) out.push(k); };
+  soloDecomps(c).forEach(d=>{
+    if(d.head===w) add('tanki');
+    d.sets.forEach(x=>{ const ix=x.run?[x.i,x.i+1,x.i+2]:[x.i,x.i,x.i]; if(ix.indexOf(w)<0) return;
+      add(fuWaitPart(ix.map(i=>TE_NAMES[i]),win,false).type); });
+  });
+  return ['ryanmen','kanchan','penchan','tanki','shanpon'].filter(k=>out.indexOf(k)>=0);
+}
+function soloBingoRec(n){
+  const r=(S.soloBingo&&typeof S.soloBingo==='object'&&S.soloBingo[n]&&typeof S.soloBingo[n]==='object')?S.soloBingo[n]:{};
+  return {done:Object.assign({},(r.done&&typeof r.done==='object')?r.done:{}), wins:+r.wins||0, kinds:Array.isArray(r.kinds)?r.kinds.slice():[],
+    lines:Array.isArray(r.lines)?r.lines.slice():[], comp:!!r.comp, xp:+r.xp||0};
+}
+/* 保存した done から ビンゴの状態を出す(画面は これだけを見る) */
+function soloBingoState(n){
+  const cells=SOLO_BINGO[n]||[], r=soloBingoRec(n);
+  const on=cells.map(c=>!!r.done[c.id]);
+  const lines=SOLO_BINGO_LINES.map((ln,i)=>ln.every(k=>on[k])?i:-1).filter(i=>i>=0);
+  return {n, cells, rec:r, on, cnt:on.filter(Boolean).length, lines, full:on.length===9&&on.every(Boolean)};
+}
+/* アガリ1回ぶんを 数える。e = {draws, kinds, hints}。もどり値 = {newCells:[マスの番号], newLines:[ライン番号], comp:今回はじめてコンプリートか, xp:今回のEXP}
+   報酬を出したライン・コンプリートは 保存するので、同じものに 2回は出さない */
+function soloBingoApply(n,e){
+  if(!soloHasBingo(n)) return null;
+  const cells=SOLO_BINGO[n], r=soloBingoRec(n), today=todayStr();
+  r.wins++;
+  (e.kinds||[]).forEach(k=>{ if(r.kinds.indexOf(k)<0) r.kinds.push(k); });
+  const newCells=[];
+  cells.forEach((c,i)=>{ if(!r.done[c.id]&&c.ok(e,r)){ r.done[c.id]=today; newCells.push(i); } });
+  if(!S.soloBingo||typeof S.soloBingo!=='object') S.soloBingo={};
+  S.soloBingo[n]=r;
+  const st=soloBingoState(n), newLines=[];
+  let xp=0, comp=false;
+  st.lines.forEach(i=>{ if(r.lines.indexOf(i)<0){ r.lines.push(i); newLines.push(i); xp+=SOLO_BINGO_LINE_XP; } });
+  if(st.full&&!r.comp){ r.comp=true; comp=true; xp+=SOLO_BINGO_COMP_XP; }
+  r.xp+=xp; S.xp+=xp;
+  S.soloBingo[n]=r; save();
+  return {newCells, newLines, comp, xp};
+}
+/* 3×3 の盤。opt.newCells = 今回うまったマス(しるしを つける) */
+function soloBingoGridHTML(n,opt){
+  opt=opt||{};
+  const st=soloBingoState(n), nc=opt.newCells||[];
+  const inLine=new Set(); st.lines.forEach(i=>SOLO_BINGO_LINES[i].forEach(k=>inLine.add(k)));
+  return '<div class="sb-grid" id="'+(opt.id||'sb-grid-'+n)+'" data-n="'+n+'">'+st.cells.map((c,i)=>{
+      const on=st.on[i], isNew=nc.indexOf(i)>=0;
+      const sub=(!on&&c.goal)?'累計 '+Math.min(st.rec.wins,c.goal)+'/'+c.goal:c.s;
+      return '<div class="sb-cell'+(on?' on':'')+(isNew?' new':'')+(inLine.has(i)?' line':'')+'" data-i="'+i+'" data-id="'+c.id+'" title="'+c.d+'">'
+        +'<span class="sb-mark" aria-hidden="true">'+(on?'✓':'')+'</span>'
+        +'<b class="sb-t">'+c.t+'</b><small class="sb-s">'+sub+'</small>'+(isNew?'<i class="sb-new">NEW</i>':'')+'</div>';
+    }).join('')+'</div>';
+}
+function soloBingoSumHTML(n){
+  const st=soloBingoState(n);
+  return '<span class="sb-sum" data-n="'+n+'"><b>'+st.cnt+'</b> / 9 マス・ビンゴ <b>'+st.lines.length+'</b> / 8'+(st.full?'<em class="sb-comp">コンプリート！</em>':'')+'</span>';
+}
+/* ゲーム中に 見る(重ねて出すだけ。SOLO・山・河・手牌・タイマーには さわらない) */
+function soloBingoPop(){
+  const g=SOLO; if(!g||!soloHasBingo(g.n)) return;
+  const host=soloModalHost(); if(!host) return;
+  soloBingoPopClose();
+  host.insertAdjacentHTML('beforeend','<div class="solo-modal sb-pop" id="solo-bingo-pop" role="dialog" aria-modal="true" onclick="if(event.target===this)soloBingoPopClose()">'
+    +'<div class="solo-dlg sb-dlg"><p class="sd-title">🎯 ミッションビンゴ<small>'+SOLO_MODES[g.n].label+'</small></p>'
+    +soloBingoSumHTML(g.n)+soloBingoGridHTML(g.n,{id:'sb-grid-pop'})
+    +'<button class="btn solo-sub" id="sb-pop-close" onclick="soloBingoPopClose()">とじる</button></div></div>');
+}
+function soloBingoPopClose(){ const m=document.getElementById('solo-bingo-pop'); if(m) m.remove(); }
+/* 結果のカード: 今回うまったマス・そろったビンゴ・もらったEXP。盤は 保存した記録から */
+function soloBingoResHTML(g){
+  const b=g.bingo||{newCells:[],newLines:[],comp:false,xp:0};
+  let msg='';
+  if(b.newLines.length) msg+='<span class="sb-hit">ビンゴ！ '+b.newLines.length+'本</span>';
+  if(b.comp) msg+='<span class="sb-hit comp">コンプリート！</span>';
+  if(b.xp) msg+='<span class="sb-xp">+'+b.xp+' EXP</span>';
+  return '<div class="sr-bingo" id="sr-bingo"><p class="sr-bh">🎯 ミッションビンゴ'
+    +(b.newCells.length?'<span class="sb-plus">+'+b.newCells.length+'マス</span>':'')+'</p>'
+    +(msg?'<p class="sb-msg" id="sb-msg">'+msg+'</p>':'')
+    +soloBingoSumHTML(g.n)+soloBingoGridHTML(g.n,{newCells:b.newCells,id:'sb-grid-res'})+'</div>';
+}
+function soloBingoBtnPaint(){
+  const b=document.getElementById('solo-bingo-btn'); if(!b) return;
+  const g=SOLO, on=!!(g&&soloHasBingo(g.n));
+  b.style.display=on?'':'none';
+  if(on){ const st=soloBingoState(g.n); b.innerHTML='🎯 <b>'+st.cnt+'</b>/9'; }
+}
 /* ---- 画面 ---- */
 function soloEl(id){ return document.getElementById(id); }
 function soloOpen(){
@@ -5877,15 +6036,15 @@ function soloOpen(){
   soloRenderMenu();
 }
 function soloClose(){
-  soloClearTimers(); SOLO=null; soloModalClose(); agariDeclClose();
+  soloClearTimers(); SOLO=null; soloModalClose(); agariDeclClose(); soloBingoPopClose(); soloBingoBtnPaint();
   soloEl('solo').classList.remove('show');
   soloEl('solo-body').innerHTML='';
   if(typeof renderHome==='function') renderHome();
 }
-function soloBack(){ if(SOLO&&SOLO.confirm) return; agariDeclClose(); if(SOLO){ soloClearTimers(); SOLO=null; soloRenderMenu(); } else soloClose(); }
+function soloBack(){ if(SOLO&&SOLO.confirm) return; agariDeclClose(); soloBingoPopClose(); if(SOLO){ soloClearTimers(); SOLO=null; soloRenderMenu(); } else soloClose(); }
 function soloRenderMenu(){
   soloEl('solo-title').textContent='ひとり麻雀';
-  soloModalClose();
+  soloModalClose(); soloBingoBtnPaint();
   let h='<p class="solo-lead">山からツモって、いらない牌を1枚切る。じぶんで考えて、<b>アガリの形</b>を作ろう！ まちがいは ないよ。</p>';
   SOLO_ORDER.forEach(n=>{
     const m=SOLO_MODES[n], u=soloUnlockInfo(n), r=soloRecOf(n);
@@ -5895,12 +6054,14 @@ function soloRenderMenu(){
           ?'ベストスコア <b>'+r.bestScore.toLocaleString()+'</b>・アガリ '+r.wins+'/'+r.plays
           :(r.best!=null?'最少ツモ <b>'+r.best+'</b>回・':'')+'連続アガリ <b>'+r.streak+'</b>（最長 '+r.maxStreak+'）・アガリ '+r.wins+'/'+r.plays)+'</span>';
     }
-    h+='<div class="solo-mode'+(u.open?'':' locked')+'" id="solo-mode-'+n+'">'
+    h+='<div class="solo-mode'+(u.open?'':' locked')+(u.open&&soloHasBingo(n)?' has-sb':'')+'" id="solo-mode-'+n+'">'
       +'<div class="sm-txt"><b>'+m.label+'</b><span>'+m.form+'でアガリ ・ '+(m.honors?'ぜんぶの牌':m.nSuits===3?'数の牌 3色':'数の牌 '+m.nSuits+'色')+'</span>'
       +(u.open?'<span class="sm-goal">🎯 '+m.goal+'</span>'+rec
               :'<span class="sm-lock">🔒 '+(u.where?u.where+' を学ぶと ひらくよ':'まだ ひらいていないよ')+'</span>')
       +'</div>'
       +(u.open?'<button class="btn sm-go" onclick="soloStart('+n+')">遊ぶ</button>':'')
+      /* R92: 4・7・10枚は ミッションビンゴの進み(ひらくと 3×3 の盤)。13枚には ない */
+      +(u.open&&soloHasBingo(n)?'<details class="sb-det" id="sb-det-'+n+'"><summary>ミッションビンゴ '+soloBingoSumHTML(n)+'</summary>'+soloBingoGridHTML(n)+'</details>':'')
       +'</div>';
   });
   soloEl('solo-body').innerHTML=h;
@@ -5908,7 +6069,7 @@ function soloRenderMenu(){
 }
 function soloStart(n){
   if(!SOLO_MODES[n]||!soloUnlocked(n)) return;
-  soloClearTimers(); soloModalClose();
+  soloClearTimers(); soloModalClose(); soloBingoPopClose();
   const rnd=(SOLO_SEED!=null)?soloRng(SOLO_SEED++):Math.random;
   const d=soloDeal(n,rnd), m=SOLO_MODES[n];
   SOLO={n, sets:m.sets, hand:d.hand, wall:d.wall, total:d.wall.length, river:[], tsumo:null, draws:0,
@@ -6039,7 +6200,11 @@ function soloEnd(won){
   soloModalClose();
   g.fl=soloRecord(g.n,won,g.draws,g.res);
   dmSoloEnd(g);                                          // R86: デイリーミッション・学習日(1局につき1回)
-  if(won&&(g.fl.newBest||g.fl.newStreak||g.fl.newScore)) sndPlay('streak');
+  /* R92: ミッションビンゴ(4・7・10枚)。アガった1局につき1回だけ数える。待ちの形は アガる前の手(g.hand)と アガリ牌(g.tsumo)から */
+  if(won&&soloHasBingo(g.n)&&!g.bingoCounted){ g.bingoCounted=true;
+    g.bingo=soloBingoApply(g.n,{draws:g.draws,kinds:soloWaitKinds(g.hand,g.tsumo),hints:g.hints}); }
+  const bingoUp=!!(g.bingo&&(g.bingo.newLines.length||g.bingo.comp));
+  if(won&&(g.fl.newBest||g.fl.newStreak||g.fl.newScore||bingoUp)) sndPlay('streak');   // 音は これまでの「自己ベスト」と同じもの
   soloPaint();
 }
 /* ヒント(押したときだけ)。切る候補の牌を光らせる。使っても何も へらない */
@@ -6120,6 +6285,7 @@ function soloResultHTML(g){
       +'<div class="sr-row"><span>アガリ</span><b>'+r.wins+'/'+r.plays+'（'+soloRate(r)+'%）</b></div>';
   }
   if(won&&(fl.newBest||fl.newStreak||fl.newScore)) h+='<p class="sr-cheer" id="sr-cheer">✨ 自己ベスト更新！</p>';
+  if(won&&soloHasBingo(g.n)) h+=soloBingoResHTML(g);                 // R92
   return h+'<div class="sr-btns"><button class="btn" id="solo-again" onclick="soloStart('+g.n+')">もう一度</button>'
     +'<button class="btn solo-sub" id="solo-menu" onclick="soloBack()">枚数をえらぶ</button></div></div>';
 }
@@ -6131,6 +6297,7 @@ function soloPaint(){
   const uses=m.honors?'ぜんぶ':g.suits.split('').map(x=>SOLO_SUIT_NAME[x]).join('・');
   info.innerHTML='<span>'+m.form+'でアガリ<small class="solo-uses" id="solo-uses">つかう牌: '+uses+(m.yaku?' ／ 東場・南家（'+RB_KO+'）':'')+'</small></span><span class="solo-wall" id="solo-wall">山 のこり <b>'+g.wall.length+'</b>枚</span>';
   board.innerHTML=soloBoardHTML(g);
+  soloBingoBtnPaint();                                   // R92: 上のバーの 🎯(4・7・10枚だけ)
   if(g.done){ ui.innerHTML=soloResultHTML(g); return; }
   const idle=!g.over&&!g.busy&&!!g.tsumo&&!g.confirm;
   const free=idle&&!(g.canWin&&!g.passed);
