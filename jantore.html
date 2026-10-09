@@ -502,6 +502,40 @@ span.tv-riichi-tile{transform:rotate(-90deg);}
 .sr-exp .sr-ex{margin:3px 0; font-size:clamp(12.5px,3.5vw,14px); line-height:1.6;}
 .sr-exp .sr-alt{display:flex; flex-wrap:wrap; align-items:center; gap:6px;}
 .sr-exp .sp-next{width:auto; padding:7px 12px; font-size:clamp(12px,3.4vw,13px);}
+/* R94 役コレクション: 一覧(翻ごと)・収集ずみ(色＋✓)・結果のカード・待ちの右の役 */
+.solo-mode .yc-open{flex:1 0 100%; margin-top:2px; padding:9px 10px; min-height:42px; font-size:clamp(12.5px,3.5vw,14px);}
+.yc-dlg{max-height:calc(100% - 24px); display:flex; flex-direction:column;}
+.yc-body{overflow-y:auto; min-height:0; flex:1 1 auto; margin:0 -2px; padding:0 2px;}
+.yc-sum{font-size:clamp(13px,3.6vw,14.5px); font-weight:800; color:var(--ink);}
+.yc-sum b{font-size:1.25em; color:var(--jade-ink);}
+.yc-pct{margin-left:8px; color:var(--ink-soft); font-weight:800;}
+.yc-bar{height:8px; border-radius:6px; background:var(--line); overflow:hidden; margin:4px 0;}
+.yc-bar i{display:block; height:100%; background:var(--jade);}
+.yc-note{margin:2px 0 6px; font-size:clamp(11px,3vw,12px); color:var(--ink-soft); font-weight:700;}
+.yc-gh{margin:8px 0 3px; font-size:12px; font-weight:900; color:var(--ink-soft);}
+.yc-row{border:2px solid var(--line); border-radius:10px; background:var(--paper); margin:0 0 4px;}
+.yc-row summary{display:flex; align-items:center; gap:6px; padding:7px 8px; cursor:pointer; list-style:none; min-height:40px;}
+.yc-row summary::-webkit-details-marker{display:none;}
+.yc-row .yc-mk{flex:none; width:1.2em; text-align:center; font-weight:900; color:var(--ink-soft);}
+.yc-row .yc-nm{flex:1 1 auto; min-width:0; font-weight:800; font-size:clamp(13px,3.6vw,14.5px); color:var(--ink);}
+.yc-row .yc-han{flex:none; font-size:clamp(11.5px,3.2vw,12.5px); font-weight:800; color:var(--ink-soft);}
+.yc-row .yc-st{flex:none; font-size:10.5px; font-weight:800; color:var(--ink-soft); min-width:3.6em; text-align:right;}
+.yc-row.got{background:var(--jade-soft); border-color:var(--jade);}
+.yc-row.got .yc-mk,.yc-row.got .yc-st{color:var(--jade-ink);}
+.yc-row.new{box-shadow:0 0 0 2px var(--gold);}
+.yc-row .sb-new{position:static; transform:none; display:inline-block;}
+.yc-det{padding:0 10px 8px; font-size:clamp(12px,3.4vw,13px); line-height:1.5;}
+.yc-det p{margin:2px 0;}
+.yc-det .yc-date{font-size:11px; color:var(--ink-soft); font-weight:700;}
+.yc-det .yc-ref{margin-top:6px; padding:8px 10px; font-size:clamp(12px,3.4vw,13px);}
+.sr-yc{margin:10px 0 0; padding:8px 0 0; border-top:2px dashed var(--line); text-align:left;}
+.sr-yc .sr-bh{margin:0 0 2px; font-weight:900; font-size:clamp(13.5px,3.8vw,15px);}
+.sr-yc .yc-got{list-style:none; margin:2px 0; padding:0; display:flex; flex-wrap:wrap; gap:4px 12px; font-weight:800; font-size:clamp(13px,3.6vw,14px);}
+.sr-yc .yc-got li.new{color:var(--verm);}
+.sr-yc .yc-got .sb-new{position:static; transform:none; display:inline-block;}
+.sr-yc .yc-res-n{margin:2px 0; font-size:clamp(12.5px,3.5vw,13.5px);}
+.sr-yc .sp-next{width:auto; padding:7px 12px; font-size:clamp(12px,3.4vw,13px);}
+.sp-yk{flex-basis:100%; font-size:.92em; color:var(--jade-ink); font-weight:800;}
 .solo-mjt .mjt-pick.solo-rz > .tile{outline:2.5px solid var(--now-ring); outline-offset:1px;}
 .solo-mjt .solo-dim > .tile{opacity:.45;}
 .solo-mjt .solo-tp-off{display:block; line-height:0;}
@@ -2235,6 +2269,7 @@ button.mjt-pick.mjt-hp,
       <button class="x" id="solo-x" onclick="soloBack()">✕</button>
       <div class="solo-title" id="solo-title">ひとり麻雀</div>
       <button class="sb-btn" id="solo-bingo-btn" style="display:none" onclick="soloBingoPop()" aria-label="ミッションビンゴを見る"></button>
+      <button class="sb-btn" id="solo-yc-btn" style="display:none" onclick="soloYcPop()" aria-label="役コレクションを見る"></button>
       <button class="lt-ref" id="solo-ref" onclick="openRefNow()" aria-label="資料集をひらく">📚</button>
     </div>
     <div class="q-area solo-area" id="solo-body"></div>
@@ -4768,8 +4803,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.85.0';
-const BUILD_ID='20261018-01';
+const APP_VER='0.86.0';
+const BUILD_ID='20261019-01';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -6107,14 +6142,14 @@ function soloWaitInfo(g){
   if(g.tsumo&&soloIsWin(g.hand.concat([g.tsumo]),g.sets)) return {win:true};
   if(g.riichi||!g.tsumo){
     const sh=soloSh(g.hand,g.sets);
-    return {base:'hand', sh, opts:sh===0?[{cut:null, waits:soloWaitsOf(g.hand,g.sets,g.kinds,vis)}]:[]};
+    return {base:'hand', sh, opts:sh===0?[{cut:null, hand:g.hand, waits:soloWaitsOf(g.hand,g.sets,g.kinds,vis)}]:[]};
   }
   const ev=soloEval(g.hand.concat([g.tsumo]),g.river,g.sets,g.kinds);
   const minSh=Math.min.apply(null,ev.cands.map(x=>x.sh));
   const opts=[];
   if(minSh===0) ev.cands.filter(x=>x.sh===0).forEach(x=>{
     const all=g.hand.concat([g.tsumo]); all.splice(all.indexOf(x.t),1);
-    opts.push({cut:x.t, waits:soloWaitsOf(all,g.sets,g.kinds,vis)});
+    opts.push({cut:x.t, hand:all, waits:soloWaitsOf(all,g.sets,g.kinds,vis)});
   });
   return {base:'cut', sh:minSh, opts};
 }
@@ -6187,13 +6222,14 @@ function soloSpWaitHTML(g){
   if(w.win) return '<p class="sp-lead">アガリ形が できているよ！</p>';
   const unseen=x=>'<span class="sp-un">見えていない '+x.unseen+'枚</span>';
   const kindTxt=ks=>ks.map(k=>SOLO_WAIT_LABEL[k]).join('・')+(ks.length>1?' <small>（2つの読みかたが できる）</small>':'');
-  const waitRows=ws=>'<div class="sp-waits">'+ws.map(x=>'<div class="sp-w" data-t="'+x.t+'" data-kinds="'+x.kinds.join(',')+'" data-unseen="'+x.unseen+'">'+tileHTML(x.t)
-    +'<span class="sp-wt"><b>'+tileLabel(x.t)+'</b><span>'+kindTxt(x.kinds)+'</span>'+unseen(x)+'</span></div>').join('')+'</div>';
+  const waitRows=(ws,hd)=>'<div class="sp-waits">'+ws.map(x=>'<div class="sp-w" data-t="'+x.t+'" data-kinds="'+x.kinds.join(',')+'" data-unseen="'+x.unseen+'">'+tileHTML(x.t)
+    +'<span class="sp-wt"><b>'+tileLabel(x.t)+'</b><span>'+kindTxt(x.kinds)+'</span>'+unseen(x)+(hd?soloWaitYakuHTML(g,hd,x.t):'')+'</span></div>').join('')+'</div>';
   let h='';
   if(w.sh===0){
-    if(w.base==='hand') h+='<p class="sp-lead">テンパイ！ 待ちは '+w.opts[0].waits.length+'種類。</p>'+waitRows(w.opts[0].waits);
+    if(w.base==='hand') h+='<p class="sp-lead">テンパイ！ 待ちは '+w.opts[0].waits.length+'種類。</p>'+waitRows(w.opts[0].waits,w.opts[0].hand);
     else { h+='<p class="sp-lead">'+(w.opts.length===1?'この牌を 切ると テンパイ':'どれかを 切ると テンパイ')+'（アガリを待つ形）に なるよ。</p>';
-      h+=w.opts.map(o=>'<div class="sp-opt" data-cut="'+o.cut+'"><p class="sp-cut">'+inlineTile(o.cut)+' を切ると 待ちは '+o.waits.length+'種類</p>'+waitRows(o.waits)+'</div>').join(''); }
+      h+=w.opts.map(o=>'<div class="sp-opt" data-cut="'+o.cut+'"><p class="sp-cut">'+inlineTile(o.cut)+' を切ると 待ちは '+o.waits.length+'種類</p>'+waitRows(o.waits,o.hand)+'</div>').join(''); }
+    if(SOLO_MODES[g.n].yaku) h+='<p class="sp-note">待ち牌の右は、その牌を ツモって アガったときに つく役（計算した結果。一発・海底は そのとき次第で 入れていない）。★は まだ あつめていない役。</p>';
     const ks=[...new Set([].concat(...w.opts.map(o=>[].concat(...o.waits.map(x=>x.kinds)))))];
     h+='<ul class="sp-exp">'+ks.map(k=>'<li><b>'+SOLO_WAIT_LABEL[k]+'</b>: '+SOLO_WAIT_EXP[k]+'</li>').join('')+'</ul>';
   }else{
@@ -6221,7 +6257,7 @@ function soloSpHintHTML(g){
     h+='<div class="sp-step" data-step="3"><b class="sp-sn">STEP 3</b>'
       +(best.length>1?'<p>受け入れが 同じくらいの 牌が '+best.length+'つ あるよ。どれを切っても いい。</p>':'')
       +best.map(x=>'<p class="sp-rec" data-cut="'+x.t+'" data-uke="'+x.uke.join(',')+'" data-n="'+x.n+'" data-sh="'+x.sh+'">'+inlineTile(x.t)+' を切るのが おすすめ。'+why(x)+'</p>').join('')
-      +'<p class="sp-note">受け入れ = 引くと アガリに 近づく牌。見えていない枚数で 数えたよ'+(SOLO_MODES[g.n].yaku?'（役は 考えていない）':'')+'。</p></div>';
+      +'<p class="sp-note">受け入れ = 引くと アガリに 近づく牌。見えていない枚数で 数えたよ'+(SOLO_MODES[g.n].yaku?'。役は 考えていないけれど、鳴かずに ツモで アガるので「ツモ（門前清自摸和）」の役は いつも つくよ（役なしには ならない）。どの役が つくかは テンパイしたら「待ちを見る」で わかるよ':'')+'。</p></div>';
   }
   if(st<3) h+='<button class="btn solo-sub sp-next" id="sp-next" onclick="soloHintNext()">つぎのヒント（STEP '+(st+1)+'）</button>';
   return h;
@@ -6285,6 +6321,103 @@ function soloExplainHTML(g){
   return h+'</div>';
 }
 function soloExpNext(){ const g=SOLO; if(!g||!g.done) return; g.expAlt=(g.expAlt||0)+1; soloPaint(); }
+/* ===== R94 13枚麻雀の 役コレクション =====
+   13枚麻雀で アガると、その役を コレクションに のこす(はじめての役は NEW)。
+   ・役の判定は 既存の soloYakuEval(R84。点・スコアと同じ結果)を そのまま使う。コレクション用の 判定は 作らない。
+     役満のときは 役満だけ(ふつうの役は 数えない)・イーペーコーと二盃口 / ホンイツとチンイツ / チャンタと純チャン は 両方つかない(判定のまま)
+   ・ID は 役の key(CH3_YAKU_META・資料集の 役一覧と 同じ)。名前・翻・条件・牌姿の例は 役一覧の データ(CH3_YAKU_META・yakuHanText・yakuExampleHTML)を つかう(写さない)
+   ・入れる役 = 役一覧の役 から、13枚麻雀の きまりで 作れない役(SOLO_YC_OUT)を のぞいたもの。きまり: 鳴きなし・カンなし・ツモアガリだけ(ロンなし)・
+     あなたは 子(南家)・東場・ドラなし・リーチ あり(ダブルリーチ・一発・海底も)・配る手は いつも 1〜2シャンテン(soloDeal)
+   ・保存: S.soloYaku = {got:{key:日付}, xp, ms:[報酬を出した 収集数], comp}。はじめて 役を あつめるまで 作らない。古い・こわれた記録は 空として読む。
+     R84 からの S.solo[13].yaku(役ごとの回数)は そのまま(さかのぼって 収集には しない)
+   ・EXP(1回だけ): はじめての役 1翻 5・2翻 10・3翻以上 15・役満 30 / 5役 20・10役 30・20役 50 / ぜんぶ 100。
+     どの役・どの節目に 出したかを 保存するので、出しなおし・連打・読みこみなおし・枚数の切りかえ・資料集の行き来で 2回は出ない。1局で 1回だけ(g.ycCounted) */
+const SOLO_YC_OUT={
+  houtei:'ロンで アガる役。ひとり麻雀は ツモアガリだけ',
+  sankantsu:'カンが ない', suukantsu:'カンが ない',
+  tenhou:'親の役。ひとり麻雀の あなたは 子(南家)',
+  chiihou:'1回目のツモで アガる役。配る手は いつも 1〜2シャンテンなので 1回目のツモでは アガれない',
+  toitoi:'鳴きが ないので 刻子4つは いつも 暗刻 → 四暗刻(役満)になり、トイトイ単独では つかない',
+};
+const SOLO_YC_MS=[[5,20],[10,30],[20,50]], SOLO_YC_COMP_XP=100;
+function soloYcKeys(){ const o=ylOrder(); return o.norm.concat(o.ym).filter(k=>!SOLO_YC_OUT[k]); }
+function soloYcNewXp(k){ const m=CH3_YAKU_META[k]||{}; return m.yakuman?30:(m.closedHan>=3?15:(m.closedHan===2?10:5)); }
+function soloYcRec(){
+  const r=(S.soloYaku&&typeof S.soloYaku==='object')?S.soloYaku:{};
+  const got={}; if(r.got&&typeof r.got==='object') Object.keys(r.got).forEach(k=>{ if(CH3_YAKU_META[k]) got[k]=String(r.got[k]); });
+  return {got, xp:+r.xp||0, ms:Array.isArray(r.ms)?r.ms.filter(x=>typeof x==='number'):[], comp:!!r.comp};
+}
+function soloYcState(){ const keys=soloYcKeys(), r=soloYcRec(); const n=keys.filter(k=>r.got[k]).length; return {keys, rec:r, n, total:keys.length, pct:Math.floor(n*100/keys.length), full:n===keys.length}; }
+/* アガリ1回ぶん。res = soloYakuEval の結果。もどり値 = {keys:今回の役(コレクションの役だけ), newKeys, ms:[今回の節目], comp, xp} */
+function soloYcApply(res){
+  if(!res||!res.yaku) return null;
+  const all=soloYcKeys(), r=soloYcRec(), today=todayStr();
+  const keys=[...new Set(res.yaku.map(y=>y.key))].filter(k=>all.indexOf(k)>=0);
+  const newKeys=keys.filter(k=>!r.got[k]);
+  let xp=0; newKeys.forEach(k=>{ r.got[k]=today; xp+=soloYcNewXp(k); });
+  const n=all.filter(k=>r.got[k]).length, ms=[];
+  SOLO_YC_MS.forEach(([c,x])=>{ if(n>=c&&r.ms.indexOf(c)<0){ r.ms.push(c); ms.push(c); xp+=x; } });
+  let comp=false; if(n===all.length&&!r.comp){ r.comp=true; comp=true; xp+=SOLO_YC_COMP_XP; }
+  r.xp+=xp; S.xp+=xp; S.soloYaku=r; save();
+  return {keys, newKeys, ms, comp, xp};
+}
+/* 一覧(役一覧と同じ ならび: 翻の小さい順 → 役満)。はじめは とじていて、押すと 条件・牌姿の例・役一覧への ボタン */
+function soloYcListHTML(o){
+  o=o||{}; const st=soloYcState(), groups=[];
+  st.keys.forEach(k=>{ const m=CH3_YAKU_META[k], g=m.yakuman?'役満':m.closedHan+'翻の役'; let gr=groups.find(x=>x.t===g); if(!gr){ gr={t:g,ks:[]}; groups.push(gr); } gr.ks.push(k); });
+  const nx=SOLO_YC_MS.find(([c])=>st.rec.ms.indexOf(c)<0&&st.n<c);
+  let h='<div class="yc-sum" id="yc-sum"><b>'+st.n+'</b> / '+st.total+' 役収集<span class="yc-pct">'+st.pct+'%</span>'+(st.full?'<em class="sb-comp">コンプリート！</em>':'')+'</div>'
+    +'<div class="yc-bar" aria-hidden="true"><i style="width:'+st.pct+'%"></i></div>'
+    +'<p class="yc-note">'+(nx?'あと '+(nx[0]-st.n)+'役で ごほうび +'+nx[1]+' EXP':(st.full?'ぜんぶ あつめたよ！':'ぜんぶ あつめると +'+SOLO_YC_COMP_XP+' EXP'))+'。はじめて あつめた役にも EXP。</p>';
+  groups.forEach(gr=>{
+    h+='<p class="yc-gh">'+gr.t+'</p>'+gr.ks.map(k=>{ const m=CH3_YAKU_META[k], got=!!st.rec.got[k], nw=(o.newKeys||[]).indexOf(k)>=0;
+      return '<details class="yc-row'+(got?' got':'')+(nw?' new':'')+'" data-key="'+k+'" data-got="'+(got?1:0)+'"><summary>'
+        +'<span class="yc-mk" aria-hidden="true">'+(got?'✓':'○')+'</span><span class="yc-nm">'+m.label+'</span>'+(nw?'<i class="sb-new">NEW</i>':'')
+        +'<span class="yc-han">'+yakuHanText(k)+'</span><span class="yc-st">'+(got?'収集ずみ':'未収集')+'</span></summary>'
+        +'<div class="yc-det"><p>'+(m.situ||m.cond)+'</p>'+yakuExampleHTML(k)
+        +(got?'<p class="yc-date">はじめて: '+st.rec.got[k]+'</p>':'<p class="yc-date">いまの手で かならず 作れるとは かぎらないよ。役一覧で 形を たしかめよう。</p>')
+        +'<button class="btn solo-sub yc-ref" onclick="soloYcRef(\''+k+'\')">📚 役一覧で 見る</button></div></details>'; }).join('');
+  });
+  return h;
+}
+/* 資料集の 役一覧で その役を ひらく(重ねて出すだけ。とじると もとの画面) */
+function soloYcRef(k){ openRef('yaku'); if(YL_FILT!=='all'){ YL_FILT='all'; renderYakuList(); } ylTap(k);
+  try{ const b=document.querySelector('#yl-body .yl-card[onclick="ylTap(\''+k+'\')"]'); if(b) b.scrollIntoView({block:'center'}); }catch(e){} }
+/* 13枚の メニュー・ゲーム中に ひらく(重ねて出すだけ。SOLO・山・河・手牌・タイマーには さわらない) */
+function soloYcPop(){
+  const host=soloModalHost(); if(!host) return;
+  soloYcPopClose();
+  host.insertAdjacentHTML('beforeend','<div class="solo-modal sb-pop yc-pop" id="solo-yc-pop" role="dialog" aria-modal="true" onclick="if(event.target===this)soloYcPopClose()">'
+    +'<div class="solo-dlg sb-dlg yc-dlg"><p class="sd-title">📖 役コレクション<small>13枚麻雀</small></p><div class="yc-body" id="yc-body">'+soloYcListHTML()+'</div>'
+    +'<button class="btn solo-sub" id="yc-pop-close" onclick="soloYcPopClose()">とじる</button></div></div>');
+}
+function soloYcPopClose(){ const m=document.getElementById('solo-yc-pop'); if(m) m.remove(); }
+function soloYcBtnPaint(){
+  const b=document.getElementById('solo-yc-btn'); if(!b) return;
+  const on=!!(SOLO&&SOLO.n===13);
+  b.style.display=on?'':'none';
+  if(on){ const st=soloYcState(); b.innerHTML='📖 <b>'+st.n+'</b>/'+st.total; }
+}
+/* 結果のカード(13枚): 今回の役(✓ / ★NEW)・新しく あつめた数・コレクション・もらった EXP */
+function soloYcResHTML(g){
+  const y=g.yc; if(!y) return '';
+  const st=soloYcState();
+  return '<div class="sr-yc" id="sr-yc"><p class="sr-bh">📖 役コレクション</p>'
+    +'<ul class="yc-got">'+y.keys.map(k=>'<li class="'+(y.newKeys.indexOf(k)>=0?'new':'')+'" data-key="'+k+'">'+(y.newKeys.indexOf(k)>=0?'★ <i class="sb-new">NEW</i> ':'✓ ')+CH3_YAKU_META[k].label+'</li>').join('')+'</ul>'
+    +'<p class="yc-res-n">新しく あつめた役: <b>'+y.newKeys.length+'役</b>'+(y.ms.length?'・'+y.ms.map(c=>c+'役 たっせい').join('・'):'')+(y.comp?'・<b>コンプリート！</b>':'')+'</p>'
+    +'<p class="yc-res-n">コレクション: <b>'+st.n+' / '+st.total+'役</b>'+(y.xp?'<span class="sb-xp"> +'+y.xp+' EXP</span>':'')+'</p>'
+    +'<button class="btn solo-sub sp-next" id="sr-yc-open" onclick="soloYcPop()">📖 役コレクションを 見る</button></div>';
+}
+/* R94: 13枚の「待ちを見る」で、その牌で アガったときに つく役(soloYakuEval で 計算。一発・海底は そのとき次第なので 入れない)。未収集の役に しるし */
+function soloWaitYakuHTML(g,hand,t){
+  if(!SOLO_MODES[g.n].yaku) return '';
+  try{
+    const res=soloYakuEval(hand.concat([t]),{winTile:t,riichi:!!g.riichi,dblRiichi:!!g.dblRiichi,drawsAfterRiichi:g.riichi?99:undefined,haitei:false,chiihou:false});
+    if(!res) return '';
+    const st=soloYcState();
+    return '<span class="sp-yk" data-yaku="'+res.yaku.map(y=>y.key).join(',')+'">'+res.yaku.map(y=>(st.keys.indexOf(y.key)>=0&&!st.rec.got[y.key]?'★':'')+y.label).join('・')+'</span>';
+  }catch(e){ return ''; }
+}
 /* ---- 画面 ---- */
 function soloEl(id){ return document.getElementById(id); }
 function soloOpen(){
@@ -6294,15 +6427,15 @@ function soloOpen(){
   soloRenderMenu();
 }
 function soloClose(){
-  soloClearTimers(); SOLO=null; soloModalClose(); agariDeclClose(); soloBingoPopClose(); soloBingoBtnPaint();
+  soloClearTimers(); SOLO=null; soloModalClose(); agariDeclClose(); soloBingoPopClose(); soloBingoBtnPaint(); soloYcPopClose(); soloYcBtnPaint();
   soloEl('solo').classList.remove('show');
   soloEl('solo-body').innerHTML='';
   if(typeof renderHome==='function') renderHome();
 }
-function soloBack(){ if(SOLO&&SOLO.confirm) return; agariDeclClose(); soloBingoPopClose(); if(SOLO){ soloClearTimers(); SOLO=null; soloRenderMenu(); } else soloClose(); }
+function soloBack(){ if(SOLO&&SOLO.confirm) return; agariDeclClose(); soloBingoPopClose(); soloYcPopClose(); if(SOLO){ soloClearTimers(); SOLO=null; soloRenderMenu(); } else soloClose(); }
 function soloRenderMenu(){
   soloEl('solo-title').textContent='ひとり麻雀';
-  soloModalClose(); soloBingoBtnPaint();
+  soloModalClose(); soloBingoBtnPaint(); soloYcBtnPaint();
   let h='<p class="solo-lead">山からツモって、いらない牌を1枚切る。じぶんで考えて、<b>アガリの形</b>を作ろう！ まちがいは ないよ。</p>';
   SOLO_ORDER.forEach(n=>{
     const m=SOLO_MODES[n], u=soloUnlockInfo(n), r=soloRecOf(n);
@@ -6312,7 +6445,7 @@ function soloRenderMenu(){
           ?'ベストスコア <b>'+r.bestScore.toLocaleString()+'</b>・アガリ '+r.wins+'/'+r.plays
           :(r.best!=null?'最少ツモ <b>'+r.best+'</b>回・':'')+'連続アガリ <b>'+r.streak+'</b>（最長 '+r.maxStreak+'）・アガリ '+r.wins+'/'+r.plays)+'</span>';
     }
-    h+='<div class="solo-mode'+(u.open?'':' locked')+(u.open&&soloHasBingo(n)?' has-sb':'')+'" id="solo-mode-'+n+'">'
+    h+='<div class="solo-mode'+(u.open?'':' locked')+(u.open&&(soloHasBingo(n)||n===13)?' has-sb':'')+'" id="solo-mode-'+n+'">'
       +'<div class="sm-txt"><b>'+m.label+'</b><span>'+m.form+'でアガリ ・ '+(m.honors?'ぜんぶの牌':m.nSuits===3?'数の牌 3色':'数の牌 '+m.nSuits+'色')+'</span>'
       +(u.open?'<span class="sm-goal">🎯 '+m.goal+'</span>'+rec
               :'<span class="sm-lock">🔒 '+(u.where?u.where+' を学ぶと ひらくよ':'まだ ひらいていないよ')+'</span>')
@@ -6320,6 +6453,8 @@ function soloRenderMenu(){
       +(u.open?'<button class="btn sm-go" onclick="soloStart('+n+')">遊ぶ</button>':'')
       /* R92: 4・7・10枚は ミッションビンゴの進み(ひらくと 3×3 の盤)。13枚には ない */
       +(u.open&&soloHasBingo(n)?'<details class="sb-det" id="sb-det-'+n+'"><summary>ミッションビンゴ '+soloBingoSumHTML(n)+'</summary>'+soloBingoGridHTML(n)+'</details>':'')
+      /* R94: 13枚は 役コレクション */
+      +(u.open&&n===13?(()=>{ const st=soloYcState(); return '<button class="btn solo-sub yc-open" id="yc-open" onclick="soloYcPop()">📖 役コレクション <b>'+st.n+'</b> / '+st.total+'（'+st.pct+'%）</button>'; })():'')
       +'</div>';
   });
   soloEl('solo-body').innerHTML=h;
@@ -6327,7 +6462,7 @@ function soloRenderMenu(){
 }
 function soloStart(n){
   if(!SOLO_MODES[n]||!soloUnlocked(n)) return;
-  soloClearTimers(); soloModalClose(); soloBingoPopClose();
+  soloClearTimers(); soloModalClose(); soloBingoPopClose(); soloYcPopClose();
   const rnd=(SOLO_SEED!=null)?soloRng(SOLO_SEED++):Math.random;
   const d=soloDeal(n,rnd), m=SOLO_MODES[n];
   SOLO={n, sets:m.sets, hand:d.hand, wall:d.wall, total:d.wall.length, river:[], tsumo:null, draws:0,
@@ -6461,7 +6596,9 @@ function soloEnd(won){
   /* R92: ミッションビンゴ(4・7・10枚)。アガった1局につき1回だけ数える。待ちの形は アガる前の手(g.hand)と アガリ牌(g.tsumo)から */
   if(won&&soloHasBingo(g.n)&&!g.bingoCounted){ g.bingoCounted=true;
     g.bingo=soloBingoApply(g.n,{draws:g.draws,kinds:soloWaitKinds(g.hand,g.tsumo),hints:(g.hints||0)+(g.sup||0)}); }   // R93: 「ヒントなし」は サポート(待ち・分解・ヒント)も 0 のとき
-  const bingoUp=!!(g.bingo&&(g.bingo.newLines.length||g.bingo.comp));
+  /* R94: 13枚の 役コレクション。アガった1局につき1回だけ。役は 点・スコアと同じ soloYakuEval の結果(g.res) */
+  if(won&&g.n===13&&g.res&&!g.ycCounted){ g.ycCounted=true; g.yc=soloYcApply(g.res); }
+  const bingoUp=!!(g.bingo&&(g.bingo.newLines.length||g.bingo.comp))||!!(g.yc&&g.yc.newKeys.length);
   if(won&&(g.fl.newBest||g.fl.newStreak||g.fl.newScore||bingoUp)) sndPlay('streak');   // 音は これまでの「自己ベスト」と同じもの
   soloPaint();
 }
@@ -6545,6 +6682,7 @@ function soloResultHTML(g){
   if(won&&(fl.newBest||fl.newStreak||fl.newScore)) h+='<p class="sr-cheer" id="sr-cheer">✨ 自己ベスト更新！</p>';
   if(won) h+=soloExplainHTML(g);                                     // R93: アガリの形の解説
   if(won&&soloHasBingo(g.n)) h+=soloBingoResHTML(g);                 // R92
+  if(won&&g.n===13) h+=soloYcResHTML(g);                             // R94
   return h+'<div class="sr-btns"><button class="btn" id="solo-again" onclick="soloStart('+g.n+')">もう一度</button>'
     +'<button class="btn solo-sub" id="solo-menu" onclick="soloBack()">枚数をえらぶ</button></div></div>';
 }
@@ -6557,6 +6695,7 @@ function soloPaint(){
   info.innerHTML='<span>'+m.form+'でアガリ<small class="solo-uses" id="solo-uses">つかう牌: '+uses+(m.yaku?' ／ 東場・南家（'+RB_KO+'）':'')+'</small></span><span class="solo-wall" id="solo-wall">山 のこり <b>'+g.wall.length+'</b>枚</span>';
   board.innerHTML=soloBoardHTML(g);
   soloBingoBtnPaint();                                   // R92: 上のバーの 🎯(4・7・10枚だけ)
+  soloYcBtnPaint();                                      // R94: 上のバーの 📖(13枚だけ)
   if(g.done){ ui.innerHTML=soloResultHTML(g); return; }
   const idle=!g.over&&!g.busy&&!!g.tsumo&&!g.confirm;
   const free=idle&&!(g.canWin&&!g.passed);
