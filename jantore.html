@@ -613,8 +613,9 @@ span.tv-riichi-tile{transform:rotate(-90deg);}
 .fu-flow span{background:var(--card); border:2px solid var(--line); border-radius:10px; padding:4px 8px; text-align:center;}
 .fu-flow span.ff-b{border-color:var(--jade); color:var(--jade-ink);}
 .fu-flow i{font-style:normal; color:var(--ink-soft);}
+.fu-flow .ff-s{display:inline-flex; align-items:center; gap:4px;}
 .fu-tbl{margin:4px 0; font-size:13px; font-weight:800;}
-.fu-tbl .ft-h,.fu-tbl .ft-r{display:grid; grid-template-columns:1fr repeat(auto-fit,minmax(56px,auto)); gap:8px; padding:4px 2px; border-bottom:1px solid var(--line);}
+.fu-tbl .ft-h,.fu-tbl .ft-r{display:grid; grid-template-columns:minmax(0,1fr) repeat(var(--ft-n,1),minmax(52px,auto)); gap:8px; padding:4px 2px; border-bottom:1px solid var(--line);}
 .fu-tbl .ft-h{font-size:11px; color:var(--ink-soft); border-bottom:2px solid var(--line);}
 .fu-tbl .ft-h span:not(:first-child),.fu-tbl .ft-n{text-align:right; font-variant-numeric:tabular-nums;}
 .fu-tbl .ft-n{color:var(--jade-ink);}
@@ -635,7 +636,19 @@ span.tv-riichi-tile{transform:rotate(-90deg);}
 .fu-en .fu-en-t small{font-size:11px; color:var(--ink-soft); font-weight:700;}
 .fu-rec{font-style:normal; font-size:10px; background:var(--jade); color:var(--on-accent); border-radius:999px; padding:1px 7px; margin-left:6px; vertical-align:middle;}
 .fu-steps{margin-top:8px;}
-.fu-steps summary{font-size:12px; font-weight:800; color:var(--jade-ink); cursor:pointer; padding:4px 0;}
+.fu-steps .tr-opt-h small{font-weight:700; color:var(--ink-soft); margin-left:4px;}
+/* R90: 刻子・槓子のカード(LESSON 3) */
+.fs-cards{display:flex; flex-direction:column; gap:8px; margin:4px 0;}
+.fs-card{background:var(--card); border:2px solid var(--line); border-radius:12px; padding:6px 10px;}
+.fs-h{display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;}
+.fs-h b{font-size:14px;}
+.fs-h small{font-size:11px; font-weight:700; color:var(--ink-soft);}
+.fs-row{display:grid; grid-template-columns:3.6em minmax(0,1fr) auto; align-items:center; column-gap:8px; padding:3px 0; border-top:1px dashed var(--line);}
+.fs-h + .fs-row{border-top:0;}
+.fs-lab{font-size:11.5px; font-weight:800; color:var(--ink-soft);}
+.fs-ex{min-width:0;}
+.fs-ex .hand.fu-ex,.fs-ex .pz{margin:0;}
+.fs-fu{font-size:15px; color:var(--jade-ink); text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap;}
 .fu-cl{display:flex; flex-direction:column; gap:6px; text-align:left;}
 .fu-cl-i{display:flex; align-items:center; gap:10px; min-height:46px; border:2px solid var(--line); background:var(--card); border-radius:12px; padding:6px 10px; font-family:inherit; cursor:pointer; text-align:left;}
 .fu-cl-i.next{border-color:var(--jade);}
@@ -4631,8 +4644,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.81.0';
-const BUILD_ID='20261014-01';
+const APP_VER='0.82.0';
+const BUILD_ID='20261015-01';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -14533,7 +14546,7 @@ function fuReviewSet(seed){
 function fuTrainPickHTML(){
   const r=fuRecOf(), rv=fuReviewCount();
   const pct=x=>x.n?Math.round(x.ok/x.n*100)+'%':'—';
-  return '<div class="tr-opt"><p class="tr-opt-h">どのSTEPを練習する？</p>'
+  return '<div class="tr-opt"><p class="tr-opt-h">練習の STEP<small>（どこからでも えらべるよ）</small></p>'
     +'<div class="tr-grid tr-grid1">'
     +FU_STEPS.map(s=>'<button class="tr-pick tr-lv" id="fu-step-'+s.id+'" onclick="startTraining(\'fu\','+s.id+')">'
       +'<b>STEP'+s.id+' '+s.title+'</b><small>'+s.desc+(r.steps[s.id].n?'（正答率 '+pct(r.steps[s.id])+'）':'')+'</small></button>').join('')
@@ -14580,12 +14593,21 @@ function fuExTiles(ts,o){ o=o||{}; return pzHTML(ts,Object.assign({plus:!!o.win}
 function fuExMeld(m,o){ o=o||{}; const n=meldNorm(m);
   return '<div class="hand fu-ex pz-'+(o.size||pzSizeOf(n.tiles.length))+(o.q?' pz-q':'')+'">'+renderMeld(n)+'</div>'; }
 const FU_SET_KINDS=[
-  {k:'minko',label:'明刻',sub:'ポンした刻子',opt:{open:true},ex:t=>fuExMeld({type:'pon',tiles:t+t+t,called:t,from:'left'})},
+  {k:'minko',label:'明刻',sub:'ポンした刻子（ロンで完成した刻子も）',opt:{open:true},ex:t=>fuExMeld({type:'pon',tiles:t+t+t,called:t,from:'left'})},
   {k:'anko',label:'暗刻',sub:'手の中で そろえた刻子',opt:{},ex:t=>fuExTiles([t,t,t])},
   {k:'minkan',label:'明槓',sub:'大明槓・加槓',opt:{open:true,kan:'minkan'},ex:t=>fuExMeld({type:'kan',kan:'minkan',tiles:t+t+t+t,called:t,from:'opposite'})},
   {k:'ankan',label:'暗槓',sub:'手の中だけで作ったカン',opt:{kan:'ankan'},ex:t=>fuExMeld({type:'kan',kan:'ankan',tiles:t+t+t+t})},
 ];
 const FU_EX_CHUN='5p', FU_EX_YAO='9m';
+/* R90: 刻子・槓子の 種類ごとのカード(LESSON 3)。種類ごとに 中張牌(5筒)と 么九牌(9萬)の 牌姿 と その符を 1行ずつ ならべる。
+   牌姿は 共通の部品(fuExMeld = renderMeld / fuExTiles = pzHTML)、符は 共通エンジン(fuSetPart)から。行の牌と 符は かならず同じ牌・同じ種類 */
+function fuSetCardHTML(s){
+  const row=(lab,t,cls)=>'<div class="fs-row" data-k="'+s.k+'" data-tile="'+t+'" data-fu="'+fuSetFu(s.k,t)+'"><span class="fs-lab">'+lab+'</span>'
+    +'<span class="fs-ex">'+s.ex(t)+'</span><b class="fs-fu">'+fuSetFu(s.k,t)+'符</b></div>';
+  return '<div class="fs-card" data-k="'+s.k+'"><div class="fs-h"><b>'+s.label+'</b><small>'+s.sub+'</small></div>'
+    +row('中張牌',FU_EX_CHUN)+row('么九牌',FU_EX_YAO)+'</div>';
+}
+function fuSetCardsHTML(keys){ return '<div class="fs-cards">'+FU_SET_KINDS.filter(s=>keys.includes(s.k)).map(fuSetCardHTML).join('')+'</div>'; }
 function fuSetFu(kind,t){ const s=FU_SET_KINDS.find(x=>x.k===kind); return fuSetPart([t,t,t],s.opt).fu; }
 /* 雀頭(東場・あなた=南家のとき) */
 const FU_HEAD_EX=[
@@ -14689,10 +14711,14 @@ function renderFuList(){
 function openFuList(){ openRef('fu'); }
 /* ===== 基礎講座 ===== */
 function fuFlowHTML(){
-  return '<div class="fu-flow"><span class="ff-b">'+FU_BASE+'符</span><i>→</i><span>符を足す</span><i>→</i><span>合計</span><i>→</i><span class="ff-b">10符単位に<br>切り上げ</span></div>';
+  /* R90: 矢印は つぎの箱と ひとまとまり(320px で 折り返したとき 行のおわりに 矢印だけ のこらない) */
+  return '<div class="fu-flow"><span class="ff-b">'+FU_BASE+'符</span><span class="ff-s"><i>→</i><span>符を足す</span></span><span class="ff-s"><i>→</i><span>合計</span></span><span class="ff-s"><i>→</i><span class="ff-b">10符単位に<br>切り上げ</span></span></div>';
 }
+/* R90: 列の数は 表ごとに はっきり書く。R87〜R89 の CSS「repeat(auto-fit, minmax(56px,auto))」は 無効な書きかた
+   (auto-fit には 決まった大きさの列が いる)で 宣言ごと すてられ、表が 1列に くずれていた(LESSON 2・3) */
 function fuTbl(rows,head){
-  return '<div class="fu-tbl">'+(head?'<div class="ft-h">'+head.map(x=>'<span>'+x+'</span>').join('')+'</div>':'')
+  const nc=Math.max(...rows.map(r=>r.length),head?head.length:0)-1;
+  return '<div class="fu-tbl" style="--ft-n:'+nc+'">'+(head?'<div class="ft-h">'+head.map(x=>'<span>'+x+'</span>').join('')+'</div>':'')
     +rows.map(r=>'<div class="ft-r">'+r.map((c,i)=>'<span'+(i>0?' class="ft-n"':'')+'>'+c+'</span>').join('')+'</div>').join('')+'</div>';
 }
 /* 4択(順番は まぜる)。wrong = 選択肢ごとの まちがえたときの ひとこと */
@@ -14728,10 +14754,10 @@ const FU_COURSE=[
   {n:3,title:'刻子と槓子の符',sub:'明刻・暗刻・明槓・暗槓',qs:()=>{ const dr=fuExDet('ronko'), dk=fuExDet('ankan');
     const rows=FU_SET_KINDS.map(s=>[s.label,fuSetFu(s.k,FU_EX_CHUN)+'符',fuSetFu(s.k,FU_EX_YAO)+'符']);
     return [
-      fuT('順子は 0符。<b>刻子</b>には 符がつき、<b>槓子</b>は もっと大きい。1・9・字牌(<b>么九牌</b>)は 2〜8の牌(<b>中張牌</b>)の 2倍。ポンした<b>明刻</b>より 手の中の<b>暗刻</b>が 2倍。',
-        {tlab:'LESSON 3 刻子と槓子',panel:fuTbl(rows,['','中張牌','么九牌'])}),
-      fuT('見た目で わかるよ。ポンは 1枚横向き、明槓は 4枚で1枚横向き、暗槓は 両はしを伏せる。',
-        {tlab:'LESSON 3 見わけかた',panel:'<div class="fu-exrow">'+FU_SET_KINDS.map(s=>'<div><small>'+s.label+'</small>'+s.ex(FU_EX_CHUN)+'</div>').join('')+'</div>'}),
+      fuT('同じ牌3枚が<b>刻子</b>。<b>明刻</b>(ポン)より 手の中の<b>暗刻</b>が 2倍。1・9・字牌(<b>么九牌</b>)は 2〜8(<b>中張牌</b>)の 2倍。',
+        {tlab:'LESSON 3 刻子',panel:fuSetCardsHTML(['minko','anko'])}),
+      fuT('4枚の<b>槓子</b>は 刻子の 4倍。<b>明槓</b>は 1枚横向き、<b>暗槓</b>は 両はしを伏せる。',
+        {tlab:'LESSON 3 槓子',panel:fuSetCardsHTML(['minkan','ankan'])}),
       fuT('<b>ロンした牌で完成した刻子</b>は 明刻あつかい（この手の '+tileLabel('5p')+'）。',{tlab:'LESSON 3 例',panel:fuExBoardHTML('ronko')+fuExpHTML(dr,{focus:it=>/^ronko-/.test(it.key)})}),
       fuT('<b>暗槓</b>は 自分の手の中だけで作ったカン。鳴いたことにならないので 門前のまま（リーチも できて、門前ロンの'+FU_MENZEN_RON+'符も つく）。',{tlab:'LESSON 3 例',panel:fuExBoardHTML('ankan')+fuExpHTML(dk,{focus:it=>/^ankan-/.test(it.key)})}),
       fuCQ({q:'ポンした この刻子は 何符？',panel:fuExMeld({type:'pon',tiles:'5p5p5p',called:'5p',from:'left'},{q:true}),
@@ -14812,20 +14838,19 @@ function fuCourseHTML(){
 function openFuCourse(){ openModal(fuCourseHTML()); }
 function fuCourseGo(n){ document.getElementById('lesson').classList.remove('show'); L=null; renderHUD(); startFuCourse(n); }
 function fuCourseToPractice(){ afterLesson(); try{ showScreen('training'); fuShowSteps(); }catch(e){} }
-function fuShowSteps(){ const d=document.getElementById('fu-steps'); if(d){ d.open=true; try{ d.scrollIntoView({block:'nearest'}); }catch(e){} } }
+function fuShowSteps(){ const d=document.getElementById('fu-steps'); if(d){ try{ d.scrollIntoView({block:'nearest'}); }catch(e){} } }   // 講座の修了画面「練習する」から STEP の所へ
 /* 符計算の問題に「符一覧」を開くボタンを足す(押しても 答えにも まちがいにも 数えない。一覧を とじると 同じ問題に もどる) */
 const FU_REF_BTN='<button type="button" class="fu-ref-mini" onclick="event.stopPropagation();openFuList()">📋 符一覧</button>';
 function fuAddRefBtn(qs){ (qs||[]).forEach(q=>{ if(q&&!q.ch1t&&typeof q.q==='string'&&q.q.indexOf('fu-ref-mini')<0) q.q+=FU_REF_BTN; }); return qs; }
 /* トレーニングの「符計算」カードの中身: 学ぶ / 符一覧 / 練習する(STEP)。はじめての人には「学ぶ」を すすめる */
 function fuCardBodyHTML(){
   const r=fuCourseRec(), cnt=Object.keys(r.done).length, rec=fuRecOf(), fresh=!fuLearned();
-  const open=rec.n>0||!!r.completedAt;
   return '<div class="fu-entry">'
     +'<button class="fu-en'+(fresh?' rec':'')+'" id="fu-learn" onclick="openFuCourse()"><span class="fu-en-i">📘</span><span class="fu-en-t"><b>符計算を学ぶ'+(fresh?'<em class="fu-rec">おすすめ</em>':'')+'</b><small>基本から順番に（'+cnt+' / '+FU_COURSE_N+'）</small></span></button>'
     +'<button class="fu-en" id="fu-ref" onclick="openFuList()"><span class="fu-en-i">📋</span><span class="fu-en-t"><b>符一覧を見る</b><small>符の種類と 計算方法</small></span></button>'
-    +'<button class="fu-en" id="fu-practice" onclick="fuShowSteps()"><span class="fu-en-i">✏️</span><span class="fu-en-t"><b>符計算を練習する</b><small>4つの STEP・10問ずつ</small></span></button>'
     +'</div>'
-    +'<details class="fu-steps" id="fu-steps"'+(open?' open':'')+'><summary>練習の STEP</summary>'+fuTrainPickHTML()+'</details>';
+    /* R90: 「符計算を練習する」ボタンは消した(押しても 下の STEP へ うごくだけだった)。STEP は いつも ひらいて 直接えらべる */
+    +'<div class="fu-steps" id="fu-steps">'+fuTrainPickHTML()+'</div>';   // 見出し(「練習の STEP」)は fuTrainPickHTML の中に1つだけ
 }
 function ch3AgariMcq(handStr,ctx3,exp,opt){
   // 役あり/なし: 形が完成していても役がなければアガれない(第1章D2-1の実戦定着)
