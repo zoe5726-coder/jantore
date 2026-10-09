@@ -1117,6 +1117,52 @@ span.st-mg{color:var(--jade-ink); font-weight:900;}
 .hc-yaku .hy-txt span{display:block; font-size:clamp(11px,3.1vw,12.5px); color:var(--ink-soft);
   font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
 .hc-yaku:active{transform:translateY(1px);}
+/* R91 資料集: ホームのカード(見出し＋3つの入口)・資料集の目次・問題の上のバーの 📚 */
+.hc-ref{margin:10px 0 0; background:var(--card); border:2px solid var(--line); border-radius:16px; overflow:hidden;}
+.hc-ref .hc-ref-main{margin:0; border:0; border-radius:0; padding:12px 14px 8px;}
+.hc-ref .hr-arr{flex:none; font-size:20px; font-weight:900; color:var(--ink-soft);}
+.hc-ref-links{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; padding:0 10px 10px;}
+.hc-ref-links button{min-height:40px; padding:6px 4px; border:2px solid var(--line); border-radius:12px; background:var(--paper);
+  color:var(--ink); font-family:inherit; font-weight:800; font-size:clamp(11.5px,3.3vw,13px); cursor:pointer; white-space:nowrap;}
+.hc-ref-links button:active{transform:translateY(1px);}
+.ref-hub-btn{flex:none; background:none; border:0; color:var(--jade-ink); font-family:inherit; font-weight:900;
+  font-size:clamp(12.5px,3.5vw,14px); padding:6px 2px; cursor:pointer; white-space:nowrap;}
+.rf-lead{margin:2px 0 10px; font-size:clamp(12px,3.4vw,13.5px); color:var(--ink-soft); font-weight:700;}
+.rf-hub{display:flex; flex-direction:column; gap:10px;}
+.rf-card{display:flex; align-items:center; gap:12px; width:100%; min-height:64px; padding:12px 14px; text-align:left;
+  background:var(--card); border:2px solid var(--line); border-radius:16px; font-family:inherit; color:var(--ink); cursor:pointer;}
+.rf-card:active{transform:translateY(1px);}
+.rf-ico{flex:none; font-size:26px;}
+.rf-txt{flex:1 1 auto; min-width:0;}
+.rf-txt b{display:block; font-size:clamp(15px,4.2vw,17px);}
+.rf-txt small{display:block; font-size:clamp(11px,3.1vw,12.5px); color:var(--ink-soft); font-weight:700; line-height:1.45;}
+.rf-arr{flex:none; font-size:22px; font-weight:900; color:var(--ink-soft);}
+.lt-ref{flex:none; background:none; border:2px solid var(--line); border-radius:10px; font-size:16px; line-height:1;
+  padding:4px 6px; cursor:pointer; color:var(--ink);}
+.lt-ref:active{transform:translateY(1px);}
+/* R91 トレーニング: 一覧(5つを見通せる 小さめのカード)と くわしい画面へ もどるボタン */
+.tr-head{background:var(--jade); border-color:var(--jade-ink); color:var(--on-accent); padding:12px 16px;}
+.tr-head b{display:block; font-size:clamp(15px,4.2vw,17px);}
+.tr-head span{display:block; font-size:12px; opacity:.92; font-weight:700; margin-top:2px;}
+.tr-list{display:flex; flex-direction:column; gap:8px; margin:0 16px;}
+.tr-item{display:grid; grid-template-columns:auto minmax(0,1fr) auto; grid-template-areas:'ico main main' 'ico rec go';
+  column-gap:10px; row-gap:6px; align-items:center; background:var(--card); border:2px solid var(--line); border-radius:16px; padding:10px 12px;}
+.tri-ico{grid-area:ico; font-size:26px; align-self:start;}
+.tri-main{grid-area:main; min-width:0;}
+.tri-main b{display:block; font-size:clamp(14px,3.9vw,15.5px);}
+.tri-main small{display:block; font-size:clamp(11px,3.1vw,12px); color:var(--ink-soft); font-weight:700; line-height:1.4;}
+.tri-rec{grid-area:rec; align-self:center; min-width:0; display:flex; flex-wrap:wrap; gap:0 8px; font-size:clamp(10.5px,2.9vw,11.5px); font-weight:800; color:var(--ink-soft);}
+.tri-rec .tri-best{color:var(--gold-ink);}
+.tri-rt{flex-basis:100%; display:flex; align-items:baseline; gap:6px; color:var(--ink);}
+.tri-rt small{font-size:9.5px; color:var(--ink-soft); font-weight:800; letter-spacing:.08em;}
+.tri-rt b{font-size:18px; line-height:1.1; font-variant-numeric:tabular-nums;}
+.tri-go{grid-area:go; align-self:end; min-height:40px; min-width:84px; padding:6px 12px; border:0; border-radius:12px;
+  background:var(--jade); color:var(--on-accent); font-family:inherit; font-weight:900; font-size:clamp(12.5px,3.5vw,14px);
+  box-shadow:0 3px 0 var(--jade-deep); cursor:pointer; white-space:nowrap;}
+.tri-go:active{transform:translateY(2px); box-shadow:0 1px 0 var(--jade-deep);}
+.tr-sub-h{margin:14px 16px 6px; font-size:12px; font-weight:800; color:var(--ink-soft);}
+.tr-back{display:block; margin:12px 16px 0; background:none; border:0; padding:6px 0; color:var(--jade-ink);
+  font-family:inherit; font-weight:900; font-size:14px; cursor:pointer;}
 .ch1-cands{display:flex; flex-wrap:nowrap; justify-content:center; gap:2px; margin:14px 0 6px;
   touch-action:none; user-select:none; -webkit-user-select:none;}  /* なぞり選択(共通UI)のため */
 .ch1-cands .tile{cursor:pointer; width:100%;}
@@ -2084,7 +2130,7 @@ button.mjt-pick.mjt-hp,
     <div class="path-wrap" id="path-wrap"></div>
     <!-- R65: 役一覧と点数表は1つの資料画面にまとめた。ボタンは増やさず(画面を混ませない)、
          ここから1タップで資料をひらき、中のタブで点数表へ切りかえる -->
-    <button class="yl-open" onclick="openYakuList()">🀄 早見表</button>
+    <button class="yl-open" onclick="openRefHub()">📚 資料集</button>
     <button class="loc-btn" onclick="scrollToNext()">📍 現在地へ</button>
   </div>
 
@@ -2104,7 +2150,7 @@ button.mjt-pick.mjt-hp,
   <div class="nav">
     <button id="nav-home" class="on" onclick="showScreen('home')"><span class="i">🏠</span>ホーム</button>
     <button id="nav-course" onclick="openSectionList()"><span class="i">📚</span>コース</button>
-    <button id="nav-training" onclick="showScreen('training')"><span class="i">🎯</span>トレーニング</button>
+    <button id="nav-training" onclick="trNav()"><span class="i">🎯</span>トレーニング</button>
     <button id="nav-shop" onclick="showScreen('shop')"><span class="i">🛍️</span>ショップ</button>
     <button id="nav-profile" onclick="showScreen('profile')"><span class="i" id="nav-av"></span>マイページ</button>
   </div>
@@ -2116,6 +2162,7 @@ button.mjt-pick.mjt-hp,
     <div class="lesson-top">
       <button class="x" id="solo-x" onclick="soloBack()">✕</button>
       <div class="solo-title" id="solo-title">ひとり麻雀</div>
+      <button class="lt-ref" id="solo-ref" onclick="openRefNow()" aria-label="資料集をひらく">📚</button>
     </div>
     <div class="q-area solo-area" id="solo-body"></div>
   </div>
@@ -2126,6 +2173,7 @@ button.mjt-pick.mjt-hp,
     <div class="lesson-top">
       <button class="x" onclick="quitLesson()">✕</button>
       <div class="pbar"><div id="pbar-fill"></div></div>
+      <button class="lt-ref" id="lt-ref" onclick="openRefNow()" aria-label="資料集をひらく">📚</button>
       <div class="hearts" id="lesson-hearts">❤️5</div>
     </div>
     <div class="q-area" id="q-area"></div>
@@ -2143,6 +2191,7 @@ button.mjt-pick.mjt-hp,
      ここを見ることでRoadの進捗(roadProgress)・XP・ジェム・ストリークは【いっさい変わらない】 -->
 <div class="ylist" id="ylist">
   <div class="ylist-top">
+    <button class="ref-hub-btn" id="ref-hub-btn" onclick="refSetTab('hub')" aria-label="資料集の目次へ">‹ 資料集</button>
     <h3 id="ref-title">役一覧</h3>
     <button class="x" onclick="closeYakuList()" aria-label="とじる">✕</button>
   </div>
@@ -4481,6 +4530,8 @@ const RUBY_FULL_SRC=`
 例外[れいがい] 例[たと]えば 例[れい] 項目[こうもく] 総合[そうごう] 採用[さいよう] 伏[ふ]せる 伏[ふ]せ 求[もと]める
 1の位[くらい] 表[ひょう]では 問[と]い 講座[こうざ] 基礎[きそ] 両[りょう]はし 半分[はんぶん]
 1問[もん] 2問[もん] 3問[もん] 4問[もん] 5問[もん] 6問[もん] 7問[もん] 8問[もん] 9問[もん] 10問[もん] 20問[もん]
+# R91 トレーニング一覧・資料集
+資料集[しりょうしゅう] 資料[しりょう] 繰[く]り返[かえ] 実力[じつりょく] 目指[めざ] 調[しら]べ 成立条件[せいりつじょうけん] 実際[じっさい]に
 `;
 const RUBY_KANJI_RE=/[\u3400-\u9FFF\uF900-\uFAFF々〆ヶ]/;
 let RUBY_FULL_MAP=null, RUBY_FULL_MAXLEN=0;
@@ -4644,8 +4695,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.82.0';
-const BUILD_ID='20261015-01';
+const APP_VER='0.83.0';
+const BUILD_ID='20261016-01';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -4838,7 +4889,7 @@ const DM_DEFS={
   answer5:{cat:'B',kind:'answer',target:5,icon:'✏️',title:'練習問題に5問答える',min:2,go:'practice',w:2,req:()=>true},
   train5:{cat:'B',kind:'trainAnswer',target:5,icon:'🎯',title:'トレーニングで5問答える',min:2,go:'training',w:2,req:()=>dmTrainOpen()},
   fu3:{cat:'B',kind:'fu',target:3,icon:'🧮',title:'符計算を3問練習',min:2,go:'fu',w:2,req:()=>fuLearned()},   // R87: 講座を修了 または 練習を1回以上
-  score3:{cat:'B',kind:'score',target:3,icon:'💰',title:'点数トレーニングを3問',min:2,go:'score',w:2,req:()=>dmScoreLearned()},
+  score3:{cat:'B',kind:'score',target:3,icon:'💰',title:'点数計算トレーニングを3問',min:2,go:'score',w:2,req:()=>dmScoreLearned()},
   correct3:{cat:'C',kind:'correct',target:3,icon:'⭕',title:'練習問題に3問正解する',min:2,go:'practice',w:3,req:()=>true},
   lessonC:{cat:'C',kind:'lesson',target:1,icon:'📗',title:'レッスンを1回クリア',min:4,go:'road',w:2,req:()=>!dmRoadAllDone()},
   fuReview:{cat:'C',kind:'fuReview',target:1,icon:'🔁',title:'符計算の復習を1回',min:3,go:'fuReview',w:2,req:()=>fuLearned()&&fuReviewCount()>0},
@@ -4999,8 +5050,9 @@ function dmGo(id){
   const g=def.go;
   if(g==='solo'){ soloOpen(); return; }
   if(g==='road'||(g==='practice'&&!dmRoadAllDone())){ goContinue(); return; }
+  TR_SEL=(g==='fu'||g==='fuReview')?'fu':(g==='score'?'score':null);   // R91: トレーニングは 一覧 → くわしい画面
   showScreen('training');
-  const card=g==='fu'||g==='fuReview'?document.getElementById('tr-fu-card'):(g==='score'?document.querySelector('#training-body .tr-lv')&&document.querySelector('#training-body .tr-lv').closest('.card'):null);
+  const card=g==='fu'||g==='fuReview'?document.getElementById('tr-fu-card'):(g==='score'?document.getElementById('tr-score-card'):null);
   if(card) try{ card.scrollIntoView({block:'start'}); }catch(e){}
 }
 function dmMissionRowHTML(m,compact){
@@ -5505,18 +5557,18 @@ function renderHome(){
     +(nx?'<span>'+nx.icon+' '+nx.title+' ─ '+nx.sub+' '+nx.label+'</span>'
         :'<span>全レッスンクリア！ロードは何度でも復習できます</span>')
     +'</span></button>';
-  // ④役一覧(R61): 実戦中にスマホで開く手引き。ホームから1タップで開けるようにする
-  //   (Roadの進捗には影響しないので、どのレッスンまで進んでいても出す)
-  const yakuCard='<button class="hc-yaku" onclick="openYakuList()">'
-    +'<span class="hy-ico">🀄</span>'
-    +'<span class="hy-txt"><b>役一覧</b>'
-    +'<span>何翻？鳴ける？ 打ちながらすぐ見られる手引き</span></span></button>';
-  /* ⑤点数表(R65): 役一覧とおなじ「打ちながら見る資料」。1タップで開けるようにする。
-     どちらも学習の進みぐあいには影響しない */
-  const scoreCard='<button class="hc-yaku hc-score" onclick="openScoreTable()">'
-    +'<span class="hy-ico">💰</span>'
-    +'<span class="hy-txt"><b>点数表</b>'
-    +'<span>このアガリは何点？ '+RB_KO+'と'+RB_OYA+'・ロンとツモをすぐ引ける</span></span></button>';
+  /* ④資料集(R91): R61 の役一覧・R65 の点数表・R87 の符一覧の 3枚のカードを 1つにまとめた(同じ種類の入口を 3つ ならべない)。
+     見出しを押すと 資料集の目次、下の3つを押すと その資料が すぐ ひらく。学習の進みぐあいに関係なく いつでも出す */
+  const refCard='<div class="hc-ref" id="hc-ref-card">'
+    +'<button class="hc-yaku hc-ref-main" id="hc-ref" onclick="openRefHub()">'
+    +'<span class="hy-ico">📚</span>'
+    +'<span class="hy-txt"><b>資料集</b>'
+    +'<span>わからないことを いつでも調べよう</span></span><span class="hr-arr">›</span></button>'
+    +'<div class="hc-ref-links">'
+    +'<button id="hc-ref-yaku" onclick="openYakuList()">🀄 役一覧</button>'
+    +'<button id="hc-ref-score" onclick="openScoreTable()">💰 点数表</button>'
+    +'<button id="hc-ref-fu" onclick="openFuList()">🧮 符一覧</button>'
+    +'</div></div>';
   // 将来カード(今日の復習・おすすめトレーニング・週間目標等)は下へ追記するだけで拡張できる
   /* ⑥ひとり麻雀(R83): じぶんで自由に打つ遊び。Road の「つづきから」の下に置く(学習の導線が先)。
      ひらいている枚数が1つもないあいだは「まだ」と小さく出すだけ(押せば 何を学ぶと ひらくかが見える) */
@@ -5525,12 +5577,7 @@ function renderHome(){
     +'<span class="hy-ico">🀄</span>'
     +'<span class="hy-txt"><b>ひとり麻雀</b>'
     +'<span>'+(soloN?'ツモって切って、じぶんの力でアガリを作ろう（4枚・7枚・10枚・13枚）':'4枚のアガリの形を習うと あそべるよ')+'</span></span></button>';
-  /* ⑦符一覧(R87): 役一覧・点数表と同じ「見返す資料」 */
-  const fuCard='<button class="hc-yaku hc-fu" id="hc-fu" onclick="openFuList()">'
-    +'<span class="hy-ico">🧮</span>'
-    +'<span class="hy-txt"><b>符一覧</b>'
-    +'<span>副底・刻子・雀頭・待ち・特別な形を すぐ引ける</span></span></button>';
-  el.innerHTML=streakCard+missionCard+contCard+soloCard+yakuCard+scoreCard+fuCard;
+  el.innerHTML=streakCard+missionCard+contCard+soloCard+refCard;   // R91: つづきから・ひとり麻雀(R83 のならび) の下に 資料集(最初の画面に入る位置)
   if(DAILY_FX_PENDING&&!L){ DAILY_FX_PENDING=false; dmCompleteFx(); }   // R86: レッスンを とちゅうで やめたとき
 }
 
@@ -6172,7 +6219,7 @@ function trainOptionsHTML(cat){
     +'<div class="tr-grid">'+steps.map(cell).join('')
     +'<button class="tr-pick tr-any" onclick="startTraining(\'waits\',\'auto\')">おまかせ'
     +'<small>'+un.join('・')+'枚形から 7問</small></button></div>'
-    +(un.length<steps.length?'<p class="tr-note">🔒は 学習ロードで さいごまでクリアすると ひらくよ</p>':'')
+    +(un.length<steps.length?'<p class="tr-note">🔒は 学習コースで さいごまでクリアすると ひらくよ</p>':'')
     +'</div>';
 }
 function bandText(cat){
@@ -6181,10 +6228,57 @@ function bandText(cat){
   const base=Math.max(lo,Math.min(hi,Math.round((R-5)/10)));
   return 'いまの出題帯: Lv'+Math.max(lo,base-2)+'〜'+Math.min(hi,base+2);
 }
+/* ===== R91 トレーニング画面: 一覧 → くわしい画面 =====
+   一覧(TR_SEL=null)には 5つ(待ち・何切る・符計算・点数計算・ひとり麻雀)を 同じ形の小さなカードで ならべる。
+   カード = 名前・短い説明・(ある機能だけ)RATING / BEST / ランク / 記録・「はじめる」。
+   条件をえらぶ機能(待ち=枚数・符計算=STEP・点数計算=Lv)は「はじめる」で くわしい画面(TR_SEL)へ。中身は これまでのカードを そのまま使う。
+   何切る・リーチ判断は 7問を そのまま始める。ひとり麻雀は ひとり麻雀の画面(soloOpen)をひらく。
+   TR_SEL は 表示だけの状態(保存しない)。下のタブの「トレーニング」で 一覧に もどる。
+   レーティングの ない機能(符計算・点数計算・ひとり麻雀)には RATING を出さない。 */
+let TR_SEL=null;   // null=一覧 / 'waits' / 'score' / 'fu'
+const TR_HEAD='<div class="card tr-head" id="tr-head"><b>🎯 トレーニング</b><span>学んだことを繰り返し練習して、麻雀の実力を高めよう！</span></div>';
+function trNav(){ TR_SEL=null; showScreen('training'); }
+function trTop(){ try{ window.scrollTo(0,0); const sc=document.getElementById('screen-training'); if(sc) sc.scrollTop=0; }catch(e){} }
+function trOpen(k){ TR_SEL=k; renderTraining(); trTop(); }
+function trBack(){ TR_SEL=null; renderTraining(); trTop(); }
+/* 一覧の1枚。rt=RATING(数) / rec=記録の1行(HTML) / go=「はじめる」の onclick */
+function trItemHTML(o){
+  return '<div class="tr-item" id="tr-item-'+o.k+'">'
+    +'<span class="tri-ico">'+o.icon+'</span>'
+    +'<span class="tri-main"><b>'+o.title+'</b><small>'+o.desc+'</small></span>'
+    +'<span class="tri-rec">'+(o.rt!=null?'<span class="tri-rt"><small>RATING</small><b>'+o.rt+'</b></span>':'')+(o.rec||'')+'</span>'
+    +'<button class="tri-go" id="tr-go-'+o.k+'" onclick="'+o.go+'">はじめる</button>'
+    +'</div>';
+}
+function trBestHTML(cat){
+  const best=S.trainingBest[cat]; if(!best) return '';
+  const rank=rankForTime(cat,best.ms);
+  return '<span class="tri-best">🏅 BEST '+fmtDur(best.ms,true)+(rank?'　ランク'+rank:'')+'</span>';
+}
+function trListHTML(){
+  const fr=fuRecOf(), pct=x=>x.n?Math.round(x.ok/x.n*100)+'%':'—';
+  const soloOpenN=SOLO_ORDER.filter(n=>soloUnlocked(n));
+  const items=[
+    {k:'waits',icon:'🔍',title:'待ちトレーニング',desc:'テンパイ形から待ち牌を見つけよう',rt:Math.floor(S.ratings.waits),rec:trBestHTML('waits'),go:"trOpen('waits')"},
+    {k:'nanikiru',icon:'✂️',title:'何切るトレーニング',desc:'受け入れが最大になる1枚を考えよう',rt:Math.floor(S.ratings.nanikiru),
+      rec:trBestHTML('nanikiru')+'<span class="tri-band">'+bandText('nanikiru')+'・7問</span>',go:"startTraining('nanikiru')"},
+    {k:'fu',icon:'🧮',title:'符計算トレーニング',desc:'アガリの形から符を計算しよう',
+      rec:fr.n?'<span>ぜんぶで '+fr.n+'問・正答率 '+pct(fr)+'</span>':'',go:"trOpen('fu')"},
+    {k:'score',icon:'💰',title:'点数計算トレーニング',desc:'翻と符から点数を計算しよう',go:"trOpen('score')"},
+    {k:'solo',icon:'🀄',title:'ひとり麻雀',desc:'実際に牌を切ってアガリを目指そう',
+      rec:'<span>'+(soloOpenN.length?soloOpenN.map(n=>n+'枚').join('・')+' であそべる':'4枚のアガリの形を習うと あそべるよ')+'</span>',go:'soloOpen()'},
+  ];
+  return TR_HEAD
+    +'<div class="tr-list" id="tr-list">'+items.map(trItemHTML).join('')+'</div>'
+    /* リーチ判断(第8段階から ある トレーニング)は 5つの下に「そのほか」として のこす(レーティング・記録を消さない) */
+    +'<p class="tr-sub-h">そのほかの練習</p>'
+    +'<div class="tr-list">'+trItemHTML({k:'riichi',icon:'📣',title:'リーチ判断トレーニング',desc:'曲げるかダマか・鳳凰卓実測で検証済み',rt:Math.floor(S.ratings.riichi),
+      rec:trBestHTML('riichi')+'<span class="tri-band">検証済み問題からランダム7問</span>',go:"startTraining('riichi')"})+'</div>';
+}
 function renderTraining(){
   const el=document.getElementById('training-body');
-  // 各カードは対応するRating(能力)だけを表示。BEST=自己ベストタイム、ランク=タイム評価で
-  // 三者は別概念のまま(第8段階追加改善)。全カテゴリ一覧はマイページの雀力レーティングへ
+  if(TR_SEL===null||!['waits','score','fu'].includes(TR_SEL)){ TR_SEL=null; el.innerHTML=trListHTML(); return; }
+  // くわしい画面: これまでのカード(条件えらび・BEST・出題帯の説明)をそのまま使う
   const card=(cat,icon,title,desc,bandOverride)=>{
     const best=S.trainingBest[cat];
     const rank=best?rankForTime(cat,best.ms):null;
@@ -6201,33 +6295,28 @@ function renderTraining(){
       +trainOptionsHTML(cat)                  // 種別ごとの条件選択(待ち=枚数えらび / 他は開始ボタンのまま)
       +'</div>';
   };
-  el.innerHTML='<div class="card" style="background:var(--jade);border-color:var(--jade-ink);color:var(--on-accent);">'
-    +'<b>🎯 デイリートレーニング（プロト版）</b><br><span style="font-size:12px;opacity:.92;">学んだ能力の精度を上げ続ける場所。問題の難しさはレーティングに自動で追従します</span></div>'
-    +card('waits','🔍','待ちトレーニング','習った枚数形から えらんで練習',
-      bandText('waits')+'（おまかせは あなたのレーティングに合わせて自動調整）')
-    +card('nanikiru','🀄','何切るトレーニング','受け入れ最大の1枚')
-    +card('riichi','📣','リーチ判断トレーニング','曲げるかダマか・鳳凰卓実測で検証済み','検証済み問題からランダム7問（2択・レーティング反映）')
-    /* R69 点数トレーニング: 点数のレーティングはまだ作らないので、RATINGを出さない専用カード */
-    +'<div class="card">'
+  let body='';
+  if(TR_SEL==='waits') body=card('waits','🔍','待ちトレーニング','テンパイ形から待ち牌を見つけよう',
+      bandText('waits')+'（おまかせは あなたのレーティングに合わせて自動調整）');
+  /* R69 点数トレーニング: 点数のレーティングはまだ作らないので、RATINGを出さない専用カード */
+  if(TR_SEL==='score') body='<div class="card" id="tr-score-card">'
     +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">'
     +'<span style="font-size:30px;">💰</span>'
-    +'<div style="flex:1;"><b style="font-size:15px;">点数トレーニング</b>'
-    +'<div style="font-size:12px;color:var(--ink-soft);font-weight:700;">牌姿から点数を判断する練習</div></div></div>'
+    +'<div style="flex:1;"><b style="font-size:15px;">点数計算トレーニング</b>'
+    +'<div style="font-size:12px;color:var(--ink-soft);font-weight:700;">翻と符から点数を計算しよう</div></div></div>'
     +'<p style="font-size:11px;color:var(--ink-soft);margin:0 0 10px;font-weight:700;">'
     +SCORE_TRAIN_N+'問1セット。何度でもくりかえせるよ</p>'
     +trainOptionsHTML('score')
-    +'</div>'
-    /* R85 符計算トレーニング: 点数トレーニングとは べつのカード */
-    +'<div class="card" id="tr-fu-card">'
+    +'</div>';
+  /* R85 符計算トレーニング: 学ぶ / 符一覧 / 練習の STEP(R90) */
+  if(TR_SEL==='fu') body='<div class="card" id="tr-fu-card">'
     +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">'
     +'<span style="font-size:30px;">🧮</span>'
-    +'<div style="flex:1;"><b style="font-size:15px;">符計算</b>'
-    +'<div style="font-size:12px;color:var(--ink-soft);font-weight:700;">アガリ形から符を計算しよう</div></div></div>'
-    +'<p style="font-size:11px;color:var(--ink-soft);margin:0 0 10px;font-weight:700;">'
-    +'学ぶ・調べる・練習する。何度でもくりかえせるよ</p>'
+    +'<div style="flex:1;"><b style="font-size:15px;">符計算トレーニング</b>'
+    +'<div style="font-size:12px;color:var(--ink-soft);font-weight:700;">アガリの形から符を計算しよう</div></div></div>'
     +fuCardBodyHTML()
-    +'</div>'
-    +'<p style="text-align:center;font-size:11px;color:var(--ink-soft);padding:0 24px;">他のカテゴリ（役判定・押し引き…）は学習ロードの進行で解放予定</p>';
+    +'</div>';
+  el.innerHTML='<button class="tr-back" id="tr-back" onclick="trBack()">‹ トレーニング一覧</button>'+body;
 }
 /* tiles: 数値=その枚数形だけ / 'auto'=おまかせ(習った枚数からレーティングに合わせて選ぶ)
    / 省略=従来どおり枚数を固定しない(既存の呼び出し・自動テストは挙動不変) */
@@ -6257,7 +6346,7 @@ function startTraining(cat,tiles){
   if(cat==='score'){
     const lv=scoreTrainLevel(tiles||1);
     const qs=scoreTrainSet(lv.id,(Date.now()^(Math.random()*0x7fffffff))>>>0);
-    L={course:{id:'tr-score',title:'点数トレーニング Lv'+lv.id,type:'score',training:true},
+    L={course:{id:'tr-score',title:'点数計算トレーニング Lv'+lv.id,type:'score',training:true},
        qs,idx:0,correct:0,sel:null,checked:false,done:false,
        rcat:null,ratingStart:null,bigMiss:0,startedAt:Date.now(),combo:0,maxCombo:0,
        scoreTrain:{level:lv.id,ron:{n:0,ok:0},tsumo:{n:0,ok:0}}};
@@ -6327,7 +6416,7 @@ function renderPath(){
 const ROAD_FOOT='<p style="text-align:center;color:var(--ink-soft);font-size:12px;padding:10px 24px 0;">マスを順番にクリアして進もう。クリア済みのマスは何度でも挑戦できます</p>';
 function sectionListHTML(){
   const nx=(typeof nextLessonInfo==='function')?nextLessonInfo():null;
-  let html='<div class="sec-list-head"><h2>学習ロード</h2>'
+  let html='<div class="sec-list-head"><h2>学習コース</h2>'
     +'<p>SECTIONをえらんでね。順番にクリアすると、つぎのSECTIONがひらくよ</p></div>';
   SECTIONS.forEach((sec,si)=>{
     const inf=sectionInfo(si,nx);
@@ -14837,7 +14926,7 @@ function fuCourseHTML(){
 }
 function openFuCourse(){ openModal(fuCourseHTML()); }
 function fuCourseGo(n){ document.getElementById('lesson').classList.remove('show'); L=null; renderHUD(); startFuCourse(n); }
-function fuCourseToPractice(){ afterLesson(); try{ showScreen('training'); fuShowSteps(); }catch(e){} }
+function fuCourseToPractice(){ afterLesson(); try{ TR_SEL='fu'; showScreen('training'); fuShowSteps(); }catch(e){} }   // R91: 符計算トレーニングの くわしい画面へ
 function fuShowSteps(){ const d=document.getElementById('fu-steps'); if(d){ try{ d.scrollIntoView({block:'nearest'}); }catch(e){} } }   // 講座の修了画面「練習する」から STEP の所へ
 /* 符計算の問題に「符一覧」を開くボタンを足す(押しても 答えにも まちがいにも 数えない。一覧を とじると 同じ問題に もどる) */
 const FU_REF_BTN='<button type="button" class="fu-ref-mini" onclick="event.stopPropagation();openFuList()">📋 符一覧</button>';
@@ -20430,14 +20519,53 @@ function refSetTab(k){
 }
 function renderRefTabs(){
   const tb=document.getElementById('ref-tabs'); if(!tb) return;
+  const hub=REF_TAB==='hub';
   tb.innerHTML=REF_TABS.map(t=>'<button class="'+(REF_TAB===t.k?'on':'')
     +'" onclick="refSetTab(\''+t.k+'\')">'+t.t+'</button>').join('');
+  tb.style.display=hub?'none':'';                                   // R91: 目次では タブを出さない(同じ3つを2回 見せない)
+  const hb=document.getElementById('ref-hub-btn'); if(hb) hb.style.display=hub?'none':'';
   const ttl=document.getElementById('ref-title');
-  if(ttl) ttl.textContent=REF_TAB==='score'?'点数表':(REF_TAB==='fu'?'符一覧':'役一覧');
+  if(ttl) ttl.textContent=hub?'資料集':(REF_TAB==='score'?'点数表':(REF_TAB==='fu'?'符一覧':'役一覧'));
 }
 function renderRefBody(){
-  if(REF_TAB==='score') renderScoreTable(); else if(REF_TAB==='fu') renderFuList(); else renderYakuList();
+  if(REF_TAB==='hub') renderRefHub(); else if(REF_TAB==='score') renderScoreTable(); else if(REF_TAB==='fu') renderFuList(); else renderYakuList();
 }
+/* ===== R91 資料集 =====
+   役一覧・点数表・符一覧を「資料集」として 1つにまとめる。資料集の目次(REF_TAB='hub')は 3つの入口だけ。
+   中身は これまでの画面(renderYakuList / renderScoreTable / renderFuList)を そのまま使う(複製しない・計算エンジンを持たない)。
+   ・学習の進みぐあいに関係なく いつでも ひらける。見ても roadProgress/XP/ジェム/ストリーク/ライフ/問題の状態は 変わらない(R61・R65 と同じ)
+   ・資料集は 画面の上に重ねて出す(#ylist)。✕ で とじると 下の画面(ホーム・問題・トレーニング)に そのまま もどる。
+     「‹ 資料集」で 目次に もどる。状態は保存しない */
+const REF_HUB_ITEMS=[
+  {k:'yaku',icon:'🀄',t:'役一覧',d:'翻数・成立条件・牌姿の例・鳴いてもよいか'},
+  {k:'score',icon:'💰',t:'点数表',d:'子・親 × ロン・ツモ。翻と符から点数を引ける'},
+  {k:'fu',icon:'🧮',t:'符一覧',d:'副底・アガリ方・刻子・槓子・雀頭・待ち・特別な形'},
+];
+function renderRefHub(){
+  const fb=document.getElementById('yl-filt'), bd=document.getElementById('yl-body');
+  if(!fb||!bd) return;
+  fb.innerHTML='';
+  bd.innerHTML='<p class="rf-lead">わからないことを いつでも調べよう</p>'
+    +'<div class="rf-hub">'+REF_HUB_ITEMS.map(x=>'<button class="rf-card" id="rf-go-'+x.k+'" onclick="refSetTab(\''+x.k+'\')">'
+      +'<span class="rf-ico">'+x.icon+'</span><span class="rf-txt"><b>'+x.t+'</b><small>'+x.d+'</small></span><span class="rf-arr">›</span></button>').join('')+'</div>';
+}
+function openRefHub(){ openRef('hub'); }
+/* 問題・トレーニングの とちゅうから ひらく(上のバーの 📚)。いまの学習に近い資料を さいしょに出す。
+   L(問題の状態)には さわらない: 答え・回答数・ライフ・連続正解・問題の中身は そのまま */
+function refTabForNow(){
+  try{
+    if(typeof L!=='undefined'&&L){
+      if(L.fuTrain||L.fuCourse) return 'fu';
+      if(L.scoreTrain) return 'score';
+      const c=L.course||{};
+      if(c.section===2) return 'yaku';     // SECTION 3(役)
+      if(c.section===3) return 'score';    // SECTION 4(点)
+    }
+    if(typeof SOLO!=='undefined'&&SOLO&&SOLO.n===13) return 'yaku';
+  }catch(e){}
+  return 'hub';
+}
+function openRefNow(){ openRef(refTabForNow()); }
 function renderYakuList(){
   const fb=document.getElementById('yl-filt'), bd=document.getElementById('yl-body');
   if(!fb||!bd) return;
