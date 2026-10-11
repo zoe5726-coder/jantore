@@ -4844,8 +4844,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.87.0';
-const BUILD_ID='20261021-01';
+const APP_VER='0.87.1';
+const BUILD_ID='20261022-01';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -6838,34 +6838,37 @@ function trainOptionsHTML(cat){
      同じ 牌姿は 1つに まとめる(キー = 色:数字の並び[+字牌])。待ち・残り枚数は 1問ずつ 計算しなおす(5枚目の 牌は 待ちに しない)。
      原型の待ちを 同じ変形で うつしたものと ちがう問題は same:false(お手本の待ちを そのまま 使うと まちがえる問題)
    ・はじめて つかうときに 1回だけ 作って メモリに おく(保存しない。ページを ひらいただけでは 作らない)
-   ・習得は 原型ごと(S.mwPat。はじめて 答えたときに 作る)。保存キーは jantore-v1 のまま。知らない ID の記録も 消さない */
-const MW_CAT={ren:'連続形',toi:'対子複合形',an1:'暗刻複合形',an2:'暗刻2つの形',yon:'4枚使いの形',hat:'多面張発展形',ji:'字牌複合形'};
+   ・習得は 原型ごと(S.mwPat。はじめて 答えたときに 作る)。保存キーは jantore-v1 のまま。知らない ID の記録も 消さない
+   ・R95.1: 26例を ユーザーが 確定した 牌姿に 差しかえ、ぜんぶ 出題する(st:ok)。牌姿を かえた 8例(2・3・4・5・17・18・23・25)は rev:2。
+     記録の rev(ない記録は 1)が 原型の rev と ちがえば、その記録は 前の 牌姿の 記録として 数えない(未学習から)。
+     消さずに、つぎに 答えたとき 新しい記録の prev に 入れて のこす。牌姿が かわらない 18例は rev 1 のままで 記録も そのまま */
+const MW_CAT={ren:'連続形',toi:'対子複合形',an1:'暗刻＋連続形',atoi:'暗刻＋対子形',an2:'暗刻2つの形',yon:'4枚使いの形',hat:'多面張発展形',ji:'字牌複合形'};
 const MW_SRC=[
  {id:"7-001",no:1,n:7,h:"1234567",su:"m",st:"ok",cat:"ren",nm:"連続形 A",pt:"1234＋567、123＋4567 のように 分けかたが 3とおり → 1・4・7"},
- {id:"7-002",no:2,n:7,h:"1122334",su:"p",st:"ok",cat:"toi",nm:"対子複合形 A",pt:"11 を雀頭にすると 22334 がのこり → 1・4"},
- {id:"7-003",no:3,n:7,h:"2233445",su:"s",st:"dup",of:"7-002"},
- {id:"7-004",no:4,n:7,h:"2345667",su:"m",st:"check"},
- {id:"7-005",no:5,n:7,h:"2223456",su:"p",st:"ok",cat:"an1",nm:"暗刻複合形 A",pt:"222 を刻子 → 3456 で 3・6／22 を雀頭 → 23456 で 1・4・7"},
- {id:"7-006",no:6,n:7,h:"5667888",su:"s",st:"ok",cat:"an1",nm:"暗刻複合形 B",pt:"88 を雀頭 → 56678 で 4・7／888 を刻子 → 5667 で 6"},
- {id:"7-007",no:7,n:7,h:"5566777",su:"m",st:"ok",cat:"an1",nm:"暗刻複合形 C",pt:"77 を雀頭 → 55667 で 4・7／777 を刻子 → 5566 で 5・6"},
- {id:"7-008",no:8,n:7,h:"2233344",su:"p",st:"ok",cat:"an1",nm:"暗刻複合形 D",pt:"333 を刻子 → 22・44 で 2・4／33 を雀頭 → 22344 で 3"},
- {id:"7-009",no:9,n:7,h:"2223456",su:"s",st:"dup",of:"7-005"},
- {id:"7-010",no:10,n:7,h:"1345666",su:"m",st:"ok",cat:"an1",nm:"暗刻複合形 E",pt:"666 を刻子 → 1 の単騎／66 を雀頭 → 13 の間の 2"},
- {id:"7-011",no:11,n:7,h:"4446678",su:"p",st:"ok",cat:"an1",nm:"暗刻複合形 F",pt:"444 を刻子 → 6678 で 6・9／44 を雀頭 → 46678 で 5"},
- {id:"7-012",no:12,n:7,h:"1234666",su:"s",st:"ok",cat:"an1",nm:"暗刻複合形 G",pt:"666 を刻子 → 1234 で 1・4／66 を雀頭 → 12346 で 5"},
+ {id:"7-002",no:2,n:7,h:"2344567",su:"p",rev:2,st:"ok",cat:"ren",nm:"連続形 B",pt:"44 を雀頭 → 23・567 で 1・4／234・456 をぬくと 7 の単騎"},
+ {id:"7-003",no:3,n:7,h:"3455577",su:"s",rev:2,st:"ok",cat:"atoi",nm:"暗刻＋対子形 A",pt:"555 を刻子・77 を雀頭 → 34 で 2・5／55 を雀頭 → 345 と 77 で 7"},
+ {id:"7-004",no:4,n:7,h:"3456667",su:"m",rev:2,st:"ok",cat:"an1",nm:"暗刻＋連続形 A",pt:"66 を雀頭 → 34567 で 2・5・8／666 を刻子 → 345 と 7 で 7"},
+ {id:"7-005",no:5,n:7,h:"3334456",su:"p",rev:2,st:"ok",cat:"atoi",nm:"暗刻＋対子形 B",pt:"333 を刻子 → 4456 で 4・7／33 を雀頭 → 34456 で 2・5"},
+ {id:"7-006",no:6,n:7,h:"5667888",su:"s",st:"ok",cat:"atoi",nm:"暗刻＋対子形 C",pt:"88 を雀頭 → 56678 で 4・7／888 を刻子 → 5667 で 6"},
+ {id:"7-007",no:7,n:7,h:"5566777",su:"m",st:"ok",cat:"atoi",nm:"暗刻＋対子形 D",pt:"77 を雀頭 → 55667 で 4・7／777 を刻子 → 5566 で 5・6"},
+ {id:"7-008",no:8,n:7,h:"2233344",su:"p",st:"ok",cat:"atoi",nm:"暗刻＋対子形 E",pt:"333 を刻子 → 22・44 で 2・4／33 を雀頭 → 22344 で 3"},
+ {id:"7-009",no:9,n:7,h:"2223456",su:"s",st:"ok",cat:"an1",nm:"暗刻＋連続形 B",pt:"222 を刻子 → 3456 で 3・6／22 を雀頭 → 23456 で 1・4・7"},
+ {id:"7-010",no:10,n:7,h:"1345666",su:"m",st:"ok",cat:"an1",nm:"暗刻＋連続形 C",pt:"666 を刻子 → 1 の単騎／66 を雀頭 → 13 の間の 2"},
+ {id:"7-011",no:11,n:7,h:"4446678",su:"p",st:"ok",cat:"atoi",nm:"暗刻＋対子形 F",pt:"444 を刻子 → 6678 で 6・9／44 を雀頭 → 46678 で 5"},
+ {id:"7-012",no:12,n:7,h:"1234666",su:"s",st:"ok",cat:"an1",nm:"暗刻＋連続形 D",pt:"666 を刻子 → 1234 で 1・4／66 を雀頭 → 12346 で 5"},
  {id:"7-013",no:13,n:7,h:"4445666",su:"m",st:"ok",cat:"an2",nm:"暗刻2つの形 A",pt:"444・666 の どちらを 刻子にするかで 待ちが かわる → 3〜7"},
  {id:"7-014",no:14,n:7,h:"1113555",su:"p",st:"ok",cat:"an2",nm:"暗刻2つの形 B",pt:"111・555 を刻子 → 3 の単騎／11・55 を雀頭にすると 2・4"},
  {id:"7-015",no:15,n:7,h:"2223334",su:"s",st:"ok",cat:"an2",nm:"暗刻2つの形 C",pt:"222・333 を刻子 → 4 の単騎／片方を雀頭にして 順子を作ると 2・3・5"},
  {id:"7-016",no:16,n:7,h:"3345555",su:"m",st:"ok",cat:"yon",nm:"4枚使いの形 A",pt:"555 を刻子・33 を雀頭 → 45 で 3・6／55 を雀頭 → 3345 で 4"},
- {id:"7-017",no:17,n:7,h:"3344455",su:"p",st:"dup",of:"7-008"},
- {id:"7-018",no:18,n:7,h:"6667778",su:"s",st:"dup",of:"7-015"},
+ {id:"7-017",no:17,n:7,h:"3344445",su:"p",rev:2,st:"ok",cat:"yon",nm:"4枚使いの形 B",pt:"444 を刻子 → 33 と 45 で 3・6／44 を雀頭 → 3345 で 2・5"},
+ {id:"7-018",no:18,n:7,h:"3444456",su:"s",rev:2,st:"ok",cat:"yon",nm:"4枚使いの形 C",pt:"444 を刻子 → 3456 で 3・6／44 を雀頭 → 34456 で 2・5"},
  {id:"10-019",no:19,n:10,h:"2223344455",su:"m",st:"ok",cat:"hat",nm:"多面張発展形 A",pt:"222・444 を 刻子にするか 雀頭や順子にするかで → 3〜6"},
  {id:"10-020",no:20,n:10,h:"2223334455",su:"p",st:"ok",cat:"hat",nm:"多面張発展形 B",pt:"222・333 を 刻子と見るか 234 を作るかで → 1・3・4・5・6"},
  {id:"10-021",no:21,n:10,h:"2233344566",su:"s",st:"ok",cat:"hat",nm:"多面張発展形 C",pt:"66 を雀頭 → 1・4／333 を刻子にして 456 を2つ → 5"},
  {id:"10-022",no:22,n:10,h:"3334567788",su:"m",st:"ok",cat:"hat",nm:"多面張発展形 D",pt:"333 を刻子 → 77・88 で 7・8／33 を雀頭 → 345 をぬいて 6・9"},
- {id:"10-023",no:23,n:10,h:"4445677778",su:"s",st:"ok",cat:"yon",nm:"4枚使いの形 B",pt:"7 の4枚目を 順子に使う形。777 を どう見るかで → 3・5・6・8・9"},
- {id:"10-024",no:24,n:10,h:"2223456778",su:"m",st:"ok",cat:"hat",nm:"多面張発展形 E",pt:"22 を雀頭 → 234・567 と 78 で 6・9／222 を刻子 → 77 を雀頭にして 7"},
- {id:"10-025",no:25,n:10,h:"3334555666",su:"p",st:"ok",cat:"hat",nm:"多面張発展形 F",pt:"333・555・666 の 刻子と 順子の 組みかえで → 2〜6"},
+ {id:"10-023",no:23,n:10,h:"4445677899",su:"s",rev:2,st:"ok",cat:"hat",nm:"多面張発展形 E",pt:"444 を刻子・99 を雀頭 → 56778 で 6・9／44 を雀頭 → 77899 で 8"},
+ {id:"10-024",no:24,n:10,h:"2223456778",su:"m",st:"ok",cat:"hat",nm:"多面張発展形 F",pt:"22 を雀頭 → 234・567 と 78 で 6・9／222 を刻子 → 77 を雀頭にして 7"},
+ {id:"10-025",no:25,n:10,h:"3334555677",su:"p",rev:2,st:"ok",cat:"hat",nm:"多面張発展形 G",pt:"333 を刻子・77 を雀頭 → 5／333 を刻子・55 を雀頭 → 7／33 を雀頭 → 345・567 で 6"},
  {id:"10-026",no:26,n:10,h:"44555666",su:"s",hon:"RR",st:"ok",cat:"ji",nm:"字牌複合形 A",pt:"中中 を雀頭 → 44555666 で 4・7／44 を雀頭 → 中 を ひいて 刻子"}
 ];
 const MW_ST_LABEL={new:'○ 未学習',learn:'△ 学習中',master:'✓ 習得済み'};
@@ -6935,8 +6938,9 @@ function mwStoreRead(){
   const s=S.mwPat; const p=(s&&typeof s==='object'&&s.p&&typeof s.p==='object'&&!Array.isArray(s.p))?s.p:{};
   return {v:1,p:Object.assign({},p)};
 }
+function mwRevOf(pid){ const s=MW_SRC.find(x=>x.id===pid); return (s&&s.rev)||1; }
 function mwRecOf(pid,st){
-  const r0=(st||mwStoreRead()).p[pid], r=(r0&&typeof r0==='object')?r0:{};
+  const r0=(st||mwStoreRead()).p[pid], r=(r0&&typeof r0==='object'&&((+r0.rev||1)===mwRevOf(pid)))?r0:{};   // R95.1: 前の 牌姿(rev)の 記録は 数えない
   const arr=(a,f)=>Array.isArray(a)?a.filter(f):[];
   const o={ok:Math.max(0,+r.ok||0), ng:Math.max(0,+r.ng||0), last:arr(r.last,x=>x===0||x===1).slice(-5), at:typeof r.at==='string'?r.at:null,
     keys:arr(r.keys,x=>typeof x==='string').slice(-12), seen:arr(r.seen,x=>typeof x==='string').slice(-6), wrong:typeof r.wrong==='string'?r.wrong:null};
@@ -6956,6 +6960,10 @@ function mwRecord(q,ok){
   if(ok){ if(r.keys.indexOf(k)<0) r.keys=r.keys.concat([k]).slice(-12); if(r.wrong===k) r.wrong=null; }
   else r.wrong=k;
   r.seen=r.seen.filter(x=>x!==k).concat([k]).slice(-6);
+  /* R95.1: 牌姿の 版(rev)を 記録に のこす。前の 版の 記録は 消さずに prev に うつす(すでに prev が あれば それを のこす) */
+  const raw=st.p[q.mw.pid], rev=mwRevOf(q.mw.pid);
+  r.rev=rev;
+  if(raw&&typeof raw==='object'){ if((+raw.rev||1)!==rev){ const o=Object.assign({},raw); delete o.prev; r.prev=o; } else if(raw.prev) r.prev=raw.prev; }
   r.st=mwStatusOf(r); st.p[q.mw.pid]=r; S.mwPat=st; save();
 }
 function mwSummary(n){ const st=mwStoreRead(), a=mwActive(n), c={new:0,learn:0,master:0}; a.forEach(p=>c[mwRecOf(p.id,st).st]++); return Object.assign(c,{total:a.length}); }
