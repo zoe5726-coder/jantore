@@ -577,6 +577,12 @@ span.tv-riichi-tile{transform:rotate(-90deg);}
 .mw-fb{display:block; margin-bottom:4px;}
 .mw-chg{display:block; color:var(--verm); margin-top:2px;}
 .numpick-h{grid-template-columns:repeat(7,1fr); max-width:min(300px,88vw); margin-top:8px;}
+/* R95.2 基本セット */
+.mw-b.mw-set small{font-weight:800;}
+.mw-b.mw-set.done{border-color:var(--jade);}
+.mw-tag{display:inline-block; margin-left:6px; font-size:11px; font-weight:800; color:var(--ink-soft); border:1px solid var(--line); border-radius:999px; padding:0 6px; vertical-align:2px;}
+.mw-go .btn{margin-top:6px;}
+.mw-gs{display:block; font-size:11.5px; font-weight:800; opacity:.85;}
 .solo-mjt .mjt-pick.solo-rz > .tile{outline:2.5px solid var(--now-ring); outline-offset:1px;}
 .solo-mjt .solo-dim > .tile{opacity:.45;}
 .solo-mjt .solo-tp-off{display:block; line-height:0;}
@@ -4844,8 +4850,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.87.1';
-const BUILD_ID='20261022-01';
+const APP_VER='0.87.2';
+const BUILD_ID='20261023-01';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -6871,6 +6877,30 @@ const MW_SRC=[
  {id:"10-025",no:25,n:10,h:"3334555677",su:"p",rev:2,st:"ok",cat:"hat",nm:"多面張発展形 G",pt:"333 を刻子・77 を雀頭 → 5／333 を刻子・55 を雀頭 → 7／33 を雀頭 → 345・567 で 6"},
  {id:"10-026",no:26,n:10,h:"44555666",su:"s",hon:"RR",st:"ok",cat:"ji",nm:"字牌複合形 A",pt:"中中 を雀頭 → 44555666 で 4・7／44 を雀頭 → 中 を ひいて 刻子"}
 ];
+/* R95.2: 4枚形の 基本 10形(4-001〜4-010)。待ちの 基本の 形を 1つずつ(両面・嵌張・辺張・双碰・単騎2つ・延べ単・刻子の 複合2つ・重なり)。
+   数字や 色を かえただけの 同じ形は 入れない(平行移動・左右反転で 重ならない)。4枚形は 待ち1種類の 形も 基本なので のぞかない。
+   問題(派生)は 7枚形・10枚形と 同じ 作りかたで、べつの 表(byKey4)に おく(7枚形・10枚形の 774問は かわらない) */
+const MW4_SRC=[
+ {id:"4-001",no:1,n:4,h:"1156",su:"m",st:"ok",cat:"w4",nm:"両面待ち",pt:"11 を雀頭 → 56 で 4・7"},
+ {id:"4-002",no:2,n:4,h:"1157",su:"p",st:"ok",cat:"w4",nm:"嵌張待ち",pt:"11 を雀頭 → 57 の間の 6"},
+ {id:"4-003",no:3,n:4,h:"1299",su:"s",st:"ok",cat:"w4",nm:"辺張待ち",pt:"99 を雀頭 → 12 には 3 しか つかない → 3"},
+ {id:"4-004",no:4,n:4,h:"3377",su:"m",st:"ok",cat:"w4",nm:"双碰待ち",pt:"33・77 の どちらかが 刻子に なる → 3・7"},
+ {id:"4-005",no:5,n:4,h:"3458",su:"p",st:"ok",cat:"w4",nm:"単騎待ち（順子＋1枚）",pt:"345 を順子にすると 8 が ひとり → 8 の単騎"},
+ {id:"4-006",no:6,n:4,h:"5558",su:"s",st:"ok",cat:"w4",nm:"単騎待ち（刻子＋1枚）",pt:"555 を刻子にすると 8 が ひとり → 8 の単騎"},
+ {id:"4-007",no:7,n:4,h:"3456",su:"m",st:"ok",cat:"w4",nm:"延べ単（4枚の 連続）",pt:"3＋456 か 345＋6 に 分けて → 3・6"},
+ {id:"4-008",no:8,n:4,h:"2223",su:"p",st:"ok",cat:"w4",nm:"刻子＋となりの 1枚",pt:"22 を雀頭 → 23 で 1・4／222 を刻子 → 3 の単騎"},
+ {id:"4-009",no:9,n:4,h:"2224",su:"s",st:"ok",cat:"w4",nm:"刻子＋1つ とんだ 1枚",pt:"222 を刻子 → 4 の単騎／22 を雀頭 → 24 の間の 3"},
+ {id:"4-010",no:10,n:4,h:"4556",su:"m",st:"ok",cat:"w4",nm:"重なり待ち（嵌張と 単騎が 同じ牌）",pt:"55 を雀頭 → 46 の間の 5／456 を順子 → 5 の単騎 → 待ちは 5 だけ"},
+];
+/* R95.2: 基本セット(お手本の 形 そのものを 1問ずつ 解く。ならびは 下の 順)。
+   4枚形 = 基本 10形。7枚形 = 18例を 9形ずつ A・B に わける:
+     むずかしさの 目安 = 待ちの 種類数 ＋(暗刻2つの形・4枚使いの形 なら 1)。小さい順(同じなら ID 順)に 9形が A、のこり 9形が B */
+const MW_SETS={
+  '4': {n:4,label:'基本10問',ids:['4-001','4-002','4-003','4-004','4-005','4-006','4-007','4-008','4-009','4-010']},
+  '7A':{n:7,label:'基本セットA',ids:['7-010','7-001','7-002','7-003','7-006','7-008','7-011','7-012','7-004']},
+  '7B':{n:7,label:'基本セットB',ids:['7-005','7-007','7-014','7-016','7-009','7-015','7-017','7-018','7-013']},
+};
+const MW_SET_OF={}; Object.keys(MW_SETS).forEach(k=>MW_SETS[k].ids.forEach(id=>{ MW_SET_OF[id]=k; }));
 const MW_ST_LABEL={new:'○ 未学習',learn:'△ 学習中',master:'✓ 習得済み'};
 const MW_SUIT_BASE={m:0,p:9,s:18}, MW_N_Q=7;
 let MW_CACHE=null, MW_N=7;
@@ -6891,10 +6921,11 @@ function mwKey(suit,ds,hon){ return suit+':'+ds.join('')+(hon.length?'+'+hon.joi
 function mwBuild(){
   if(MW_CACHE) return MW_CACHE;
   const byKey={}, pats=[], bad=[];
-  MW_SRC.forEach(src=>{
+  const byKey4={}, pats4=[];   // R95.2: 4枚形(7枚形・10枚形とは べつの 表)
+  const add=(src,byKey,pats)=>{
     const ds=mwDigits(src.h), hon=src.hon?src.hon.split(''):[], base=mwEval(ds,src.su,hon,src.n);
     const P=Object.assign({},src,{ds,honA:hon,base,probs:[],rep:{shift:0,ref:0,raw:0,uniq:0,changed:0}});
-    P.verified=!!base&&base.waits.length>=2;
+    P.verified=!!base&&base.waits.length>=(src.n===4?1:2);   // R95.2: 4枚形は 待ち1種類の 形も 基本
     P.use=src.st==='ok'&&P.verified;
     pats.push(P);
     if(!P.use) return;
@@ -6916,12 +6947,15 @@ function mwBuild(){
         });
       }
     });
-  });
-  MW_CACHE={pats,byKey,bad};
+  };
+  MW_SRC.forEach(src=>add(src,byKey,pats));
+  MW4_SRC.forEach(src=>add(src,byKey4,pats4));
+  MW_CACHE={pats,byKey,bad,pats4,byKey4};
   return MW_CACHE;
 }
-function mwPat(pid){ return mwBuild().pats.find(p=>p.id===pid)||null; }
-function mwActive(n){ return mwBuild().pats.filter(p=>p.use&&p.n===n); }
+function mwPat(pid){ const C=mwBuild(); return C.pats.find(p=>p.id===pid)||C.pats4.find(p=>p.id===pid)||null; }
+function mwActive(n){ const C=mwBuild(); return (n===4?C.pats4:C.pats).filter(p=>p.use&&p.n===n); }
+function mwProb(key){ const C=mwBuild(); return C.byKey[key]||C.byKey4[key]||null; }   // R95.2: 4枚形の 問題も さがす
 function mwTiles(ds,suit,hon){ return ds.map(d=>d+suit).concat(hon||[]); }
 /* アガリの 分けかた(1つ)。雀頭＋組 を 牌の 列で */
 function mwDecOf(ds,suit,hon,w){
@@ -6938,7 +6972,7 @@ function mwStoreRead(){
   const s=S.mwPat; const p=(s&&typeof s==='object'&&s.p&&typeof s.p==='object'&&!Array.isArray(s.p))?s.p:{};
   return {v:1,p:Object.assign({},p)};
 }
-function mwRevOf(pid){ const s=MW_SRC.find(x=>x.id===pid); return (s&&s.rev)||1; }
+function mwRevOf(pid){ const s=MW_SRC.find(x=>x.id===pid)||MW4_SRC.find(x=>x.id===pid); return (s&&s.rev)||1; }
 function mwRecOf(pid,st){
   const r0=(st||mwStoreRead()).p[pid], r=(r0&&typeof r0==='object'&&((+r0.rev||1)===mwRevOf(pid)))?r0:{};   // R95.1: 前の 牌姿(rev)の 記録は 数えない
   const arr=(a,f)=>Array.isArray(a)?a.filter(f):[];
@@ -6984,7 +7018,7 @@ function mwSpread(slots){
   return out;
 }
 function mwChoose(x,used,rnd,exact){
-  if(exact){ const pr=mwBuild().byKey[exact]; if(pr&&pr.pid===x.p.id&&!used.has(exact)) return pr; }
+  if(exact){ const pr=mwProb(exact); if(pr&&pr.pid===x.p.id&&!used.has(exact)) return pr; }
   const all=x.p.probs.filter(pr=>!used.has(pr.key));
   const fresh=all.filter(pr=>x.r.seen.indexOf(pr.key)<0&&pr.key!==x.r.wrong);
   const pool=fresh.length?fresh:all; if(!pool.length) return null;
@@ -7017,22 +7051,32 @@ function mwPlan(n,mode,rnd){
   slots.forEach(s=>{ const pr=mwChoose(s.x,used,rnd,s.exact); if(pr){ used.add(pr.key); out.push(pr); } });
   return out;
 }
+/* ---- R95.2 基本セット: お手本の 形 そのもの(色も そのまま)を セットの 順に。記録(S.mwSet)は おわったときに 1回 ---- */
+function mwSetPlan(k){ const st=MW_SETS[k]; if(!st) return []; return st.ids.map(id=>{ const P=mwPat(id); return P&&P.use?mwProb(mwKey(P.su,P.ds,P.honA)):null; }).filter(Boolean); }
+function mwSetRec(k){ const s=S.mwSet, r=(s&&typeof s==='object'&&s.s&&typeof s.s==='object'&&s.s[k]&&typeof s.s[k]==='object')?s.s[k]:{};
+  return {plays:Math.max(0,+r.plays||0), best:Math.max(0,+r.best||0), total:MW_SETS[k]?MW_SETS[k].ids.length:0, at:typeof r.at==='string'?r.at:null, done:!!r.done}; }
+function mwSetFinish(k,correct){
+  if(!MW_SETS[k]) return; const s=(S.mwSet&&typeof S.mwSet==='object'&&S.mwSet.s&&typeof S.mwSet.s==='object')?S.mwSet:{v:1,s:Object.assign({},(S.mwSet&&S.mwSet.s)||{})};
+  const r=mwSetRec(k); r.plays++; r.best=Math.max(r.best,correct); r.at=todayStr(); r.done=true; delete r.total; s.s[k]=r; S.mwSet=s;
+}
+function mwSetChip(k){ const r=mwSetRec(k); return r.done?(r.best===r.total?'✓ ぜんぶ正解':'✓ 完了 '+r.best+'/'+r.total):'○ まだ'; }
 function mwQ(pr){
   const counts=new Array(9).fill(0); pr.ds.forEach(d=>counts[d-1]++);
   return {wtype:true, mw:{pid:pr.pid,key:pr.key,same:pr.same,remain:pr.remain}, level:pr.n, counts, suit:pr.suit, hon:pr.hon.slice(),
     waits:pr.waits.slice(), seed:'mw:'+pr.key, lv:waitsLv(pr.n,pr.waits.length), fs:'mw:'+pr.pid+(pr.same?'':':chg')};
 }
-function mwStart(n,mode){
+function mwStart(n,mode,set){
   if(!staminaFree()&&S.hearts<=0){ staminaModal(); return; }
   if(!waitsTilesUnlocked().includes(n)){ trainLockInfo(n); return; }
-  const plan=mwPlan(n,mode); if(!plan.length) return;
-  L={course:{id:'tr-waits',title:'多面張 '+n+'枚形'+(mode==='review'?'（苦手）':''),type:'waits',training:true},
+  if(mode==='set'&&!(MW_SETS[set]&&MW_SETS[set].n===n)) return;
+  const plan=mode==='set'?mwSetPlan(set):mwPlan(n,mode); if(!plan.length) return;
+  L={course:{id:'tr-waits',title:(mode==='set'?n+'枚形 '+MW_SETS[set].label:'多面張 '+n+'枚形'+(mode==='review'?'（苦手）':'')),type:'waits',training:true},
      qs:plan.map(mwQ),idx:0,correct:0,sel:null,checked:false,done:false,
-     rcat:'waits',ratingStart:S.ratings.waits,bigMiss:0,startedAt:Date.now(),combo:0,maxCombo:0,wtiles:n,mw:{n,mode}};
+     rcat:'waits',ratingStart:S.ratings.waits,bigMiss:0,startedAt:Date.now(),combo:0,maxCombo:0,wtiles:n,mw:mode==='set'?{n,mode,set}:{n,mode}};
   document.getElementById('lesson').classList.add('show');
   renderQ();
 }
-function mwAgain(n,mode){ document.getElementById('lesson').classList.remove('show'); L=null; renderHUD(); mwStart(n,mode); }
+function mwAgain(n,mode,set){ document.getElementById('lesson').classList.remove('show'); L=null; renderHUD(); mwStart(n,mode,set); }
 function mwStudyFromResult(n){ afterLesson(); mwStudy(n); }
 /* ---- 画面 ---- */
 function mwStudy(n){ MW_N=n; TR_SEL='mw'; renderTraining(); trTop(); }
@@ -7041,20 +7085,22 @@ function mwBlockHTML(){
   const row=n=>{
     if(!un.includes(n)) return '<div class="mw-row lock" id="mw-row-'+n+'"><b>'+n+'枚形</b><button class="tr-pick lock mw-b" onclick="trainLockInfo('+n+')">🔒 まだ クリアしてない</button></div>';
     const s=mwSummary(n), wk=mwWeak(n).length;
+    const setB=k=>'<button class="tr-pick mw-b mw-set'+(mwSetRec(k).done?' done':'')+'" id="mw-set-'+k+'" onclick="mwStart('+n+',\'set\',\''+k+'\')">'+(k==='4'?'🔰 基本10問':'🔰 基本'+k.slice(1))+'<small>'+mwSetChip(k)+'</small></button>';   // R95.2
     return '<div class="mw-row" id="mw-row-'+n+'"><div class="mw-rh"><b>'+n+'枚形</b><span class="mw-prog" id="mw-prog-'+n+'">習得 '+s.master+' / '+s.total+'形</span></div>'
       +'<div class="mw-btns">'
       +'<button class="tr-pick mw-b" id="mw-study-'+n+'" onclick="mwStudy('+n+')">📖 お手本<small>'+s.total+'形</small></button>'
+      +Object.keys(MW_SETS).filter(k=>MW_SETS[k].n===n).map(setB).join('')
       +'<button class="tr-pick mw-b" id="mw-drill-'+n+'" onclick="mwStart('+n+',\'drill\')">✏️ 問題<small>'+MW_N_Q+'問</small></button>'
       +'<button class="tr-pick mw-b'+(wk?'':' off')+'" id="mw-rev-'+n+'"'+(wk?'':' disabled')+' onclick="mwStart('+n+',\'review\')">🔁 苦手<small>'+(wk?wk+'形':'まだ ないよ')+'</small></button>'
       +'</div></div>';
   };
-  return '<div class="tr-opt mw-box" id="mw-box"><p class="tr-opt-h">🧩 多面張パターン（7枚形・10枚形）</p>'
-    +'<p class="tr-note">お手本の 形を おぼえて、色や 位置を かえた 問題で れんしゅう</p>'+row(7)+row(10)+'</div>';
+  return '<div class="tr-opt mw-box" id="mw-box"><p class="tr-opt-h">🧩 待ちの形パターン</p>'
+    +'<p class="tr-note">基本の 形を おぼえて、色や 位置を かえた 問題で れんしゅう</p>'+row(4)+row(7)+row(10)+'</div>';
 }
 function mwCardHTML(P,st){
   const r=mwRecOf(P.id,st), w=P.base.waits, su=P.su;
   return '<div class="mw-card st-'+r.st+'" id="mw-c-'+P.id+'" data-st="'+r.st+'">'
-    +'<div class="mw-top"><b class="mw-nm">'+P.nm+'</b><span class="mw-st">'+MW_ST_LABEL[r.st]+'</span></div>'
+    +'<div class="mw-top"><b class="mw-nm">'+P.nm+(MW_SET_OF[P.id]&&MW_SET_OF[P.id]!=='4'?'<small class="mw-tag">'+MW_SETS[MW_SET_OF[P.id]].label.slice(2)+'</small>':'')+'</b><span class="mw-st">'+MW_ST_LABEL[r.st]+'</span></div>'
     +'<div class="hand mw-hand n'+P.n+'">'+mwTiles(P.ds,su,P.honA).map(t=>tileHTML(t)).join('')+'</div>'
     +'<div class="mw-wrow"><span class="mw-wl">待ち</span><span class="mw-wt">'+w.map(x=>tileHTML(mwCode(x,su))).join('')+'</span>'
     +'<span class="mw-wn">'+w.length+'種・残り'+P.base.remain+'枚</span></div>'
@@ -7064,13 +7110,14 @@ function mwCardHTML(P,st){
     +'</div>';
 }
 function mwStudyHTML(n){
-  const un=waitsTilesUnlocked().filter(x=>x===7||x===10), st=mwStoreRead(), s=mwSummary(n), ps=mwActive(n);
+  const un=waitsTilesUnlocked().filter(x=>x===4||x===7||x===10), st=mwStoreRead(), s=mwSummary(n), ps=mwActive(n);   // R95.2: 4枚形も
   return '<div class="card mw-study" id="mw-study">'
-    +'<div class="mw-sh"><b>📖 多面張パターン</b><span>'+n+'枚形・'+s.total+'形</span></div>'
+    +'<div class="mw-sh"><b>📖 '+(n===4?'待ちの 基本形':'多面張パターン')+'</b><span>'+n+'枚形・'+s.total+'形</span></div>'
     +(un.length>1?'<div class="mw-tabs">'+un.map(x=>'<button class="mw-tab'+(x===n?' on':'')+'" id="mw-tab-'+x+'" onclick="mwStudy('+x+')">'+x+'枚形</button>').join('')+'</div>':'')
     +'<p class="mw-sum" id="mw-sum">✓ 習得 '+s.master+'・△ 学習中 '+s.learn+'・○ 未学習 '+s.new+'</p>'
     +'<p class="tr-note">お手本は 1つの 例。問題では 色や 位置を かえて 出るよ（端に よると 待ちが かわることも）。</p>'
-    +'<div class="mw-btns mw-go"><button class="btn" id="mw-go-drill" onclick="mwStart('+n+',\'drill\')">✏️ 問題を解く（'+MW_N_Q+'問）</button></div>'
+    +'<div class="mw-btns mw-go">'+Object.keys(MW_SETS).filter(k=>MW_SETS[k].n===n).map(k=>'<button class="btn" id="mw-go-set-'+k+'" onclick="mwStart('+n+',\'set\',\''+k+'\')">🔰 '+MW_SETS[k].label+'（'+MW_SETS[k].ids.length+'問）<small class="mw-gs">'+mwSetChip(k)+'</small></button>').join('')
+    +'<button class="btn'+(n===10?'':' gray')+'" id="mw-go-drill" onclick="mwStart('+n+',\'drill\')">✏️ 問題を解く（'+MW_N_Q+'問）</button></div>'
     +'</div>'
     +ps.map(P=>mwCardHTML(P,st)).join('');
 }
@@ -7078,7 +7125,7 @@ function mwFeedback(q,res){
   const lab=w=>typeof w==='number'?w+'':HONOR[w];
   const P=mwPat(q.mw.pid), ds=[]; q.counts.forEach((c,i)=>{ for(let k=0;k<c;k++) ds.push(i+1); });
   return {ansText:'正解の待ち： '+q.waits.map(lab).join('・')+'（'+SUITCH[q.suit]+'子'+(q.hon&&q.hon.length?'・字牌':'')+'）　'+q.waits.length+'種・残り'+q.mw.remain+'枚',
-    expText:'<span class="mw-fb">お手本「'+(P?P.nm:'')+'」の 形'+(q.mw.same?'':'。<b class="mw-chg">⚠ 端に よったので、お手本と 待ちが かわるよ</b>')+'</span>'
+    expText:'<span class="mw-fb">'+(q.mw.pid[0]==='4'?'基本形':'お手本')+'「'+(P?P.nm:'')+'」の 形'+(q.mw.same?'':'。<b class="mw-chg">⚠ 端に よったので、お手本と 待ちが かわるよ</b>')+'</span>'
       +mwDecHTML(ds,q.suit,q.hon||[],q.waits)};
 }
 function bandText(cat){
@@ -20809,6 +20856,7 @@ function finishLesson(){
   if(L.fuCourse) fuCourseMark(L.fuCourse.n,'done');                  // R87: 講座のレッスンを おえた(はじめての日だけ のこす)
   // トレーニング自己ベスト(完走時のみ・種別ごとに分離。将来waits_4等の粒度キーも同じ器で持てる)
   let bestInfo=null;
+  if(L.mw&&L.mw.set) mwSetFinish(L.mw.set,L.correct);   // R95.2: 基本セットを おえた(1回の 終了で 1回。下の save で 保存)
   if(L.course.training&&L.rcat&&!L.mw){   // R95: 多面張パターンの 問題・苦手は BEST(ランダム 7問の タイム)に 入れない
     const key=L.rcat;
     const prev=S.trainingBest[key];
@@ -20936,7 +20984,8 @@ function renderResult(ctx){
       +statBox(accuracy+'%','正解率')
       +statBox(sm.master+' / '+sm.total,'習得した形')
       +'</div>'
-      +'<p class="stag" id="mw-res-note" style="'+noteStyle+'animation-delay:'+(SI++)*MOTION.resultStagger+'ms">🧩 多面張 '+L.mw.n+'枚形・'+(L.mw.mode==='review'?'苦手を復習':'問題')
+      +(L.mw.set?'<div class="best-badge stag" id="mw-set-done"'+stagStyle(SI++)+'>🔰 '+L.mw.n+'枚形 '+MW_SETS[L.mw.set].label+' 完了！'+(L.correct===quizN?' ぜんぶ正解':'')+'</div>':'')   // R95.2
+      +'<p class="stag" id="mw-res-note" style="'+noteStyle+'animation-delay:'+(SI++)*MOTION.resultStagger+'ms">🧩 '+L.mw.n+'枚形・'+(L.mw.set?MW_SETS[L.mw.set].label:L.mw.mode==='review'?'苦手を復習':'問題')
       +(wk?'　／　苦手の形: '+wk:'')+'</p>'
       +'<div class="stag"'+stagStyle(SI++)+'><span class="xp-chip" style="font-size:12px;padding:6px 12px;">+'+xp+' EXP</span></div>'
       +ratingSummary;
@@ -20989,9 +21038,11 @@ function renderResult(ctx){
       +(fuReviewCount()&&L.fuTrain.step!=='review'?'<button class="btn gray" id="fu-go-review" style="margin-top:8px;" onclick="fuTrainAgain(\'review\')">まちがえた形を復習する</button>':'')
       +'<button class="btn gray" style="margin-top:8px;" onclick="afterLesson()">トレーニングに戻る</button>'
     :L.mw
-    ?'<button class="btn" id="mw-again" onclick="mwAgain('+L.mw.n+',\'drill\')">もう一度（'+MW_N_Q+'問）</button>'
+    ?(L.mw.set?'<button class="btn" id="mw-again" onclick="mwAgain('+L.mw.n+',\'set\',\''+L.mw.set+'\')">もう一度（'+MW_SETS[L.mw.set].label+'）</button>'
+        +(L.mw.set==='7A'?'<button class="btn gray" id="mw-next-set" style="margin-top:8px;" onclick="mwAgain(7,\'set\',\'7B\')">基本セットBへ</button>':'')
+      :'<button class="btn" id="mw-again" onclick="mwAgain('+L.mw.n+',\'drill\')">もう一度（'+MW_N_Q+'問）</button>')
       +(mwWeak(L.mw.n).length?'<button class="btn gray" id="mw-again-rev" style="margin-top:8px;" onclick="mwAgain('+L.mw.n+',\'review\')">苦手な形を 復習する</button>':'')
-      +'<button class="btn gray" id="mw-to-study" style="margin-top:8px;" onclick="mwStudyFromResult('+L.mw.n+')">お手本を 見る</button>'
+      +(L.mw.set==='7A'?'':'<button class="btn gray" id="mw-to-study" style="margin-top:8px;" onclick="mwStudyFromResult('+L.mw.n+')">お手本を 見る</button>')   // R95.2: セットA の 結果は「セットBへ」を 出すので ボタンは 3つまで
       +'<button class="btn gray" style="margin-top:8px;" onclick="afterLesson()">トレーニングに戻る</button>'
     :L.scoreTrain
     ?'<button class="btn" onclick="scoreTrainAgain('+L.scoreTrain.level+')">もう一度（'+SCORE_TRAIN_N+'問）</button>'
