@@ -4803,8 +4803,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.86.0';
-const BUILD_ID='20261019-01';
+const APP_VER='0.86.1';
+const BUILD_ID='20261020-01';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -5712,10 +5712,10 @@ function renderHome(){
    start  = 配ったときの「アガリまでの近さ」の出やすさ [あと何枚ぶん, 重み]。0 = テンパイ。毎回テンパイからは始めない
    draws と start は、ヒントどおりに打ったときに アガれる局が 7割前後になるように 決めた(4枚は9割ちかく) */
 const SOLO_MODES={
-  4: {n:4, sets:1, label:'4枚麻雀', form:'1メンツ＋1アタマ', key:'c1_1', nSuits:1, honors:false, draws:10, start:[[0,3],[1,7]], goal:'少ないツモで アガろう'},
-  7: {n:7, sets:2, label:'7枚麻雀', form:'2メンツ＋1アタマ', key:'c2_1', nSuits:2, honors:false, draws:18, start:[[1,7],[2,3]], goal:'つづけて アガろう'},
-  10:{n:10,sets:3, label:'10枚麻雀',form:'3メンツ＋1アタマ', key:'c3_1', nSuits:3, honors:false, draws:27, start:[[1,7],[2,3]], goal:'じぶんの記録を こえよう'},
-  13:{n:13,sets:4, label:'13枚麻雀',form:'4メンツ＋1アタマ', key:'d1_1', nSuits:3, honors:true,  draws:36, start:[[1,5],[2,5]], goal:'役を作って 高いスコアをねらおう', yaku:true},
+  4: {n:4, sets:1, label:'4枚麻雀', form:'1メンツ＋1アタマ', key:'c1_1', nSuits:1, honors:false, draws:10, goal:'少ないツモで アガろう'},
+  7: {n:7, sets:2, label:'7枚麻雀', form:'2メンツ＋1アタマ', key:'c2_1', nSuits:2, honors:false, draws:18, goal:'つづけて アガろう'},
+  10:{n:10,sets:3, label:'10枚麻雀',form:'3メンツ＋1アタマ', key:'c3_1', nSuits:3, honors:false, draws:27, goal:'じぶんの記録を こえよう'},
+  13:{n:13,sets:4, label:'13枚麻雀',form:'4メンツ＋1アタマ', key:'d1_1', nSuits:3, honors:true,  draws:36, goal:'役を作って 高いスコアをねらおう', yaku:true},
 };
 const SOLO_SUIT_NAME={m:'マンズ',p:'ピンズ',s:'ソーズ'};
 const SOLO_ORDER=[4,7,10,13];
@@ -5747,23 +5747,15 @@ function soloKinds(n,suits){ const c=teCount(soloUniverse(n,suits)); return c.ma
 function soloShC(c,sets,nTiles){ return sets===4?teShanten(c,nTiles):teShStd(c,sets); }
 function soloSh(tiles,sets){ return soloShC(teCount(tiles),sets,tiles.length); }
 function soloIsWin(tiles,sets){ return tiles.length===sets*3+2&&soloSh(tiles,sets)===-1; }
-/* 配る: 山をまぜて、上から n 枚が手牌、つづく draws 枚が ツモる山。
-   手牌の近さが ねらい(start)に合うまで まぜなおす。合わせるのは 配った手だけで、ツモの順番には さわらない */
+/* 配る: その局の牌(soloUniverse。同じ牌は4枚ずつ)を まぜて、上から n 枚が手牌、つづく draws 枚が ツモる山。
+   R94.1: 4・7・10・13枚 ぜんぶ ランダム。手牌の近さ(シャンテン)は 見ない・配りなおさない・入れかえない。
+   sh は 記録(startSh)のために 数えるだけで、配りかたには つかわない */
 function soloDeal(n,rnd){
   const m=SOLO_MODES[n]; rnd=rnd||Math.random;
-  const tot=m.start.reduce((a,x)=>a+x[1],0); let r=rnd()*tot, want=m.start[0][0];
-  for(const x of m.start){ if(r<x[1]){ want=x[0]; break; } r-=x[1]; }
-  const suits=soloPickSuits(n,rnd);
-  let best=null;
-  for(let tryN=0;tryN<600;tryN++){
-    const u=soloUniverse(n,suits);
-    for(let i=u.length-1;i>0;i--){ const j=Math.floor(rnd()*(i+1)); const t=u[i]; u[i]=u[j]; u[j]=t; }
-    const hand=u.slice(0,n), sh=soloSh(hand,m.sets);
-    const d={hand:sortTiles(hand), wall:u.slice(n,n+m.draws), sh, want, suits, tries:tryN+1};
-    if(sh===want) return d;
-    if(!best||Math.abs(sh-want)<Math.abs(best.sh-want)) best=d;
-  }
-  return best;
+  const suits=soloPickSuits(n,rnd), u=soloUniverse(n,suits);
+  for(let i=u.length-1;i>0;i--){ const j=Math.floor(rnd()*(i+1)); const t=u[i]; u[i]=u[j]; u[j]=t; }
+  const hand=u.slice(0,n);
+  return {hand:sortTiles(hand), wall:u.slice(n,n+m.draws), sh:soloSh(hand,m.sets), suits};
 }
 /* 打牌ごとの評価(ヒント用)。tiles = 手牌＋ツモ牌、visible = 河、kinds = 山に入っている牌の種類 */
 function soloEval(tiles,visible,sets,kinds){
@@ -6107,7 +6099,7 @@ function soloBingoBtnPaint(){
      打牌の評価 soloEval(R83 のヒント。見えている牌=手牌＋ツモ牌＋河 だけで数える)・アガリ形 soloIsWin・待ちの形 soloWaitKinds(R92)・アガリ形の分けかた soloDecomps
    ・山(g.wall)は 見ない。のこり枚数は「見えていない枚数」(4枚 −(手牌＋ツモ牌＋河 に見えている数))。山に あるとは かぎらない
    ・つかったら g.sup が ふえる。7・10枚の ビンゴ「ヒントなし」は ヒント(g.hints)と サポート(g.sup)の どちらも 0 のときだけ。g は 局ごとに 作りなおすので 次の局に のこらない */
-const SOLO_SH_WORD=['テンパイ','イーシャンテン','リャンシャンテン','サンシャンテン','スーシャンテン'];
+const SOLO_SH_WORD=['テンパイ','イーシャンテン','リャンシャンテン','サンシャンテン','スーシャンテン','ウーシャンテン','ローシャンテン'];   // R94.1: ランダムに配るので 5・6シャンテンも ある
 /* 見えている牌(手牌＋ツモ牌＋河)の数。山は ふくめない */
 function soloVisCount(g){ return teCount(g.hand.concat(g.tsumo?[g.tsumo]:[]).concat(g.river)); }
 /* 待ちの形の名前。七対子・国士は ふつうの形の分けかたが ないので べつに名づける(13枚だけ) */
@@ -6327,7 +6319,7 @@ function soloExpNext(){ const g=SOLO; if(!g||!g.done) return; g.expAlt=(g.expAlt
      役満のときは 役満だけ(ふつうの役は 数えない)・イーペーコーと二盃口 / ホンイツとチンイツ / チャンタと純チャン は 両方つかない(判定のまま)
    ・ID は 役の key(CH3_YAKU_META・資料集の 役一覧と 同じ)。名前・翻・条件・牌姿の例は 役一覧の データ(CH3_YAKU_META・yakuHanText・yakuExampleHTML)を つかう(写さない)
    ・入れる役 = 役一覧の役 から、13枚麻雀の きまりで 作れない役(SOLO_YC_OUT)を のぞいたもの。きまり: 鳴きなし・カンなし・ツモアガリだけ(ロンなし)・
-     あなたは 子(南家)・東場・ドラなし・リーチ あり(ダブルリーチ・一発・海底も)・配る手は いつも 1〜2シャンテン(soloDeal)
+     あなたは 子(南家)・東場・ドラなし・リーチ あり(ダブルリーチ・一発・海底も)・配る手は ランダム(soloDeal。R94.1)
    ・保存: S.soloYaku = {got:{key:日付}, xp, ms:[報酬を出した 収集数], comp}。はじめて 役を あつめるまで 作らない。古い・こわれた記録は 空として読む。
      R84 からの S.solo[13].yaku(役ごとの回数)は そのまま(さかのぼって 収集には しない)
    ・EXP(1回だけ): はじめての役 1翻 5・2翻 10・3翻以上 15・役満 30 / 5役 20・10役 30・20役 50 / ぜんぶ 100。
@@ -6336,9 +6328,10 @@ const SOLO_YC_OUT={
   houtei:'ロンで アガる役。ひとり麻雀は ツモアガリだけ',
   sankantsu:'カンが ない', suukantsu:'カンが ない',
   tenhou:'親の役。ひとり麻雀の あなたは 子(南家)',
-  chiihou:'1回目のツモで アガる役。配る手は いつも 1〜2シャンテンなので 1回目のツモでは アガれない',
   toitoi:'鳴きが ないので 刻子4つは いつも 暗刻 → 四暗刻(役満)になり、トイトイ単独では つかない',
 };
+/* R94.1: 配る手が ランダムになり、配牌テンパイ → 1回目のツモで アガる(地和)が ありうるので、地和を 対象に入れた(29 → 30役)。
+   判定は これまでどおり soloWin の chiihou(1回目のツモ・河が空)→ ch3YakuList。R94 で コンプリート(comp)した記録は そのまま(100 EXP は 1回だけ) */
 const SOLO_YC_MS=[[5,20],[10,30],[20,50]], SOLO_YC_COMP_XP=100;
 function soloYcKeys(){ const o=ylOrder(); return o.norm.concat(o.ym).filter(k=>!SOLO_YC_OUT[k]); }
 function soloYcNewXp(k){ const m=CH3_YAKU_META[k]||{}; return m.yakuman?30:(m.closedHan>=3?15:(m.closedHan===2?10:5)); }
@@ -6673,7 +6666,7 @@ function soloResultHTML(g){
       +'<div class="sr-row"><span>アガリ</span><b>'+r.wins+'/'+r.plays+'（'+soloRate(r)+'%）</b></div>';
   }else{
     h+='<p class="sr-title" id="sr-title">山がなくなったよ</p>'
-      +'<p class="sr-sub">こんどは アガれなかったね。もう一度 やってみよう！</p>'
+      +'<p class="sr-sub">流局（りゅうきょく）だよ。今回は アガれなかったね。つぎの局でも ちょうせんしてみよう！</p>'
       +(m.yaku?'<div class="sr-row" id="sr-best"><span>自己ベスト</span><b>'+r.bestScore.toLocaleString()+'</b></div>'
               :'<div class="sr-row" id="sr-streak"><span>連続アガリ</span><b>0回<small>（最長 '+r.maxStreak+'）</small></b></div>'
                +(r.best!=null?'<div class="sr-row" id="sr-best"><span>最少ツモ</span><b>'+r.best+'回</b></div>':''))
