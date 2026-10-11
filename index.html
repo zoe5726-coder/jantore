@@ -536,6 +536,47 @@ span.tv-riichi-tile{transform:rotate(-90deg);}
 .sr-yc .yc-res-n{margin:2px 0; font-size:clamp(12.5px,3.5vw,13.5px);}
 .sr-yc .sp-next{width:auto; padding:7px 12px; font-size:clamp(12px,3.4vw,13px);}
 .sp-yk{flex-basis:100%; font-size:.92em; color:var(--jade-ink); font-weight:800;}
+/* ---- R95 多面張パターン(待ちトレーニングの中) ---- */
+.mw-box{margin-top:12px;}
+.mw-row{border-top:1px dashed var(--line); padding:8px 0 2px;}
+.mw-rh{display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-bottom:6px;}
+.mw-rh b{font-size:14px;}
+.mw-prog{font-size:12px; font-weight:800; color:var(--ink-soft);}
+.mw-btns{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px;}
+.mw-b{min-height:48px; font-size:14px; white-space:nowrap; padding-left:2px; padding-right:2px;}
+.mw-b.off{opacity:.55;}
+.mw-row.lock{display:flex; align-items:center; gap:10px;}
+.mw-row.lock .mw-b{flex:1;}
+.mw-go{grid-template-columns:1fr; margin-top:8px;}
+.mw-study .mw-sh{display:flex; align-items:baseline; justify-content:space-between; gap:8px;}
+.mw-study .mw-sh b{font-size:15px;}
+.mw-study .mw-sh span{font-size:12.5px; font-weight:800; color:var(--ink-soft);}
+.mw-tabs{display:flex; gap:6px; margin:8px 0 4px;}
+.mw-tab{flex:1; min-height:42px; border-radius:10px; border:2px solid var(--line); background:var(--card); font-weight:900; font-size:14px; color:var(--ink);}
+.mw-tab.on{border-color:var(--jade); background:var(--jade-soft);}
+.mw-sum{font-size:13px; font-weight:800; margin:6px 0 2px;}
+.mw-card{background:var(--card); border:2px solid var(--line); border-radius:14px; padding:10px 8px 8px; margin:10px 0;}
+.mw-card.st-master{border-color:var(--jade);}
+.mw-top{display:flex; align-items:center; justify-content:space-between; gap:8px;}
+.mw-nm{font-size:14.5px;}
+.mw-st{font-size:12px; font-weight:900; padding:2px 8px; border-radius:999px; background:var(--jade-soft); white-space:nowrap;}
+.mw-card.st-new .mw-st{background:transparent; border:1px solid var(--line); color:var(--ink-soft);}
+.mw-hand{margin:8px 0 6px; --tile-w:38px;}
+.mw-hand.n10{gap:1px;}
+.mw-wrow{display:flex; align-items:center; gap:6px; flex-wrap:wrap;}
+.mw-wl{font-size:12px; font-weight:900; color:var(--ink-soft);}
+.mw-wt{display:inline-flex; gap:2px;}
+.mw-wt .tile{width:26px;}
+.mw-wn{font-size:12.5px; font-weight:800;}
+.mw-pt{font-size:13px; font-weight:700; line-height:1.55; margin:6px 0 2px;}
+.mw-det summary{font-size:12.5px; font-weight:800; color:var(--jade-ink); cursor:pointer; padding:8px 0; min-height:34px;}
+.mw-decs{display:block;}
+.mw-dec{display:flex; align-items:center; gap:2px; flex-wrap:wrap; font-size:14px; margin:3px 0;}
+.mw-ar{margin:0 4px; color:var(--ink-soft); font-weight:900;}
+.mw-rec{font-size:11.5px; color:var(--ink-soft); font-weight:700; margin:2px 0 0;}
+.mw-fb{display:block; margin-bottom:4px;}
+.mw-chg{display:block; color:var(--verm); margin-top:2px;}
+.numpick-h{grid-template-columns:repeat(7,1fr); max-width:min(300px,88vw); margin-top:8px;}
 .solo-mjt .mjt-pick.solo-rz > .tile{outline:2.5px solid var(--now-ring); outline-offset:1px;}
 .solo-mjt .solo-dim > .tile{opacity:.45;}
 .solo-mjt .solo-tp-off{display:block; line-height:0;}
@@ -4803,8 +4844,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.86.1';
-const BUILD_ID='20261020-01';
+const APP_VER='0.87.0';
+const BUILD_ID='20261021-01';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -6785,7 +6826,252 @@ function trainOptionsHTML(cat){
     +'<button class="tr-pick tr-any" onclick="startTraining(\'waits\',\'auto\')">おまかせ'
     +'<small>'+un.join('・')+'枚形から 7問</small></button></div>'
     +(un.length<steps.length?'<p class="tr-note">🔒は 学習コースで さいごまでクリアすると ひらくよ</p>':'')
+    +'</div>'
+    +mwBlockHTML();   // R95: 7枚形・10枚形の 多面張パターン(お手本・問題・苦手)
+}
+/* ===== R95 多面張パターン(7枚形・10枚形)の お手本・問題・苦手復習 =====
+   ・原型 = ユーザーが えらんだ 26例(MW_SRC)。画像からの 転記なので、ここの 牌姿は「候補」。待ちは 書かず、かならず 計算で きめる(getWaits)。
+     st: ok=検算ずみで 出題する / dup=ほかの お手本と 同じ形(平行移動・左右反転で 重なる)→ 出題しない(転記の 確認待ち) /
+         check=待ちが 1種類で 多面張に ならない → 出題しない(転記の 確認待ち)。ID は 26例 ぜんぶ のこす(あとで なおしても 記録が きえない)
+   ・名前(nm)は 牌姿の 形から つけた ツモッピィの 名前(元の資料の 名前は つかわない)。cat は 形の 分類(MW_CAT)
+   ・問題 = 原型を 左右反転(n→10−n)・平行移動(1〜9 の 中だけ)・色替え(萬・筒・索。字牌は そのまま)した 牌姿。
+     同じ 牌姿は 1つに まとめる(キー = 色:数字の並び[+字牌])。待ち・残り枚数は 1問ずつ 計算しなおす(5枚目の 牌は 待ちに しない)。
+     原型の待ちを 同じ変形で うつしたものと ちがう問題は same:false(お手本の待ちを そのまま 使うと まちがえる問題)
+   ・はじめて つかうときに 1回だけ 作って メモリに おく(保存しない。ページを ひらいただけでは 作らない)
+   ・習得は 原型ごと(S.mwPat。はじめて 答えたときに 作る)。保存キーは jantore-v1 のまま。知らない ID の記録も 消さない */
+const MW_CAT={ren:'連続形',toi:'対子複合形',an1:'暗刻複合形',an2:'暗刻2つの形',yon:'4枚使いの形',hat:'多面張発展形',ji:'字牌複合形'};
+const MW_SRC=[
+ {id:"7-001",no:1,n:7,h:"1234567",su:"m",st:"ok",cat:"ren",nm:"連続形 A",pt:"1234＋567、123＋4567 のように 分けかたが 3とおり → 1・4・7"},
+ {id:"7-002",no:2,n:7,h:"1122334",su:"p",st:"ok",cat:"toi",nm:"対子複合形 A",pt:"11 を雀頭にすると 22334 がのこり → 1・4"},
+ {id:"7-003",no:3,n:7,h:"2233445",su:"s",st:"dup",of:"7-002"},
+ {id:"7-004",no:4,n:7,h:"2345667",su:"m",st:"check"},
+ {id:"7-005",no:5,n:7,h:"2223456",su:"p",st:"ok",cat:"an1",nm:"暗刻複合形 A",pt:"222 を刻子 → 3456 で 3・6／22 を雀頭 → 23456 で 1・4・7"},
+ {id:"7-006",no:6,n:7,h:"5667888",su:"s",st:"ok",cat:"an1",nm:"暗刻複合形 B",pt:"88 を雀頭 → 56678 で 4・7／888 を刻子 → 5667 で 6"},
+ {id:"7-007",no:7,n:7,h:"5566777",su:"m",st:"ok",cat:"an1",nm:"暗刻複合形 C",pt:"77 を雀頭 → 55667 で 4・7／777 を刻子 → 5566 で 5・6"},
+ {id:"7-008",no:8,n:7,h:"2233344",su:"p",st:"ok",cat:"an1",nm:"暗刻複合形 D",pt:"333 を刻子 → 22・44 で 2・4／33 を雀頭 → 22344 で 3"},
+ {id:"7-009",no:9,n:7,h:"2223456",su:"s",st:"dup",of:"7-005"},
+ {id:"7-010",no:10,n:7,h:"1345666",su:"m",st:"ok",cat:"an1",nm:"暗刻複合形 E",pt:"666 を刻子 → 1 の単騎／66 を雀頭 → 13 の間の 2"},
+ {id:"7-011",no:11,n:7,h:"4446678",su:"p",st:"ok",cat:"an1",nm:"暗刻複合形 F",pt:"444 を刻子 → 6678 で 6・9／44 を雀頭 → 46678 で 5"},
+ {id:"7-012",no:12,n:7,h:"1234666",su:"s",st:"ok",cat:"an1",nm:"暗刻複合形 G",pt:"666 を刻子 → 1234 で 1・4／66 を雀頭 → 12346 で 5"},
+ {id:"7-013",no:13,n:7,h:"4445666",su:"m",st:"ok",cat:"an2",nm:"暗刻2つの形 A",pt:"444・666 の どちらを 刻子にするかで 待ちが かわる → 3〜7"},
+ {id:"7-014",no:14,n:7,h:"1113555",su:"p",st:"ok",cat:"an2",nm:"暗刻2つの形 B",pt:"111・555 を刻子 → 3 の単騎／11・55 を雀頭にすると 2・4"},
+ {id:"7-015",no:15,n:7,h:"2223334",su:"s",st:"ok",cat:"an2",nm:"暗刻2つの形 C",pt:"222・333 を刻子 → 4 の単騎／片方を雀頭にして 順子を作ると 2・3・5"},
+ {id:"7-016",no:16,n:7,h:"3345555",su:"m",st:"ok",cat:"yon",nm:"4枚使いの形 A",pt:"555 を刻子・33 を雀頭 → 45 で 3・6／55 を雀頭 → 3345 で 4"},
+ {id:"7-017",no:17,n:7,h:"3344455",su:"p",st:"dup",of:"7-008"},
+ {id:"7-018",no:18,n:7,h:"6667778",su:"s",st:"dup",of:"7-015"},
+ {id:"10-019",no:19,n:10,h:"2223344455",su:"m",st:"ok",cat:"hat",nm:"多面張発展形 A",pt:"222・444 を 刻子にするか 雀頭や順子にするかで → 3〜6"},
+ {id:"10-020",no:20,n:10,h:"2223334455",su:"p",st:"ok",cat:"hat",nm:"多面張発展形 B",pt:"222・333 を 刻子と見るか 234 を作るかで → 1・3・4・5・6"},
+ {id:"10-021",no:21,n:10,h:"2233344566",su:"s",st:"ok",cat:"hat",nm:"多面張発展形 C",pt:"66 を雀頭 → 1・4／333 を刻子にして 456 を2つ → 5"},
+ {id:"10-022",no:22,n:10,h:"3334567788",su:"m",st:"ok",cat:"hat",nm:"多面張発展形 D",pt:"333 を刻子 → 77・88 で 7・8／33 を雀頭 → 345 をぬいて 6・9"},
+ {id:"10-023",no:23,n:10,h:"4445677778",su:"s",st:"ok",cat:"yon",nm:"4枚使いの形 B",pt:"7 の4枚目を 順子に使う形。777 を どう見るかで → 3・5・6・8・9"},
+ {id:"10-024",no:24,n:10,h:"2223456778",su:"m",st:"ok",cat:"hat",nm:"多面張発展形 E",pt:"22 を雀頭 → 234・567 と 78 で 6・9／222 を刻子 → 77 を雀頭にして 7"},
+ {id:"10-025",no:25,n:10,h:"3334555666",su:"p",st:"ok",cat:"hat",nm:"多面張発展形 F",pt:"333・555・666 の 刻子と 順子の 組みかえで → 2〜6"},
+ {id:"10-026",no:26,n:10,h:"44555666",su:"s",hon:"RR",st:"ok",cat:"ji",nm:"字牌複合形 A",pt:"中中 を雀頭 → 44555666 で 4・7／44 を雀頭 → 中 を ひいて 刻子"}
+];
+const MW_ST_LABEL={new:'○ 未学習',learn:'△ 学習中',master:'✓ 習得済み'};
+const MW_SUIT_BASE={m:0,p:9,s:18}, MW_N_Q=7;
+let MW_CACHE=null, MW_N=7;
+function mwCounts(ds,suit,hon){ const c=new Array(34).fill(0); ds.forEach(d=>c[MW_SUIT_BASE[suit]+d-1]++); (hon||[]).forEach(h=>c[27+'ESWNBGR'.indexOf(h)]++); return c; }
+function mwWaitOf(i){ return i<27?(i%9+1):'ESWNBGR'[i-27]; }
+function mwCode(w,suit){ return typeof w==='number'?w+suit:w; }
+/* 1つの 牌姿を しらべる。だめなら null(数字が 1〜9 の外・枚数ちがい・5枚目・テンパイでない) */
+function mwEval(ds,suit,hon,n){
+  if(ds.some(d=>!(d>=1&&d<=9))) return null;
+  const c=mwCounts(ds,suit,hon);
+  if(c.reduce((a,b)=>a+b,0)!==n||c.some(x=>x>4)) return null;
+  const w=getWaits(c.slice()); if(!w.length) return null;
+  return {waits:w.map(mwWaitOf), remain:w.reduce((a,i)=>a+4-c[i],0)};
+}
+function mwDigits(h){ return h.split('').map(Number).sort((a,b)=>a-b); }
+function mwXfWait(w,ref,sh){ return typeof w==='number'?(ref?10-w:w)+sh:w; }
+function mwKey(suit,ds,hon){ return suit+':'+ds.join('')+(hon.length?'+'+hon.join(''):''); }
+function mwBuild(){
+  if(MW_CACHE) return MW_CACHE;
+  const byKey={}, pats=[], bad=[];
+  MW_SRC.forEach(src=>{
+    const ds=mwDigits(src.h), hon=src.hon?src.hon.split(''):[], base=mwEval(ds,src.su,hon,src.n);
+    const P=Object.assign({},src,{ds,honA:hon,base,probs:[],rep:{shift:0,ref:0,raw:0,uniq:0,changed:0}});
+    P.verified=!!base&&base.waits.length>=2;
+    P.use=src.st==='ok'&&P.verified;
+    pats.push(P);
+    if(!P.use) return;
+    [0,1].forEach(ref=>{
+      const r0=ds.map(x=>ref?10-x:x).sort((a,b)=>a-b);
+      for(let sh=1-r0[0]; r0[r0.length-1]+sh<=9; sh++){
+        const d2=r0.map(x=>x+sh);
+        if(ref) P.rep.ref++; else P.rep.shift++;
+        ['m','p','s'].forEach(su=>{
+          P.rep.raw++;
+          const key=mwKey(su,d2,hon);
+          if(byKey[key]) return;                       // ほかの道すじで もう 作った 牌姿
+          const e=mwEval(d2,su,hon,src.n);
+          if(!e){ bad.push({pid:src.id,key}); return; }
+          const tw=base.waits.map(w=>mwXfWait(w,ref,sh));
+          const same=tw.length===e.waits.length&&tw.every(w=>e.waits.indexOf(w)>=0)&&e.remain===base.remain;
+          const pr={key,pid:src.id,n:src.n,suit:su,ds:d2,hon:hon.slice(),waits:e.waits,remain:e.remain,same,ref,sh};
+          byKey[key]=pr; P.probs.push(pr); P.rep.uniq++; if(!same) P.rep.changed++;
+        });
+      }
+    });
+  });
+  MW_CACHE={pats,byKey,bad};
+  return MW_CACHE;
+}
+function mwPat(pid){ return mwBuild().pats.find(p=>p.id===pid)||null; }
+function mwActive(n){ return mwBuild().pats.filter(p=>p.use&&p.n===n); }
+function mwTiles(ds,suit,hon){ return ds.map(d=>d+suit).concat(hon||[]); }
+/* アガリの 分けかた(1つ)。雀頭＋組 を 牌の 列で */
+function mwDecOf(ds,suit,hon,w){
+  const c=mwCounts(ds,suit,hon); const i=typeof w==='number'?MW_SUIT_BASE[suit]+w-1:27+'ESWNBGR'.indexOf(w); c[i]++;
+  const d=soloDecomps(c)[0]; if(!d) return null;
+  return [[TE_NAMES[d.head],TE_NAMES[d.head]]].concat(d.sets.map(x=>x.run?[TE_NAMES[x.i],TE_NAMES[x.i+1],TE_NAMES[x.i+2]]:[TE_NAMES[x.i],TE_NAMES[x.i],TE_NAMES[x.i]]));
+}
+function mwDecHTML(ds,suit,hon,waits){
+  return '<span class="mw-decs">'+waits.map(w=>{ const g=mwDecOf(ds,suit,hon,w);
+    return '<span class="mw-dec" data-w="'+w+'">'+inlineTile(mwCode(w,suit))+'<span class="mw-ar">→</span>'+(g?g.map(t=>inlineTiles(t)).join(''):'')+'</span>'; }).join('')+'</span>';
+}
+/* ---- 記録(原型ごと) ---- */
+function mwStoreRead(){
+  const s=S.mwPat; const p=(s&&typeof s==='object'&&s.p&&typeof s.p==='object'&&!Array.isArray(s.p))?s.p:{};
+  return {v:1,p:Object.assign({},p)};
+}
+function mwRecOf(pid,st){
+  const r0=(st||mwStoreRead()).p[pid], r=(r0&&typeof r0==='object')?r0:{};
+  const arr=(a,f)=>Array.isArray(a)?a.filter(f):[];
+  const o={ok:Math.max(0,+r.ok||0), ng:Math.max(0,+r.ng||0), last:arr(r.last,x=>x===0||x===1).slice(-5), at:typeof r.at==='string'?r.at:null,
+    keys:arr(r.keys,x=>typeof x==='string').slice(-12), seen:arr(r.seen,x=>typeof x==='string').slice(-6), wrong:typeof r.wrong==='string'?r.wrong:null};
+  o.st=mwStatusOf(o); return o;
+}
+/* 習得: 正解した ちがう 牌姿が 3つ以上・そのなかに 色か 数字の並びが ちがうものが ある・直近 3回 ぜんぶ 正解 */
+function mwStatusOf(r){
+  if(!(r.ok+r.ng)) return 'new';
+  const suits=new Set(r.keys.map(k=>k[0])), forms=new Set(r.keys.map(k=>k.slice(2))), l3=r.last.slice(-3);
+  return (r.keys.length>=3&&(suits.size>=2||forms.size>=2)&&l3.length===3&&l3.every(x=>x===1))?'master':'learn';
+}
+function mwRecord(q,ok){
+  if(!q||!q.mw||q._mwRec) return; q._mwRec=true;
+  const st=mwStoreRead(), r=mwRecOf(q.mw.pid,st), k=q.mw.key;
+  if(ok) r.ok++; else r.ng++;
+  r.last=r.last.concat([ok?1:0]).slice(-5); r.at=new Date().toISOString();
+  if(ok){ if(r.keys.indexOf(k)<0) r.keys=r.keys.concat([k]).slice(-12); if(r.wrong===k) r.wrong=null; }
+  else r.wrong=k;
+  r.seen=r.seen.filter(x=>x!==k).concat([k]).slice(-6);
+  r.st=mwStatusOf(r); st.p[q.mw.pid]=r; S.mwPat=st; save();
+}
+function mwSummary(n){ const st=mwStoreRead(), a=mwActive(n), c={new:0,learn:0,master:0}; a.forEach(p=>c[mwRecOf(p.id,st).st]++); return Object.assign(c,{total:a.length}); }
+/* 苦手 = まちがえたことがあって まだ 習得していない形。直近が まちがい → 正解率の ひくい順 */
+function mwWeak(n){
+  const st=mwStoreRead();
+  return mwActive(n).map(p=>({p,r:mwRecOf(p.id,st)})).filter(x=>x.r.ng>0&&x.r.st!=='master')
+    .sort((a,b)=>((a.r.last[a.r.last.length-1]===0?0:1)-(b.r.last[b.r.last.length-1]===0?0:1))||(a.r.ok/(a.r.ok+a.r.ng)-b.r.ok/(b.r.ok+b.r.ng))||(a.p.no-b.p.no));
+}
+/* ---- 出題えらび(かんたんな きまり) ----
+   問題を解く: 学習中(3形まで)→ 未学習 → 習得ずみ(いちばん前に といた 1形)→ のこり。
+   苦手を復習: 苦手の形ごとに「まちがえた 牌姿 そのもの」→「同じ形の ちがう 牌姿」。習得ずみも 1形。
+   同じ形が つづかないように ならべる。牌姿は その形の 最近の 6問と この回の 問題を さける(足りなければ ゆるめる) */
+function mwShuffle(a,rnd){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(rnd()*(i+1)); const t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+function mwSpread(slots){
+  const out=[], rest=slots.slice();
+  while(rest.length){ const prev=out.length?out[out.length-1].p.id:null; let i=rest.findIndex(x=>x.p.id!==prev); if(i<0) i=0; out.push(rest.splice(i,1)[0]); }
+  return out;
+}
+function mwChoose(x,used,rnd,exact){
+  if(exact){ const pr=mwBuild().byKey[exact]; if(pr&&pr.pid===x.p.id&&!used.has(exact)) return pr; }
+  const all=x.p.probs.filter(pr=>!used.has(pr.key));
+  const fresh=all.filter(pr=>x.r.seen.indexOf(pr.key)<0&&pr.key!==x.r.wrong);
+  const pool=fresh.length?fresh:all; if(!pool.length) return null;
+  return pool[Math.floor(rnd()*pool.length)];
+}
+function mwPlan(n,mode,rnd){
+  rnd=rnd||Math.random;
+  const st=mwStoreRead(), items=mwActive(n).map(p=>({p,r:mwRecOf(p.id,st)})); if(!items.length) return [];
+  const byAt=(a,b)=>((a.r.at||'')<(b.r.at||'')?-1:(a.r.at||'')>(b.r.at||'')?1:a.p.no-b.p.no);
+  const ms=items.filter(x=>x.r.st==='master').sort(byAt);
+  let slots=[];
+  if(mode==='review'){
+    const weak=mwWeak(n).map(w=>items.find(x=>x.p.id===w.p.id));
+    if(!weak.length) return [];
+    weak.forEach(x=>{ if(x.r.wrong) slots.push({x,exact:x.r.wrong}); slots.push({x}); });
+    if(ms.length) slots.push({x:ms[0]});
+    for(let k=0;slots.length<MW_N_Q&&k<weak.length*2;k++) slots.push({x:weak[k%weak.length]});
+    slots=slots.slice(0,MW_N_Q);
+  }else{
+    const learn=mwShuffle(items.filter(x=>x.r.st==='learn'),rnd), nw=mwShuffle(items.filter(x=>x.r.st==='new'),rnd), pick=[];
+    learn.slice(0,3).forEach(x=>pick.push(x));
+    nw.forEach(x=>{ if(pick.length<MW_N_Q-1) pick.push(x); });
+    if(ms.length) pick.push(ms[0]);
+    mwShuffle(items.filter(x=>pick.indexOf(x)<0),rnd).forEach(x=>{ if(pick.length<MW_N_Q) pick.push(x); });
+    for(let k=0;pick.length<MW_N_Q;k++) pick.push(items[k%items.length]);
+    slots=mwSpread(mwShuffle(pick.map(x=>({x})),rnd).map(s=>({p:s.x.p,s}))).map(o=>o.s);
+  }
+  if(mode==='review') slots=mwSpread(slots.map(s=>({p:s.x.p,s}))).map(o=>o.s);
+  const used=new Set(), out=[];
+  slots.forEach(s=>{ const pr=mwChoose(s.x,used,rnd,s.exact); if(pr){ used.add(pr.key); out.push(pr); } });
+  return out;
+}
+function mwQ(pr){
+  const counts=new Array(9).fill(0); pr.ds.forEach(d=>counts[d-1]++);
+  return {wtype:true, mw:{pid:pr.pid,key:pr.key,same:pr.same,remain:pr.remain}, level:pr.n, counts, suit:pr.suit, hon:pr.hon.slice(),
+    waits:pr.waits.slice(), seed:'mw:'+pr.key, lv:waitsLv(pr.n,pr.waits.length), fs:'mw:'+pr.pid+(pr.same?'':':chg')};
+}
+function mwStart(n,mode){
+  if(!staminaFree()&&S.hearts<=0){ staminaModal(); return; }
+  if(!waitsTilesUnlocked().includes(n)){ trainLockInfo(n); return; }
+  const plan=mwPlan(n,mode); if(!plan.length) return;
+  L={course:{id:'tr-waits',title:'多面張 '+n+'枚形'+(mode==='review'?'（苦手）':''),type:'waits',training:true},
+     qs:plan.map(mwQ),idx:0,correct:0,sel:null,checked:false,done:false,
+     rcat:'waits',ratingStart:S.ratings.waits,bigMiss:0,startedAt:Date.now(),combo:0,maxCombo:0,wtiles:n,mw:{n,mode}};
+  document.getElementById('lesson').classList.add('show');
+  renderQ();
+}
+function mwAgain(n,mode){ document.getElementById('lesson').classList.remove('show'); L=null; renderHUD(); mwStart(n,mode); }
+function mwStudyFromResult(n){ afterLesson(); mwStudy(n); }
+/* ---- 画面 ---- */
+function mwStudy(n){ MW_N=n; TR_SEL='mw'; renderTraining(); trTop(); }
+function mwBlockHTML(){
+  const un=waitsTilesUnlocked();
+  const row=n=>{
+    if(!un.includes(n)) return '<div class="mw-row lock" id="mw-row-'+n+'"><b>'+n+'枚形</b><button class="tr-pick lock mw-b" onclick="trainLockInfo('+n+')">🔒 まだ クリアしてない</button></div>';
+    const s=mwSummary(n), wk=mwWeak(n).length;
+    return '<div class="mw-row" id="mw-row-'+n+'"><div class="mw-rh"><b>'+n+'枚形</b><span class="mw-prog" id="mw-prog-'+n+'">習得 '+s.master+' / '+s.total+'形</span></div>'
+      +'<div class="mw-btns">'
+      +'<button class="tr-pick mw-b" id="mw-study-'+n+'" onclick="mwStudy('+n+')">📖 お手本<small>'+s.total+'形</small></button>'
+      +'<button class="tr-pick mw-b" id="mw-drill-'+n+'" onclick="mwStart('+n+',\'drill\')">✏️ 問題<small>'+MW_N_Q+'問</small></button>'
+      +'<button class="tr-pick mw-b'+(wk?'':' off')+'" id="mw-rev-'+n+'"'+(wk?'':' disabled')+' onclick="mwStart('+n+',\'review\')">🔁 苦手<small>'+(wk?wk+'形':'まだ ないよ')+'</small></button>'
+      +'</div></div>';
+  };
+  return '<div class="tr-opt mw-box" id="mw-box"><p class="tr-opt-h">🧩 多面張パターン（7枚形・10枚形）</p>'
+    +'<p class="tr-note">お手本の 形を おぼえて、色や 位置を かえた 問題で れんしゅう</p>'+row(7)+row(10)+'</div>';
+}
+function mwCardHTML(P,st){
+  const r=mwRecOf(P.id,st), w=P.base.waits, su=P.su;
+  return '<div class="mw-card st-'+r.st+'" id="mw-c-'+P.id+'" data-st="'+r.st+'">'
+    +'<div class="mw-top"><b class="mw-nm">'+P.nm+'</b><span class="mw-st">'+MW_ST_LABEL[r.st]+'</span></div>'
+    +'<div class="hand mw-hand n'+P.n+'">'+mwTiles(P.ds,su,P.honA).map(t=>tileHTML(t)).join('')+'</div>'
+    +'<div class="mw-wrow"><span class="mw-wl">待ち</span><span class="mw-wt">'+w.map(x=>tileHTML(mwCode(x,su))).join('')+'</span>'
+    +'<span class="mw-wn">'+w.length+'種・残り'+P.base.remain+'枚</span></div>'
+    +'<p class="mw-pt">'+P.pt+'</p>'
+    +'<details class="mw-det"><summary>アガリの 分けかたを 見る</summary>'+mwDecHTML(P.ds,su,P.honA,w)+'</details>'
+    +(r.ok+r.ng?'<p class="mw-rec">正解 '+r.ok+'・まちがい '+r.ng+'</p>':'')
     +'</div>';
+}
+function mwStudyHTML(n){
+  const un=waitsTilesUnlocked().filter(x=>x===7||x===10), st=mwStoreRead(), s=mwSummary(n), ps=mwActive(n);
+  return '<div class="card mw-study" id="mw-study">'
+    +'<div class="mw-sh"><b>📖 多面張パターン</b><span>'+n+'枚形・'+s.total+'形</span></div>'
+    +(un.length>1?'<div class="mw-tabs">'+un.map(x=>'<button class="mw-tab'+(x===n?' on':'')+'" id="mw-tab-'+x+'" onclick="mwStudy('+x+')">'+x+'枚形</button>').join('')+'</div>':'')
+    +'<p class="mw-sum" id="mw-sum">✓ 習得 '+s.master+'・△ 学習中 '+s.learn+'・○ 未学習 '+s.new+'</p>'
+    +'<p class="tr-note">お手本は 1つの 例。問題では 色や 位置を かえて 出るよ（端に よると 待ちが かわることも）。</p>'
+    +'<div class="mw-btns mw-go"><button class="btn" id="mw-go-drill" onclick="mwStart('+n+',\'drill\')">✏️ 問題を解く（'+MW_N_Q+'問）</button></div>'
+    +'</div>'
+    +ps.map(P=>mwCardHTML(P,st)).join('');
+}
+function mwFeedback(q,res){
+  const lab=w=>typeof w==='number'?w+'':HONOR[w];
+  const P=mwPat(q.mw.pid), ds=[]; q.counts.forEach((c,i)=>{ for(let k=0;k<c;k++) ds.push(i+1); });
+  return {ansText:'正解の待ち： '+q.waits.map(lab).join('・')+'（'+SUITCH[q.suit]+'子'+(q.hon&&q.hon.length?'・字牌':'')+'）　'+q.waits.length+'種・残り'+q.mw.remain+'枚',
+    expText:'<span class="mw-fb">お手本「'+(P?P.nm:'')+'」の 形'+(q.mw.same?'':'。<b class="mw-chg">⚠ 端に よったので、お手本と 待ちが かわるよ</b>')+'</span>'
+      +mwDecHTML(ds,q.suit,q.hon||[],q.waits)};
 }
 function bandText(cat){
   const R=S.ratings[cat];
@@ -6842,7 +7128,9 @@ function trListHTML(){
 }
 function renderTraining(){
   const el=document.getElementById('training-body');
-  if(TR_SEL===null||!['waits','score','fu'].includes(TR_SEL)){ TR_SEL=null; el.innerHTML=trListHTML(); return; }
+  if(TR_SEL===null||!['waits','score','fu','mw'].includes(TR_SEL)){ TR_SEL=null; el.innerHTML=trListHTML(); return; }
+  /* R95: 多面張パターンの お手本(待ちトレーニングの中)。もどると 待ちトレーニング */
+  if(TR_SEL==='mw'){ el.innerHTML='<button class="tr-back" id="tr-back" onclick="trOpen(\'waits\')">‹ 待ちトレーニング</button>'+mwStudyHTML(MW_N); return; }
   // くわしい画面: これまでのカード(条件えらび・BEST・出題帯の説明)をそのまま使う
   const card=(cat,icon,title,desc,bandOverride)=>{
     const best=S.trainingBest[cat];
@@ -18920,6 +19208,7 @@ const QFORMATS={
         :'「'+(((q.level-1)/3))+'面子＋1雀頭」になる牌をすべて選ぼう')+'</div>';
       html+='<div class="hand">';
       for(let n=0;n<9;n++) for(let k=0;k<q.counts[n];k++) html+=tileHTML((n+1)+q.suit);
+      (q.hon||[]).forEach(h=>{ html+=tileHTML(h); });   // R95: 字牌の 対子が ある形(数牌の あとに ならべる)
       html+='</div>';
       html+='<div class="numpick" onpointerdown="pickDrag(event,\'np\')">';
       for(let n=1;n<=9;n++){
@@ -18927,23 +19216,32 @@ const QFORMATS={
         html+='<button class="tile'+(off?' off':'')+'" id="np-'+n+'"'+(off?' disabled':'')+'>'+tileFace(n+q.suit)+'</button>';
       }
       html+='</div>';
+      /* R95: 字牌が 手にある 問題だけ、字牌7種も えらべる(手牌で 4枚 見えている牌は えらべない) */
+      if(q.hon&&q.hon.length){
+        html+='<div class="numpick numpick-h" onpointerdown="pickDrag(event,\'nh\')">';
+        'ESWNBGR'.split('').forEach(h=>{ const off=q.hon.filter(x=>x===h).length>=4;
+          html+='<button class="tile z'+(off?' off':'')+'" id="nh-'+h+'"'+(off?' disabled':'')+'>'+tileFace(h)+'</button>'; });
+        html+='</div>';
+      }
       L.sel=new Set();
       return html;
     },
     answer(q){ return {kind:'tileSet', set:L.sel}; },
     reveal(q,ans,res){
+      const npId=n=>(typeof n==='number'?'np-':'nh-')+n;   // R95: 字牌は nh-
       for(const n of q.waits){
-        const el=document.getElementById('np-'+n); if(!el) continue;
+        const el=document.getElementById(npId(n)); if(!el) continue;
         if(ans.set.has(n)){ el.classList.remove('sel'); el.classList.add('correct'); }
         else el.classList.add('miss');
       }
       for(const n of ans.set){
         if(q.waits.includes(n)) continue;
-        const el=document.getElementById('np-'+n);
+        const el=document.getElementById(npId(n));
         if(el){ el.classList.remove('sel'); el.classList.add('wrong'); }
       }
     },
     feedback(q,res){
+      if(q.mw) return mwFeedback(q,res);   // R95: 多面張パターン(残り枚数・アガリの分けかた・お手本と 待ちが かわるか)
       return {
         ansText:'正解の待ち： '+q.waits.join('・')+'（'+SUITCH[q.suit]+'子）',
         expText:'【'+goalLabel(q.level)+'】を完成させる最後の1枚が「待ち」。この形は'+q.waits.length+'種。複合形は「雀頭を固定して考える」「面子を抜いて考える」と見えやすいよ。'
@@ -20386,6 +20684,7 @@ function check(){
   const cat=fmt.cat, qid=cat?fmt.qid(q):null;
   fmt.reveal(q,ans,res);
   const ratingRes=applyOutcome(q,cat,qid,res,elapsed);
+  if(q.mw) mwRecord(q,res.isCorrect);   // R95: 多面張パターンの 習得(原型ごと・1問1回)
   if(q.compareId){
     // Compare学習履歴: 能力測定ログ(jantore-anslog)とは別ストア。Ratingの根拠には使わない。
     logCompare({compareId:q.compareId,variantId:q.variantId,changedCategories:q.changedCategories,
@@ -20502,7 +20801,7 @@ function finishLesson(){
   if(L.fuCourse) fuCourseMark(L.fuCourse.n,'done');                  // R87: 講座のレッスンを おえた(はじめての日だけ のこす)
   // トレーニング自己ベスト(完走時のみ・種別ごとに分離。将来waits_4等の粒度キーも同じ器で持てる)
   let bestInfo=null;
-  if(L.course.training&&L.rcat){
+  if(L.course.training&&L.rcat&&!L.mw){   // R95: 多面張パターンの 問題・苦手は BEST(ランダム 7問の タイム)に 入れない
     const key=L.rcat;
     const prev=S.trainingBest[key];
     const isBest=!prev||duration<prev.ms;
@@ -20621,6 +20920,18 @@ function renderResult(ctx){
       +'<p class="stag" style="'+noteStyle+'animation-delay:'+(SI++)*MOTION.resultStagger+'ms">'
       +'💰 Lv'+lv.id+'　'+lv.title+'（'+lv.desc+'）</p>'
       +'<div class="stag"'+stagStyle(SI++)+'><span class="xp-chip" style="font-size:12px;padding:6px 12px;">+'+xp+' EXP</span></div>';
+  }else if(L.mw){
+    /* R95: 多面張パターンの 結果。正解・正解率・習得(原型の数)・EXP・RATING(BEST は ランダム 7問の 記録なので 出さない) */
+    const sm=mwSummary(L.mw.n), wk=mwWeak(L.mw.n).length;
+    stats='<div class="res-grid">'
+      +statBox(L.correct+' / '+quizN,'正解')
+      +statBox(accuracy+'%','正解率')
+      +statBox(sm.master+' / '+sm.total,'習得した形')
+      +'</div>'
+      +'<p class="stag" id="mw-res-note" style="'+noteStyle+'animation-delay:'+(SI++)*MOTION.resultStagger+'ms">🧩 多面張 '+L.mw.n+'枚形・'+(L.mw.mode==='review'?'苦手を復習':'問題')
+      +(wk?'　／　苦手の形: '+wk:'')+'</p>'
+      +'<div class="stag"'+stagStyle(SI++)+'><span class="xp-chip" style="font-size:12px;padding:6px 12px;">+'+xp+' EXP</span></div>'
+      +ratingSummary;
   }else if(L.course.training&&bestInfo){
     // トレーニング: 正解率・今回タイム・自己ベスト・ランクが中心(ランク基準は設定データ・未設定種別は非表示)
     const rank=rankForTime(bestInfo.key,duration);
@@ -20668,6 +20979,11 @@ function renderResult(ctx){
     ?'<button class="btn" id="fu-again" onclick="fuTrainAgain('+(L.fuTrain.step==='review'?'\'review\'':L.fuTrain.step)+')">'
       +(L.fuTrain.step==='review'?'もう一度 復習する':'もう一度（'+FU_TRAIN_N+'問）')+'</button>'
       +(fuReviewCount()&&L.fuTrain.step!=='review'?'<button class="btn gray" id="fu-go-review" style="margin-top:8px;" onclick="fuTrainAgain(\'review\')">まちがえた形を復習する</button>':'')
+      +'<button class="btn gray" style="margin-top:8px;" onclick="afterLesson()">トレーニングに戻る</button>'
+    :L.mw
+    ?'<button class="btn" id="mw-again" onclick="mwAgain('+L.mw.n+',\'drill\')">もう一度（'+MW_N_Q+'問）</button>'
+      +(mwWeak(L.mw.n).length?'<button class="btn gray" id="mw-again-rev" style="margin-top:8px;" onclick="mwAgain('+L.mw.n+',\'review\')">苦手な形を 復習する</button>':'')
+      +'<button class="btn gray" id="mw-to-study" style="margin-top:8px;" onclick="mwStudyFromResult('+L.mw.n+')">お手本を 見る</button>'
       +'<button class="btn gray" style="margin-top:8px;" onclick="afterLesson()">トレーニングに戻る</button>'
     :L.scoreTrain
     ?'<button class="btn" onclick="scoreTrainAgain('+L.scoreTrain.level+')">もう一度（'+SCORE_TRAIN_N+'問）</button>'
