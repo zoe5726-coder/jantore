@@ -4242,12 +4242,16 @@ const SND_FILES={
 /* R96: 音ごとの内部バランス(ユーザー向けの音量設定ではない)。素材の音量差をならす。
    シャキーン1 は ほかより約4dB大きく鋭いので控えめにする(実測: 統合ラウドネス -14.3LUFS、ほかは -17〜-20LUFS) */
 const SND_GAIN={select:0.8,correct:0.8,wrong:1,lessonComplete:0.85,themeComplete:0.6,mission:1};
-/* R96: 優先度(小さいほど上)。ここにない音(discard/streak/卓の音)は優先度の制御の外で、これまでどおり鳴る。
+/* R96: 優先度(小さいほど上)。ここにない音(discard/卓の音)は優先度の制御の外で、これまでどおり鳴る。
    1 テーマ制覇・節目 > 2 レッスンクリア・全問正解 > 3 ミッション達成 > 4 正解・不正解 > 5 通常選択
-   hold: その音が「場を取っている」時間(ms)。この間に来た下位の音は鳴らさない(後回しにもしない=待ちキューなし)。
-   同じ瞬間(同じ処理の中)に複数たのまれたら、いちばん上位の1つだけを鳴らす */
+   ・同じ瞬間(同じ処理の中)に複数たのまれたら、いちばん上位の1つだけを鳴らす
+   R96.1: 1.5秒の hold を やめ、2つに 分けた(待ちキューは 作らない・新しい操作を 待たせない)
+   ・SND_GUARD(250ms): 上位の音が 鳴りはじめた 直後に 来た 下位の 音だけ 捨てる(ほぼ同時の 別処理が 重なって さわがしくならないため)
+   ・SND_DUP: 同じ 達成音(優先度1〜3)の 二重再生だけを 防ぐ時間。ちがう イベント(別の問題の 正誤など)は 抑えない
+   ・新しい音を 鳴らすときは、まだ 鳴っている 古い音を 短く フェードして 止める(古い音の 終わりを 待たない) */
 const SND_PRI={themeComplete:1,lessonComplete:2,streak:2,mission:3,correct:4,wrong:4,select:5};   // streak(仮音源)=ひとり麻雀の達成。クリアと同格
-const SND_HOLD={themeComplete:1500,lessonComplete:1500,streak:1000,mission:450,correct:300,wrong:250,select:120};
+const SND_GUARD=250;
+const SND_DUP={themeComplete:1500,lessonComplete:1500,streak:1000,mission:400};   // ミッションは 別の ミッションが 続けて 達成されうるので 短く(同じ ミッションの 二重は claimed が 防ぐ)
 /* R96: 連続日数で音を鳴らす節目(毎日の更新では鳴らさない)。画面の節目表示(STREAK_MILESTONES)とは別に持つ */
 const SND_STREAK_MILES=[3,7,14,30];
 let SND_CTX=null;
@@ -4410,9 +4414,9 @@ function sndStart(name){
 }
 /* R96: 優先度つきの音(SND_PRI)の調停。待ちキューは作らない:
    ・同じ処理の中で たのまれた音は マイクロタスク1回ぶんだけ集めて、最上位の1つだけを鳴らす(残りは捨てる)
-   ・上位の音が hold 中なら 下位の音は捨てる。同じ達成音(優先度1〜3)の hold 中の2回目も捨てる(二重再生の防止)
-   ・新しく鳴らす音より 下位/同位 で まだ鳴っている音は 短くフェードして止める */
-let SND_REQ=[], SND_REQ_ON=false, SND_ACTIVE=[], SND_SEL_AT=-1e9;
+   ・R96.1: 上位の音が 鳴りはじめて SND_GUARD 以内の 下位の音は 捨てる。同じ達成音の SND_DUP 以内の 2回目も 捨てる(二重再生の防止)
+   ・それ以外は 鳴らす。まだ鳴っている 古い音は 短くフェードして止める */
+let SND_REQ=[], SND_REQ_ON=false, SND_ACTIVE=[], SND_SEL_AT=-1e9, SND_RECENT={};
 function sndFlush(){
   SND_REQ_ON=false;
   const reqs=SND_REQ; SND_REQ=[];
@@ -4423,14 +4427,19 @@ function sndFlush(){
     const best=reqs[bi];
     reqs.forEach((n,i)=>{ if(i!==bi) sndLog({name:n,via:'dropped',by:best}); });
     const pri=SND_PRI[best], now=sndNow();
+    const dup=SND_DUP[best]&&SND_RECENT[best]!=null&&now-SND_RECENT[best]<SND_DUP[best];
+    if(dup){ sndLog({name:best,via:'dropped',by:best}); return; }                       // 同じ達成の 二重
     SND_ACTIVE=SND_ACTIVE.filter(a=>a.endAt>now);
-    const holder=SND_ACTIVE.find(a=>a.holdUntil>now&&(a.pri<pri||(a.name===best&&pri<=3)));
-    if(holder){ sndLog({name:best,via:'dropped',by:holder.name}); return; }
-    SND_ACTIVE.forEach(a=>{ if(a.pri>=pri&&a.h&&a.h.stop) a.h.stop(); });
-    SND_ACTIVE=SND_ACTIVE.filter(a=>a.pri<pri);
+    const holder=SND_ACTIVE.find(a=>a.pri<pri&&now-a.at<SND_GUARD);
+    if(holder){ sndLog({name:best,via:'dropped',by:holder.name}); return; }            // ほぼ同時の 上位
+    SND_ACTIVE.forEach(a=>{ if(a.h&&a.h.stop) a.h.stop(); });                         // 古い音は フェードして 止める
+    SND_ACTIVE=[];
     const h=sndStart(best);
     sndLog({name:best,via:h.via});
-    if(h.via!=='none'&&h.via!=='loading') SND_ACTIVE.push({name:best,pri,h,holdUntil:now+SND_HOLD[best],endAt:now+Math.max(SND_HOLD[best],h.dur||0)});
+    if(h.via!=='none'&&h.via!=='loading'){
+      if(SND_DUP[best]) SND_RECENT[best]=now;
+      SND_ACTIVE.push({name:best,pri,h,at:now,endAt:now+Math.max(SND_GUARD,h.dur||0)});
+    }
   }catch(e){}
 }
 function sndStopAll(){
@@ -4937,8 +4946,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.88.0';
-const BUILD_ID='20261024-01';
+const APP_VER='0.88.1';
+const BUILD_ID='20261025-01';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -8364,12 +8373,14 @@ function ch1MtPickT(i){
   const mt=L.mt; if(!L||L.checked||!mt||mt.lock||mt.finished||mt.gotT[i]||mt.busyT[i]) return;
   mt.selT=(mt.selT===i?null:i);
   mt.sets[mt.si].forEach((x,k)=>{ const t=ch1MtTile(k); if(t) t.classList.toggle('sel',mt.selT===k); });
+  sndPlay('select');                       // R96.1: タップの 操作音(29)。ペアが そろっても 正解音は 鳴らさない
   ch1MtResolve();
 }
 function ch1MtPickN(j){
   const mt=L.mt; if(!L||L.checked||!mt||mt.lock||mt.finished||mt.gotN[j]||mt.busyN[j]) return;
   mt.selN=(mt.selN===j?null:j);
   mt.nums[mt.si].forEach((x,k)=>{ const e=document.getElementById('mtn-'+k); if(e) e.classList.toggle('sel',mt.selN===k); });
+  sndPlay('select');                       // R96.1: タップの 操作音(29)
   ch1MtResolve();
 }
 /* ===== Matching Correct Feedback(共通仕様) =====
@@ -8395,7 +8406,8 @@ function mtOnceAfter(el,evt,ms,fn){
 function mtPairCorrectFx(tEl,nEl,onEnd){
   const reduce=mtReduceMotion();
   const tile=tEl&&tEl.firstElementChild;
-  sndPlay('correct');                                   // 音OFFならsndPlay側で鳴らさない
+  // R96.1: ペアが そろった瞬間の 正解音は 鳴らさない(部分正解)。正解音・不正解音は 全ペアが そろって check() → renderFeedback で 問題として 確定したときに 1回だけ。
+  //        ペアの 手ごたえは 見た目(ポンッと弾む・薄くなる)で 返す。タップの 音は ch1MtPickT/N の 選択音(29)
   // この2要素だけを即座に操作不能に(演出の終わりを待たない)。薄くする(mt-done)のは演出の最後のまま。
   // ここで disabled は付けない: ブラウザ既定の無効色(グレー)が牌の色に乗り、演出の見た目が変わってしまうため。
   // pointer-events:none でタップ自体が届かなくなり、state側(gotT/gotN)でも二重判定を止めている
@@ -20108,7 +20120,8 @@ const SCORERS={
      type:'friend'+相手名で同じ器を使う(現在はpersonalのみ使用。架空データでの表示はしない)。
    ・節目(STREAK_MILESTONES)は自動でmilestone表示に切り替え。
    ・SEは表示と同時(効果音OFFならSoundManager側で無音)。つづけるで閉じる */
-const STREAK_MILESTONES={7:'1週間達成！',14:'2週間達成！',30:'30日連続！',50:'50日連続！',100:'100日連続！'};
+const STREAK_MILESTONES={3:'3日連続！',7:'1週間達成！',   /* R96.1: 3日目も 節目の 表示(シャキーン1 と そろえる) */
+  14:'2週間達成！',30:'30日連続！',50:'50日連続！',100:'100日連続！'};
 function streakComment(days){
   if(days===1) return '今日からスタート！まいにち少しずつ、いっしょにがんばろう！';
   if(days===2) return '2日連続！明日も待ってるよ！';
