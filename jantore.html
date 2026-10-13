@@ -4215,34 +4215,48 @@ function save(){ try{ localStorage.setItem('jantore-v1',JSON.stringify(S)); }cat
                      ③fallbackも失敗 → 無音のまま処理続行(音の失敗で学習を止めない)
    ・AudioContextは最初のユーザー操作で生成/resume(スマホのautoplay制限対応。勝手に鳴らさない)
    ・ON/OFFはS.sound(localStorage jantore-v1に保存)。OFFならWAVもfallbackも鳴らさない
-   ・イベント名: select/correct/wrong/discard/lessonComplete/themeComplete/streak/streakMile
+   ・イベント名: select/correct/wrong/discard/lessonComplete/themeComplete/mission/streak
      (将来: tsumo/ron/riichi/pon/chi/kan を SND_FILES と SND_DEFS に1エントリ足すだけで拡張できる) */
-/* ---- Sound Set(外部WAV)の定義: 役割名 → ファイル名 (1対1) ----
-   [TEMPORARY / NOT FINAL] 現在 assets/sounds/ に置いている8ファイルはすべて実装確認用の仮音源。
-   正式Sound Set完成時は assets/sounds/ の同名WAVを上書きするだけで移行できる
-   (この定義・呼び出し側・Lesson/回答/ストリークのロジックは変更不要)。
+/* ---- Sound Set の定義: 役割名 → ファイル名 (1対1) ----
+   R96: 効果音ラボの採用音源(MP3)へ切りかえた。素材名・取得元・利用条件は assets/sounds/README.md。
+     採用(正式): select=決定ボタンを押す29 / correct=決定ボタンを押す5 / wrong=決定ボタンを押す42
+                 lessonComplete=決定ボタンを押す27(全問正解も共用) / mission=決定ボタンを押す12
+                 themeComplete=シャキーン1(連続日数の節目も共用)
+     仮音源のまま(R96の対象外): discard.wav(打牌音は別途選定) / streak.wav(ひとり麻雀の自己ベスト等)
+     もう参照しない旧仮音源(ファイルは消していない): select/correct/wrong/lessonComplete/themeComplete/streakMile.wav
+   ・同じファイル名で上書きすれば音だけ差しかわる(呼び出し側・ロジックは変更不要)
    パスは相対(GitHub Pages / ローカル / 将来のCapacitor等でもそのまま参照できる) */
 const SND_DIR='assets/sounds/';
 const SND_FILES={
-  select:'select.wav',                  // 回答候補などを選んだ瞬間の操作音
-  correct:'correct.wav',                // 通常問題の正解
-  wrong:'wrong.wav',                    // 通常問題の不正解
-  discard:'discard.wav',                // ミニ麻雀で牌を切った
-  lessonComplete:'lessonComplete.wav',  // 1Lesson完了
-  themeComplete:'themeComplete.wav',    // テーマ(小テーマ)制覇=Lesson完了より上位
-  streak:'streak.wav',                  // 通常のストリーク達成演出
-  streakMile:'streakMile.wav',          // 7/14/30/50/100日の節目ストリーク
-  // 将来スロット(今回は未設定): tileTouch:'tileTouch.wav', tsumo:'tsumo.wav', ron:'ron.wav',
-  //   riichi:'riichi.wav', pon:'pon.wav', chi:'chi.wav', kan:'kan.wav'
-  // ※tileTouch(牌にさわる音)は現在 SND_DEFS の生成音(仮音)で鳴らしている。
-  //   正式WAVができたら assets/sounds/tileTouch.wav を置き、上の行を有効にするだけでよい
+  select:'select.mp3',                  // 決定ボタンを押す29: 選択肢・牌などを選んだ瞬間の操作音
+  correct:'correct.mp3',                // 決定ボタンを押す5: 正解
+  wrong:'wrong.mp3',                    // 決定ボタンを押す42: 不正解
+  discard:'discard.wav',                // [仮音源・R96で変更なし] ミニ麻雀などで牌を切った
+  lessonComplete:'lessonComplete.mp3',  // 決定ボタンを押す27: 1Lesson完了(全問正解も同じ音。違いは画面の🏆で出す)
+  themeComplete:'themeComplete.mp3',    // シャキーン1: テーマ制覇 と 連続日数の節目(3/7/14/30日)
+  mission:'mission.mp3',                // 決定ボタンを押す12: デイリーミッションが「未達成→達成」になった瞬間
+  streak:'streak.wav',                  // [仮音源・R96で変更なし] ひとり麻雀の自己ベスト・ビンゴ等(soloEnd)
+  // 将来スロット(今回は未設定): tileTouch, tsumo, ron, riichi, pon, chi, kan
+  // ※tileTouch(牌にさわる音)は現在 SND_DEFS の生成音(仮音)で鳴らしている
 };
+/* R96: 音ごとの内部バランス(ユーザー向けの音量設定ではない)。素材の音量差をならす。
+   シャキーン1 は ほかより約4dB大きく鋭いので控えめにする(実測: 統合ラウドネス -14.3LUFS、ほかは -17〜-20LUFS) */
+const SND_GAIN={select:0.8,correct:0.8,wrong:1,lessonComplete:0.85,themeComplete:0.6,mission:1};
+/* R96: 優先度(小さいほど上)。ここにない音(discard/streak/卓の音)は優先度の制御の外で、これまでどおり鳴る。
+   1 テーマ制覇・節目 > 2 レッスンクリア・全問正解 > 3 ミッション達成 > 4 正解・不正解 > 5 通常選択
+   hold: その音が「場を取っている」時間(ms)。この間に来た下位の音は鳴らさない(後回しにもしない=待ちキューなし)。
+   同じ瞬間(同じ処理の中)に複数たのまれたら、いちばん上位の1つだけを鳴らす */
+const SND_PRI={themeComplete:1,lessonComplete:2,streak:2,mission:3,correct:4,wrong:4,select:5};   // streak(仮音源)=ひとり麻雀の達成。クリアと同格
+const SND_HOLD={themeComplete:1500,lessonComplete:1500,streak:1000,mission:450,correct:300,wrong:250,select:120};
+/* R96: 連続日数で音を鳴らす節目(毎日の更新では鳴らさない)。画面の節目表示(STREAK_MILESTONES)とは別に持つ */
+const SND_STREAK_MILES=[3,7,14,30];
 let SND_CTX=null;
 function sndCtx(){
   if(S.sound===false) return null;
   try{
     if(!SND_CTX){ const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return null; SND_CTX=new AC(); }
-    if(SND_CTX.state==='suspended') SND_CTX.resume();
+    // R96: iOS の 'interrupted'(電話・別アプリ)も含め、running でなければ再開を試みる
+    if(SND_CTX.state!=='running'&&SND_CTX.state!=='closed'){ try{ const p=SND_CTX.resume(); if(p&&p.catch) p.catch(()=>{}); }catch(e){} }
     return SND_CTX;
   }catch(e){ return null; }
 }
@@ -4343,22 +4357,32 @@ function sndSynth(name){
   }catch(e){ return false; }
 }
 function sndFile(name){
-  // 外部WAVを鳴らせたらtrue。未読込・失敗ならfalse(→呼び出し元がfallback)
-  const ent=SND_BANK[name]; if(!ent) return false;
+  // 外部ファイルを鳴らせたら「止めるための取っ手」を返す。未読込・失敗なら null(→呼び出し元がfallback)
+  // R96: 音ごとの内部バランス(SND_GAIN)をかけるため GainNode を1つはさむ。止めるときは短くフェードして切る(プツッと鳴らさない)
+  const ent=SND_BANK[name]; if(!ent) return null;
+  const gain=SND_GAIN[name]!=null?SND_GAIN[name]:1;
   if(ent.st==='buffer'){
-    const ctx=sndCtx(); if(!ctx) return false;
+    const ctx=sndCtx(); if(!ctx) return null;
     const src=ctx.createBufferSource(); src.buffer=ent.buf;
-    src.connect(ctx.destination); src.start(0);          // 使い捨てノード(再生終了で自動解放)
-    return true;
+    const g=ctx.createGain(); g.gain.value=gain;
+    src.connect(g); g.connect(ctx.destination); src.start(0);   // 使い捨てノード(再生終了で自動解放)
+    return {via:'file',dur:ent.buf.duration*1000,stop:()=>{
+      try{ const t=ctx.currentTime; g.gain.cancelScheduledValues(t); g.gain.setValueAtTime(g.gain.value,t);
+        g.gain.linearRampToValueAtTime(0,t+0.04); src.stop(t+0.05); }catch(e){} }};
   }
   if(ent.st==='element'&&ent.el){
-    const el=ent.el;
+    const el=ent.el, t0=Date.now();
+    try{ el.volume=gain; }catch(e){}          // iOS Safari は <audio> の volume を無視する(OSの仕様)
     try{ el.currentTime=0; }catch(e){}
     const p=el.play();
-    if(p&&p.catch) p.catch(()=>{ ent.st='failed'; sndSynth(name); });   // 再生拒否時はその回もfallback
-    return true;
+    if(p&&p.catch) p.catch(()=>{
+      ent.st='failed';
+      sndLog({name,via:'element-rejected'});              // 「鳴った」と記録したままにしない
+      if(Date.now()-t0<300) sndSynth(name);               // その回のfallbackは すぐの時だけ(遅れて古い音を鳴らさない)
+    });
+    return {via:'file-element',dur:(isFinite(el.duration)?el.duration*1000:0),stop:()=>{ try{ el.pause(); }catch(e){} }};
   }
-  return false;
+  return null;
 }
 let SND_LAST={};
 function sndPlayTap(name,ms){
@@ -4366,27 +4390,90 @@ function sndPlayTap(name,ms){
   const t=Date.now(); if(t-(SND_LAST[name]||0)<(ms||70)) return false;
   SND_LAST[name]=t; sndPlay(name); return true;
 }
-function sndPlay(name){
+/* R96: 再生の記録(確認用)。via: file|file-element|synth|none|loading|off|dropped|element-rejected
+   seq は 通し番号(ログは 直近80件だけ のこすので、件数ではなく seq で「ここから後」を 見る) */
+const SND_LOG=[]; let SND_SEQ=0;
+function sndLog(e){
+  e.seq=++SND_SEQ;
+  try{ e.t=Math.round((window.performance&&performance.now)?performance.now():Date.now()); }catch(_){}
+  SoundManager.last=e; SND_LOG.push(e); if(SND_LOG.length>80) SND_LOG.shift();
+}
+function sndNow(){ try{ return performance.now(); }catch(e){ return Date.now(); } }
+function sndStart(name){
+  const h=sndFile(name); if(h) return h;
+  // R96: 採用音源(SND_GAIN に ある6音)が まだ読み込み中なら その回は鳴らさない(別の音=合成音で 代わりに鳴らさない。あとから遅れても鳴らさない)。
+  //      合成音(SND_DEFS)は ファイルが読めなかった(failed)ときと、ファイルを持たない音だけの 予備
+  const ent=SND_BANK[name];
+  if(ent&&ent.st==='loading'&&SND_GAIN[name]!=null) return {via:'loading',dur:0,stop:null};   // 採用6音だけ(打牌・仮音源は これまでどおり)
+  if(sndSynth(name)) return {via:'synth',dur:0,stop:null};
+  return {via:'none',dur:0,stop:null};
+}
+/* R96: 優先度つきの音(SND_PRI)の調停。待ちキューは作らない:
+   ・同じ処理の中で たのまれた音は マイクロタスク1回ぶんだけ集めて、最上位の1つだけを鳴らす(残りは捨てる)
+   ・上位の音が hold 中なら 下位の音は捨てる。同じ達成音(優先度1〜3)の hold 中の2回目も捨てる(二重再生の防止)
+   ・新しく鳴らす音より 下位/同位 で まだ鳴っている音は 短くフェードして止める */
+let SND_REQ=[], SND_REQ_ON=false, SND_ACTIVE=[], SND_SEL_AT=-1e9;
+function sndFlush(){
+  SND_REQ_ON=false;
+  const reqs=SND_REQ; SND_REQ=[];
   try{
-    if(S.sound===false){ SoundManager.last={name,via:'off'}; return; }
-    if(!SND_WARMED) sndWarm();
-    let via='none';
-    if(sndFile(name)) via=SND_BANK[name].st==='buffer'?'wav':'wav-element';
-    else if(sndSynth(name)) via='synth';
-    SoundManager.last={name,via};
+    if(!reqs.length) return;
+    if(S.sound===false){ reqs.forEach(n=>sndLog({name:n,via:'off'})); return; }
+    let bi=0; reqs.forEach((n,i)=>{ if(SND_PRI[n]<SND_PRI[reqs[bi]]) bi=i; });
+    const best=reqs[bi];
+    reqs.forEach((n,i)=>{ if(i!==bi) sndLog({name:n,via:'dropped',by:best}); });
+    const pri=SND_PRI[best], now=sndNow();
+    SND_ACTIVE=SND_ACTIVE.filter(a=>a.endAt>now);
+    const holder=SND_ACTIVE.find(a=>a.holdUntil>now&&(a.pri<pri||(a.name===best&&pri<=3)));
+    if(holder){ sndLog({name:best,via:'dropped',by:holder.name}); return; }
+    SND_ACTIVE.forEach(a=>{ if(a.pri>=pri&&a.h&&a.h.stop) a.h.stop(); });
+    SND_ACTIVE=SND_ACTIVE.filter(a=>a.pri<pri);
+    const h=sndStart(best);
+    sndLog({name:best,via:h.via});
+    if(h.via!=='none'&&h.via!=='loading') SND_ACTIVE.push({name:best,pri,h,holdUntil:now+SND_HOLD[best],endAt:now+Math.max(SND_HOLD[best],h.dur||0)});
   }catch(e){}
 }
+function sndStopAll(){
+  try{ SND_ACTIVE.forEach(a=>{ if(a.h&&a.h.stop) a.h.stop(); }); }catch(e){}
+  SND_ACTIVE=[]; SND_REQ=[];
+}
+function sndPlay(name){
+  try{
+    if(S.sound===false){ sndLog({name,via:'off'}); return; }
+    if(!SND_WARMED) sndWarm();
+    if(SND_PRI[name]==null){ sndLog({name,via:sndStart(name).via}); return; }   // 優先度の外の音(打牌・卓の音など)は これまでどおり その場で
+    if(name==='select'){                                  // 通常選択の連打: 70ms以内の2回目以降は鳴らさない
+      const t=sndNow(); if(t-SND_SEL_AT<70){ sndLog({name,via:'dropped',by:'tap'}); return; }
+      SND_SEL_AT=t;
+    }
+    SND_REQ.push(name);
+    if(!SND_REQ_ON){ SND_REQ_ON=true; Promise.resolve().then(sndFlush); }
+  }catch(e){}
+}
+/* R96: バックグラウンドから もどったとき、止まっている AudioContext の再開を試みる(Sound OFF中は何もしない) */
+document.addEventListener('visibilitychange',()=>{
+  try{ if(document.visibilityState==='visible'&&SND_CTX&&S.sound!==false) sndCtx(); }catch(e){}
+});
 /* 公開API: 呼び出し側は SoundManager.play('意味') または従来どおり sndPlay('意味') */
 const SoundManager={
   play:n=>sndPlay(n),
   toggle:()=>sndToggle(),
   files:SND_FILES, dir:SND_DIR,
   status:n=>(SND_BANK[n]?SND_BANK[n].st:'unloaded'),
-  last:null,                           // 直近の再生結果 {name, via:'wav'|'wav-element'|'synth'|'off'|'none'}(確認用)
+  last:null,                           // 直近の再生結果 {name, via, t}(確認用)。優先度つきの音はマイクロタスクのあとに入る
+  log:SND_LOG,                         // R96: 直近80件
 };
 function sndToggle(){
   S.sound=S.sound===false?true:false; save();
-  if(S.sound!==false) sndPlay('select');       // ONにした瞬間だけ試し鳴らし(ユーザー操作起点)
+  if(S.sound===false) sndStopAll();             // R96: OFFにしたら 鳴っている音もすぐ止める
+  if(S.sound!==false){
+    // ONにした瞬間の試し鳴らし(29)。OFFのまま起動していると まだ読み込んでいないので、読みおわるのを 最大0.6秒だけ待つ(それ以上は鳴らさない)
+    if(!SND_WARMED) sndWarm();
+    const t0=Date.now();
+    const tryPlay=()=>{ if(S.sound===false) return; const e=SND_BANK.select;
+      if(!e||e.st!=='loading'||Date.now()-t0>600){ sndPlay('select'); return; } setTimeout(tryPlay,50); };
+    tryPlay();
+  }       // ONにした瞬間だけ試し鳴らし(ユーザー操作起点)
   renderProfile();
 }
 /* ================= 最新版に更新(2026-09-21) =================
@@ -4850,8 +4937,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.87.2';
-const BUILD_ID='20261023-01';
+const APP_VER='0.88.0';
+const BUILD_ID='20261024-01';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -5142,6 +5229,9 @@ function dmEvent(kind,n){
     if(typeof L!=='undefined'&&L) DAILY_FX_PENDING=true; else dmCompleteFx();   // レッスン中は 結果の画面で出す
   }
   if(done.length){ dmSave(); if(typeof renderHUD==='function') renderHUD(); }
+  // R96: ミッションが「未達成→達成」に変わった この瞬間だけ鳴らす(claimed で二重付与を防いでいるのと同じ場所)。
+  //   一覧を開く・再描画・再読み込みでは ここを通らない。同時に2つ達成しても1回。上位の音(クリアなど)と重なれば上位を優先
+  if(done.length) sndPlay('mission');
   return done;
 }
 /* 旧版の呼び出し口(第8段階)。dm_lesson だけ レッスンの完了として受ける */
@@ -20053,7 +20143,9 @@ function showStreakFx(opts){
       +'<button class="btn sfx-next" onclick="closeStreakFx()">つづける</button>'
       +'</div>';
     document.body.appendChild(wrap);
-    requestAnimationFrame(()=>{ wrap.classList.add('show'); sndPlay(mileLabel?'streakMile':'streak'); });
+    // R96: 毎日の更新では鳴らさない。節目(SND_STREAK_MILES=3/7/14/30日)だけ シャキーン1。
+    //   この演出は streakFxDay(保存)で その日1回だけ出るので、再読み込み・再描画で ふたたび鳴ることはない
+    requestAnimationFrame(()=>{ wrap.classList.add('show'); if(SND_STREAK_MILES.indexOf(days)>=0&&!(opts&&opts.sndDone)) sndPlay('themeComplete'); });
   }catch(e){}
 }
 function closeStreakFx(){
@@ -20887,7 +20979,13 @@ function finishLesson(){
   save();
   // ここまでで報酬・進捗はすべて確定済み。以降は演出のみ:
   // 通常は直接リザルト。初回制覇時のみ COMPLETE または MASTER を1回だけ挟む
-  sndPlay(roadEvents.some(e=>e.type==='theme'||e.type==='subtheme')?'themeComplete':'lessonComplete');
+  // R96: クリアの音は1回だけ。テーマ制覇 > (節目の連続日数) > レッスンクリア(全問正解も同じ27。違いは画面の🏆)。
+  //   連続日数の節目は 260ms後の連続日数の演出と いっしょに シャキーン1 を鳴らすので、ここでは27を鳴らさない(27の頭を切らないため)
+  const themeUp=roadEvents.some(e=>e.type==='theme'||e.type==='subtheme');
+  const mileSnd=!!(streakEvent&&SND_STREAK_MILES.indexOf(streakEvent.days)>=0);
+  if(themeUp) sndPlay('themeComplete');
+  else if(!mileSnd) sndPlay('lessonComplete');
+  if(themeUp&&mileSnd) streakEvent.sndDone=true;   // テーマ制覇と節目が 同じ操作: シャキーン1 は テーマ制覇の1回だけ(連続日数の演出では もう鳴らさない)
   playClearSequence(roadEvents,()=>{
     renderResult({xp,duration,firstToday,bestInfo,cid});
     // 当日初達成のみ: リザルトの上にストリーク達成演出(閉じるとリザルトが見える)。
