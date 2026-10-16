@@ -1252,6 +1252,15 @@ span.st-mg{color:var(--jade-ink); font-weight:900;}
 .yl-dora b{font-size:13.5px;}
 .yl-dora p{margin:4px 0 0; font-size:12px; color:var(--ink-soft); font-weight:700; line-height:1.5;
   font-family:'Noto Sans JP',sans-serif;}
+/* R98: スタミナに 制限が ないあいだ(staminaFree)は ❤️∞ を 出さない(内部の スタミナ処理は そのまま) */
+body.stamina-free .stat-hearts, body.stamina-free #lesson-hearts{display:none;}
+/* R98: 14枚の 手牌(何切る)の 押せる 範囲。牌の 見た目・ならびは そのまま、行の 上下に 透明な 帯を つけて
+   牌の 列ごとに 押せるようにする(帯の高さ = 牌の高さ + 上下 9px。320px で 約45px) */
+.hand.dc-hand{padding:9px 0; margin:1px 0 5px; touch-action:manipulation;}
+/* R98: SECTION一覧では 資料集を 見出しの 右に 置く(下に 浮かぶ ボタンが カードの 文字に 重ならないように) */
+.sec-list-head.has-ref{display:flex; align-items:flex-start; gap:10px;}
+.sec-list-head.has-ref .slh-txt{flex:1; min-width:0;}
+.yl-open.yl-inline{position:static; flex:none; white-space:nowrap; padding:7px 12px; font-size:12.5px; margin-top:2px;}
 .yl-open{position:fixed; right:14px; bottom:calc(136px + env(safe-area-inset-bottom)); z-index:25;
   background:var(--card); color:var(--jade-ink); border:2px solid var(--jade); border-radius:999px;
   padding:9px 14px; font-weight:900; font-size:13px; box-shadow:0 3px 0 var(--jade-deep); cursor:pointer;}
@@ -1309,6 +1318,7 @@ span.st-mg{color:var(--jade-ink); font-weight:900;}
 .tri-rt{flex-basis:100%; display:flex; align-items:baseline; gap:6px; color:var(--ink);}
 .tri-rt small{font-size:9.5px; color:var(--ink-soft); font-weight:800; letter-spacing:.08em;}
 .tri-rt b{font-size:18px; line-height:1.1; font-variant-numeric:tabular-nums;}
+.tri-rt.unrated b{font-size:13px; color:var(--ink-soft);}   /* R98: まだ測っていない RATING */
 .tri-go{grid-area:go; align-self:end; min-height:40px; min-width:84px; padding:6px 12px; border:0; border-radius:12px;
   background:var(--jade); color:var(--on-accent); font-family:inherit; font-weight:900; font-size:clamp(12.5px,3.5vw,14px);
   box-shadow:0 3px 0 var(--jade-deep); cursor:pointer; white-space:nowrap;}
@@ -2161,6 +2171,11 @@ button.mjt-pick.mjt-hp,
 .res-box .k{font-size:clamp(10.5px,3vw,12px); color:var(--ink-soft); font-weight:700; margin-top:2px;}
 .best-badge{background:var(--gold); color:var(--on-accent); font-weight:800; border-radius:999px;
   padding:8px 20px; box-shadow:0 3px 0 var(--gold-deep); font-size:clamp(14px,4vw,16px);}
+/* R98: 結果画面の ミッションの 1行(このレッスンの あいだに 達成した 分) */
+.res-mission{background:var(--card); border:2px solid var(--jade); border-radius:14px; padding:8px 14px;
+  width:min(320px,92%); box-sizing:border-box; font-weight:800; font-size:clamp(12.5px,3.5vw,14px); color:var(--ink);}
+.res-mission>div{display:flex; justify-content:space-between; align-items:center; gap:8px; padding:2px 0;}
+.res-mission b{color:var(--jade-ink); white-space:nowrap; font-variant-numeric:tabular-nums;}
 .streak-celebrate{background:linear-gradient(180deg,var(--gold),#f0bc55); border-radius:20px;
   padding:18px 34px; color:var(--on-accent); box-shadow:0 5px 0 var(--gold-deep); width:min(280px,80%);
   animation:scpop .45s cubic-bezier(.2,1.6,.4,1);}
@@ -2172,6 +2187,14 @@ button.mjt-pick.mjt-hp,
   text-shadow:0 2px 0 rgba(0,0,0,.15); font-variant-numeric:tabular-nums;}
 .streak-celebrate .sc-label{font-size:clamp(17px,5vw,21px); font-weight:800;}
 .streak-celebrate .sc-sub{margin:6px 0 0; font-size:clamp(11px,3.2vw,12.5px); font-weight:700; opacity:.94;}
+/* R98: 毎日の 連続日数は モーダルを やめて 結果画面の この帯だけに したので、結果の 数字(EXP・正解率)と
+   ミッションの 1行が 1画面に 入るよう 横ならびの 小さめの 帯にする(🔥 と 数字 | 日連続！/ ひとこと) */
+.streak-celebrate{display:grid; grid-template-columns:auto auto 1fr; align-items:center; column-gap:8px;
+  padding:8px 18px; width:min(300px,88%); box-sizing:border-box; text-align:left; border-radius:16px;}
+.streak-celebrate .sc-flame{grid-row:1 / span 2; font-size:clamp(28px,8vw,34px);}
+.streak-celebrate .sc-num{grid-row:1 / span 2; font-size:clamp(34px,10vw,42px);}
+.streak-celebrate .sc-label{font-size:clamp(15px,4.4vw,18px); align-self:end;}
+.streak-celebrate .sc-sub{margin:0; align-self:start;}
 @keyframes scpop{0%{transform:scale(.6); opacity:0;} 100%{transform:scale(1); opacity:1;}}
 .cal-head{display:flex; align-items:center; justify-content:space-between; margin:10px 0 6px;}
 .cal-head b{font-size:15px;}
@@ -2267,7 +2290,7 @@ button.mjt-pick.mjt-hp,
     <div style="display:flex; gap:14px;">
       <div class="stat" title="連続学習" style="cursor:pointer;" onclick="showStreakDetail()">🔥<span id="hud-streak">0</span><small>日</small></div>
       <div class="stat" title="ジェム">💎<span id="hud-gems">0</span></div>
-      <div class="stat" title="スタミナ">❤️<span id="hud-hearts">5</span></div>
+      <div class="stat stat-hearts" title="スタミナ">❤️<span id="hud-hearts">5</span></div>
     </div>
   </div>
 
@@ -4946,8 +4969,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.88.1';
-const BUILD_ID='20261025-01';
+const APP_VER='0.89.0';
+const BUILD_ID='20261026-01';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -5226,7 +5249,11 @@ function dmEvent(kind,n){
       const h=dmHist(); h.completedMissions++;
       S.xp+=DM_XP; d.xp=(d.xp||0)+DM_XP; h.missionXp+=DM_XP;
       done.push(m);
-      queueToast('✓ ミッション達成！ +'+DM_XP+' EXP',def.title);
+      /* R98: レッスン中に 達成した ミッションは L.dmDone に のこし、結果画面に まとめて 出す。
+         レッスンを おえる 処理の中(L.done)で 達成した ときは トーストを 出さない(結果画面に 重ねない) */
+      const inL=(typeof L!=='undefined'&&L);
+      if(inL) (L.dmDone=L.dmDone||[]).push(def.title);
+      if(!(inL&&L.done)) queueToast('✓ ミッション達成！ +'+DM_XP+' EXP',def.title);
     }
   });
   if(done.length&&!d.bonusClaimed&&d.missions.every(m=>d.claimed[m.id])){
@@ -5235,7 +5262,7 @@ function dmEvent(kind,n){
     if(h.perfect.indexOf(d.date)<0){ h.perfect.push(d.date); h.perfect.sort(); while(h.perfect.length>DM_KEEP_DAYS) h.perfect.shift(); }
     S.xp+=DM_BONUS; d.xp=(d.xp||0)+DM_BONUS; h.missionXp+=DM_BONUS;
     d.completedAt=new Date().toISOString();
-    if(typeof L!=='undefined'&&L) DAILY_FX_PENDING=true; else dmCompleteFx();   // レッスン中は 結果の画面で出す
+    if(typeof L!=='undefined'&&L){ DAILY_FX_PENDING=true; L.dmBonus=true; } else dmCompleteFx();   // レッスン中は 結果の画面で出す(R98: 結果画面の中の1行。帯は 重ねない)
   }
   if(done.length){ dmSave(); if(typeof renderHUD==='function') renderHUD(); }
   // R96: ミッションが「未達成→達成」に変わった この瞬間だけ鳴らす(claimed で二重付与を防いでいるのと同じ場所)。
@@ -5363,9 +5390,17 @@ try{ document.addEventListener('visibilitychange',dmOnResume); window.addEventLi
 /* ミッション達成トースト: 画面上部の小さなチップ。pointer-events:noneでレッスン進行・
    コンボ演出・解説と共存し、順番に1つずつ約1.3秒で自然に消える(全画面演出にしない) */
 let TOAST_Q=[],TOAST_ON=false;
+/* R98: いま出ている トーストを すぐ 消し、まだ 出ていない ものも すてる。
+   レッスンを おえた とき(内容は 結果画面に まとめる)と、結果画面を はなれる とき(あとから 別の画面に 出さない)に よぶ */
+function toastClear(){
+  TOAST_Q=[];
+  const el=document.getElementById('toast'); if(el) el.classList.remove('show');
+  TOAST_ON=false;
+}
 function queueToast(title,sub){ TOAST_Q.push({title,sub}); pumpToast(); }
 function pumpToast(){
   if(TOAST_ON||!TOAST_Q.length) return;
+  if(typeof L!=='undefined'&&L&&L.done) return;   // R98: 結果画面の あいだは 出さない(この間の達成は 結果画面に まとめて 出している)
   const el=document.getElementById('toast');
   if(!el){ TOAST_Q=[]; return; }
   TOAST_ON=true;
@@ -5405,6 +5440,7 @@ function scrollToNext(){
 }
 
 function renderHUD(){
+  try{ document.body.classList.toggle('stamina-free',!!staminaFree()); }catch(e){}   // R98: ❤️∞ を かくす(表示だけ)
   document.getElementById('hud-streak').textContent=S.streak;
   document.getElementById('hud-gems').textContent=S.gems;
   document.getElementById('hud-hearts').textContent=staminaFree()?'∞':S.hearts;
@@ -5438,6 +5474,14 @@ function rankForTime(typeKey,ms){
 /* ================= スキルレーティング（v2.2仕様） ================= */
 const CAT_LABEL={waits:'待ち',nanikiru:'何切る',riichi:'リーチ判断',ukeire1:'受け入れ'};
 const TWO_CHOICE_CATS=['riichi']; // 2択カテゴリはE'=0.5+0.5E補正（v2.2仕様どおり）
+/* R98: その分野の RATING を 実際に 測ったか。ratingN(ratingUpdate の たびに +1。最初の 公開版から ある)で 決める。
+   念のため 値が 初期値(DEFAULT_STATE.ratings)から 動いていれば 測った あつかい(30 という 値だけでは 決めない)。
+   内部の 初期値30・計算式は そのまま。表示だけ「未評価」にする */
+function ratingRated(cat){
+  const n=S.ratingN&&S.ratingN[cat], v=S.ratings&&S.ratings[cat], d=DEFAULT_STATE.ratings[cat];
+  return (n|0)>0||(v!=null&&d!=null&&v!==d);
+}
+function ratingDisp(cat){ return ratingRated(cat)?String(Math.floor(S.ratings[cat])):'未評価'; }
 function ratingUpdate(cat,lv,qual,isReview){
   const R0=S.ratings[cat];
   const d=lv*10+5;
@@ -5790,6 +5834,8 @@ function goContinue(){                          // ホームの「つづきか�
   showScreen('course');
   requestAnimationFrame(()=>requestAnimationFrame(scrollToNext));
 }
+/* R98: 学習ロードを 1レッスンでも 進めたか(roadProgress だけで 決める。新しい 保存データは 足さない) */
+function roadStarted(){ return Object.values(S.roadProgress||{}).some(v=>(v|0)>0); }
 function renderHome(){
   ensureDaily();
   const el=document.getElementById('home-body');
@@ -5807,7 +5853,7 @@ function renderHome(){
   const nx=nextLessonInfo();
   const contCard='<button class="hc-continue" onclick="goContinue()">'
     +'<span class="hc-play">▶</span>'
-    +'<span class="hc-txt"><b>つづきから</b>'
+    +'<span class="hc-txt"><b>'+(roadStarted()?'つづきから':'学習をはじめる')+'</b>'
     +(nx?'<span>'+nx.icon+' '+nx.title+' ─ '+nx.sub+' '+nx.label+'</span>'
         :'<span>全レッスンクリア！ロードは何度でも復習できます</span>')
     +'</span></button>';
@@ -7251,7 +7297,7 @@ function trItemHTML(o){
   return '<div class="tr-item" id="tr-item-'+o.k+'">'
     +'<span class="tri-ico">'+o.icon+'</span>'
     +'<span class="tri-main"><b>'+o.title+'</b><small>'+o.desc+'</small></span>'
-    +'<span class="tri-rec">'+(o.rt!=null?'<span class="tri-rt"><small>RATING</small><b>'+o.rt+'</b></span>':'')+(o.rec||'')+'</span>'
+    +'<span class="tri-rec">'+(o.rt!=null?'<span class="tri-rt'+(o.rt==='未評価'?' unrated':'')+'"><small>RATING</small><b>'+o.rt+'</b></span>':'')+(o.rec||'')+'</span>'
     +'<button class="tri-go" id="tr-go-'+o.k+'" onclick="'+o.go+'">はじめる</button>'
     +'</div>';
 }
@@ -7264,8 +7310,8 @@ function trListHTML(){
   const fr=fuRecOf(), pct=x=>x.n?Math.round(x.ok/x.n*100)+'%':'—';
   const soloOpenN=SOLO_ORDER.filter(n=>soloUnlocked(n));
   const items=[
-    {k:'waits',icon:'🔍',title:'待ちトレーニング',desc:'テンパイ形から待ち牌を見つけよう',rt:Math.floor(S.ratings.waits),rec:trBestHTML('waits'),go:"trOpen('waits')"},
-    {k:'nanikiru',icon:'✂️',title:'何切るトレーニング',desc:'受け入れが最大になる1枚を考えよう',rt:Math.floor(S.ratings.nanikiru),
+    {k:'waits',icon:'🔍',title:'待ちトレーニング',desc:'テンパイ形から待ち牌を見つけよう',rt:ratingDisp('waits'),rec:trBestHTML('waits'),go:"trOpen('waits')"},
+    {k:'nanikiru',icon:'✂️',title:'何切るトレーニング',desc:'受け入れが最大になる1枚を考えよう',rt:ratingDisp('nanikiru'),
       rec:trBestHTML('nanikiru')+'<span class="tri-band">'+bandText('nanikiru')+'・7問</span>',go:"startTraining('nanikiru')"},
     {k:'fu',icon:'🧮',title:'符計算トレーニング',desc:'アガリの形から符を計算しよう',
       rec:fr.n?'<span>ぜんぶで '+fr.n+'問・正答率 '+pct(fr)+'</span>':'',go:"trOpen('fu')"},
@@ -7277,7 +7323,7 @@ function trListHTML(){
     +'<div class="tr-list" id="tr-list">'+items.map(trItemHTML).join('')+'</div>'
     /* リーチ判断(第8段階から ある トレーニング)は 5つの下に「そのほか」として のこす(レーティング・記録を消さない) */
     +'<p class="tr-sub-h">そのほかの練習</p>'
-    +'<div class="tr-list">'+trItemHTML({k:'riichi',icon:'📣',title:'リーチ判断トレーニング',desc:'曲げるかダマか・鳳凰卓実測で検証済み',rt:Math.floor(S.ratings.riichi),
+    +'<div class="tr-list">'+trItemHTML({k:'riichi',icon:'📣',title:'リーチ判断トレーニング',desc:'曲げるかダマか・鳳凰卓実測で検証済み',rt:ratingDisp('riichi'),
       rec:trBestHTML('riichi')+'<span class="tri-band">検証済み問題からランダム7問</span>',go:"startTraining('riichi')"})+'</div>';
 }
 function renderTraining(){
@@ -7295,7 +7341,8 @@ function renderTraining(){
       +'<div style="flex:1;"><b style="font-size:15px;">'+title+'</b>'
       +'<div style="font-size:12px;color:var(--ink-soft);font-weight:700;">'+desc+'</div></div>'
       +'<div style="text-align:center;"><div style="font-size:9.5px;color:var(--ink-soft);font-weight:800;letter-spacing:.08em;">RATING</div>'
-      +'<b style="font-size:22px;font-variant-numeric:tabular-nums;">'+Math.floor(S.ratings[cat])+'</b></div></div>'
+      +(ratingRated(cat)?'<b style="font-size:22px;font-variant-numeric:tabular-nums;">'+Math.floor(S.ratings[cat])+'</b>'
+        :'<b class="rt-unrated" style="font-size:13px;">未評価</b>')+'</div></div>'
       +(best?'<p style="font-size:11.5px;color:var(--gold-ink);margin:0 0 4px;font-weight:800;">🏅 BEST '
         +fmtDur(best.ms,true)+(rank?'　ランク'+rank:'')+'</p>':'')
       +'<p style="font-size:11px;color:var(--ink-soft);margin:0 0 10px;font-weight:700;">'+(bandOverride||bandText(cat)+'（あなたのレーティングに合わせて自動調整）')+'</p>'
@@ -7419,12 +7466,15 @@ function renderPath(){
   // 「📍現在地へ」はSECTION Road上に進めるマスがあるときだけ出す(一覧・完了SECTIONでは隠す)
   const lb=document.querySelector('#screen-course .loc-btn');
   if(lb) lb.style.display=(ROAD_SEC!==null&&wrap.querySelector('.node.next'))?'':'none';
+  // R98: SECTION一覧では 浮かぶ「資料集」を かくす(見出しの右の #sec-ref を使う)。SECTION の ロードでは これまでどおり
+  const yb=document.querySelector('#screen-course > .yl-open'); if(yb) yb.style.display=(ROAD_SEC===null&&!window.__ROAD_ALL)?'none':'';
 }
 const ROAD_FOOT='<p style="text-align:center;color:var(--ink-soft);font-size:12px;padding:10px 24px 0;">マスを順番にクリアして進もう。クリア済みのマスは何度でも挑戦できます</p>';
 function sectionListHTML(){
   const nx=(typeof nextLessonInfo==='function')?nextLessonInfo():null;
-  let html='<div class="sec-list-head"><h2>学習コース</h2>'
-    +'<p>SECTIONをえらんでね。順番にクリアすると、つぎのSECTIONがひらくよ</p></div>';
+  let html='<div class="sec-list-head has-ref"><div class="slh-txt"><h2>学習コース</h2>'
+    +'<p>SECTIONをえらんでね。順番にクリアすると、つぎのSECTIONがひらくよ</p></div>'
+    +'<button class="yl-open yl-inline" id="sec-ref" onclick="openRefHub()">📚 資料集</button></div>';
   SECTIONS.forEach((sec,si)=>{
     const inf=sectionInfo(si,nx);
     if(!inf.ths.length) return;
@@ -19306,9 +19356,11 @@ function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.rando
 function quitLesson(){
   btClearTimers();                // R54: 裏で他家の打牌が進みつづけないように必ず止める
   mjfxClear();                    // R60: 「ポン！」「ロン！」などの演出を画面に残さない
+  const wasDone=!!(L&&L.done);
   document.getElementById('lesson').classList.remove('show');
   L=null; renderHUD(); renderPath();
   ROAD_FX=null;  // ✕離脱時は復帰演出を持ち越さない
+  if(wasDone){ toastClear(); streakFxFlush(); }   // R98: 結果画面から ✕ で はなれた ときも afterLesson と 同じ
 }
 
 /* ================= 出題 ================= */
@@ -19413,7 +19465,7 @@ const QFORMATS={
       html+='<div class="q-type">1択何切る</div>';
       html+='<div class="q-text">どれを切る？</div>';
       if(q.ctx) html+='<div class="q-ctx">'+q.ctx+'</div>';
-      html+='<div class="hand">'+sortTiles(parseHand(q.hand)).map((t,i)=>
+      html+='<div class="hand dc-hand" onpointerdown="dcHandTap(event)">'+sortTiles(parseHand(q.hand)).map((t,i)=>
         '<button class="tile '+(t.length===2?t[1]:'z')+'" id="ht-'+i+'" data-t="'+t+'" onpointerdown="selTile('+i+')">'
         +tileFace(t)+'</button>').join('')+'</div>';
       html+='<p style="text-align:center;color:var(--ink-soft);font-size:12px;font-weight:700;">牌をタップして選択</p>';
@@ -20133,6 +20185,20 @@ function streakComment(days){
     '今日もえらい！'+days+'日連続！','コツコツがちからになるよ。'+days+'日連続！'];
   return pool[days%pool.length];
 }
+/* R98: 節目の 演出の 予約。結果画面の 段階表示(約1秒)を 見おえた あと 約2.2秒で 出す。
+   その前に 結果画面を はなれたら(afterLesson / quitLesson)その場で 出す(おくれて 別の画面に 出ない・なくさない)。
+   予約は メモリだけ(再演出の 防止は これまでどおり streakFxDay)。1回 出したら 消す */
+let STREAK_FX_PENDING=null, STREAK_FX_TIMER=null;
+function streakFxLater(ev){
+  STREAK_FX_PENDING=ev;
+  if(STREAK_FX_TIMER) clearTimeout(STREAK_FX_TIMER);
+  STREAK_FX_TIMER=setTimeout(streakFxFlush,reducedMotion()?700:2200);
+}
+function streakFxFlush(){
+  if(STREAK_FX_TIMER){ clearTimeout(STREAK_FX_TIMER); STREAK_FX_TIMER=null; }
+  const ev=STREAK_FX_PENDING; STREAK_FX_PENDING=null;
+  if(ev) showStreakFx(ev);
+}
 function showStreakFx(opts){
   try{
     const days=opts&&opts.days||S.streak||1;
@@ -20316,6 +20382,22 @@ function selChoice(i){
      何巡も打つ実戦ではテンポが悪いのでやめた(確定ボタンそのものも出さない)。
      連打で2枚切れないように、ch1AutoJudge が L.judging を立てて 以降のタップを止める */
   ch1AutoJudge();               // 単一選択(mcq/tchoices/リーチ判断/Compare)も打牌も即判定
+}
+/* R98: 何切るの 手牌の 上下の 帯を 押したとき。押した 位置の 真下(真上)の 牌を えらぶ。
+   牌そのものを 押したときは 牌の onpointerdown が 受けるので ここでは 何もしない(2回 えらばない)。
+   どの牌の 列にも 入らない(すき間 2px)ときは いちばん 近い 牌。帯の 外(左右の 余白)は えらばない */
+function dcHandTap(ev){
+  try{
+    if(ev.target&&ev.target.closest&&ev.target.closest('button.tile')) return;
+    const hand=ev.currentTarget; if(!hand) return;
+    const tiles=[...hand.querySelectorAll('button.tile')]; if(!tiles.length) return;
+    const x=ev.clientX, rs=tiles.map(b=>b.getBoundingClientRect());
+    if(x<rs[0].left-2||x>rs[rs.length-1].right+2) return;
+    let best=0, bd=1e9;
+    rs.forEach((r,i)=>{ const d=(x>=r.left&&x<=r.right)?0:Math.min(Math.abs(x-r.left),Math.abs(x-r.right)); if(d<bd){ bd=d; best=i; } });
+    const id=tiles[best].id, i=id&&/^ht-(\d+)$/.test(id)?+RegExp.$1:best;
+    selTile(i);
+  }catch(e){}
 }
 function selTile(i){
   if(!L||L.checked||L.judging) return;
@@ -20908,6 +20990,10 @@ function finishLesson(){
      L.doneガードで「つづける」連打等による二重発火・二重付与を防ぐ(第7段階) */
   if(L.done) return;
   L.done=true;
+  toastClear();   // R98: 答えている間の トーストは ここで 消す(その達成は 結果画面に まとめて 出す)
+  /* R98: 最後の 答えの コンボ演出(5/10 COMBO・約1秒)が 残っていたら 消す(結果画面の 数字に 重ねない。後かたづけの コールバックは ない) */
+  { const fx=document.getElementById('fx');
+    if(fx&&fx.classList.contains('fx-combo')){ if(FX_TIMER){ clearTimeout(FX_TIMER); FX_TIMER=null; } fx.className='fx'; fx.innerHTML=''; } }
   document.getElementById('pbar-fill').style.width='100%';
   const foot0=document.getElementById('lesson-foot');
   foot0.className='lesson-foot'; foot0.innerHTML='';   // クリア演出中の誤タップ防止
@@ -20992,18 +21078,19 @@ function finishLesson(){
   save();
   // ここまでで報酬・進捗はすべて確定済み。以降は演出のみ:
   // 通常は直接リザルト。初回制覇時のみ COMPLETE または MASTER を1回だけ挟む
-  // R96: クリアの音は1回だけ。テーマ制覇 > (節目の連続日数) > レッスンクリア(全問正解も同じ27。違いは画面の🏆)。
-  //   連続日数の節目は 260ms後の連続日数の演出と いっしょに シャキーン1 を鳴らすので、ここでは27を鳴らさない(27の頭を切らないため)
+  // R96: クリアの音は1回だけ。テーマ制覇 > レッスンクリア(全問正解も同じ27。違いは画面の🏆)。
+  // R98: 連続日数の節目の演出は 結果画面を 見たあと(約2秒後・または 結果画面を はなれるとき)に うつしたので、
+  //      結果画面では ふつうに 27 を鳴らす(節目の シャキーン1 は 節目の演出と いっしょ。時間が わかれている)
   const themeUp=roadEvents.some(e=>e.type==='theme'||e.type==='subtheme');
   const mileSnd=!!(streakEvent&&SND_STREAK_MILES.indexOf(streakEvent.days)>=0);
   if(themeUp) sndPlay('themeComplete');
-  else if(!mileSnd) sndPlay('lessonComplete');
+  else sndPlay('lessonComplete');
   if(themeUp&&mileSnd) streakEvent.sndDone=true;   // テーマ制覇と節目が 同じ操作: シャキーン1 は テーマ制覇の1回だけ(連続日数の演出では もう鳴らさない)
   playClearSequence(roadEvents,()=>{
     renderResult({xp,duration,firstToday,bestInfo,cid});
-    // 当日初達成のみ: リザルトの上にストリーク達成演出(閉じるとリザルトが見える)。
-    // 将来: この直後にフレンドストリーク成立時 showStreakFx({type:'friend',...}) を連結する
-    if(streakEvent) setTimeout(()=>showStreakFx(streakEvent),260);
+    // R98: ふつうの日の 連続日数は 結果画面の中(🔥 n日連続)だけ。大きな モーダルは 節目(STREAK_MILESTONES)の日だけで、
+    //      結果画面の 数字を 見おえてから 出す(streakFxLater)。モーダルを 自動で 重ねない
+    if(streakEvent&&STREAK_MILESTONES[streakEvent.days]) streakFxLater(streakEvent);
   });
 }
 /* 達成演出(第7段階追補×2): 上位が下位を包含し、出るのは最大1回。
@@ -21039,13 +21126,23 @@ function renderResult(ctx){
       +'<b style="color:var(--'+(up?'jade-deep':'verm')+')">'+r0+' → '+r1+(up?' ▲':' ▼')+'</b></div>';
   }
   // リザルトの順次表示(第7段階): 見出し→EXP→正解率→…を短い間隔で(全体約1秒・reduced時は即時表示)
-  let SI=2;                                      // 0=絵文字, 1=見出し, 以降は登場順
+  let SI=2;
+  /* R98: このレッスン(トレーニング)の あいだに 達成した ミッションを 1つに まとめて 出す。
+     数は dmEvent が 実際に EXP を つけた ときに L.dmDone へ 入れたもの(表示だけ。付与は もう すんでいる) */
+  const dmN=(L.dmDone||[]).length, dmBonus=!!(L.dmBonus||DAILY_FX_PENDING);
+  const missionLine=()=>dmN||dmBonus
+    ?'<div class="res-mission stag" id="res-mission"'+stagStyle(SI++)+'>'
+      +(dmN?'<div>🎯 ミッション達成'+(dmN>1?' ×'+dmN:'')+'<b>+'+(DM_XP*dmN)+' EXP</b></div>':'')
+      +(dmBonus?'<div>🎉 3つ達成ボーナス<b>+'+DM_BONUS+' EXP</b></div>':'')
+      +'</div>'
+    :'';                                      // 0=絵文字, 1=見出し, 以降は登場順
   const stagStyle=i=>' style="animation-delay:'+(i*MOTION.resultStagger)+'ms"';
   // 当日初回の学習達成のみ、連続記録を大きく祝う(同日2回目以降は通常リザルト)
+  const mileLab=firstToday?(STREAK_MILESTONES[S.streak]||null):null;   // R98: 節目の日は 結果の中にも 🏆 を出す(モーダルは あとで)
   const streakCelebrate=firstToday
     ?'<div class="streak-celebrate stag"'+stagStyle(SI++)+'><div class="sc-flame">🔥</div>'
       +'<div class="sc-num">'+S.streak+'</div><div class="sc-label">日連続！</div>'
-      +'<p class="sc-sub">今日の学習を達成しました</p></div>'
+      +'<p class="sc-sub">'+(mileLab?'🏆 '+mileLab:'今日の学習を達成しました')+'</p></div>'
     :'';
   const statBox=(v,k,extra)=>'<div class="res-box stag'+(extra||'')+'"'+stagStyle(SI++)+'>'
     +'<div class="v">'+v+'</div><div class="k">'+k+'</div></div>';
@@ -21128,12 +21225,14 @@ function renderResult(ctx){
         :'<p class="stag" style="'+noteStyle+'animation-delay:'+(SI++)*MOTION.resultStagger+'ms">👑 '
           +L.course.title+'：'+(S.crowns[cid]||0)+'/5</p>');
   }
+  const missionHTML=missionLine();
   area.innerHTML='<div class="center-col" style="gap:12px;">'
     +'<div class="res-av stag"'+stagStyle(0)+'>'+avatarImgHTML(S.avatarId,'uav-res')+(perfect?'<span class="res-av-badge" aria-hidden="true">🏆</span>':'')+'</div>'   // R34: 自分のアバターが「できた！」
     +'<h2 class="stag" style="margin:0;animation-delay:'+MOTION.resultStagger+'ms">'
     +(L.fuCourse?'LESSON '+L.fuCourse.n+' クリア！':(L.course.training?'トレーニング完了！':(perfect?'パーフェクト！':'レッスンクリア！')))+'</h2>'
     +streakCelebrate
     +stats
+    +missionHTML
     +'</div>';
   area.scrollTop=0;
   const foot=document.getElementById('lesson-foot');
@@ -21161,7 +21260,8 @@ function renderResult(ctx){
     :'<button class="btn" onclick="afterLesson()">つづける</button>';
   // DAILY COMPLETE(第8段階): 3ミッション全達成のその日1回だけ、解説を邪魔しない
   // リザルト表示のタイミングで再生(COMPLETE/MASTER演出の後に順番に流れる。操作は塞がない)
-  if(DAILY_FX_PENDING){ DAILY_FX_PENDING=false; dmCompleteFx(); }   // R86: えらんでいるアバターで お祝い
+  /* R98: 3つ達成の お祝いは 結果画面の中の 1行(#res-mission)に した。結果の 上に 帯(dmCompleteFx)を 重ねない */
+  DAILY_FX_PENDING=false;
 }
 /* R69: 同じLvで新しい10問をすぐ始める。進捗(roadProgress)には一切さわらない */
 function scoreTrainAgain(level){
@@ -21172,6 +21272,8 @@ function scoreTrainAgain(level){
 function afterLesson(){
   document.getElementById('lesson').classList.remove('show');
   L=null; renderHUD(); renderPath();
+  toastClear();      // R98: 結果画面の あいだに たまった 通知は ここで すてる(結果画面に まとめて 出した)
+  streakFxFlush();   // R98: 節目の 演出が まだなら いま 出す(なくさない・あとから 突然 出さない)
   // ロード復帰演出(第7段階): クリアしたマス(✓ポップ)と解放された次マス(ロック解除グロー)が
   // 見える位置へスクロール。演出情報は一度使ったら破棄(再描画では再生しない)
   if(ROAD_FX){
@@ -21263,13 +21365,13 @@ const RATING_CATALOG=[
  {key:'oshihiki_r',label:'押し引き'},{key:'yomi_r',label:'読み'},{key:'joukyou_r',label:'状況判断'},
  {key:'alllast_r',label:'オーラス'}];
 function ratingSectionHTML(){
-  const row=(label,val)=>'<div class="rt-row"><span>'+label+'</span>'
-    +(val!=null?'<b>'+Math.floor(val)+'</b>':'<i>― 未計測</i>')+'</div>';
+  const row=(label,val,key)=>'<div class="rt-row"><span>'+label+'</span>'
+    +(val!=null?(key&&!ratingRated(key)?'<i class="rt-unrated">― 未評価（トレーニングで測ります）</i>':'<b>'+Math.floor(val)+'</b>'):'<i>― 未計測</i>')+'</div>';
   const measured=RATING_CATALOG.filter(c=>S.ratings[c.key]!=null);
   const rest=RATING_CATALOG.filter(c=>S.ratings[c.key]==null);
   return '<div class="card"><b style="font-size:14px;">📈 雀力レーティング</b>'
     +'<div style="margin-top:8px;">'
-    +measured.map(c=>row(c.label,S.ratings[c.key])).join('')
+    +measured.map(c=>row(c.label,S.ratings[c.key],c.key)).join('')
     +'</div>'
     +(rest.length?'<details class="rt-more"><summary>その他のカテゴリを見る（'+rest.length+'）</summary>'
       +rest.map(c=>row(c.label,null)).join('')
