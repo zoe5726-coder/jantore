@@ -2059,6 +2059,11 @@ button.mjt-pick.mjt-hp,
   overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
 .today-strip .ts-cal{font-size:clamp(14px,4vw,17px); opacity:.75;}
 /* コースの現在地フローティングボタン(ロードが長くなっても現在地へ一発。過去マス閲覧の邪魔をしない) */
+/* R100: ホームの「今日の復習」(つづきから より 目立たない 白い カード) */
+.hc-review{padding:8px 12px; border-radius:14px; min-height:46px;}
+.hc-review .hy-ico{font-size:18px;}
+.hc-review .hy-txt b{font-size:clamp(13.5px,3.7vw,15px);}
+.hc-review .hr-go{flex:none; margin-left:auto; background:var(--jade); color:var(--on-accent); border-radius:999px; padding:6px 11px; font-size:12px; font-weight:900; white-space:nowrap;}
 .loc-btn{position:fixed; right:14px; bottom:calc(78px + env(safe-area-inset-bottom)); z-index:25;
   border:none; background:var(--jade); color:var(--on-accent); font-weight:800; border-radius:999px;
   padding:9px 14px; font-size:clamp(11px,3.1vw,12.5px); box-shadow:0 3px 0 var(--jade-deep),0 4px 10px var(--shadow);}
@@ -4980,8 +4985,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.90.0';
-const BUILD_ID='20261027-01';
+const APP_VER='0.91.0';
+const BUILD_ID='20261028-01';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -5286,6 +5291,7 @@ function bumpMission(id,amt){ if(id==='dm_lesson') dmEvent('lesson',amt||1); }
 /* 答えた1問(check から1回だけ呼ぶ) */
 function dmAnswer(q,ok){
   if(!q||q.ch1t) return;
+  if(L&&L.dailyReview) rvAnswer(q,ok);   // R100: 今日の復習の 予定を すすめる(1問1回。ミッションの 進みは これまでどおり 下で)
   dmEvent('answer'); if(ok) dmEvent('correct');
   if(L&&L.course&&L.course.training&&!L.fuCourse) dmEvent('trainAnswer');   // R87: 講座の確認問題は トレーニングの回答に数えない
   if(q.fuQ) dmEvent('fu');
@@ -5380,6 +5386,163 @@ function frzCardHTML(msg){
     +'<p class="frz-note" id="frz-msg">'+(msg||(st.ok?'ジェムが '+FRZ_PRICE+' へります（いま 💎'+(S.gems|0)+'）':st.why))+'</p>';
 }
 function frzCardRefresh(msg){ const el=document.getElementById('frz-card'); if(el) el.innerHTML=frzCardHTML(msg); }
+/* ================= R100 今日の復習 =================
+   ロードの レッスンで まちがえた 問題を、間をあけて もう一度 解く。新しい 問題は 作らない。
+   ・どの 問題か(id): 形式 + 問題の 中身を ならべなおして ハッシュ(rvId)。'_' で はじまる 一時的な 項目は 見ない。
+     選択肢(choices・tchoices・cands)の ならび順は 区別しない(答えは 番号でなく 中身で 持つ)。牌姿・問う内容が ちがえば べつの id。
+   ・作りなおしかた(recipe): 出すときは 毎回 既存の 作りかたで 作りなおし、同じ id に なることを たしかめてから 出す(保存した 中身を そのまま 出さない)。
+       seed: 待ち当て(mkWaitsQ)・受け入れ当て(mkUkeireQ)・何切る(genNanikiru)は 種から 作りなおす
+       build: それ以外は その レッスンを buildThemeQuestions で 作りなおし(最大30回)＋ そのコースの 問題の プールから 同じ id を さがす
+     作りなおせない 問題(ミニ実戦・まいかい 牌姿が かわる 問題 など)は 記録しない・出さない。正誤は 既存の QFORMATS/SCORERS(check)で 決める。
+   ・間隔: まちがえた → 翌日。復習で 正解 → 3日・7日・14日・30日後(連続正解 1・2・3・4回以上)。復習で まちがえる → 連続0・翌日。
+     予定を すすめる 正解は 同じ問題で 1日1回まで(同じ日の 2回目の 正解では すすまない)。
+   ・保存: localStorage 'jantore-reviewstate-v1' = {v:1, items:{id:{id,fmt,rc,th,li,mi,st,due,first,last,lastOk}}, bonus:日付, mig:1}
+       (jantore-v1 と jantore-reviewlog-v1 の 形は かえない。reviewlog は これまでどおり 書く・消さない)
+       旧データ: reviewlog の うち 種(seed)が ある 記録(待ち当て・受け入れ当て・何切る)だけ 1回 取りこむ(予定は 今日)。上限 300件(覚えた ものから へらす) */
+const RV_KEY='jantore-reviewstate-v1', RV_N=5, RV_MAX=300, RV_GAPS=[3,7,14,30], RV_XP=10;
+let RV_CACHE=null;
+function rvLoad(){
+  if(RV_CACHE) return RV_CACHE;
+  let st=null, raw=null;
+  try{ raw=localStorage.getItem(RV_KEY); st=JSON.parse(raw||'null'); }catch(e){ st=null; }
+  if(!st||typeof st!=='object'||st.v!==1||!st.items||typeof st.items!=='object') st={v:1,items:{},bonus:null,mig:0};
+  RV_CACHE=st;
+  /* 旧データの 取りこみは 1回。取りこんだ ものが なく 保存キーも なければ キーを 作らない(まちがえて はじめて 作る)。
+     その場合 同じ 読みこみ中は RV_CACHE で 1回だけ・次に ひらいた ときは また しらべる(記録の ない 旧データは すぐ 終わる) */
+  if(!st.mig){ try{ rvMigrate(st); }catch(e){} st.mig=1; if(Object.keys(st.items).length||raw!=null) rvSave(); }   // こわれた 保存は 空で 書きなおす
+  return st;
+}
+function rvSave(){ try{ const st=RV_CACHE; if(!st) return; rvPrune(st); localStorage.setItem(RV_KEY,JSON.stringify(st)); }catch(e){} }
+function rvPrune(st){
+  const ids=Object.keys(st.items); if(ids.length<=RV_MAX) return;
+  ids.sort((a,b)=>{ const x=st.items[a], y=st.items[b]; return (y.st|0)-(x.st|0)||(y.due>x.due?1:y.due<x.due?-1:0)||(x.last>y.last?1:x.last<y.last?-1:0); });
+  ids.slice(0,ids.length-RV_MAX).forEach(id=>delete st.items[id]);
+}
+function rvNorm(q){
+  const o=JSON.parse(JSON.stringify(q,(k,v)=>(k.charAt(0)==='_'||typeof v==='function')?undefined:v));
+  let done=false;
+  ['choices','tchoices','cands'].forEach(f=>{
+    if(done||!Array.isArray(o[f])) return;
+    if(typeof o.a==='number'&&o[f][o.a]!==undefined){ o.ansV=JSON.stringify(o[f][o.a]); delete o.a; done=true; }
+    if(Array.isArray(o.answers)&&o.answers.every(x=>Number.isInteger(x))){ o.answersV=o.answers.map(i=>JSON.stringify(o[f][i])).sort(); delete o.answers; done=true; }
+    if(done) o[f]=o[f].map(x=>JSON.stringify(x)).sort();
+  });
+  const ks=x=>Array.isArray(x)?x.map(ks):(x&&typeof x==='object')?Object.keys(x).sort().reduce((a,k)=>(a[k]=ks(x[k]),a),{}):x;
+  return JSON.stringify(ks(o));
+}
+function rvId(q){ const n=rvNorm(q); return qFormatKey(q)+':'+dmHash(n).toString(36)+dmHash('x'+n).toString(36); }
+function rvRecipe(q,fmt){
+  if(q.seed!=null&&fmt==='waits'&&q.level) return {k:'w',seed:q.seed,lv:q.level};
+  if(q.seed!=null&&fmt==='ukeire1') return {k:'u',seed:q.seed,lv:q.full?'full':q.level,p:q.pattern||null};
+  if(q.seed!=null&&fmt==='discard'&&q.gen&&!q.curated) return {k:'n',seed:q.seed};
+  return {k:'b'};
+}
+/* 作りなおして 同じ id の 問題を かえす。なければ null */
+function rvRebuild(it){
+  try{
+    const rc=it.rc||{k:'b'};
+    if(rc.k==='w'){ const q=mkWaitsQ(rc.lv,rc.seed); return q&&rvId(q)===it.id?q:null; }
+    if(rc.k==='u'){ const q=mkUkeireQ(rc.lv,rc.seed,rc.p); return q&&rvId(q)===it.id?q:null; }
+    if(rc.k==='n'){ const q=genNanikiru(mulberry32(rc.seed),rc.seed); return q&&rvId(q)===it.id?q:null; }
+    const t=themeOf(it.th); if(!t) return null;
+    const ls=themeLessons(t), l=ls[it.li]; if(!l) return null;
+    const c=COURSES.find(x=>x.id===t.course); if(!c) return null;
+    if(Array.isArray(c.questions)){ const f=c.questions.find(q=>q&&rvId(q)===it.id); if(f) return f; }
+    for(let k=0;k<30;k++){ const f=buildThemeQuestions(c,l.diff,l.qn).find(q=>q&&!q.ch1t&&rvId(q)===it.id); if(f) return f; }   // まとめの レッスンなど 毎回 えらびなおす ものは 30回まで さがす
+  }catch(e){}
+  return null;
+}
+function rvCanReview(q){ if(!q||q.ch1t||q.bt) return false; const f=qFormatKey(q); return f!=='battle'&&f!=='teach'; }
+/* レッスンで まちがえた 1問を 記録(finishLesson から)。作りなおせない 問題は 記録しない */
+function rvRecordMiss(q,th,li){
+  if(!rvCanReview(q)) return false;
+  const fmt=qFormatKey(q), id=rvId(q), today=todayStr(), st=rvLoad();
+  let it=st.items[id];
+  if(!it){
+    it={id,fmt,rc:rvRecipe(q,fmt),th:th||null,li:(li!=null?li:null),mi:0,st:0,due:null,first:today,last:null,lastOk:null};
+    if(!rvRebuild(it)) return false;          // 作りなおせない: 記録しない(まちがった 問題を 出さない)
+    st.items[id]=it;
+  }
+  it.mi=(it.mi|0)+1; it.st=0; it.last=today; it.due=dayAdd(today,1);
+  return true;
+}
+/* 今日の復習の 1問に 答えた(dmAnswer から 1問1回) */
+function rvAnswer(q,ok){
+  const id=q&&q._rvid; if(!id) return;
+  const st=rvLoad(), it=st.items[id]; if(!it) return;
+  const today=todayStr();
+  if(ok){
+    if(it.lastOk!==today){ it.st=(it.st|0)+1; it.lastOk=today; it.due=dayAdd(today,RV_GAPS[Math.min(it.st,RV_GAPS.length)-1]); }
+  }else{ it.st=0; it.mi=(it.mi|0)+1; it.last=today; it.due=dayAdd(today,1); }
+  if(L&&L.dailyReview){ L.dailyReview.res.push({id,ok:!!ok}); }
+  rvSave();
+}
+function rvDue(){
+  const st=rvLoad(), today=todayStr();
+  return Object.values(st.items).filter(it=>it&&it.due&&it.due<=today&&!it.bad);
+}
+/* 今日 出す 問題: 予定日が 古い順 → まちがえた 回数が 多い順 → 最近 まちがえた順。テーマが かたよらないよう 1テーマ 3問まで(足りなければ ゆるめる) */
+function rvPick(){
+  const due=rvDue().sort((a,b)=>(a.due<b.due?-1:a.due>b.due?1:0)||(b.mi|0)-(a.mi|0)||((b.last||'')>(a.last||'')?1:(b.last||'')<(a.last||'')?-1:0));
+  const out=[], per={}, rest=[];
+  const take=it=>{
+    const q=rvRebuild(it);
+    if(!q){ it.fail=(it.fail|0)+1; if(it.fail>=3) it.bad=true; return; }   // 作りなおせない: とばす(まちがった 問題は 出さない)。3回 つづけば もう 出さない
+    if(it.fail) it.fail=0;
+    out.push(Object.assign({},q,{_rvid:it.id})); const g=it.th||'_'; per[g]=(per[g]|0)+1;
+  };
+  // 1回目: 同じ テーマは 3問まで(かたよらないように)。2回目: たりない 分を のこりから 同じ 順で
+  for(const it of due){ if(out.length>=RV_N) break; if((per[it.th||'_']|0)>=3){ rest.push(it); continue; } take(it); }
+  for(const it of rest){ if(out.length>=RV_N) break; take(it); }
+  rvSave();
+  return out;
+}
+function rvStart(){
+  if(typeof L!=='undefined'&&L) return;
+  const qs=rvPick();
+  if(!qs.length){ queueToast('今日の復習はありません','学習を つづけよう！'); renderHome(); return; }
+  if(!staminaFree()&&S.hearts<=0){ staminaModal(); return; }
+  L={course:{id:'daily-review',title:'今日の復習',type:'review'},themeId:null,lessonIndex:null,qs,idx:0,correct:0,sel:null,checked:false,done:false,
+     rcat:null,ratingStart:null,startedAt:Date.now(),combo:0,maxCombo:0,baseN:qs.length,teachN:0,
+     dailyReview:{n:qs.length,res:[]}};
+  document.getElementById('lesson').classList.add('show');
+  renderQ();
+}
+/* 完了ボーナス: 1日1回 +10 EXP(0問では 始まらないので 付かない) */
+function rvBonus(){
+  const st=rvLoad(), today=todayStr();
+  if(st.bonus===today) return 0;
+  st.bonus=today; rvSave(); return RV_XP;
+}
+function rvHomeCardHTML(){
+  let n=0; try{ n=rvDue().length; }catch(e){ n=0; }
+  if(!n) return '';
+  return '<button class="hc-yaku hc-review" id="hc-review" onclick="rvStart()">'
+    +'<span class="hy-ico">🔁</span>'
+    +'<span class="hy-txt"><b>今日の復習</b><span>まちがえた問題を '+Math.min(n,RV_N)+'問おさらい'+(n>RV_N?'（のこり '+n+'問）':'')+'</span></span>'
+    +'<span class="hr-go">復習する</span></button>';
+}
+/* 旧データ: reviewlog の 記録の うち 種から 作りなおせる ものだけ(待ち当て・受け入れ当て・何切る)。1回だけ */
+function rvMigrate(st){
+  let arr=[]; try{ arr=JSON.parse(localStorage.getItem('jantore-reviewlog-v1')||'[]'); }catch(e){ arr=[]; }
+  if(!Array.isArray(arr)) return;
+  const today=todayStr();
+  arr.forEach(e=>{
+    if(!e||e.seed==null||typeof e.fs!=='string') return;
+    let rc=null, m;
+    if((m=/^w:t(\d+):/.exec(e.fs))) rc={k:'w',seed:e.seed,lv:+m[1]};
+    else if((m=/^u1:full:p(\d+):/.exec(e.fs))) rc={k:'u',seed:e.seed,lv:'full',p:+m[1]};
+    else if((m=/^u1:t(\d+):/.exec(e.fs))) rc={k:'u',seed:e.seed,lv:+m[1],p:null};
+    else if(e.course==='nanikiru') rc={k:'n',seed:e.seed};
+    if(!rc) return;
+    const q=rc.k==='w'?mkWaitsQ(rc.lv,rc.seed):rc.k==='u'?mkUkeireQ(rc.lv,rc.seed,rc.p):genNanikiru(mulberry32(rc.seed),rc.seed);
+    if(!q||q.fs!==e.fs) return;                 // 作りなおした 問題が 記録と ちがう: とりこまない
+    const id=rvId(q); let it=st.items[id];
+    const day=(typeof e.at==='string'&&e.at.length>=10)?jstDay(Date.parse(e.at)):today;
+    if(!it) it=st.items[id]={id,fmt:qFormatKey(q),rc,th:e.themeId||null,li:(e.lessonIndex!=null?e.lessonIndex:null),mi:0,st:0,due:today,first:day,last:day,lastOk:null};
+    it.mi=(it.mi|0)+1; if(day>(it.last||'')) it.last=day; it.due=today;
+  });
+}
 /* ---- 学習日(連続日数) ----
    レッスン・トレーニング(finishLesson)と ひとり麻雀の1局(dmSoloEnd)から呼ぶ。もどり値=今日はじめての学習か */
 function studyDayUpdate(){
@@ -5968,7 +6131,8 @@ function renderHome(){
     +'<span class="hy-ico">🀄</span>'
     +'<span class="hy-txt"><b>ひとり麻雀</b>'
     +'<span>'+(soloN?'ツモって切って、じぶんの力でアガリを作ろう（4枚・7枚・10枚・13枚）':'4枚のアガリの形を習うと あそべるよ')+'</span></span></button>';
-  el.innerHTML=streakCard+missionCard+contCard+soloCard+refCard;   // R91: つづきから・ひとり麻雀(R83 のならび) の下に 資料集(最初の画面に入る位置)
+  const reviewCard=rvHomeCardHTML();   // R100: 今日の復習(予定の 問題が あるときだけ。「つづきから」の 下に 小さく)
+  el.innerHTML=streakCard+missionCard+contCard+reviewCard+soloCard+refCard;   // R91: つづきから・ひとり麻雀(R83 のならび) の下に 資料集(最初の画面に入る位置)
   if(DAILY_FX_PENDING&&!L){ DAILY_FX_PENDING=false; dmCompleteFx(); }   // R86: レッスンを とちゅうで やめたとき
   frzNotify();   // R99: フリーズを 使った・連続記録が とぎれた お知らせ(1回だけ)
 }
@@ -7784,6 +7948,29 @@ function startLesson(id,waitLevel){
 /* ================= 学習ロード(テーマ制・第6段階) ================= */
 // レッスンのdiff(出題条件)に従って5問を毎回生成/抽選する。問題はマスに固定しない。
 // 麻雀ロジック(生成器・判定・採点)は既存のものをそのまま呼ぶだけで、一切変更しない。
+/* R100: 種(seed)から 待ち当て・受け入れ当ての 1問を 作る(buildThemeQuestions と 今日の復習の 両方が 使う。乱数の 使いかたは R99 までと 同じ) */
+function mkWaitsQ(level,seed){
+  const rng=mulberry32(seed);
+  const g=genSuitTenpai(level,rng);
+  if(!g) return null;
+  const ankou=g.counts.filter(x=>x>=3).length;
+  return {wtype:true,level,counts:g.counts,waits:g.waits,
+    suit:['m','p','s'][Math.floor(rng()*3)],
+    seed,lv:waitsLv(level,g.waits.length),
+    fs:'w:t'+level+':w'+g.waits.length+':a'+ankou};
+}
+function mkUkeireQ(level,seed,pattern){
+  const rng=mulberry32(seed);
+  if(level===34||level==='full'){
+    const g=genFullIishanten(rng,pattern);
+    return g?{u1:true,full:true,level:'full',counts34:g.counts,accepts:g.accepts,
+      pattern:g.pattern,seed,lv:9,fs:'u1:full:p'+g.pattern+':a'+g.accepts.length}:null;
+  }
+  const g=genSuitIishanten(level,rng);
+  return g?{u1:true,level,counts:g.counts,accepts:g.accepts,
+    suit:['m','p','s'][Math.floor(rng()*3)],
+    seed,lv:u1Lv(level,g.accepts.length),fs:'u1:t'+level+':a'+g.accepts.length}:null;
+}
 function buildThemeQuestions(c,diff,n){
   n=n||LESSON_QN_DEFAULT;
   if(c.type==='ch1') return buildCh1(diff&&diff.ch1);  // 第1章: レッスンごとの固定シナリオ(問題数もレッスン定義側)
@@ -7794,15 +7981,8 @@ function buildThemeQuestions(c,diff,n){
     for(let i=0;i<n;i++){
       const level=pick(lvls);
       const seed=(Math.random()*0x7fffffff)|0;
-      const rng=mulberry32(seed);
-      const g=genSuitTenpai(level,rng);
-      if(g){
-        const ankou=g.counts.filter(x=>x>=3).length;
-        qs.push({wtype:true,level,counts:g.counts,waits:g.waits,
-          suit:['m','p','s'][Math.floor(rng()*3)],
-          seed,lv:waitsLv(level,g.waits.length),
-          fs:'w:t'+level+':w'+g.waits.length+':a'+ankou});
-      }
+      const q=mkWaitsQ(level,seed);    // R100: 同じ 種(seed)から 同じ 問題を 作りなおせるよう 1つの 関数に した(作りかたは これまでと 同じ)
+      if(q) qs.push(q);
     }
   }else if(c.type==='ukeire1'){
     const lvls=(diff&&diff.ukeireLevels)||[7,10,13,34];
@@ -7813,17 +7993,8 @@ function buildThemeQuestions(c,diff,n){
     for(let i=0;i<n;i++){
       const level=pick(lvls);
       const seed=(Math.random()*0x7fffffff)|0;
-      const rng=mulberry32(seed);
-      if(level===34){
-        const g=genFullIishanten(rng,patPlan[i]);
-        if(g) qs.push({u1:true,full:true,level:'full',counts34:g.counts,accepts:g.accepts,
-          pattern:g.pattern,seed,lv:9,fs:'u1:full:p'+g.pattern+':a'+g.accepts.length});
-      }else{
-        const g=genSuitIishanten(level,rng);
-        if(g) qs.push({u1:true,level,counts:g.counts,accepts:g.accepts,
-          suit:['m','p','s'][Math.floor(rng()*3)],
-          seed,lv:u1Lv(level,g.accepts.length),fs:'u1:t'+level+':a'+g.accepts.length});
-      }
+      const q=mkUkeireQ(level,seed,patPlan[i]);   // R100: 作りかたは これまでと 同じ(種から 作りなおせる)
+      if(q) qs.push(q);
     }
   }else if(c.type==='discard'){
     const r=(diff&&diff.lvRange)||[2,9];
@@ -21094,11 +21265,13 @@ function finishLesson(){
   const baseN=L.baseN||L.qs.length;
   // 第1章: Teach問はスコア外。全問正解ボーナスの分母はQuiz/Try問のみ(teachN=0なら従来どおり)
   const quizN=Math.max(1,baseN-(L.teachN||0));
-  const xp=10+L.correct*3;
-  const gems=5+(L.correct===quizN?10:0);
+  // R100: 今日の復習は レッスンの 報酬では なく 完了ボーナス(1日1回 +10)だけ。ジェム・クラウンは 付かない
+  const xp=L.dailyReview?rvBonus():10+L.correct*3;
+  const gems=L.dailyReview?0:5+(L.correct===quizN?10:0);
+  if(L.dailyReview) L.dailyReview.xp=xp;
   S.xp+=xp; S.gems+=gems;
   const cid=L.course.id;
-  if(!L.course.training) S.crowns[cid]=Math.min(5,(S.crowns[cid]||0)+1);
+  if(!L.course.training&&!L.dailyReview) S.crowns[cid]=Math.min(5,(S.crowns[cid]||0)+1);
   // 学習ロード(テーマ制): 現在フロンティアのマスをクリアしたら次のマスを解放。
   // クリア済みマスの再挑戦(lessonIndex<フロンティア)では進捗は動かさない。
   // フロンティア前進時=初回クリア時のみ、小テーマ制覇/大テーマ制覇イベントを検出。
@@ -21150,6 +21323,8 @@ function finishLesson(){
   // レッスン内復習の結果を専用ストアへ記録(既存の回答ログjantore-anslog-v1には手を付けない。
   // ロードのレッスンは元々レーティング対象外でanslogへ書いていないため、復習の二重記録も発生しない。
   // needsReviewを含むこの記録は将来の「あとで復習」「弱点トレーニング」「AI Coach」の入力になる)
+  /* R100: まちがえた 問題を 今日の復習へ(作りなおせる ものだけ。予定は 翌日) */
+  if(L.review&&L.review.length){ try{ L.review.forEach(e=>rvRecordMiss(e.q,L.themeId,L.lessonIndex)); rvSave(); }catch(e){} }
   if(L.review&&L.review.length){
     try{
       const k='jantore-reviewlog-v1';
@@ -21289,6 +21464,18 @@ function renderResult(ctx){
       +(wk?'　／　苦手の形: '+wk:'')+'</p>'
       +'<div class="stag"'+stagStyle(SI++)+'><span class="xp-chip" style="font-size:12px;padding:6px 12px;">+'+xp+' EXP</span></div>'
       +ratingSummary;
+  }else if(L.dailyReview){
+    /* R100: 今日の復習の 結果。正解の 数・正解率・完了ボーナス */
+    const dr=L.dailyReview, okN=dr.res.filter(x=>x.ok).length, nn=dr.res.length||quizN;
+    stats='<div class="res-grid">'
+      +statBox(okN+' / '+nn,'正解')
+      +statBox(Math.round(okN/Math.max(1,nn)*100)+'%','正解率')
+      +'</div>'
+      +'<p class="stag" id="rv-res-note" style="'+noteStyle+'animation-delay:'+(SI++)*MOTION.resultStagger+'ms">'
+      +'<b id="rv-res-count" style="display:block;font-size:15px;margin-bottom:2px;">'+nn+'問中'+okN+'問正解</b>'
+      +(okN===nn?'🔁 苦手を 少しずつ 克服しています':'🔁 まちがえた問題は あしたまた出ます')+'</p>'
+      +'<div class="stag"'+stagStyle(SI++)+'>'+(dr.xp?'<span class="xp-chip" id="rv-xp" style="font-size:12px;padding:6px 12px;">+'+dr.xp+' EXP</span>'
+        :'<span class="xp-chip" id="rv-xp" style="font-size:12px;padding:6px 12px;opacity:.75;">今日の復習ボーナスは 受け取りずみ</span>')+'</div>';
   }else if(L.course.training&&bestInfo){
     // トレーニング: 正解率・今回タイム・自己ベスト・ランクが中心(ランク基準は設定データ・未設定種別は非表示)
     const rank=rankForTime(bestInfo.key,duration);
@@ -21321,7 +21508,7 @@ function renderResult(ctx){
   area.innerHTML='<div class="center-col" style="gap:12px;">'
     +'<div class="res-av stag"'+stagStyle(0)+'>'+avatarImgHTML(S.avatarId,'uav-res')+(perfect?'<span class="res-av-badge" aria-hidden="true">🏆</span>':'')+'</div>'   // R34: 自分のアバターが「できた！」
     +'<h2 class="stag" style="margin:0;animation-delay:'+MOTION.resultStagger+'ms">'
-    +(L.fuCourse?'LESSON '+L.fuCourse.n+' クリア！':(L.course.training?'トレーニング完了！':(perfect?'パーフェクト！':'レッスンクリア！')))+'</h2>'
+    +(L.dailyReview?'今日の復習 完了！':L.fuCourse?'LESSON '+L.fuCourse.n+' クリア！':(L.course.training?'トレーニング完了！':(perfect?'パーフェクト！':'レッスンクリア！')))+'</h2>'
     +streakCelebrate
     +stats
     +missionHTML
@@ -21366,6 +21553,7 @@ function afterLesson(){
   L=null; renderHUD(); renderPath();
   toastClear();      // R98: 結果画面の あいだに たまった 通知は ここで すてる(結果画面に まとめて 出した)
   streakFxFlush();   // R98: 節目の 演出が まだなら いま 出す(なくさない・あとから 突然 出さない)
+  { const hm=document.getElementById('screen-home'); if(hm&&hm.classList.contains('show')) renderHome(); }   // R100: 今日の復習の カード(のこりの 数)を 描きなおす
   // ロード復帰演出(第7段階): クリアしたマス(✓ポップ)と解放された次マス(ロック解除グロー)が
   // 見える位置へスクロール。演出情報は一度使ったら破棄(再描画では再生しない)
   if(ROAD_FX){
