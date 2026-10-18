@@ -610,6 +610,21 @@ span.tv-riichi-tile{transform:rotate(-90deg);}
 .wt-gs .itiles{margin:0;}
 .wt-ty{font-size:11.5px; font-weight:800; color:var(--ink-soft); white-space:nowrap;}
 .itiles .itile.wt-hit{border:2px solid var(--verm); border-radius:3px; background:color-mix(in srgb, var(--gold) 30%, var(--tile-face));}
+.wt-legend{display:flex;}
+/* R102 待ち当ての 解説(お手本と 同じ 部品) */
+.fb-exp.fb-block{display:block;}
+.wt-ans{display:inline-flex; align-items:center; flex-wrap:wrap; gap:2px 6px;}
+.wt-anst{display:inline-flex; gap:3px; font-size:20px; line-height:1;}
+.wt-diff{display:flex; flex-wrap:wrap; gap:2px 12px; font-size:12.5px; font-weight:800; color:var(--verm-ink); margin:0 0 6px;}
+.wt-diff span{display:inline-flex; align-items:center; gap:3px;}
+.wt-lead{display:block; font-size:13px; font-weight:700; margin:0 0 4px;}
+.wt-fbi{margin-top:4px;}
+.wt-fbi .wt-wh{font-size:17px;}
+.wt-alt{margin:2px 0 0 2px;}
+.wt-alt summary{font-size:12.5px; font-weight:800; color:var(--jade-ink); cursor:pointer; padding:6px 0; min-height:32px; list-style-position:inside;}
+.wt-alt .wt-cl, .wt-alt[open] .wt-op{display:none;}
+.wt-alt[open] .wt-cl{display:inline;}
+.wt-sp{font-size:12.5px; font-weight:800; color:var(--ink-soft);}
 .solo-mjt .mjt-pick.solo-rz > .tile{outline:2.5px solid var(--now-ring); outline-offset:1px;}
 .solo-mjt .solo-dim > .tile{opacity:.45;}
 .solo-mjt .solo-tp-off{display:block; line-height:0;}
@@ -5012,8 +5027,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.92.0';
-const BUILD_ID='20261029-01';
+const APP_VER='0.93.0';
+const BUILD_ID='20261030-01';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -7410,15 +7425,7 @@ function mwActive(n){ const C=mwBuild(); return (n===4?C.pats4:C.pats).filter(p=
 function mwProb(key){ const C=mwBuild(); return C.byKey[key]||C.byKey4[key]||null; }   // R95.2: 4枚形の 問題も さがす
 function mwTiles(ds,suit,hon){ return ds.map(d=>d+suit).concat(hon||[]); }
 /* アガリの 分けかた(1つ)。雀頭＋組 を 牌の 列で */
-function mwDecOf(ds,suit,hon,w){
-  const c=mwCounts(ds,suit,hon); const i=typeof w==='number'?MW_SUIT_BASE[suit]+w-1:27+'ESWNBGR'.indexOf(w); c[i]++;
-  const d=soloDecomps(c)[0]; if(!d) return null;
-  return [[TE_NAMES[d.head],TE_NAMES[d.head]]].concat(d.sets.map(x=>x.run?[TE_NAMES[x.i],TE_NAMES[x.i+1],TE_NAMES[x.i+2]]:[TE_NAMES[x.i],TE_NAMES[x.i],TE_NAMES[x.i]]));
-}
-function mwDecHTML(ds,suit,hon,waits){
-  return '<span class="mw-decs">'+waits.map(w=>{ const g=mwDecOf(ds,suit,hon,w);
-    return '<span class="mw-dec" data-w="'+w+'">'+inlineTile(mwCode(w,suit))+'<span class="mw-ar">→</span>'+(g?g.map(t=>inlineTiles(t)).join(''):'')+'</span>'; }).join('')+'</span>';
-}
+/* R102: 解説の 分けかた(mwDecOf・mwDecHTML。分けかた 1つ・強調なし)は 共通の mwInterpHTML(…,{fb:true}) に おきかえた */
 /* ---- 記録(原型ごと) ---- */
 function mwStoreRead(){
   const s=S.mwPat; const p=(s&&typeof s==='object'&&s.p&&typeof s.p==='object'&&!Array.isArray(s.p))?s.p:{};
@@ -7557,21 +7564,56 @@ function mwInterps(ds,suit,hon,w){
       out.push({gi,pos,type,label:FU_WAIT_LABEL[type],groups:gs.map(x=>({k:x.k,i:x.i,tiles:(x.k==='run'?[x.i,x.i+1,x.i+2]:x.k==='head'?[x.i,x.i]:[x.i,x.i,x.i]).map(t=>TE_NAMES[t])}))});
     });
   });
+  /* R102: 14枚の 特殊形(13枚の 待ち当て)。アガリの 判定(isWinning)が みとめる 形だけ。
+     七対子 = 7種類の 対子(isWinning と 同じ 条件) → 対子 7つに 分けて、待ち牌で できた 対子の 2枚目を 強調(タンキ待ち)。
+     ほかの 特殊形(国士無双など)は 面子・雀頭に 分けない(form:'special'・組なし) */
+  if(c.reduce((a,b)=>a+b,0)===14){
+    const ks=[]; let ok=true; c.forEach((v,i)=>{ if(v===2) ks.push(i); else if(v) ok=false; });
+    if(ok&&ks.length===7){ const gi=ks.indexOf(wi); out.push({gi,pos:1,type:'tanki',label:FU_WAIT_LABEL.tanki,form:'chiitoi',groups:ks.map(i=>({k:'pair',i,tiles:[TE_NAMES[i],TE_NAMES[i]]}))}); }
+    else if(!out.length&&isWinning(c.slice())) out.push({gi:-1,pos:-1,type:'special',label:'',form:'special',groups:[]});
+  }
   return out;
 }
 function mwGroupHTML(g,hit){
   return '<span class="itiles wt-g wt-'+g.k+(hit>=0?' has-hit':'')+'" role="img" aria-label="'+g.tiles.map(t=>tileReading(t)||t).join('・')+(hit>=0?'（'+(hit+1)+'枚目が 待ち牌）':'')+'">'
     +g.tiles.map((t,j)=>'<span class="itile'+(j===hit?' wt-hit':'')+'" data-it="'+t+'" aria-hidden="true">'+tileFace(t)+'</span>').join('')+'</span>';
 }
-function mwInterpHTML(ds,suit,hon,waits){
-  return '<div class="wt-ints"><p class="wt-legend"><span class="wt-key"></span>＝ 待ち牌が 入った ところ</p>'+waits.map(w=>{
-    const its=mwInterps(ds,suit,hon,w), kinds=[...new Set(its.map(x=>x.label))];
-    return '<div class="mw-dec wt-w" data-w="'+w+'">'
-      +'<div class="wt-wh"><span class="wt-wl">待ち牌</span>'+inlineTile(mwCode(w,suit),{cls:'wt-wtile'})+'<span class="wt-kinds">'+kinds.join('・')+'</span></div>'
-      +its.map(x=>'<div class="wt-int" data-type="'+x.type+'" data-hit="'+x.gi+':'+x.pos+'">'
-        +'<span class="wt-gs">'+x.groups.map((g,gi)=>mwGroupHTML(g,gi===x.gi?x.pos:-1)).join('')+'</span>'
-        +(its.length>1?'<span class="wt-ty">'+x.label+'</span>':'')+'</div>').join('')
-      +'</div>'; }).join('')+'</div>';
+/* R101/R102: 待ちごとの アガリの 形(お手本と 問題の 解説で 共通)。<p> の 中にも 置けるように span だけで 組む(見た目は CSS で ブロック)。
+   opt.fb = 問題の 解説: 読みかたごとに 待ちの 種類を 出し、2つ目 からは「ほかの 読みかたを 見る(n通り)」に たたむ(代表 = mwInterps の 安定した 順の 先頭)。
+   お手本(opt なし)は R101 の まま(読みかたを ぜんぶ 出す。種類は 2つ以上の ときだけ 行に 出す) */
+function wtReadingHTML(x,showTy){
+  if(x.form==='special') return '<span class="wt-int wt-sp" data-type="special" data-hit="-1:-1">面子と 雀頭に 分けない 特殊な アガリの 形</span>';
+  return '<span class="wt-int" data-type="'+x.type+'" data-hit="'+x.gi+':'+x.pos+'"'+(x.form?' data-form="'+x.form+'"':'')+'>'
+    +'<span class="wt-gs">'+x.groups.map((g,gi)=>mwGroupHTML(g,gi===x.gi?x.pos:-1)).join('')+'</span>'
+    +(showTy?'<span class="wt-ty">'+x.label+(x.form==='chiitoi'?'（七対子）':'')+'</span>':'')+'</span>';
+}
+function mwInterpHTML(ds,suit,hon,waits,opt){
+  const fb=!!(opt&&opt.fb);
+  return '<span class="wt-ints'+(fb?' wt-fbi':'')+'"><span class="wt-legend"><span class="wt-key"></span>＝ 待ち牌が 入った ところ</span>'+waits.map(w=>{
+    const its=mwInterps(ds,suit,hon,w), kinds=[...new Set(its.filter(x=>x.label).map(x=>x.label+(x.form==='chiitoi'?'（七対子）':'')))];
+    const rows=fb
+      ? (its.length?wtReadingHTML(its[0],true):'')
+        +(its.length>1?'<details class="wt-alt"><summary><span class="wt-op">ほかの 読みかたを 見る（'+(its.length-1)+'通り）</span><span class="wt-cl">ほかの 読みかたを とじる</span></summary>'
+          +its.slice(1).map(x=>wtReadingHTML(x,true)).join('')+'</details>':'')
+      : its.map(x=>wtReadingHTML(x,its.length>1)).join('');
+    return '<span class="mw-dec wt-w" data-w="'+w+'" data-n="'+its.length+'">'
+      +'<span class="wt-wh"><span class="wt-wl">待ち牌</span>'+inlineTile(mwCode(w,suit),{cls:'wt-wtile'})+'<span class="wt-kinds">'+kinds.join('・')+'</span></span>'
+      +rows+'</span>'; }).join('')+'</span>';
+}
+/* R102: 待ち当ての 解説(QFORMATS.waits の feedback。多面張パターン・基本セット・苦手・ランダム・学習コース・今日の復習 で 共通)。
+   答え(正解の 待ち牌を 牌の 絵で)→ 理由(待ちごとの アガリの 形・待ちの 種類)。まちがえたときは えらんだ 牌との ちがいも 1行。
+   待ち・正誤は q.waits と 既存の 採点の まま(ここでは 計算しなおさない) */
+function wtDigits(q){ const ds=[]; q.counts.forEach((c,i)=>{ for(let k=0;k<c;k++) ds.push(i+1); }); return ds; }
+function wtFeedback(q,res,lead){
+  const su=q.suit, hon=q.hon||[], ds=wtDigits(q), code=w=>mwCode(w,su);
+  const remain=q.mw?q.mw.remain:q.waits.reduce((a,w)=>a+4-(typeof w==='number'?q.counts[w-1]:hon.filter(h=>h===w).length),0);
+  let diff='';
+  if(!res.isCorrect&&L&&L.sel){ const sel=[...L.sel], miss=q.waits.filter(w=>!L.sel.has(w)), extra=sel.filter(w=>q.waits.indexOf(w)<0);
+    const t=a=>a.map(w=>inlineTile(code(w))).join('');
+    diff='<span class="wt-diff" id="wt-diff">'+(miss.length?'<span>えらんでいない 待ち '+t(miss)+'</span>':'')+(extra.length?'<span>待ちではない 牌 '+t(extra)+'</span>':'')+'</span>'; }
+  return {block:true,
+    ansText:'<span class="wt-ans">正解の待ち <span class="wt-anst">'+q.waits.map(w=>inlineTile(code(w),{cls:'wt-wtile'})).join('')+'</span>　'+q.waits.length+'種・残り'+remain+'枚</span>',
+    expText:diff+(lead||'')+mwInterpHTML(ds,su,hon,q.waits,{fb:true})};
 }
 function mwCardHTML(P,st){
   const r=mwRecOf(P.id,st), w=P.base.waits, su=P.su;
@@ -7616,11 +7658,8 @@ function mwStudyHTML(n){
     +cards;
 }
 function mwFeedback(q,res){
-  const lab=w=>typeof w==='number'?w+'':HONOR[w];
-  const P=mwPat(q.mw.pid), ds=[]; q.counts.forEach((c,i)=>{ for(let k=0;k<c;k++) ds.push(i+1); });
-  return {ansText:'正解の待ち： '+q.waits.map(lab).join('・')+'（'+SUITCH[q.suit]+'子'+(q.hon&&q.hon.length?'・字牌':'')+'）　'+q.waits.length+'種・残り'+q.mw.remain+'枚',
-    expText:'<span class="mw-fb">'+(q.mw.pid[0]==='4'?'基本形':'お手本')+'「'+(P?P.nm:'')+'」の 形'+(q.mw.same?'':'。<b class="mw-chg">⚠ 端に よったので、お手本と 待ちが かわるよ</b>')+'</span>'
-      +mwDecHTML(ds,q.suit,q.hon||[],q.waits)};
+  const P=mwPat(q.mw.pid);
+  return wtFeedback(q,res,'<span class="mw-fb">'+(q.mw.pid[0]==='4'?'基本形':'お手本')+'「'+(P?P.nm:'')+'」の 形'+(q.mw.same?'':'。<b class="mw-chg">⚠ 端に よったので、お手本と 待ちが かわるよ</b>')+'</span>');   // R102: 解説は 共通(wtFeedback)
 }
 function bandText(cat){
   const R=S.ratings[cat];
@@ -19807,10 +19846,8 @@ const QFORMATS={
     },
     feedback(q,res){
       if(q.mw) return mwFeedback(q,res);   // R95: 多面張パターン(残り枚数・アガリの分けかた・お手本と 待ちが かわるか)
-      return {
-        ansText:'正解の待ち： '+q.waits.join('・')+'（'+SUITCH[q.suit]+'子）',
-        expText:'【'+goalLabel(q.level)+'】を完成させる最後の1枚が「待ち」。この形は'+q.waits.length+'種。複合形は「雀頭を固定して考える」「面子を抜いて考える」と見えやすいよ。'
-      };
+      /* R102: 答え(待ち牌の 絵)→ 理由(待ちごとの アガリの 形)。お手本と 同じ 表示(wtFeedback) */
+      return wtFeedback(q,res,'<span class="wt-lead">【'+goalLabel(q.level)+'】を完成させる最後の1枚が「待ち」。</span>');
     },
   },
   discard:{
@@ -21215,7 +21252,7 @@ function renderFeedback(q,cat,res,ratingRes,fb){
     +(staminaOut?'スタミナが切れた…':title)+'</p>'+comboChip+'</div>')
     +rvClear+comboEnd+ratingLine+dbgLine
     +(!staminaOut&&fb.ansText&&!(btStop&&res.isCorrect)?'<p class="fb-exp"><b>'+fb.ansText+'</b></p>':'')
-    +'<p class="fb-exp">'+tileTokLesson(fb.expText)+'</p>'
+    +(fb.block?'<div class="fb-exp fb-block">'+tileTokLesson(fb.expText)+'</div>':'<p class="fb-exp">'+tileTokLesson(fb.expText)+'</p>')   // R102: 解説に たためる 枠(details)が あるときは div
     +(btStop?'<button class="btn'+(cls==='ng'?' red':'')+'" onclick="next()">つづける</button>':'')
     +'</div>';
   const area=document.getElementById('q-area');
