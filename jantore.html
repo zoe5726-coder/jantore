@@ -625,6 +625,43 @@ span.tv-riichi-tile{transform:rotate(-90deg);}
 .wt-alt .wt-cl, .wt-alt[open] .wt-op{display:none;}
 .wt-alt[open] .wt-cl{display:inline;}
 .wt-sp{font-size:12.5px; font-weight:800; color:var(--ink-soft);}
+
+/* R104 初回レベル選択・実力チェック(既存の レッスン画面の 中) */
+.lesson.pl-noclose .lesson-top .x{visibility:hidden;}
+.lesson.pl-mode #lt-ref,.lesson.pl-mode #lesson-hearts{visibility:hidden;}
+.lesson.pl-static .pbar{visibility:hidden;}
+.pl-wrap{display:flex; flex-direction:column; align-items:stretch; gap:10px; padding:4px 2px 24px;}
+.pl-hero{align-self:center; width:96px; height:96px;}
+.pl-hero .uav{width:100%; height:100%;}
+.pl-h{font-size:clamp(18px,5.2vw,22px); font-weight:900; text-align:center; margin:2px 0 0; line-height:1.35;}
+.pl-sub{font-size:12.5px; font-weight:700; color:var(--ink-soft); text-align:center; margin:0; line-height:1.6;}
+.pl-opts{display:flex; flex-direction:column; gap:10px; margin-top:6px;}
+.pl-opt{display:flex; align-items:center; gap:12px; width:100%; min-height:64px; padding:12px 14px; border:2px solid var(--line); border-radius:16px; background:var(--card); color:var(--ink); text-align:left; font-family:inherit; cursor:pointer; box-shadow:0 3px 0 var(--line);}
+.pl-opt:active{transform:translateY(2px); box-shadow:0 1px 0 var(--line);}
+.pl-ico{flex:none; font-size:28px; line-height:1;}
+.pl-ot{display:flex; flex-direction:column; gap:2px; min-width:0;}
+.pl-ot b{font-size:clamp(15px,4.3vw,17px); font-weight:900;}
+.pl-ot small{font-size:12.5px; font-weight:700; color:var(--ink-soft); line-height:1.45;}
+.pl-tag{display:inline-block; margin-left:8px; font-size:11px; font-weight:900; color:var(--on-accent); background:var(--jade); border-radius:999px; padding:1px 8px; vertical-align:2px;}
+.pl-back{align-self:flex-start; background:none; border:0; color:var(--jade-ink); font-weight:800; font-size:13px; padding:10px 4px; min-height:44px; cursor:pointer;}
+.pl-chip{display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:12.5px; font-weight:800; color:var(--jade-ink); background:var(--jade-soft); border-radius:999px; padding:5px 12px; margin:0 0 8px; align-self:flex-start; width:max-content; max-width:100%;}
+.pl-chip b{font-weight:900;}
+.pl-chip span{color:var(--ink-soft);}
+.pl-dk{display:block; margin:14px auto 4px; min-height:44px; min-width:160px; padding:8px 18px; border:2px dashed var(--line); border-radius:999px; background:transparent; color:var(--ink-soft); font-family:inherit; font-weight:800; font-size:13.5px; cursor:pointer;}
+.pl-msg{font-size:14px; font-weight:800; text-align:center; line-height:1.7; margin:0;}
+.pl-marks{display:flex; flex-wrap:wrap; justify-content:center; gap:6px;}
+.pl-st{font-size:12px; font-weight:900; border-radius:999px; padding:3px 10px; border:1.5px solid var(--line);}
+.pl-st.ok{color:var(--jade-ink); border-color:var(--jade); background:var(--jade-soft);}
+.pl-st.ng{color:var(--ink-soft);}
+.pl-box{display:flex; flex-direction:column; gap:2px; border-radius:12px; padding:10px 12px; font-size:13px; font-weight:700; line-height:1.6; background:var(--card); border:2px solid var(--line);}
+.pl-box b{font-size:12px; font-weight:900; color:var(--ink-soft);}
+.pl-box.ok{border-color:var(--jade);}
+.pl-note{font-size:12px; font-weight:700; color:var(--ink-soft); text-align:center; margin:0; line-height:1.6;}
+.pl-btns{display:flex; flex-direction:column; gap:8px; margin-top:4px;}
+.pl-my-d{font-size:12.5px; font-weight:700; color:var(--ink-soft); margin:6px 0 8px;}
+.pl-my-now{font-size:12.5px; font-weight:800; margin:0 0 8px;}
+.sec-card.skipped{border-style:dashed;}
+.sc-skip{font-size:12px; font-weight:800; color:var(--ink-soft); margin-top:4px;}
 .solo-mjt .mjt-pick.solo-rz > .tile{outline:2.5px solid var(--now-ring); outline-offset:1px;}
 .solo-mjt .solo-dim > .tile{opacity:.45;}
 .solo-mjt .solo-tp-off{display:block; line-height:0;}
@@ -4264,6 +4301,7 @@ const DEFAULT_STATE={schemaVersion:1,xp:0,hearts:5,gems:120,streak:0,lastDay:nul
   rubyMode:'standard',   // R33: ルビ表示 'standard'(標準)|'full'(すべて)。無い旧データは標準
   themeMode:'system',    // R39: 表示テーマ 'light'|'dark'|'system'。無い旧データ・新規ともに system(端末の設定に合わせる)
   avatarId:'human'};     // R34: ユーザーアバター(AVATARSのID。画像パスは保存しない)。無い旧データ・不明なIDは human
+placeRescueBroken();   // R104: 読めない 保存は 上書きされる 前に 退避(jantore-v1-broken)
 let S=loadState();
 if(S.rubyMode!=='full') S.rubyMode='standard';   // R33: 未設定・不正値は標準(保存はユーザーが切り替えたときだけ)
 if(!AVATARS[S.avatarId]) S.avatarId=AVATAR_DEFAULT; // R34: 未設定・不明なIDは human(保存はユーザーが選んだときだけ)
@@ -5027,8 +5065,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.93.0';
-const BUILD_ID='20261030-01';
+const APP_VER='0.94.0';
+const BUILD_ID='20261031-01';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -5332,7 +5370,7 @@ function dmEvent(kind,n){
 function bumpMission(id,amt){ if(id==='dm_lesson') dmEvent('lesson',amt||1); }
 /* 答えた1問(check から1回だけ呼ぶ) */
 function dmAnswer(q,ok){
-  if(!q||q.ch1t) return;
+  if(!q||q.ch1t||(L&&L.place)) return;   // R104: 実力チェックは ミッションを すすめない
   if(L&&L.dailyReview) rvAnswer(q,ok);   // R100: 今日の復習の 予定を すすめる(1問1回。ミッションの 進みは これまでどおり 下で)
   dmEvent('answer'); if(ok) dmEvent('correct');
   if(L&&L.course&&L.course.training&&!L.fuCourse) dmEvent('trainAnswer');   // R87: 講座の確認問題は トレーニングの回答に数えない
@@ -5584,6 +5622,298 @@ function rvMigrate(st){
     if(!it) it=st.items[id]={id,fmt:qFormatKey(q),rc,th:e.themeId||null,li:(e.lessonIndex!=null?e.lessonIndex:null),mi:0,st:0,due:today,first:day,last:day,lastOk:null};
     it.mi=(it.mi|0)+1; if(day>(it.last||'')) it.last=day; it.due=today;
   });
+}
+/* ===== R104 初回レベル選択・実力チェック・飛び級 =====
+   ・はじめて(🐣)は チェックなしで SECTION 1 の 最初の レッスンへ。ルールは わかる(🀄)・よく打つ(🏆)は 実力チェック か 最初から。
+   ・実力チェック = 4問 × 最大4ステップ(SECTION 1〜4 の 内容)。合格した ステップの 数が おすすめの 開始 SECTION(全部 合格 = SECTION 5)。
+     問題・正誤・解説は 既存の もの(buildThemeQuestions・mwQ・mkWaitsQ・check・QFORMATS)。出す 問題は 固定(rvId で 同じ 問題か たしかめる)。
+     四択などの 選択肢は 問題ごとに きまった 順へ 並べかえる(答えの 位置で 当てられないように。正誤の きまりは 同じ)。
+   ・実力チェックでは 何も ふえない・へらない: EXP・ジェム・RATING・クラウン・宝箱・ミッション・学習日・ストリーク・フリーズ・answered・
+     習得記録(mwPat)・今日の復習・ライフ・回答ログ。applyOutcome の 先頭で 抜ける(L.place)・dmAnswer・mwRecord も 何もしない。
+   ・飛び級 = 開始位置(S.place.start)だけを 保存。roadProgress・宝箱・クラウンは 書きかえない(クリア済みに しない)。
+     解放は ch1ThemeUnlocked に「開始 SECTION より 前の テーマ ＋ 開始 SECTION の 先頭テーマ」(placeAllows)を 足すだけ。
+   ・保存: S.place = {v:1, choice, start, by, at, check:{at,set,rec,st}, hist:[{at,start,by}]×5}。きめた ときに 作る(DEFAULT_STATE は 不変)。
+     チェックの とちゅうは 保存しない(やめる・再読み込みで 最初から)。 */
+const PL_SET='p1';
+const PL_STAGES=[
+ {sec:0, label:'アガリの形・局の流れ', good:'アガリの形や 局の 流れ', items:[
+   {k:'1a',src:['th_ch1d',0,3],id:'pickmulti:zmw6571888a5h',topic:'アガリの形（4メンツ＋1アタマ）',key:true,hi:true,lv:'標準'},
+   {k:'1b',src:['th_ch1c',7,1],id:'pickone:1mev9f9xfvcyj',topic:'メンツと アタマ',hi:true,lv:'基本'},
+   {k:'1c',src:['th_ch1p',2,8],id:'mcq:cqose21wc6at8',topic:'点の やりとり（ツモ）',hi:true,lv:'基本'},
+   {k:'1d',src:['th_ch1n',1,12],id:'mcq:11bnn3ybr6jok',topic:'鳴き（チー）',hi:true,lv:'基本'}],
+  ex:[{k:'1x',src:['th_ch1c',9,3],id:'pickmulti:qb8k5o1m0v13a',topic:'アガリの形（4メンツ＋1アタマ）',key:true,hi:true,lv:'基本'},
+   {k:'1y',src:['th_ch1g',6,2],id:'mcq:e2frytb9cyyv',topic:'局の 流れ',hi:true,lv:'標準'}]},
+ {sec:1, label:'待ち', good:'待ちの 基本', items:[
+   {k:'2a',mw:'m:1234567',id:'waits:11qn0xrk9mdct',topic:'待ち牌（多面張）',key:true,hi:true,lv:'標準'},
+   {k:'2b',w:[13,1],id:'waits:u16jwa1m70dgs',topic:'13枚の 待ち',hi:true,lv:'応用'},
+   {k:'2c',src:['th_ch3c',2,3],id:'mcq:1a6ucohcyw0h3',topic:'待ちの 形（リャンメンなど）',hi:true,lv:'基本'},
+   {k:'2d',src:['th_ch2e',3,8],id:'mcq:pq8kue1jslt8s',topic:'ロンと フリテン',hi:false,lv:'基本'}],
+  ex:[{k:'2x',w:[13,2],id:'waits:s0ev386ghmim',topic:'待ち牌（多面張）',key:true,hi:true,lv:'応用'},
+   {k:'2y',src:['th_ch3c',2,4],id:'mcq:xofackqf5b1a',topic:'待ちの 形（リャンメンなど）',hi:true,lv:'基本'}]},
+ {sec:2, label:'役', good:'役の 見分けかた', items:[
+   {k:'3a',src:['th_ch3h',2,2],id:'yfind:19245511809h33',topic:'役（いくつも ついた 手）',key:true,hi:true,lv:'応用'},
+   {k:'3b',src:['th_ch3i',4,3],id:'tchoices:xska5i19w41ws',topic:'ドラ',hi:true,lv:'基本'},
+   {k:'3c',src:['th_ch3c',4,2],id:'mcq:19lph8xbge71n',topic:'ピンフ',hi:true,lv:'標準'},
+   {k:'3d',src:['th_ch3h',0,2],id:'mcq:z939iczceyeu',topic:'役の 成立（タンヤオ など）',hi:true,lv:'基本'}],
+  ex:[{k:'3x',src:['th_ch3h',4,4],id:'yfind:rrm0lr1jf6gu1',topic:'役（いくつも ついた 手）',key:true,hi:true,lv:'応用'},
+   {k:'3y',src:['th_ch3e',5,4],id:'mcq:vuyofch3aew6',topic:'形の 役（七対子 など）',hi:true,lv:'標準'}]},
+ {sec:3, label:'点数', good:'点数の 基本', items:[
+   {k:'4a',src:['th_ch3y',2,3],id:'mcq:1pvuf9eln4r08',topic:'満貫',key:true,hi:true,lv:'基本'},
+   {k:'4b',src:['th_ch3y',3,1],id:'mcq:6g915t2leph3',topic:'跳満・倍満',hi:true,lv:'標準'},
+   {k:'4c',src:['th_ch3y',0,8],id:'mcq:5mir7rrhfaop',topic:'翻の 合計',hi:false,lv:'基本'},
+   {k:'4d',src:['th_ch3y',12,7],id:'mcq:7ionb719aof49',topic:'点数の 読みとり（払い）',hi:true,lv:'応用'}],
+  ex:[{k:'4x',src:['th_ch3y',5,3],id:'mcq:ntpsblhflra7',topic:'満貫',key:true,hi:true,lv:'基本'},
+   {k:'4y',src:['th_ch3y',7,2],id:'mcq:1doic0x1szlzvz',topic:'よく出る 点数（2翻）',hi:true,lv:'標準'}]},
+];
+let PL=null;   // 表示中の オンボーディング/実力チェック(保存しない)
+/* ---- 判定(テストできる 独立した 関数) ----
+   rs = そのステップの 答え [{ok, key, hi, extra}]。'pass' | 'fail' | 'extra'(確認問題を 2問 出す)。
+   ① 基本の 4問で 3問以上 正解・必須(key)が 正解・選択肢3つ以上か 全部えらぶ 問題(hi)を 1問以上 正解 → 合格
+   ② 正解が 1問以下 → 不合格
+   ③ それ以外(2問正解・3問以上でも 必須を まちがえた・正解が 二択だけ)→ 確認問題 2問(必須の 言いかえ ＋ 同じ SECTION の べつの 分野)
+   ④ 確認問題を 出したら、2問とも 正解の ときだけ 合格(安全側)。確認問題が 作れない ときは 不合格 */
+function placeJudge(rs){
+  rs=Array.isArray(rs)?rs:[];
+  const main=rs.filter(r=>!r.extra), ex=rs.filter(r=>r.extra);
+  if(ex.length) return (ex.length>=2&&ex.every(r=>r.ok))?'pass':'fail';
+  const c=main.filter(r=>r.ok).length, keyOK=main.some(r=>r.key&&r.ok), hiOK=main.some(r=>r.hi&&r.ok);
+  if(main.length>=4&&c>=3&&keyOK&&hiOK) return 'pass';
+  if(c<=1) return 'fail';
+  return 'extra';
+}
+/* 結果: 合格した ステップの 数 = おすすめの 開始 SECTION(0..4)。
+   できていた こと = 合格して、しかも 1問も まちがえなかった ステップの 分野名。
+   復習が おすすめ = まちがえた 問題の 分野(どの ステップでも)。まちがえた 分野を「できていた」に 入れない */
+function placeResult(stRs,verdicts){
+  let rec=0; for(let s=0;s<PL_STAGES.length;s++){ if(verdicts[s]==='pass') rec++; else break; }
+  const good=[], weak=[];
+  stRs.forEach((rs,s)=>(rs||[]).forEach(r=>{ if(!r.ok){ if(weak.indexOf(r.topic)<0) weak.push(r.topic); } }));
+  stRs.forEach((rs,s)=>{ if(s<rec&&(rs||[]).length&&(rs||[]).every(r=>r.ok)) good.push(PL_STAGES[s].label); });
+  return {rec, good, weak, st:stRs.map((rs,s)=>[s,(rs||[]).length,(rs||[]).filter(r=>r.ok).length,verdicts[s]||null]).filter(x=>x[1])};
+}
+/* ---- 問題を 作る(固定・再現できる。同じ 問題で なければ 出さない) ---- */
+function placeBuild(it){
+  try{
+    let q=null, cid=null;
+    if(it.mw){ const pr=mwProb(it.mw); q=pr?mwQ(pr):null; }
+    else if(it.w){ q=mkWaitsQ(it.w[0],it.w[1]); }
+    else{
+      const t=themeOf(it.src[0]), c=t&&COURSES.find(x=>x.id===t.course), l=t&&themeLessons(t)[it.src[1]];
+      if(!c||!l) return null;
+      q=(buildThemeQuestions(c,l.diff,l.qn)||[])[it.src[2]]; cid=c.id;
+    }
+    if(!q||rvId(q)!==it.id) return null;
+    q=Object.assign({},q,{_pl:{k:it.k,cid,key:!!it.key,hi:!!it.hi,topic:it.topic,lv:it.lv}});
+    if(Array.isArray(q.choices)&&typeof q.a==='number'){        // 選択肢の 並べかえ(きまった 順。答えの 位置を 正しく つけかえる)
+      /* もとの 並びが 毎回 ちがう 問題も あるので、いったん 文字の 順に そろえてから まぜる(いつも 同じ 並び) */
+      const ch=q.choices, rng=mulberry32(dmHash('pl|'+PL_SET+'|'+it.k)), idx=ch.map((_,i)=>i).sort((x,y)=>{ const a=String(ch[x]), b=String(ch[y]); return a<b?-1:a>b?1:x-y; });
+      for(let i=idx.length-1;i>0;i--){ const j=Math.floor(rng()*(i+1)); const t=idx[i]; idx[i]=idx[j]; idx[j]=t; }
+      q.choices=idx.map(i=>q.choices[i]); q.a=idx.indexOf(q.a);
+    }
+    return q;
+  }catch(e){ return null; }
+}
+function placeStageQs(s,extra){
+  const st=PL_STAGES[s]; if(!st) return [];
+  return (extra?st.ex:st.items).map(placeBuild).filter(Boolean).map(q=>{ q._pl.extra=!!extra; q._pl.s=s; return q; });
+}
+/* ---- 開始位置と 解放 ---- */
+function placeStart(){ const p=S.place; const s=(p&&typeof p.start==='number')?(p.start|0):0; return (s>0&&s<SECTIONS.length)?s:0; }
+function placeAllows(t){
+  const st=placeStart(); if(!st||!t) return false;
+  const si=sectionOfTheme(t.id); if(si==null) return false;
+  if(si<st) return true;                                         // 飛ばした SECTION の テーマは いつでも 学べる
+  if(si===st){ const core=sectionThemes(st).filter(x=>!SECTION_OPTIONAL_THEMES.includes(x.id)); return !!core[0]&&core[0].id===t.id; }   // 開始 SECTION の 先頭テーマ
+  return false;
+}
+function placeSkippedTheme(t){ const st=placeStart(); if(!st||!t) return false; const si=sectionOfTheme(t.id); return si!=null&&si<st; }
+/* ---- 初回の 判定: 実質的に 学習を 始めていない 人だけ ----
+   S.place が ない ＋ 学習の 跡が 1つも ない(進み・EXP・答えた数・RATING の 回答・学習日・トレーニング・ひとり麻雀・
+   今日の復習・回答ログ・ミッションの 進み・宝箱・クラウン・連続日数 など)。ほかの 保存キー(jantore-…)が ある 人も 出さない */
+function placePristine(){
+  const s=S, has=o=>!!o&&typeof o==='object'&&Object.keys(o).length>0;
+  if(Object.values(s.roadProgress||{}).some(v=>(v|0)>0)) return false;
+  if((s.xp|0)>0||(s.answered|0)>0||(s.correct|0)>0||(s.streak|0)>0||(s.bestStreak|0)>0||s.lastDay) return false;
+  if(Object.values(s.ratingN||{}).some(v=>(v|0)>0)) return false;
+  if(has(s.learningDays)||has(s.trainingBest)||has(s.best)||has(s.crowns)||has(s.chests)||has(s.seenNk)||has(s.seenRq)) return false;
+  const known=Object.keys(DEFAULT_STATE).concat(['daily','dailyArchive','studyHistory','frz','place']);   // 起動しただけで できる もの
+  if(Object.keys(s).some(k=>known.indexOf(k)<0)) return false;   // solo・fuTrain・fuCourse・mwPat・mwSet など(使ったときに できる 記録)
+  const sh=s.studyHistory; if(sh&&((sh.totalDays|0)>0||(sh.completedMissions|0)>0||(sh.perfectDays|0)>0||(sh.missionXp|0)>0)) return false;
+  if(has(s.dailyArchive)) return false;
+  const d=s.daily; if(d&&d.progress&&Object.values(d.progress).some(v=>(v|0)>0)) return false;
+  try{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(/^jantore-/.test(k)&&k!=='jantore-v1'&&k!=='jantore-v1-broken') return false; } }catch(e){}
+  return true;
+}
+function placeShouldShow(){ return !S.place&&placePristine(); }
+/* こわれた 保存(JSON として 読めない)は、上書きされる 前に 元の 文字を 1回だけ 退避する(すでに 退避が あれば のこす) */
+function placeRescueBroken(){
+  try{ const raw=localStorage.getItem('jantore-v1'); if(raw==null) return;
+    try{ JSON.parse(raw); }catch(e){ if(localStorage.getItem('jantore-v1-broken')==null) localStorage.setItem('jantore-v1-broken',raw); } }catch(e){}
+}
+function placeBoot(){ try{ if(placeShouldShow()){ PL={mode:'onb'}; placeOpenA(); } }catch(e){} }
+/* ---- 画面(既存の レッスン画面 #lesson を そのまま 使う) ---- */
+function placeScreen(html,opt){
+  opt=opt||{}; L=null;
+  const lz=document.getElementById('lesson');
+  lz.classList.add('show','pl-mode','pl-static'); lz.classList.toggle('pl-noclose',!!opt.noClose);
+  document.getElementById('pbar-fill').style.width='0%';
+  const area=document.getElementById('q-area'); area.innerHTML='<div class="pl-wrap" id="pl-wrap">'+html+'</div>'; area.scrollTop=0;
+  footNone(document.getElementById('lesson-foot'));
+}
+function placeHero(){ return '<div class="pl-hero">'+avatarImgHTML(S.avatarId,'uav-res')+'</div>'; }
+function placeOpt(id,ico,t,d,fn,tag){
+  return '<button class="pl-opt" id="'+id+'" onclick="'+fn+'"><span class="pl-ico">'+ico+'</span><span class="pl-ot"><b>'+t+(tag?'<span class="pl-tag">'+tag+'</span>':'')+'</b><small>'+d+'</small></span></button>';
+}
+function placeOpenA(){
+  if(!PL) PL={mode:'onb'}; PL.phase='A';
+  placeScreen(placeHero()+'<h2 class="pl-h">麻雀は どれくらい 知ってる？</h2><p class="pl-sub">あとから マイページで かえられるよ</p>'
+    +'<div class="pl-opts">'+placeOpt('pl-new','🐣','はじめて','麻雀を これから 覚えたい',"placeChoose('new')")
+    +placeOpt('pl-some','🀄','ルールは わかる','基本ルールは 知っているけど、まだ 自信がない',"placeChoose('some')")
+    +placeOpt('pl-exp','🏆','よく打つ','麻雀を ふだんから 打っている',"placeChoose('exp')")+'</div>',{noClose:true});
+}
+function placeChoose(c){
+  if(!PL) PL={mode:'onb'};
+  PL.choice=c; sndPlay('select');
+  if(c==='new'){ placeApply(0,'self'); return; }
+  placeOpenB();
+}
+function placeOpenB(){
+  if(!PL) return; PL.phase='B'; const my=PL.mode==='my', exp=PL.choice==='exp';
+  placeScreen(placeHero()+'<h2 class="pl-h">ぴったりの スタート地点を 見つけよう</h2>'
+    +'<p class="pl-sub">実力チェック：4問ずつ・最大16問（1〜4分）<br>EXP や 記録は かわらないよ（スタート地点を きめるだけ）</p>'
+    +'<div class="pl-opts">'+placeOpt('pl-check','🎯','実力チェックを 受ける','かんたんな 問題から、だんだん むずかしく なるよ','placeBegin()',(exp||my)?'おすすめ':'')
+    +(my?placeOpt('pl-cancel','↩','やめる','いまの スタート地点の まま','placeClose()')
+        :placeOpt('pl-scratch','🐣','最初から 学ぶ','SECTION 1 の 最初の レッスンから',"placeApply(0,'self')"))+'</div>'
+    +(my?'':'<button class="pl-back" id="pl-back" onclick="placeOpenA()">‹ もどる</button>'),{noClose:!my});
+}
+/* ---- 実力チェック ---- */
+function placeBegin(){
+  if(!PL) PL={mode:'my'};
+  PL.phase='Q'; PL.s=0; PL.rs=[[],[],[],[]]; PL.v=[]; PL.base=[0];
+  const qs=placeStageQs(0,false);
+  if(qs.length<4){ PL.v[0]='fail'; placeFinish(); return; }   // 問題が 作れない(安全側: SECTION 1 から)
+  const lz=document.getElementById('lesson'); lz.classList.remove('pl-static','pl-noclose'); lz.classList.add('show','pl-mode');
+  L={course:{id:'place',title:'実力チェック',type:'place'},qs,idx:0,correct:0,sel:null,checked:false,done:false,rcat:null,
+     place:true,noHeartLoss:true,themeId:null,lessonIndex:null,startedAt:Date.now(),combo:0,maxCombo:0,baseN:qs.length,teachN:0};
+  placeRenderQ();
+}
+function placeRenderQ(){
+  const q=L.qs[L.idx], src=q._pl.cid?COURSES.find(x=>x.id===q._pl.cid):null;
+  L.course=Object.assign({},src||{},{id:src?src.id:'place',title:'実力チェック',type:src?src.type:'place',place:true});   // 元の レッスンと 同じ 表示(牌の 字の 変換など)
+  L.placeDk=false;
+  renderQ();
+  const s=PL.s, inStage=L.idx-PL.base[s];
+  const area=document.getElementById('q-area');
+  area.insertAdjacentHTML('afterbegin','<div class="pl-chip" id="pl-chip">🎯 実力チェック<b>ステップ '+(s+1)+' / '+PL_STAGES.length+'</b><span>'+(q._pl.extra?'確認 ':'')+(inStage+1)+'問目</span></div>');
+  area.insertAdjacentHTML('beforeend','<button class="pl-dk" id="pl-dk" onclick="placeDk()">わからない</button>');
+  document.getElementById('pbar-fill').style.width=Math.min(100,((s+Math.min(1,inStage/4))/PL_STAGES.length)*100)+'%';
+}
+/* 「わからない」: 不正解として 答えを 終え、既存の 解説を 出す(ライフ・記録は 変えない。音は ふつうの まちがいと 同じ 1回) */
+function placeDk(){
+  if(!L||!L.place||L.checked||L.judging) return;
+  L.autoTok=null; L.placeDk=true;
+  const q=L.qs[L.idx], fmt=QFORMATS[qFormatKey(q)];
+  const res={S:0,isCorrect:false,isPerfect:false,details:{dk:true}};
+  let ans=null; try{ ans=fmt.answer(q); }catch(e){}
+  try{ fmt.reveal(q,ans||{},res); }catch(e){}
+  applyOutcome(q,fmt.cat,null,res,0);
+  let fb=null; try{ fb=fmt.feedback(q,res); }catch(e){ fb={ansText:'',expText:q.exp||''}; }
+  renderFeedback(q,fmt.cat,res,null,fb||{ansText:'',expText:''});
+}
+/* applyOutcome の 先頭から(L.place のとき): 答えを 記録(画面の 中だけ) */
+function placeAnswered(q,res){
+  if(!PL||!q||!q._pl) return;
+  const r={k:q._pl.k,ok:!!(res&&res.isCorrect)&&!L.placeDk,dk:!!L.placeDk,key:q._pl.key,hi:q._pl.hi,topic:q._pl.topic,extra:q._pl.extra};
+  (PL.rs[q._pl.s]=PL.rs[q._pl.s]||[]).push(r);
+  const b=document.getElementById('pl-dk'); if(b) b.remove();
+}
+/* next() から(L.place のとき): つぎの 問題・確認問題・つぎの ステップ・おわり */
+function placeNext(){
+  if(L.idx<L.qs.length){ placeRenderQ(); return; }
+  const s=PL.s; let v=placeJudge(PL.rs[s]);
+  if(v==='extra'){ const ex=placeStageQs(s,true); if(ex.length>=2){ L.qs=L.qs.concat(ex); placeRenderQ(); return; } v='fail'; }
+  PL.v[s]=v;
+  if(v==='pass'&&s+1<PL_STAGES.length){
+    const qs=placeStageQs(s+1,false);
+    if(qs.length>=4){ PL.s=s+1; PL.base[PL.s]=L.qs.length; L.qs=L.qs.concat(qs); placeRenderQ(); return; }
+    PL.v[s+1]='fail';
+  }
+  placeFinish();
+}
+function placeFinish(){
+  if(L) L.done=true;
+  PL.result=placeResult(PL.rs,PL.v); PL.phase='D';
+  placeOpenD();
+}
+const PL_NEXT_WORD=['アガリの形から','待ちを 学ぶ','役を 学ぶ','点数を 学ぶ','実力を みがく'];
+function placeOpenD(){
+  const r=PL.result, rec=r.rec, sec=SECTIONS[rec], my=PL.mode==='my';
+  const head=rec>=PL_STAGES.length?'SECTION 1〜'+PL_STAGES.length+' の 基本は 理解できています！':rec>0?PL_STAGES[rec-1].good+'は 理解できています！':'まずは 基本から いっしょに 学ぼう！';
+  const marks=r.st.map(x=>'<span class="pl-st '+(x[3]==='pass'?'ok':'ng')+'">ステップ'+(x[0]+1)+' '+(x[3]==='pass'?'✓':'△')+'</span>').join('');
+  const cur=placeStart();
+  placeScreen(placeHero()
+    +'<h2 class="pl-h" id="pl-res-h">SECTION '+(rec+1)+'「'+sec.name+'」から はじめよう！</h2>'
+    +'<p class="pl-msg" id="pl-res-msg">'+head+'<br>次は '+PL_NEXT_WORD[rec]+' SECTION '+(rec+1)+' から 始めましょう。</p>'
+    +'<div class="pl-marks">'+marks+'</div>'
+    +(r.good.length?'<div class="pl-box ok" id="pl-good"><b>できていた こと</b><span>'+r.good.join('・')+'</span></div>':'')
+    +(r.weak.length?'<div class="pl-box ng" id="pl-weak"><b>復習が おすすめ</b><span>'+r.weak.join('・')+'</span></div>':'')
+    +(rec>0?'<p class="pl-note">SECTION 1'+(rec>1?'〜'+rec:'')+' は スキップ。いつでも 学べるよ（クリア済みには ならない）。</p>':'')
+    +'<div class="pl-btns"><button class="btn" id="pl-go" onclick="placeApply('+rec+',\'check\')">ここから学習をはじめる</button>'
+    +(rec>0?'<button class="btn gray" id="pl-scratch2" onclick="placeApply(0,\'self\')">最初から学ぶ</button>':'')
+    +(my?'<button class="btn gray" id="pl-keep" onclick="placeClose()">いまのままにする'+(cur?'（SECTION '+(cur+1)+'）':'')+'</button>':'')+'</div>',{noClose:!my});
+}
+/* ✕: チェック中は たしかめてから。案内の 画面では もどる/とじる */
+function placeQuit(){
+  if(!PL) return false;
+  if(PL.phase==='Q'&&L&&L.place&&!L.done){
+    openModal('<h3>実力チェックを やめる？</h3><p>とちゅうの 結果は 使わないよ。スタート地点は かわらない。<br>あとで マイページから 受けなおせるよ。</p>'
+      +'<button class="btn" id="pl-q-cont" onclick="closeModal()">つづける</button>'
+      +'<button class="btn gray" id="pl-q-stop" style="margin-top:8px;" onclick="placeAbort()">やめる</button>');
+    return true;
+  }
+  if(PL.mode==='onb'){ if(PL.phase==='B') placeOpenA(); return true; }   // 初回は スタート地点を きめるまで とじない
+  placeClose(); return true;
+}
+function placeAbort(){
+  closeModal(); btClearTimers(); L=null;
+  if(PL&&PL.mode==='onb'){ PL.rs=null; PL.result=null; placeOpenB(); return; }
+  placeClose();
+}
+function placeClose(){
+  PL=null; L=null;
+  const lz=document.getElementById('lesson'); lz.classList.remove('show','pl-mode','pl-static','pl-noclose');
+  renderHUD(); renderPath();
+  try{ if(document.getElementById('screen-profile').classList.contains('show')) renderProfile(); if(document.getElementById('screen-home').classList.contains('show')) renderHome(); }catch(e){}
+}
+/* スタート地点を きめる(保存は ここだけ)。roadProgress・EXP などは さわらない */
+function placeApply(start,by){
+  start=Math.max(0,Math.min(SECTIONS.length-1,start|0));
+  const now=new Date().toISOString(), p=Object.assign({v:1,choice:null},(S.place&&typeof S.place==='object')?S.place:{});
+  if(PL&&PL.choice) p.choice=PL.choice;
+  p.start=start; p.by=by; p.at=now;
+  if(PL&&PL.result) p.check={at:now,set:PL_SET,rec:PL.result.rec,st:PL.result.st};
+  p.hist=(Array.isArray(p.hist)?p.hist:[]).concat([{at:now,start,by}]).slice(-5);
+  p.v=1; S.place=p; save();
+  const mode=PL?PL.mode:null, choice=PL?PL.choice:null;
+  placeClose();
+  if(mode==='onb'&&start===0){ showScreen('home'); startThemeLesson('th_ch1a',0); return; }   // はじめて・最初から: すぐ 最初の レッスンへ
+  if(mode) goContinue();                                                                      // 開始 SECTION の 先頭の マスへ
+}
+/* マイページの 入口(既存ユーザーも 受けられる。結果を 使うかは 結果の 画面で えらぶ) */
+function placeOpenMy(){ PL={mode:'my',choice:(S.place&&S.place.choice)||null}; placeOpenB(); }
+function placeResetAsk(){
+  openModal('<h3>スタートを SECTION 1 に もどす？</h3><p>スキップしていた SECTION が ふつうの 順番に もどるよ。<br>学習した 記録・EXP は そのまま。</p>'
+    +'<button class="btn" id="pl-reset-ok" onclick="closeModal();placeApply(0,\'self\');">もどす</button>'
+    +'<button class="btn gray" style="margin-top:8px;" onclick="closeModal()">やめる</button>');
+}
+function placeMyCardHTML(){
+  const st=placeStart();
+  return '<div class="card pl-my" id="pl-my"><b style="font-size:14px;">🎯 実力チェック</b>'
+    +'<p class="pl-my-d">今の実力に合った 学習の スタート地点を 見つけます</p>'
+    +(st?'<p class="pl-my-now" id="pl-my-now">いまの スタート：SECTION '+(st+1)+'（SECTION 1'+(st>1?'〜'+st:'')+' は スキップ中）</p>':'')
+    +'<button class="btn" id="pl-my-go" onclick="placeOpenMy()">実力チェックを受ける</button>'
+    +(st?'<button class="btn gray" id="pl-my-reset" style="margin-top:8px;" onclick="placeResetAsk()">スタートを SECTION 1 に もどす</button>':'')
+    +'</div>';
 }
 /* ---- 学習日(連続日数) ----
    レッスン・トレーニング(finishLesson)と ひとり麻雀の1局(dmSoloEnd)から呼ぶ。もどり値=今日はじめての学習か */
@@ -6107,6 +6437,7 @@ function nextLessonInfo(){
       const c=COURSES.find(x=>x.id===t.course);
       if(!c||c.section!==si||!protoCourseVisible(c.id)) continue;
       if(!ch1ThemeUnlocked(t)) continue;      // ロック中テーマは「つづきから」の対象外
+      if(placeSkippedTheme(t)&&!themeFrontier(t)) continue;   // R104: 飛ばした SECTION の 手付かずの テーマは 案内しない(学びはじめた テーマは これまでどおり)
       if(typeof SECTION_OPTIONAL_THEMES!=='undefined'&&SECTION_OPTIONAL_THEMES.includes(t.id)&&!themeFrontier(t)){
         // 任意テーマ(未着手)は、同じSECTIONでこれより後ろのテーマを学び始めていたら「つづきから」に出さない
         const later=THEMES.slice(THEMES.indexOf(t)+1).filter(u=>{ const cu=COURSES.find(x=>x.id===u.course); return cu&&cu.section===si; });
@@ -7446,7 +7777,7 @@ function mwStatusOf(r){
   return (r.keys.length>=3&&(suits.size>=2||forms.size>=2)&&l3.length===3&&l3.every(x=>x===1))?'master':'learn';
 }
 function mwRecord(q,ok){
-  if(!q||!q.mw||q._mwRec) return; q._mwRec=true;
+  if(!q||!q.mw||q._mwRec||(L&&L.place)) return; q._mwRec=true;   // R104: 実力チェックは 習得記録に 入れない
   const st=mwStoreRead(), r=mwRecOf(q.mw.pid,st), k=q.mw.key;
   if(ok) r.ok++; else r.ng++;
   r.last=r.last.concat([ok?1:0]).slice(-5); r.at=new Date().toISOString();
@@ -7837,7 +8168,7 @@ function sectionInfo(si,nx){
   core.forEach(t=>{ total+=themeLessons(t).length; done+=themeFrontier(t); });
   const unlocked=core.length>0&&ch1ThemeUnlocked(core[0]);
   const current=!!nx&&sectionOfTheme(nx.tid)===si;
-  const state=!unlocked?'locked':(total>0&&done>=total?'done':(current?'current':'open'));
+  const state=!unlocked?'locked':(total>0&&done>=total?'done':(current?'current':(si<placeStart()?'skipped':'open')));   // R104: skipped = 飛び級で 飛ばした(クリア済みでは ない)
   return {si,ths,core,done,total,state,current,
     optLessons:opt.reduce((a,t)=>a+themeLessons(t).length,0)};
 }
@@ -7867,7 +8198,7 @@ function sectionListHTML(){
     const inf=sectionInfo(si,nx);
     if(!inf.ths.length) return;
     const pct=inf.total?Math.round(inf.done/inf.total*100):0;
-    const badge={locked:'🔒 未解放',done:'✓ 完了',current:'▶ 学習中',
+    const badge={locked:'🔒 未解放',done:'✓ 完了',current:'▶ 学習中',skipped:'⤴ スキップしたSECTION',
       open:(inf.done>0?'途中まで':'はじめられる')}[inf.state];
     html+='<button class="sec-card '+inf.state+'" data-sec="'+si+'" onclick="openSection('+si+')">'
       +'<div class="sc-top"><span class="sc-no">SECTION '+(si+1)+'</span>'
@@ -7877,6 +8208,7 @@ function sectionListHTML(){
       +'<div class="sc-prog"><span class="sc-bar"><i style="width:'+pct+'%"></i></span>'
       +'<span class="sc-num">'+inf.done+'/'+inf.total+'</span></div>'
       +(inf.optLessons?'<div class="sc-opt">＋よりみち（'+inf.ths.filter(t=>SECTION_OPTIONAL_THEMES.includes(t.id)).map(t=>t.title).join('・')+'）'+inf.optLessons+'Lesson（任意）</div>':'')
+      +(inf.state==='skipped'?'<div class="sc-skip">いつでも 学べます（クリア済みでは ありません）</div>':'')
       +(inf.state==='current'&&nx?'<div class="sc-here">いまここ：'+nx.title+' ─ '+nx.sub+' '+nx.label+'</div>':'')
       +'</button>';
   });
@@ -19693,6 +20025,7 @@ const CH3_LESSONS={
 function ch1ThemeUnlocked(t){
   // requires付きテーマ(D1〜)は前提テーマを全クリアするまでロック(既存テーマは常に解放)
   if(!t||!t.requires) return true;
+  if(placeAllows(t)) return true;   // R104: 飛び級(開始 SECTION より 前の テーマ・開始 SECTION の 先頭テーマ)。roadProgress は 書きかえない
   /* 既得解放(R44): すでに1つでもレッスンを進めたテーマは、あとから requires を変えても閉じない。
      R44で th_ch1e(旧 requires: th_ch1d → th_ch1g)・th_ch2a(旧 th_ch1e → th_ch1p)を付け替えたため、
      「実戦への扉を進めているのに4人で打つ/ゲームの進み方が未クリア」という既存ユーザーが
@@ -19749,6 +20082,8 @@ function pickReview(relaxed){
 }
 function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
 function quitLesson(){
+  if(PL&&(!L||L.place)&&placeQuit()) return;     // R104: 初回レベル選択・実力チェック(ふつうの レッスン中は ふつうに とじる)
+  if(PL){ PL=null; document.getElementById('lesson').classList.remove('pl-mode','pl-static','pl-noclose'); }   // R104: のこった 案内の 状態は すてる
   btClearTimers();                // R54: 裏で他家の打牌が進みつづけないように必ず止める
   mjfxClear();                    // R60: 「ポン！」「ロン！」などの演出を画面に残さない
   const wasDone=!!(L&&L.done);
@@ -21031,6 +21366,7 @@ function ch2WfSubmit(btn){
     requestAnimationFrame(()=>requestAnimationFrame(()=>{ if(L&&!L.checked) check(); }));
     return;
   }
+  if(L.place){ if(L.wf){ L.wf.miss++; L.wf.done=true; } check(); return; }   // R104: 実力チェックは 1回目の「これで決定」で 答えを きめる(まちがいでも 解説へ)
   if(L.wf) L.wf.miss++;
   const g=document.getElementById('wf-msg');
   if(g){ g.classList.add('retry');
@@ -21061,6 +21397,7 @@ function ch3YfSubmit(btn){
     requestAnimationFrame(()=>requestAnimationFrame(()=>{ if(L&&!L.checked) check(); }));
     return;
   }
+  if(L.place){ if(L.wf){ L.wf.miss++; L.wf.done=true; } check(); return; }   // R104: 実力チェックは 1回目の「これで決定」で 答えを きめる(まちがいでも 解説へ)
   if(L.wf) L.wf.miss++;
   const g=document.getElementById('wf-msg');
   if(g){ g.classList.add('retry');
@@ -21131,6 +21468,7 @@ function logCompare(entry){
 /* ================= 進行・報酬処理 ================= */
 function applyOutcome(q,cat,qid,res,elapsed){
   L.checked=true;
+  if(L.place){ placeAnswered(q,res); return null; }   // R104: 実力チェックは 何も 記録しない(累計・コンボ・ライフ・RATING・ログ・保存)
   // コンボ: 正解で+1、不正解で即0(責めない・小表示のみ)。演出専用のカウンタであり、
   // レーティング計算にもEXP計算式にも一切影響させない(第6段階指示)。maxComboは将来ミッション用に保持。
   L.prevCombo=L.combo||0;
@@ -21363,6 +21701,7 @@ function next(){
   // (renderQがL.checked=falseへ戻すため、連打の2回目以降はここで止まる)
   if(!L||L.done||!L.checked) return;
   L.idx++;
+  if(L.place){ placeNext(); return; }   // R104: 実力チェック(ステップの 判定・確認問題)
   if(L.course.compare&&L.idx>=L.qs.length&&!L.contrastShown){ showContrast(); return; }
   // レッスン内復習の差し込み: 間隔を満たした復習問題を次の1問として出す。
   // 基本問題を出し切った後は、残った復習を回収し切るまでレッスンを終了しない
@@ -21799,6 +22138,7 @@ function renderProfile(){
     +'<div class="av-me-txt"><span class="av-me-k">あなたのアバター</span><b class="av-me-n">'+avatarOf(S.avatarId).name+'</b>'
     +'<span class="av-me-s">ツモッピィ 見習い雀士</span>'
     +'<button class="btn au-btn" id="av-change" onclick="openAvatarPicker()">アバターをかえる</button></div></div>'
+    +placeMyCardHTML()   // R104: 実力チェックの 入口(既存ユーザーも)
     +'<div class="card"><b style="font-size:14px;">📊 記録</b><div class="stat-grid" style="margin-top:10px;">'
     +'<div class="stat-box"><div class="v">'+S.xp+'</div><div class="k">合計XP</div></div>'
     +'<div class="stat-box"><div class="v">'+S.streak+'🔥</div><div class="k">連続学習</div></div>'
@@ -22203,6 +22543,7 @@ if(S.dev){ const v=validateV3(); console.log('[v3検証]', v.ok?'OK':'NG', v.cou
 frzCheck();                     // R99: きのうまでの 休みを 判定(同じ日に 何度 ひらいても 1回だけ)
 renderHUD(); renderPath();      // コース(ロード)を先に構築しておく
 showScreen('home');             // 起動時の初期画面はホーム(今日の状況→ミッション→つづきから)
+placeBoot();                    // R104: 実質的に 学習を 始めていない 人だけ、初回レベル選択
 if(rubyModeFull()) rubyFullApply(document.body);
 if(appUpdateAfterBoot()){       // 「最新版に更新」から起動したときだけ完了を知らせる(再読込はしない)
   // ここは「読み込み直したあと」なので、表示するbuildは"いま動いているHTML"の版そのもの
