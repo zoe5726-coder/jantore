@@ -660,6 +660,28 @@ span.tv-riichi-tile{transform:rotate(-90deg);}
 .pl-btns{display:flex; flex-direction:column; gap:8px; margin-top:4px;}
 .pl-my-d{font-size:12.5px; font-weight:700; color:var(--ink-soft); margin:6px 0 8px;}
 .pl-my-now{font-size:12.5px; font-weight:800; margin:0 0 8px;}
+/* R107 アカウント(ログイン・引き継ぎ)。既存の カード・ボタン・モーダルの 見た目に そろえる */
+.ac-line{font-size:13.5px; font-weight:800; margin:8px 0 4px;}
+.ac-sub,.ac-note{font-size:12.5px; font-weight:700; color:var(--ink-soft); margin:0 0 10px; line-height:1.6;}
+.ac-note{margin:10px 0 0; color:var(--jade-ink);}
+.ac-sync{font-size:12px; font-weight:700; color:var(--ink-soft); background:var(--surface-sunken); border-radius:12px; padding:8px 10px; margin:0 0 10px; line-height:1.6;}
+.ac-modal .ac-dev{display:inline-block; margin-left:8px; font-size:11px; font-weight:800; color:var(--gold-ink); border:2px solid var(--gold); border-radius:999px; padding:1px 8px; vertical-align:middle;}
+.ac-lbl{display:block; font-size:13px; font-weight:800; margin:4px 0 6px;}
+.ac-inp{display:block; width:100%; box-sizing:border-box; font-size:16px; font-weight:700; padding:12px 14px; border:2px solid var(--line); border-radius:14px;
+  background:var(--card); color:var(--ink); margin:0 0 12px; font-family:inherit;}
+.ac-inp:focus{outline:3px solid var(--jade-soft); border-color:var(--jade);}
+.ac-inp.ac-code{letter-spacing:.4em; text-align:center; font-size:22px;}
+.ac-err{color:var(--verm-ink)!important; font-weight:800; font-size:13px!important; margin:0 0 10px!important;}
+.ac-ok{color:var(--jade-ink)!important; font-weight:800; font-size:13px!important;}
+.ac-small{font-size:12px!important; margin:10px 0 0!important;}
+.ac-sub-btn,.ac-close{margin-top:8px;}
+.ac-mail{color:var(--ink); word-break:break-all;}
+.ac-box{border:2px solid var(--line); border-radius:14px; padding:6px 12px; margin:0 0 12px;}
+.ac-kv{display:flex; justify-content:space-between; gap:10px; font-size:13px; padding:6px 0; border-bottom:1px solid var(--line);}
+.ac-kv:last-child{border-bottom:none;}
+.ac-kv span{color:var(--ink-soft); font-weight:700;} .ac-kv b{text-align:right; word-break:break-all;}
+.ac-st{font-size:13px!important; font-weight:700; color:var(--ink)!important;}
+.ac-list{margin:0 0 12px; padding-left:1.2em; font-size:12.5px; line-height:1.7; color:var(--ink-soft); font-weight:700;}
 .sec-card.skipped{border-style:dashed;}
 .sc-skip{font-size:12px; font-weight:800; color:var(--ink-soft); margin-top:4px;}
 .solo-mjt .mjt-pick.solo-rz > .tile{outline:2.5px solid var(--now-ring); outline-offset:1px;}
@@ -1922,6 +1944,17 @@ button.mjt-pick.mjt-hp,
 .hand.lh .ch3-tsumo-gap{display:none;}
 .hand.lh .ch3-now{flex:none; margin-left:4px; max-width:none; min-width:0;}
 .hand.lh .ch3-now .tile{width:var(--lh-w);}
+/* R107.3: 13枚＋ツモ牌(アガリ牌)の行は【かならず横1行】(PO の実機確認で、320px などで ツモ牌だけが 次の行へ 落ちていた)。
+   R89 の「牌は 24px より小さくしない・入りきらなければ まとまりの切れ目で折り返す」を、手の中の牌とアガリ牌については やめる。
+   牌の大きさ = (行のはば − すきまの合計) ÷ 牌の数(--lh-hn・--lh-hgap は lhStyle が 牌の数と すきまを 数えて わたす)。上限は --tile-w。
+   ・鳴いた組が ない行(.lh-one): 折り返さない(nowrap)。
+   ・鳴いた組が ある行: 手の中＋アガリ牌の まとまりは 1行に 入る大きさに する(ツモ牌だけが 落ちない)。鳴いた組は これまでどおり 組の切れ目で 次の行へ 折り返してよい。
+   ・「ツモ」「ロン」の ラベルは 牌と同じ はばの箱の 中央に置き、文字が 牌より 広くても 箱(=行)を 広げない */
+.hand.lh.lh-one{flex-wrap:nowrap;}
+@supports (width:1cqw){ .hand.lh{
+  --lh-w:clamp(min(24px, calc((100cqw - var(--lh-hgap,var(--lh-gap,0px)) - 2px) / var(--lh-hn,var(--lh-n,14)))), calc((100cqw - var(--lh-gap,0px) - 2px) / var(--lh-n,14)), var(--tile-w));} }
+@supports not (width:1cqw){ .hand.lh.lh-one{--lh-w:min(var(--tile-w), calc((100vw - 64px - var(--lh-gap,0px)) / var(--lh-n,14)));} }
+.hand.lh .ch3-now .ch3-now-lab{width:var(--lh-w); display:flex; justify-content:center; overflow:visible;}
 .hand.lh .lh-meld{align-items:flex-start;}
 .hand.lh .lh-meld .mld-kan{display:contents;}
 .hand.lh .mld-side{flex:none; width:calc(var(--lh-w) * 1.4); max-width:none; min-width:0;}
@@ -3157,8 +3190,9 @@ function openHandHTML(concealed,melds,opt){
        手牌側の牌の大きさも副露エリアとそろえる(2枚だけの手牌が巨大に見えるのを防ぐ) */
     /* R89: 手の中が9枚以上なら 学習用の行(24px より小さくしない・牌の種類の切れ目で折り返す) */
     const nc=concealed.length+(opt.drawHTML?1:0);
-    if(nc>=9){ const gs=lhSuitGroups(concealed), gap=6*(gs.length-1+(opt.drawHTML?1:0))+(opt.drawHTML?4:0);
-      return '<div class="hand hand-open oh-split lh'+(opt.cls?' '+opt.cls:'')+'" style="'+lhStyle(nc,gap,gs)+'">'
+    if(nc>=9){ const gs=lhSuitGroups(concealed), gap=lhGapPx(gs,gs.length+(opt.drawHTML?1:0),!!opt.drawHTML);
+      /* R107.3: この行は 手の中＋ツモ牌だけ(鳴いた組は 下の 副露エリア)なので 1行(lh-one) */
+      return '<div class="hand hand-open oh-split lh lh-one'+(opt.cls?' '+opt.cls:'')+'" style="'+lhStyle(nc,gap,gs,nc,gap)+'">'
         +gs.map(g=>'<span class="hgrp lh-g">'+g.map(t=>tileHTML(t)).join('')+'</span>').join('')
         +(opt.drawHTML||'')+'</div>'+fuuroAreaHTML(melds,{lab:opt.fuLab}); }
     return '<div class="hand hand-open oh-split'+(opt.cls?' '+opt.cls:'')+'">'
@@ -3171,8 +3205,10 @@ function openHandHTML(concealed,melds,opt){
   const nMeld=(melds||[]).reduce((a,m)=>a+meldNorm(m).tiles.length+0.4,0), nAll=concealed.length+(opt.drawHTML?1:0)+nMeld;
   if((melds&&melds.length&&nAll>=9)||nAll>=11){
     const gs=lhSuitGroups(concealed), mg=(melds||[]).slice().reverse();
-    const n=Math.ceil(nAll), gap=6*(gs.length+mg.length-1+(opt.drawHTML?1:0))+(opt.drawHTML?4:0);
-    return '<div class="hand hand-open lh'+(opt.cls?' '+opt.cls:'')+'" style="'+lhStyle(n,gap,gs)+'">'
+    const n=Math.ceil(nAll), gap=lhGapPx(gs,gs.length+mg.length+(opt.drawHTML?1:0),!!opt.drawHTML);
+    /* R107.3: 手の中＋ツモ牌の まとまりは かならず 1行(--lh-hn・--lh-hgap)。鳴いた組は 組の切れ目で 折り返してよい(R89 の まま) */
+    const hn=concealed.length+(opt.drawHTML?1:0), hgap=lhGapPx(gs,gs.length+(opt.drawHTML?1:0),!!opt.drawHTML);
+    return '<div class="hand hand-open lh'+(mg.length?'':' lh-one')+(opt.cls?' '+opt.cls:'')+'" style="'+lhStyle(n,gap,gs,hn,hgap)+'">'
       +gs.map(g=>'<span class="hgrp lh-g">'+g.map(t=>tileHTML(t)).join('')+'</span>').join('')
       +(opt.drawHTML||'')
       +mg.map(m=>'<span class="lh-g lh-meld">'+renderMeld(m)+'</span>').join('')+'</div>';
@@ -3713,10 +3749,10 @@ const THEMES=[
  {id:'th_ch1a', course:'ch1a', title:'牌を知ろう', sub:'まずは牌とともだちになる',
   subThemes:[
    {id:'st_a1', title:'牌の種類', lessons:[
-    {diff:{ch1:'a1_1'}},                       // 牌にさわってみよう(短尺)
-    {diff:{ch1:'a1_2'}},                       // マンズ・ピンズ・ソーズ(短尺)
-    {diff:{ch1:'a1_3'}},                       // 字牌(短尺)
-    {diff:{ch1:'a1_4'}},                       // ★まとめ: 牌はかせ
+    {id:'ls_a1_1',diff:{ch1:'a1_1'}},                       // 牌にさわってみよう(短尺)
+    {id:'ls_a1_2',diff:{ch1:'a1_2'}},                       // マンズ・ピンズ・ソーズ(短尺)
+    {id:'ls_a1_3',diff:{ch1:'a1_3'}},                       // 字牌(短尺)
+    {id:'ls_a1_4',diff:{ch1:'a1_4'}},                       // ★まとめ: 牌はかせ
    ]},
   ]},
  /* 牌の読み方(2026-09-21追加・任意の基礎教養): 数牌=「数字の読み+種類の呼び方」の規則で読む→字牌7種→ミックス。
@@ -3726,55 +3762,55 @@ const THEMES=[
   requires:'th_ch1a',
   subThemes:[
    {id:'st_r1', title:'牌のよび方', lessons:[
-    {diff:{ch1:'r1_1'}},                       // 読み方のしくみ(数字の読み+種類の呼び方)
-    {diff:{ch1:'r1_2'}},                       // 数牌を読もう(27種)
-    {diff:{ch1:'r1_3'}},                       // 字牌の読み方(7種)
-    {diff:{ch1:'r1_4'}},                       // ★まとめ: 34種ミックス
+    {id:'ls_r1_1',diff:{ch1:'r1_1'}},                       // 読み方のしくみ(数字の読み+種類の呼び方)
+    {id:'ls_r1_2',diff:{ch1:'r1_2'}},                       // 数牌を読もう(27種)
+    {id:'ls_r1_3',diff:{ch1:'r1_3'}},                       // 字牌の読み方(7種)
+    {id:'ls_r1_4',diff:{ch1:'r1_4'}},                       // ★まとめ: 34種ミックス
    ]},
   ]},
  {id:'th_ch1b', course:'ch1b', title:'組を作ろう', sub:'メンツ・トイツ・アタマ',
   subThemes:[
    {id:'st_b1', title:'3枚の組', lessons:[
-    {diff:{ch1:'b1_1'}},                       // ならんだ3枚(シュンツ)
-    {diff:{ch1:'b1_2'}},                       // おなじ3枚(コーツ)
-    {diff:{ch1:'b1_3'}},                       // メンツ
-    {diff:{ch1:'b1_4'}},                       // ★字牌のひみつ(字牌はシュンツにできない)
+    {id:'ls_b1_1',diff:{ch1:'b1_1'}},                       // ならんだ3枚(シュンツ)
+    {id:'ls_b1_2',diff:{ch1:'b1_2'}},                       // おなじ3枚(コーツ)
+    {id:'ls_b1_3',diff:{ch1:'b1_3'}},                       // メンツ
+    {id:'ls_b1_4',diff:{ch1:'b1_4'}},                       // ★字牌のひみつ(字牌はシュンツにできない)
    ]},
    {id:'st_b2', title:'2枚の組とアガリ形', lessons:[
-    {diff:{ch1:'b2_1'}},                       // おなじ2枚(トイツ)
-    {diff:{ch1:'b2_2'}},                       // アタマ — トイツの役割
-    {diff:{ch1:'b2_3'}},                       // ★まとめ: 組はかせ
+    {id:'ls_b2_1',diff:{ch1:'b2_1'}},                       // おなじ2枚(トイツ)
+    {id:'ls_b2_2',diff:{ch1:'b2_2'}},                       // アタマ — トイツの役割
+    {id:'ls_b2_3',diff:{ch1:'b2_3'}},                       // ★まとめ: 組はかせ
    ]},
   ]},
  {id:'th_ch1c', course:'ch1c', title:'ミニ麻雀', sub:'ツモって切ってアガる',
   subThemes:[
    {id:'st_c1', title:'4枚ミニ麻雀', lessons:[
-    {diff:{ch1:'c1_1'}},                       // はじめてのアガリ形
-    {diff:{ch1:'c1_2'}},                       // はじめてのツモ(LEVEL1・誘導)
-    {diff:{ch1:'c1_3'}},                       // 4枚ミニ麻雀で遊ぼう(LEVEL2)
-    {diff:{ch1:'c1_4'}},                       // あと1枚！(テンパイと待ち)
-    {diff:{ch1:'c1_5'}},                       // ★まとめ: 4枚マスター(LEVEL2〜3相当)
+    {id:'ls_c1_1',diff:{ch1:'c1_1'}},                       // はじめてのアガリ形
+    {id:'ls_c1_2',diff:{ch1:'c1_2'}},                       // はじめてのツモ(LEVEL1・誘導)
+    {id:'ls_c1_3',diff:{ch1:'c1_3'}},                       // 4枚ミニ麻雀で遊ぼう(LEVEL2)
+    {id:'ls_c1_4',diff:{ch1:'c1_4'}},                       // あと1枚！(テンパイと待ち)
+    {id:'ls_c1_5',diff:{ch1:'c1_5'}},                       // ★まとめ: 4枚マスター(LEVEL2〜3相当)
    ]},
    {id:'st_c2', title:'7枚ミニ麻雀', lessons:[
-    {diff:{ch1:'c2_1'}},                       // 2メンツ+1アタマ
-    {diff:{ch1:'c2_2'}},                       // 7枚ミニ麻雀(LEVEL1→2)
-    {diff:{ch1:'c2_3'}},                       // いらない牌はどれ？(牌姿認識・牌効率ではない)
-    {diff:{ch1:'c2_4'}},                       // ★まとめ: 7枚マスター
+    {id:'ls_c2_1',diff:{ch1:'c2_1'}},                       // 2メンツ+1アタマ
+    {id:'ls_c2_2',diff:{ch1:'c2_2'}},                       // 7枚ミニ麻雀(LEVEL1→2)
+    {id:'ls_c2_3',diff:{ch1:'c2_3'}},                       // いらない牌はどれ？(牌姿認識・牌効率ではない)
+    {id:'ls_c2_4',diff:{ch1:'c2_4'}},                       // ★まとめ: 7枚マスター
    ]},
    {id:'st_c3', title:'10枚ミニ麻雀', lessons:[
-    {diff:{ch1:'c3_1'}},                       // 3メンツ+1アタマ
-    {diff:{ch1:'c3_2'}},                       // 10枚ミニ麻雀(LEVEL2)
-    {diff:{ch1:'c3_3'}},                       // ★まとめ: 10枚マスター(LEVEL3相当で締め)
+    {id:'ls_c3_1',diff:{ch1:'c3_1'}},                       // 3メンツ+1アタマ
+    {id:'ls_c3_2',diff:{ch1:'c3_2'}},                       // 10枚ミニ麻雀(LEVEL2)
+    {id:'ls_c3_3',diff:{ch1:'c3_3'}},                       // ★まとめ: 10枚マスター(LEVEL3相当で締め)
    ]},
   ]},
  {id:'th_ch1d', course:'ch1d', title:'本物の13枚へ', sub:'本物とおなじ13枚で打つ',
   requires:'th_ch1c',                          // C3(ミニ麻雀テーマ)を全クリアで解放
   subThemes:[
    {id:'st_d1', title:'13枚麻雀', lessons:[
-    {diff:{ch1:'d1_1'}},                       // 本物の麻雀は13枚(4メンツ+1アタマ)
-    {diff:{ch1:'d1_2'}},                       // 13枚ミニ麻雀(LEVEL3中心)
-    {diff:{ch1:'d1_3'}},                       // 13枚のテンパイと待ち
-    {diff:{ch1:'d1_4'}},                       // ★まとめ: 13枚マスター
+    {id:'ls_d1_1',diff:{ch1:'d1_1'}},                       // 本物の麻雀は13枚(4メンツ+1アタマ)
+    {id:'ls_d1_2',diff:{ch1:'d1_2'}},                       // 13枚ミニ麻雀(LEVEL3中心)
+    {id:'ls_d1_3',diff:{ch1:'d1_3'}},                       // 13枚のテンパイと待ち
+    {id:'ls_d1_4',diff:{ch1:'d1_4'}},                       // ★まとめ: 13枚マスター
    ]},
   ]},
  /* 4人で打つ(R38): ロン・鳴き(D2-3)の前に「麻雀卓と4人」を理解しておくためのテーマ。
@@ -3788,10 +3824,10 @@ const THEMES=[
   requires:'th_ch1d',
   subThemes:[
    {id:'st_s1', title:'4人の席', lessons:[
-    {diff:{ch1:'s1_1'}},                       // 4人で打つ / 上家・下家・対面
-    {diff:{ch1:'s1_2'}},                       // 東家・南家・西家・北家
-    {diff:{ch1:'s1_3'}},                       // 親と子
-    {diff:{ch1:'s1_4'}},                       // ★まとめ: 4人マスター
+    {id:'ls_s1_1',diff:{ch1:'s1_1'}},                       // 4人で打つ / 上家・下家・対面
+    {id:'ls_s1_2',diff:{ch1:'s1_2'}},                       // 東家・南家・西家・北家
+    {id:'ls_s1_3',diff:{ch1:'s1_3'}},                       // 親と子
+    {id:'ls_s1_4',diff:{ch1:'s1_4'}},                       // ★まとめ: 4人マスター
    ]},
   ]},
  /* ゲームの進み方(R41): 「1局」から「半荘」までの時間軸を理解するテーマ。
@@ -3807,16 +3843,16 @@ const THEMES=[
   requires:'th_ch1s',
   subThemes:[
    {id:'st_g1', title:'1局のながれ', lessons:[
-    {diff:{ch1:'g1_1'}},                       // 1局ってなに？(13→14→13のループ→命名)
-    {diff:{ch1:'g1_2'}},                       // 局はどう終わる？(アガリ / 流局)
-    {diff:{ch1:'g1_3'}},                       // 流局したら？(テンパイ / ノーテン。点には入らない)
-    {diff:{ch1:'g1_4'}},                       // ★まとめ: 1局マスター
+    {id:'ls_g1_1',diff:{ch1:'g1_1'}},                       // 1局ってなに？(13→14→13のループ→命名)
+    {id:'ls_g1_2',diff:{ch1:'g1_2'}},                       // 局はどう終わる？(アガリ / 流局)
+    {id:'ls_g1_3',diff:{ch1:'g1_3'}},                       // 流局したら？(テンパイ / ノーテン。点には入らない)
+    {id:'ls_g1_4',diff:{ch1:'g1_4'}},                       // ★まとめ: 1局マスター
    ]},
    {id:'st_g2', title:'ゲームのおわり', lessons:[
-    {diff:{ch1:'g2_1'}},                       // 親はどうなる？(親交代 / 連荘。流局時はルール差)
-    {diff:{ch1:'g2_2'}},                       // 東1局〜東4局(親の位置と局名の対応)
-    {diff:{ch1:'g2_3'}},                       // 東場から南場へ(→半荘。東風戦は補足)
-    {diff:{ch1:'g2_4'}},                       // ★まとめ: オーラス / 1局のアガリと順位は別 / 点の予告
+    {id:'ls_g2_1',diff:{ch1:'g2_1'}},                       // 親はどうなる？(親交代 / 連荘。流局時はルール差)
+    {id:'ls_g2_2',diff:{ch1:'g2_2'}},                       // 東1局〜東4局(親の位置と局名の対応)
+    {id:'ls_g2_3',diff:{ch1:'g2_3'}},                       // 東場から南場へ(→半荘。東風戦は補足)
+    {id:'ls_g2_4',diff:{ch1:'g2_4'}},                       // ★まとめ: オーラス / 1局のアガリと順位は別 / 点の予告
    ]},
   ]},
  /* R44: requires を th_ch1d → th_ch1g に変更。
@@ -3827,10 +3863,10 @@ const THEMES=[
   requires:'th_ch1g',                          // ゲームの進み方を全クリアで解放(R44。旧: th_ch1d)
   subThemes:[
    {id:'st_d2', title:'実戦への扉', lessons:[
-    {diff:{ch1:'d2_1'}},                       // アガリには役がいる
-    {diff:{ch1:'d2_2'}},                       // リーチ — 最初のひとつの役
-    {diff:{ch1:'d2_3'}},                       // ほかの人がいる麻雀
-    {diff:{ch1:'d2_4'}},                       // ★第1章チャレンジ: 麻雀を打てる！
+    {id:'ls_d2_1',diff:{ch1:'d2_1'}},                       // アガリには役がいる
+    {id:'ls_d2_2',diff:{ch1:'d2_2'}},                       // リーチ — 最初のひとつの役
+    {id:'ls_d2_3',diff:{ch1:'d2_3'}},                       // ほかの人がいる麻雀
+    {id:'ls_d2_4',diff:{ch1:'d2_4'}},                       // ★第1章チャレンジ: 麻雀を打てる！
    ]},
   ]},
  /* 鳴きを使う(R46): 「ポン・チーという言葉を知っている」から「他家が捨てた瞬間に、鳴けるか判断して
@@ -3849,15 +3885,15 @@ const THEMES=[
   requires:'th_ch1e',
   subThemes:[
    {id:'st_n1', title:'鳴けるかどうか', lessons:[
-    {diff:{ch1:'nk1_1'}},                      // N1 ポンできる？(だれの捨て牌でもOK)
-    {diff:{ch1:'nk1_2'}},                      // N2 チーできる？(ならび＋上家だけ)
-    {diff:{ch1:'nk1_3'}},                      // N3 カンできる？(3枚＋4枚目。カンのあとは1枚引いてから切る)
+    {id:'ls_n1_1',diff:{ch1:'nk1_1'}},                      // N1 ポンできる？(だれの捨て牌でもOK)
+    {id:'ls_n1_2',diff:{ch1:'nk1_2'}},                      // N2 チーできる？(ならび＋上家だけ)
+    {id:'ls_n1_3',diff:{ch1:'nk1_3'}},                      // N3 カンできる？(3枚＋4枚目。カンのあとは1枚引いてから切る)
    ]},
    {id:'st_n2', title:'鳴いたあと', lessons:[
-    {diff:{ch1:'nk1_4'}},                      // N4 鳴いたあとはどうする？(声→さらす→1枚切る)
-    {diff:{ch1:'nk1_5'}},                      // N5 鳴くとリーチできない
-    {diff:{ch1:'nk1_6'}},                      // N6 鳴ける ≠ 鳴いた方がいい
-    {diff:{ch1:'nk1_7'}},                      // ★N7 鳴きマスター
+    {id:'ls_n2_1',diff:{ch1:'nk1_4'}},                      // N4 鳴いたあとはどうする？(声→さらす→1枚切る)
+    {id:'ls_n2_2',diff:{ch1:'nk1_5'}},                      // N5 鳴くとリーチできない
+    {id:'ls_n2_3',diff:{ch1:'nk1_6'}},                      // N6 鳴ける ≠ 鳴いた方がいい
+    {id:'ls_n2_4',diff:{ch1:'nk1_7'}},                      // ★N7 鳴きマスター
    ]},
   ]},
  /* 点のしくみ(R44): 「点がどう動くか」を理解するテーマ。点数計算(符・翻・点数表)は一切やらない。
@@ -3873,14 +3909,14 @@ const THEMES=[
   requires:'th_ch1n',                          // 鳴きを使うまで全クリアで解放(R46。旧: th_ch1e)
   subThemes:[
    {id:'st_p1', title:'アガリと点', lessons:[
-    {diff:{ch1:'p1_1'}},                       // 点棒ってなに？
-    {diff:{ch1:'p1_2'}},                       // ロンしたら だれがはらう？
-    {diff:{ch1:'p1_3'}},                       // ツモしたら だれがはらう？
-    {diff:{ch1:'p1_4'}},                       // ★親と子では点の動きがちがう
+    {id:'ls_p1_1',diff:{ch1:'p1_1'}},                       // 点棒ってなに？
+    {id:'ls_p1_2',diff:{ch1:'p1_2'}},                       // ロンしたら だれがはらう？
+    {id:'ls_p1_3',diff:{ch1:'p1_3'}},                       // ツモしたら だれがはらう？
+    {id:'ls_p1_4',diff:{ch1:'p1_4'}},                       // ★親と子では点の動きがちがう
    ]},
    {id:'st_p2', title:'アガリ以外の点', lessons:[
-    {diff:{ch1:'p2_1'}},                       // リーチ棒と、流局のときの点
-    {diff:{ch1:'p2_2'}},                       // ★点のしくみマスター
+    {id:'ls_p2_1',diff:{ch1:'p2_1'}},                       // リーチ棒と、流局のときの点
+    {id:'ls_p2_2',diff:{ch1:'p2_2'}},                       // ★点のしくみマスター
    ]},
   ]},
  /* ===== 第2章「アガリが見える」v1.0 (19Lesson・待ち牌と待ちの形) ===== */
@@ -3888,45 +3924,45 @@ const THEMES=[
   requires:'th_ch1p',                          // 第1章(点のしくみ)まで全クリアで解放(R44。旧: th_ch1e)
   subThemes:[
    {id:'st_ch2a1', title:'待ち牌さがし', lessons:[
-    {diff:{ch1:'wa1_1'}},                      // A1-1 あと1枚はどれ？
-    {diff:{ch1:'wa1_2'}},                      // A1-2 待ちは1枚とは限らない
-    {diff:{ch1:'wa1_3'}},                      // A1-3 待ちを全部えらぼう
-    {diff:{ch1:'wa1_4'}},                      // ★まとめ: 待ちはかせ
+    {id:'ls_ch2a1_1',diff:{ch1:'wa1_1'}},                      // A1-1 あと1枚はどれ？
+    {id:'ls_ch2a1_2',diff:{ch1:'wa1_2'}},                      // A1-2 待ちは1枚とは限らない
+    {id:'ls_ch2a1_3',diff:{ch1:'wa1_3'}},                      // A1-3 待ちを全部えらぼう
+    {id:'ls_ch2a1_4',diff:{ch1:'wa1_4'}},                      // ★まとめ: 待ちはかせ
    ]},
   ]},
  {id:'th_ch2b', course:'ch2b', title:'待ちの形を知ろう', sub:'ならび2枚のひみつ',
   requires:'th_ch2a',
   subThemes:[
    {id:'st_ch2b1', title:'ならび2枚の待ち', lessons:[
-    {diff:{ch1:'wb1_1'}},                      // B1-1 両側でアガれる
-    {diff:{ch1:'wb1_2'}},                      // B1-2 リャンメン
-    {diff:{ch1:'wb1_3'}},                      // B1-3 真ん中を待つ
-    {diff:{ch1:'wb1_4'}},                      // B1-4 カンチャン
-    {diff:{ch1:'wb1_5'}},                      // B1-5 端っこを待つ
-    {diff:{ch1:'wb1_6'}},                      // ★B1-6 ペンチャン(ならび2枚3形まとめ)
+    {id:'ls_ch2b1_1',diff:{ch1:'wb1_1'}},                      // B1-1 両側でアガれる
+    {id:'ls_ch2b1_2',diff:{ch1:'wb1_2'}},                      // B1-2 リャンメン
+    {id:'ls_ch2b1_3',diff:{ch1:'wb1_3'}},                      // B1-3 真ん中を待つ
+    {id:'ls_ch2b1_4',diff:{ch1:'wb1_4'}},                      // B1-4 カンチャン
+    {id:'ls_ch2b1_5',diff:{ch1:'wb1_5'}},                      // B1-5 端っこを待つ
+    {id:'ls_ch2b1_6',diff:{ch1:'wb1_6'}},                      // ★B1-6 ペンチャン(ならび2枚3形まとめ)
    ]},
   ]},
  {id:'th_ch2c', course:'ch2c', title:'いろいろな待ち', sub:'トイツと1枚の待ち',
   requires:'th_ch2b',
   subThemes:[
    {id:'st_ch2c1', title:'トイツ2組の待ち', lessons:[
-    {diff:{ch1:'wc1_1'}},                      // C1-1 2組のトイツ
-    {diff:{ch1:'wc1_2'}},                      // C1-2 シャンポン
+    {id:'ls_ch2c1_1',diff:{ch1:'wc1_1'}},                      // C1-1 2組のトイツ
+    {id:'ls_ch2c1_2',diff:{ch1:'wc1_2'}},                      // C1-2 シャンポン
    ]},
    {id:'st_ch2c2', title:'アタマを待つ', lessons:[
-    {diff:{ch1:'wc2_1'}},                      // C2-1 アタマがない！
-    {diff:{ch1:'wc2_2'}},                      // C2-2 単騎
-    {diff:{ch1:'wc2_3'}},                      // ★C2-3 5つの待ち総まとめ
+    {id:'ls_ch2c2_1',diff:{ch1:'wc2_1'}},                      // C2-1 アタマがない！
+    {id:'ls_ch2c2_2',diff:{ch1:'wc2_2'}},                      // C2-2 単騎
+    {id:'ls_ch2c2_3',diff:{ch1:'wc2_3'}},                      // ★C2-3 5つの待ち総まとめ
    ]},
   ]},
  {id:'th_ch2d', course:'ch2d', title:'実戦の待ち', sub:'13枚から待ちをさがす',
   requires:'th_ch2c',
   subThemes:[
    {id:'st_ch2d1', title:'13枚の待ち', lessons:[
-    {diff:{ch1:'wd1_1'}},                      // D1-1 13枚から待ちを探す
-    {diff:{ch1:'wd1_2'}},                      // D1-2 待ちを全部当てよう
-    {diff:{ch1:'wd1_3'}},                      // D1-3 待ちの形はどれ？
-    {diff:{ch1:'wd1_4'}},                      // ★D1-4 第2章チャレンジ「アガリが見える！」
+    {id:'ls_ch2d1_1',diff:{ch1:'wd1_1'}},                      // D1-1 13枚から待ちを探す
+    {id:'ls_ch2d1_2',diff:{ch1:'wd1_2'}},                      // D1-2 待ちを全部当てよう
+    {id:'ls_ch2d1_3',diff:{ch1:'wd1_3'}},                      // D1-3 待ちの形はどれ？
+    {id:'ls_ch2d1_4',diff:{ch1:'wd1_4'}},                      // ★D1-4 第2章チャレンジ「アガリが見える！」
    ]},
   ]},
  /* ロンとフリテン(R45): 第2章で育てた「待ちが見える目」を、実戦の判断へつなぐテーマ。
@@ -3941,14 +3977,14 @@ const THEMES=[
   requires:'th_ch2d',
   subThemes:[
    {id:'st_ch2e1', title:'ほかの人の捨て牌', lessons:[
-    {diff:{ch1:'fr1_1'}},                      // F1 他家の捨て牌を見よう(河の命名・「ロン！」の発声)
-    {diff:{ch1:'fr1_2'}},                      // F2 ロンできる？ できない？(待ち牌かどうかだけ)
+    {id:'ls_ch2e1_1',diff:{ch1:'fr1_1'}},                      // F1 他家の捨て牌を見よう(河の命名・「ロン！」の発声)
+    {id:'ls_ch2e1_2',diff:{ch1:'fr1_2'}},                      // F2 ロンできる？ できない？(待ち牌かどうかだけ)
    ]},
    {id:'st_ch2e2', title:'フリテン', lessons:[
-    {diff:{ch1:'fr1_3'}},                      // F3 フリテン(自分の河に待ち牌が1枚でもあるとロン不可)
-    {diff:{ch1:'fr1_4'}},                      // F4 フリテンでもツモならアガれる
-    {diff:{ch1:'fr1_5'}},                      // F5 見逃したらどうなる？
-    {diff:{ch1:'fr1_6'}},                      // ★F6 ロンとフリテンマスター
+    {id:'ls_ch2e2_1',diff:{ch1:'fr1_3'}},                      // F3 フリテン(自分の河に待ち牌が1枚でもあるとロン不可)
+    {id:'ls_ch2e2_2',diff:{ch1:'fr1_4'}},                      // F4 フリテンでもツモならアガれる
+    {id:'ls_ch2e2_3',diff:{ch1:'fr1_5'}},                      // F5 見逃したらどうなる？
+    {id:'ls_ch2e2_4',diff:{ch1:'fr1_6'}},                      // ★F6 ロンとフリテンマスター
    ]},
   ]},
  /* 牌を選んで切る(R53): 自分の番の基本動作「1枚ツモって1枚切る」を体で覚えるテーマ。
@@ -3961,14 +3997,14 @@ const THEMES=[
   requires:'th_ch2e',
   subThemes:[
    {id:'st_ch2f1', title:'ツモって切る', lessons:[
-    {diff:{ch1:'tu1_1'}},                      // T1 1枚ツモったら？(14枚になる・いらない牌を1枚切る)
-    {diff:{ch1:'tu1_2'}},                      // T2 ツモった牌をそのまま切る(ツモ切り)
-    {diff:{ch1:'tu1_3'}},                      // T3 手牌から1枚切る(ツモ牌が手に入る)
+    {id:'ls_ch2f1_1',diff:{ch1:'tu1_1'}},                      // T1 1枚ツモったら？(14枚になる・いらない牌を1枚切る)
+    {id:'ls_ch2f1_2',diff:{ch1:'tu1_2'}},                      // T2 ツモった牌をそのまま切る(ツモ切り)
+    {id:'ls_ch2f1_3',diff:{ch1:'tu1_3'}},                      // T3 手牌から1枚切る(ツモ牌が手に入る)
    ]},
    {id:'st_ch2f2', title:'どの牌を切る？', lessons:[
-    {diff:{ch1:'tu1_4'}},                      // T4 いわれた牌を切ろう(牌の見分けの復習)
-    {diff:{ch1:'tu1_5'}},                      // T5 形をくずさず切ろう(できている組は残す)
-    {diff:{ch1:'tu1_6'}},                      // ★T6 捨て牌マスター
+    {id:'ls_ch2f2_1',diff:{ch1:'tu1_4'}},                      // T4 いわれた牌を切ろう(牌の見分けの復習)
+    {id:'ls_ch2f2_2',diff:{ch1:'tu1_5'}},                      // T5 形をくずさず切ろう(できている組は残す)
+    {id:'ls_ch2f2_3',diff:{ch1:'tu1_6'}},                      // ★T6 捨て牌マスター
    ]},
   ]},
  /* ★ はじめてのミニ実戦(R54): 特別ステージ。これまで別々に習った
@@ -3982,9 +4018,9 @@ const THEMES=[
    {id:'st_ch2z1', title:'ミニ実戦', lessons:[
     /* R59: Lesson ID・Lesson数・小テーマ構成は変えない(roadProgressに影響させない)。
        中身のシナリオだけ 本来の学習設計へ合わせた */
-    {diff:{ch1:'mb1_1'}},                      // ① 手を育ててロンしてみよう(2シャンテン→5巡→ロン)
-    {diff:{ch1:'mb1_2'}},                      // ② 鳴きを使ってみよう(東ポン→2マンチー→ロン)
-    {diff:{ch1:'mb1_3'}},                      // ★③ 門前で育てて リーチ→ツモアガリ
+    {id:'ls_ch2z1_1',diff:{ch1:'mb1_1'}},                      // ① 手を育ててロンしてみよう(2シャンテン→5巡→ロン)
+    {id:'ls_ch2z1_2',diff:{ch1:'mb1_2'}},                      // ② 鳴きを使ってみよう(東ポン→2マンチー→ロン)
+    {id:'ls_ch2z1_3',diff:{ch1:'mb1_3'}},                      // ★③ 門前で育てて リーチ→ツモアガリ
    ]},
   ]},
  /* ===== 第3章「役がわかる」v1.0 (本編50Lesson+任意Road7Lesson) =====
@@ -3996,112 +4032,112 @@ const THEMES=[
   requires:'th_ch2e',                          // 第2章(ロンとフリテン)まで全クリアで解放(R45。旧: th_ch2d)
   subThemes:[
    {id:'st_ch3a1', title:'リーチとツモ', lessons:[
-    {diff:{ch1:'ya1_1'}},                      // A1-1 役ってなんだっけ？
-    {diff:{ch1:'ya1_2'}},                      // A1-2 リーチ
-    {diff:{ch1:'ya1_3'}},                      // A1-3 ツモ
-    {diff:{ch1:'ya1_4'}},                      // A1-4 リーチ？ツモ？
-    {diff:{ch1:'ya1_5'}},                      // A1-5 最初の役マスター(リーチ・ツモ)
+    {id:'ls_ch3a1_1',diff:{ch1:'ya1_1'}},                      // A1-1 役ってなんだっけ？
+    {id:'ls_ch3a1_2',diff:{ch1:'ya1_2'}},                      // A1-2 リーチ
+    {id:'ls_ch3a1_3',diff:{ch1:'ya1_3'}},                      // A1-3 ツモ
+    {id:'ls_ch3a1_4',diff:{ch1:'ya1_4'}},                      // A1-4 リーチ？ツモ？
+    {id:'ls_ch3a1_5',diff:{ch1:'ya1_5'}},                      // A1-5 最初の役マスター(リーチ・ツモ)
     /* R63: 一発。リーチと一緒によく出るので通常の学習導線に入れる。
        末尾に足しているので、すでにこのテーマをクリアした人にも新しい1マスとして届く */
-    {diff:{ch1:'ya1_6'}},                      // ★A1-6 一発
+    {id:'ls_ch3a1_6',diff:{ch1:'ya1_6'}},                      // ★A1-6 一発
    ]},
   ]},
  {id:'th_ch3b', course:'ch3b', title:'役牌', sub:'3枚そろえるだけで役になる牌',
   requires:'th_ch3a',
   subThemes:[
    {id:'st_ch3b1', title:'役牌', lessons:[
-    {diff:{ch1:'yb1_1'}},                      // B1-1 白・發・中(三元牌)
-    {diff:{ch1:'yb1_2'}},                      // B1-2 4人の席と風牌(R28: 自風の前提)
-    {diff:{ch1:'yb1_3'}},                      // B1-3 自分の風(自風)
-    {diff:{ch1:'yb1_4'}},                      // B1-4 場の風(場風)
-    {diff:{ch1:'yb1_5'}},                      // B1-5 役牌(命名・整理)
-    {diff:{ch1:'yb1_6'}},                      // ★B1-6 役牌マスター(実戦練習統合)
+    {id:'ls_ch3b1_1',diff:{ch1:'yb1_1'}},                      // B1-1 白・發・中(三元牌)
+    {id:'ls_ch3b1_2',diff:{ch1:'yb1_2'}},                      // B1-2 4人の席と風牌(R28: 自風の前提)
+    {id:'ls_ch3b1_3',diff:{ch1:'yb1_3'}},                      // B1-3 自分の風(自風)
+    {id:'ls_ch3b1_4',diff:{ch1:'yb1_4'}},                      // B1-4 場の風(場風)
+    {id:'ls_ch3b1_5',diff:{ch1:'yb1_5'}},                      // B1-5 役牌(命名・整理)
+    {id:'ls_ch3b1_6',diff:{ch1:'yb1_6'}},                      // ★B1-6 役牌マスター(実戦練習統合)
    ]},
   ]},
  {id:'th_ch3c', course:'ch3c', title:'ピンフ', sub:'条件を1つずつ積み上げる',
   requires:'th_ch3b',
   subThemes:[
    {id:'st_ch3c1', title:'ピンフ', lessons:[
-    {diff:{ch1:'yc1_1'}},                      // C1-1 シュンツでそろえよう
-    {diff:{ch1:'yc1_2'}},                      // C1-2 アタマにも条件がある
-    {diff:{ch1:'yc1_3'}},                      // C1-3 待ちにも条件がある
-    {diff:{ch1:'yc1_4'}},                      // C1-4 ピンフ
-    {diff:{ch1:'yc1_5'}},                      // C1-5 ピンフを見つけよう
-    {diff:{ch1:'yc1_6'}},                      // ★C1-6 ピンフマスター
+    {id:'ls_ch3c1_1',diff:{ch1:'yc1_1'}},                      // C1-1 シュンツでそろえよう
+    {id:'ls_ch3c1_2',diff:{ch1:'yc1_2'}},                      // C1-2 アタマにも条件がある
+    {id:'ls_ch3c1_3',diff:{ch1:'yc1_3'}},                      // C1-3 待ちにも条件がある
+    {id:'ls_ch3c1_4',diff:{ch1:'yc1_4'}},                      // C1-4 ピンフ
+    {id:'ls_ch3c1_5',diff:{ch1:'yc1_5'}},                      // C1-5 ピンフを見つけよう
+    {id:'ls_ch3c1_6',diff:{ch1:'yc1_6'}},                      // ★C1-6 ピンフマスター
    ]},
   ]},
  {id:'th_ch3d', course:'ch3d', title:'タンヤオと一色', sub:'見た目でわかる役',
   requires:'th_ch3c',
   subThemes:[
    {id:'st_ch3d1', title:'タンヤオ', lessons:[
-    {diff:{ch1:'yd1_1'}},                      // D1-1 1・9・字牌をさがそう
-    {diff:{ch1:'yd1_2'}},                      // D1-2 タンヤオ
-    {diff:{ch1:'yd1_3'}},                      // ★D1-3 タンヤオマスター
+    {id:'ls_ch3d1_1',diff:{ch1:'yd1_1'}},                      // D1-1 1・9・字牌をさがそう
+    {id:'ls_ch3d1_2',diff:{ch1:'yd1_2'}},                      // D1-2 タンヤオ
+    {id:'ls_ch3d1_3',diff:{ch1:'yd1_3'}},                      // ★D1-3 タンヤオマスター
    ]},
    {id:'st_ch3e1', title:'ホンイツ・チンイツ', lessons:[
-    {diff:{ch1:'ye1_1'}},                      // E1-1 1種類に集めよう
-    {diff:{ch1:'ye1_2'}},                      // E1-2 ホンイツ
-    {diff:{ch1:'ye1_3'}},                      // E1-3 字牌もなくしたら？(チンイツ)
-    {diff:{ch1:'ye1_4'}},                      // E1-4 ホンイツ？チンイツ？
-    {diff:{ch1:'ye1_5'}},                      // ★E1-5 一色マスター
+    {id:'ls_ch3e1_1',diff:{ch1:'ye1_1'}},                      // E1-1 1種類に集めよう
+    {id:'ls_ch3e1_2',diff:{ch1:'ye1_2'}},                      // E1-2 ホンイツ
+    {id:'ls_ch3e1_3',diff:{ch1:'ye1_3'}},                      // E1-3 字牌もなくしたら？(チンイツ)
+    {id:'ls_ch3e1_4',diff:{ch1:'ye1_4'}},                      // E1-4 ホンイツ？チンイツ？
+    {id:'ls_ch3e1_5',diff:{ch1:'ye1_5'}},                      // ★E1-5 一色マスター
    ]},
   ]},
  {id:'th_ch3e', course:'ch3e', title:'形の役', sub:'コーツ・トイツ・おなじシュンツ',
   requires:'th_ch3d',
   subThemes:[
    {id:'st_ch3f1', title:'トイトイ', lessons:[
-    {diff:{ch1:'yf1_1'}},                      // F1-1 コーツをあつめよう
-    {diff:{ch1:'yf1_2'}},                      // ★F1-2 トイトイ
+    {id:'ls_ch3f1_1',diff:{ch1:'yf1_1'}},                      // F1-1 コーツをあつめよう
+    {id:'ls_ch3f1_2',diff:{ch1:'yf1_2'}},                      // ★F1-2 トイトイ
    ]},
    {id:'st_ch3f2', title:'七対子', lessons:[
-    {diff:{ch1:'yf2_1'}},                      // F2-1 トイツが7組！？
-    {diff:{ch1:'yf2_2'}},                      // ★F2-2 七対子
+    {id:'ls_ch3f2_1',diff:{ch1:'yf2_1'}},                      // F2-1 トイツが7組！？
+    {id:'ls_ch3f2_2',diff:{ch1:'yf2_2'}},                      // ★F2-2 七対子
    ]},
    {id:'st_ch3f3', title:'イーペーコー', lessons:[
-    {diff:{ch1:'yf3_1'}},                      // F3-1 おなじシュンツが2組
-    {diff:{ch1:'yf3_2'}},                      // ★F3-2 イーペーコー・形の役まとめ
+    {id:'ls_ch3f3_1',diff:{ch1:'yf3_1'}},                      // F3-1 おなじシュンツが2組
+    {id:'ls_ch3f3_2',diff:{ch1:'yf3_2'}},                      // ★F3-2 イーペーコー・形の役まとめ
    ]},
   ]},
  {id:'th_ch3f', course:'ch3f', title:'ならびの役', sub:'ならびかたに注目',
   requires:'th_ch3e',
   subThemes:[
    {id:'st_ch3g1', title:'チャンタ・純チャン', lessons:[
-    {diff:{ch1:'yg1_1'}},                      // G1-1 はしっこがぜんぶに入った形
-    {diff:{ch1:'yg1_2'}},                      // G1-2 チャンタ
-    {diff:{ch1:'yg1_3'}},                      // ★G1-3 純チャン(比較まとめ)
+    {id:'ls_ch3g1_1',diff:{ch1:'yg1_1'}},                      // G1-1 はしっこがぜんぶに入った形
+    {id:'ls_ch3g1_2',diff:{ch1:'yg1_2'}},                      // G1-2 チャンタ
+    {id:'ls_ch3g1_3',diff:{ch1:'yg1_3'}},                      // ★G1-3 純チャン(比較まとめ)
    ]},
    {id:'st_ch3h1', title:'三色・イッツー・三暗刻', lessons:[
-    {diff:{ch1:'yh1_1'}},                      // H1-1 三色
-    {diff:{ch1:'yh1_2'}},                      // H1-2 イッツー
-    {diff:{ch1:'yh1_3'}},                      // H1-3 暗刻と三暗刻
-    {diff:{ch1:'yh1_4'}},                      // ★H1-4 ならびの役まとめ
+    {id:'ls_ch3h1_1',diff:{ch1:'yh1_1'}},                      // H1-1 三色
+    {id:'ls_ch3h1_2',diff:{ch1:'yh1_2'}},                      // H1-2 イッツー
+    {id:'ls_ch3h1_3',diff:{ch1:'yh1_3'}},                      // H1-3 暗刻と三暗刻
+    {id:'ls_ch3h1_4',diff:{ch1:'yh1_4'}},                      // ★H1-4 ならびの役まとめ
    ]},
   ]},
  {id:'th_ch3g', course:'ch3g', title:'役満', sub:'とても特別な役',
   requires:'th_ch3f',
   subThemes:[
    {id:'st_ch3i1', title:'役満', lessons:[
-    {diff:{ch1:'yi1_1'}},                      // I1-1 役満ってなに？
-    {diff:{ch1:'yi1_2'}},                      // I1-2 大三元
-    {diff:{ch1:'yi1_3'}},                      // I1-3 四暗刻
-    {diff:{ch1:'yi1_4'}},                      // I1-4 国士無双
-    {diff:{ch1:'yi1_5'}},                      // I1-5 小四喜
-    {diff:{ch1:'yi1_6'}},                      // ★I1-6 役満チャレンジ
+    {id:'ls_ch3i1_1',diff:{ch1:'yi1_1'}},                      // I1-1 役満ってなに？
+    {id:'ls_ch3i1_2',diff:{ch1:'yi1_2'}},                      // I1-2 大三元
+    {id:'ls_ch3i1_3',diff:{ch1:'yi1_3'}},                      // I1-3 四暗刻
+    {id:'ls_ch3i1_4',diff:{ch1:'yi1_4'}},                      // I1-4 国士無双
+    {id:'ls_ch3i1_5',diff:{ch1:'yi1_5'}},                      // I1-5 小四喜
+    {id:'ls_ch3i1_6',diff:{ch1:'yi1_6'}},                      // ★I1-6 役満チャレンジ
    ]},
   ]},
  {id:'th_ch3h', course:'ch3h', title:'役を見つけよう', sub:'第3章の総仕上げ',
   requires:'th_ch3g',
   subThemes:[
    {id:'st_ch3j1', title:'役を見つけよう', lessons:[
-    {diff:{ch1:'yj1_1'}},                      // J1-1 この手の役は？
-    {diff:{ch1:'yj1_2'}},                      // J1-2 役は1つとは限らない
-    {diff:{ch1:'yj1_3'}},                      // J1-3 役を全部見つけよう
-    {diff:{ch1:'yj1_4'}},                      // J1-4 アガれる？アガれない？
-    {diff:{ch1:'yj1_5'}},                      // J1-5 実戦で役を見つけよう
-    {diff:{ch1:'yj1_6'}},                      // J1-6 第3章チャレンジ「役がわかる！」
+    {id:'ls_ch3j1_1',diff:{ch1:'yj1_1'}},                      // J1-1 この手の役は？
+    {id:'ls_ch3j1_2',diff:{ch1:'yj1_2'}},                      // J1-2 役は1つとは限らない
+    {id:'ls_ch3j1_3',diff:{ch1:'yj1_3'}},                      // J1-3 役を全部見つけよう
+    {id:'ls_ch3j1_4',diff:{ch1:'yj1_4'}},                      // J1-4 アガれる？アガれない？
+    {id:'ls_ch3j1_5',diff:{ch1:'yj1_5'}},                      // J1-5 実戦で役を見つけよう
+    {id:'ls_ch3j1_6',diff:{ch1:'yj1_6'}},                      // J1-6 第3章チャレンジ「役がわかる！」
     /* R68 §16〜§21: 完成した牌姿から【複合する役をぜんぶ見抜く】しあげ。
        §40のとおり小テーマの【末尾に足す】ので、すでにクリアした人にもちゃんと届く。 */
-    {diff:{ch1:'yj1_7'}},                      // ★J1-7 複合する役を見抜く(しあげ)
+    {id:'ls_ch3j1_7',diff:{ch1:'yj1_7'}},                      // ★J1-7 複合する役を見抜く(しあげ)
    ]},
   ]},
  /* ドラ→カンの順(2026-09-23追加)。「役がないとアガれない」(J1-4)を理解したあとにドラを置き、
@@ -4110,33 +4146,33 @@ const THEMES=[
   requires:'th_ch3h',
   subThemes:[
    {id:'st_ch3k1', title:'ドラ', lessons:[
-    {diff:{ch1:'yk1_1'}},                      // K1-1 ドラってなに？(ドラは役ではない)
-    {diff:{ch1:'yk1_2'}},                      // K1-2 ドラ表示牌(つぎの牌がドラ)
-    {diff:{ch1:'yk1_3'}},                      // K1-3 9のつぎは1・ドラは何枚ぶん
-    {diff:{ch1:'yk1_4'}},                      // K1-4 字牌のドラ(風牌・三元牌のじゅんばん)
-    {diff:{ch1:'yk1_5'}},                      // K1-5 ドラマスター(数牌・字牌・ドラ1枚=+1翻)
+    {id:'ls_ch3k1_1',diff:{ch1:'yk1_1'}},                      // K1-1 ドラってなに？(ドラは役ではない)
+    {id:'ls_ch3k1_2',diff:{ch1:'yk1_2'}},                      // K1-2 ドラ表示牌(つぎの牌がドラ)
+    {id:'ls_ch3k1_3',diff:{ch1:'yk1_3'}},                      // K1-3 9のつぎは1・ドラは何枚ぶん
+    {id:'ls_ch3k1_4',diff:{ch1:'yk1_4'}},                      // K1-4 字牌のドラ(風牌・三元牌のじゅんばん)
+    {id:'ls_ch3k1_5',diff:{ch1:'yk1_5'}},                      // K1-5 ドラマスター(数牌・字牌・ドラ1枚=+1翻)
     /* R61: 赤ドラを【うしろに足す】。既存ユーザー(roadProgress=5)には新しい1マスとして出るので、
        すでにクリアしたLessonの中身を書きかえる方法とちがって、ちゃんと届く(TSUMOPPY_TERMS §40)。
        まえに挿し込むと既存ユーザーの5マス目の意味が変わってしまうので、必ず末尾に足す */
-    {diff:{ch1:'yk1_6'}},                      // K1-6 赤ドラ
+    {id:'ls_ch3k1_6',diff:{ch1:'yk1_6'}},                      // K1-6 赤ドラ
     /* R63: 裏ドラ。リーチしてアガったときだけのドラなので、リーチ・一発のあとに置く。
        ここでドラ4種類を整理し、リーチ＋一発＋ツモ＋裏ドラの重なりも体験させる */
-    {diff:{ch1:'yk1_7'}},                      // ★K1-7 裏ドラ＋ドラ4なかま＋リーチの強さ
+    {id:'ls_ch3k1_7',diff:{ch1:'yk1_7'}},                      // ★K1-7 裏ドラ＋ドラ4なかま＋リーチの強さ
    ]},
   ]},
  {id:'th_ch3j', course:'ch3j', title:'カンを知ろう', sub:'おなじ牌4枚の特別な組',
   requires:'th_ch3i',                          // ドラ(K)を全クリアで解放(カンドラの前提)
   subThemes:[
    {id:'st_ch3m1', title:'カン', lessons:[
-    {diff:{ch1:'km1_1'}},                      // M1-1 おなじ牌が4枚(3枚との比較)
-    {diff:{ch1:'km1_2'}},                      // M1-2 暗槓
-    {diff:{ch1:'km1_3'}},                      // M1-3 大明槓
-    {diff:{ch1:'km1_4'}},                      // M1-4 加槓
-    {diff:{ch1:'km1_5'}},                      // M1-5 どのカン？
-    {diff:{ch1:'km1_6'}},                      // M1-6 カンすると何が起きる？(嶺上牌・カンドラ)
+    {id:'ls_ch3m1_1',diff:{ch1:'km1_1'}},                      // M1-1 おなじ牌が4枚(3枚との比較)
+    {id:'ls_ch3m1_2',diff:{ch1:'km1_2'}},                      // M1-2 暗槓
+    {id:'ls_ch3m1_3',diff:{ch1:'km1_3'}},                      // M1-3 大明槓
+    {id:'ls_ch3m1_4',diff:{ch1:'km1_4'}},                      // M1-4 加槓
+    {id:'ls_ch3m1_5',diff:{ch1:'km1_5'}},                      // M1-5 どのカン？
+    {id:'ls_ch3m1_6',diff:{ch1:'km1_6'}},                      // M1-6 カンすると何が起きる？(嶺上牌・カンドラ)
     /* R64: カンでできる役(三槓子2翻・四槓子役満)。カンを学んだ直後に置く。
        既存ユーザーにも新しい1マスとして届くよう【末尾】に足す(TSUMOPPY_TERMS §40) */
-    {diff:{ch1:'km1_7'}},                      // ★M1-7 三槓子・四槓子(実際の槓子を見せる)
+    {id:'ls_ch3m1_7',diff:{ch1:'km1_7'}},                      // ★M1-7 三槓子・四槓子(実際の槓子を見せる)
    ]},
   ]},
  /* 点の大きさ(R61): 役の翻→満貫〜役満の点。第3章の本編テーマの最後に置く。
@@ -4150,25 +4186,25 @@ const THEMES=[
   requires:'th_ch3i',
   subThemes:[
    {id:'st_ch3y1', title:'点の大きさ', lessons:[
-    {diff:{ch1:'sc1_1'}},                      // S1-1 翻を足す(役の数と翻の合計はちがう)
-    {diff:{ch1:'sc1_2'}},                      // S1-2 ドラを足す(ドラは役ではない/食い下がり)
-    {diff:{ch1:'sc1_3'}},                      // S1-3 満貫(符にはふれるだけ・切り上げ満貫はTeachのみ)
-    {diff:{ch1:'sc1_4'}},                      // S1-4 跳満・倍満・三倍満(数え役満なし)
-    {diff:{ch1:'sc1_5'}},                      // S1-5 役満の点
-    {diff:{ch1:'sc1_6'}},                      // S1-6 親と子(親は高い/親ツモはオール/子ツモは親が多く払う)
-    {diff:{ch1:'sc1_7'}},                      // S1-7 点の大きさマスター
+    {id:'ls_ch3y1_1',diff:{ch1:'sc1_1'}},                      // S1-1 翻を足す(役の数と翻の合計はちがう)
+    {id:'ls_ch3y1_2',diff:{ch1:'sc1_2'}},                      // S1-2 ドラを足す(ドラは役ではない/食い下がり)
+    {id:'ls_ch3y1_3',diff:{ch1:'sc1_3'}},                      // S1-3 満貫(符にはふれるだけ・切り上げ満貫はTeachのみ)
+    {id:'ls_ch3y1_4',diff:{ch1:'sc1_4'}},                      // S1-4 跳満・倍満・三倍満(数え役満なし)
+    {id:'ls_ch3y1_5',diff:{ch1:'sc1_5'}},                      // S1-5 役満の点
+    {id:'ls_ch3y1_6',diff:{ch1:'sc1_6'}},                      // S1-6 親と子(親は高い/親ツモはオール/子ツモは親が多く払う)
+    {id:'ls_ch3y1_7',diff:{ch1:'sc1_7'}},                      // S1-7 点の大きさマスター
     /* R62: 実戦の点数感覚(代表3ライン・ツモ払い)を末尾に追加。
        符の計算はここでもやらない。既存ユーザーには新しい5マスとして出る */
-    {diff:{ch1:'sc2_1'}},                      // S2-1 1000系ライン
-    {diff:{ch1:'sc2_2'}},                      // S2-2 1300系ライン(同じ翻でも点がちがう)
-    {diff:{ch1:'sc2_3'}},                      // S2-3 七対子ライン
-    {diff:{ch1:'sc2_4'}},                      // S2-4 ツモの払い方(だれがいくら)
-    {diff:{ch1:'sc2_5'}},                      // S2-5 点数感覚マスター
+    {id:'ls_ch3y1_8',diff:{ch1:'sc2_1'}},                      // S2-1 1000系ライン
+    {id:'ls_ch3y1_9',diff:{ch1:'sc2_2'}},                      // S2-2 1300系ライン(同じ翻でも点がちがう)
+    {id:'ls_ch3y1_10',diff:{ch1:'sc2_3'}},                      // S2-3 七対子ライン
+    {id:'ls_ch3y1_11',diff:{ch1:'sc2_4'}},                      // S2-4 ツモの払い方(だれがいくら)
+    {id:'ls_ch3y1_12',diff:{ch1:'sc2_5'}},                      // S2-5 点数感覚マスター
     /* R64: 点数を数字だけの別ゲームにしないため、【牌姿→役→翻→系統→点】でつなぐ
        3段階のLessonを末尾に追加。既存ユーザーには新しい3マスとして出る */
-    {diff:{ch1:'sc3_1'}},                      // S3-1 序盤(役・翻・系統を見せて点だけ)
-    {diff:{ch1:'sc3_2'}},                      // S3-2 中盤(翻の合計と系統を自分で)
-    {diff:{ch1:'sc3_3'}},                      // ★S3-3 後半(牌姿だけ・役さがしから点まで)
+    {id:'ls_ch3y1_13',diff:{ch1:'sc3_1'}},                      // S3-1 序盤(役・翻・系統を見せて点だけ)
+    {id:'ls_ch3y1_14',diff:{ch1:'sc3_2'}},                      // S3-2 中盤(翻の合計と系統を自分で)
+    {id:'ls_ch3y1_15',diff:{ch1:'sc3_3'}},                      // ★S3-3 後半(牌姿だけ・役さがしから点まで)
    ]},
   ]},
  /* 任意Road(第3章クリアで解放。ここを受講しなくても次章へ進める=どの将来テーマもth_ch3xをrequiresにしない) */
@@ -4176,18 +4212,18 @@ const THEMES=[
   requires:'th_ch3h',                          // 既存ユーザーの解放状態を変えないため、条件は従来どおり(役の総仕上げ)
   subThemes:[
    {id:'st_ch3x1', title:'めずらしい役', lessons:[
-    {diff:{ch1:'yx1_1'}},                      // X1-1 ダブルリーチ
-    {diff:{ch1:'yx1_2'}},                      // X1-2 海底摸月・河底撈魚
-    {diff:{ch1:'yx1_3'}},                      // X1-3 小三元・混老頭
-    {diff:{ch1:'yx1_4'}},                      // ★X1-4 二盃口
+    {id:'ls_ch3x1_1',diff:{ch1:'yx1_1'}},                      // X1-1 ダブルリーチ
+    {id:'ls_ch3x1_2',diff:{ch1:'yx1_2'}},                      // X1-2 海底摸月・河底撈魚
+    {id:'ls_ch3x1_3',diff:{ch1:'yx1_3'}},                      // X1-3 小三元・混老頭
+    {id:'ls_ch3x1_4',diff:{ch1:'yx1_4'}},                      // ★X1-4 二盃口
    ]},
    {id:'st_ch3x2', title:'もっと役満', lessons:[
-    {diff:{ch1:'yx2_1'}},                      // X2-1 字一色・緑一色
-    {diff:{ch1:'yx2_2'}},                      // X2-2 清老頭
-    {diff:{ch1:'yx2_3'}},                      // X2-3 九蓮宝燈・天和
+    {id:'ls_ch3x2_1',diff:{ch1:'yx2_1'}},                      // X2-1 字一色・緑一色
+    {id:'ls_ch3x2_2',diff:{ch1:'yx2_2'}},                      // X2-2 清老頭
+    {id:'ls_ch3x2_3',diff:{ch1:'yx2_3'}},                      // X2-3 九蓮宝燈・天和
     /* R62: 役満が9種類しかなく 地和・大四喜・四槓子 が抜けていたので末尾に追加。
        ダブル役満(=役満の複合だけ)の説明もここに置く。末尾追加なので既存ユーザーにも新しい1マスとして出る */
-    {diff:{ch1:'yx2_4'}},                      // ★X2-4 大四喜・地和・四槓子・ダブル役満
+    {id:'ls_ch3x2_4',diff:{ch1:'yx2_4'}},                      // ★X2-4 大四喜・地和・四槓子・ダブル役満
    ]},
   ]},
  /* 旧SECTION「入門」(th_rules/th_yaku/th_score)は2026-09-21のSECTION整理でRoadから削除
@@ -4196,41 +4232,41 @@ const THEMES=[
  {id:'th_waits', course:'waits', title:'待ちの基本', sub:'待ちの形を見抜こう',
   subThemes:[                                  // 小テーマ間=枚数(4→7→10→13)で大きく段階化
    {id:'st_waits_4', title:'4枚形', chest:{after:2}, lessons:[  // 小テーマ内=まとめで前形を混ぜて反復
-    {diff:{waitsLevels:[4]}},{diff:{waitsLevels:[4]}},{diff:{waitsLevels:[4]}},{diff:{waitsLevels:[4]}}]},
+    {id:'ls_waits_4_1',diff:{waitsLevels:[4]}},{id:'ls_waits_4_2',diff:{waitsLevels:[4]}},{id:'ls_waits_4_3',diff:{waitsLevels:[4]}},{id:'ls_waits_4_4',diff:{waitsLevels:[4]}}]},
    {id:'st_waits_7', title:'7枚形', chest:{after:3}, lessons:[
-    {diff:{waitsLevels:[7]}},{diff:{waitsLevels:[7]}},{diff:{waitsLevels:[7]}},{diff:{waitsLevels:[7]}},{diff:{waitsLevels:[4,7]}}]},
+    {id:'ls_waits_7_1',diff:{waitsLevels:[7]}},{id:'ls_waits_7_2',diff:{waitsLevels:[7]}},{id:'ls_waits_7_3',diff:{waitsLevels:[7]}},{id:'ls_waits_7_4',diff:{waitsLevels:[7]}},{id:'ls_waits_7_5',diff:{waitsLevels:[4,7]}}]},
    {id:'st_waits_10', title:'10枚形', chest:{after:2}, lessons:[
-    {diff:{waitsLevels:[10]}},{diff:{waitsLevels:[10]}},{diff:{waitsLevels:[10]}},{diff:{waitsLevels:[7,10]}}]},
+    {id:'ls_waits_10_1',diff:{waitsLevels:[10]}},{id:'ls_waits_10_2',diff:{waitsLevels:[10]}},{id:'ls_waits_10_3',diff:{waitsLevels:[10]}},{id:'ls_waits_10_4',diff:{waitsLevels:[7,10]}}]},
    {id:'st_waits_13', title:'13枚形', chest:{after:2}, lessons:[
-    {diff:{waitsLevels:[13]}},{diff:{waitsLevels:[13]}},{diff:{waitsLevels:[13]}},{diff:{waitsLevels:[10,13]}}]},
+    {id:'ls_waits_13_1',diff:{waitsLevels:[13]}},{id:'ls_waits_13_2',diff:{waitsLevels:[13]}},{id:'ls_waits_13_3',diff:{waitsLevels:[13]}},{id:'ls_waits_13_4',diff:{waitsLevels:[10,13]}}]},
   ]},
  {id:'th_ukeire', course:'ukeire1', title:'受け入れ', sub:'テンパイする牌を探そう',
   subThemes:[                                  // 1シャンテンの最小は7枚のため4枚形の小テーマは無し
    {id:'st_uk_7', title:'7枚形', chest:{after:2}, lessons:[
-    {diff:{ukeireLevels:[7]}},{diff:{ukeireLevels:[7]}},{diff:{ukeireLevels:[7]}},{diff:{ukeireLevels:[7]}}]},
+    {id:'ls_uk_7_1',diff:{ukeireLevels:[7]}},{id:'ls_uk_7_2',diff:{ukeireLevels:[7]}},{id:'ls_uk_7_3',diff:{ukeireLevels:[7]}},{id:'ls_uk_7_4',diff:{ukeireLevels:[7]}}]},
    {id:'st_uk_10', title:'10枚形', chest:{after:2}, lessons:[
-    {diff:{ukeireLevels:[10]}},{diff:{ukeireLevels:[10]}},{diff:{ukeireLevels:[10]}},{diff:{ukeireLevels:[7,10]}}]},
+    {id:'ls_uk_10_1',diff:{ukeireLevels:[10]}},{id:'ls_uk_10_2',diff:{ukeireLevels:[10]}},{id:'ls_uk_10_3',diff:{ukeireLevels:[10]}},{id:'ls_uk_10_4',diff:{ukeireLevels:[7,10]}}]},
    {id:'st_uk_13', title:'13枚形', chest:{after:2}, lessons:[
-    {diff:{ukeireLevels:[13]}},{diff:{ukeireLevels:[13]}},{diff:{ukeireLevels:[13]}},{diff:{ukeireLevels:[10,13]}}]},
+    {id:'ls_uk_13_1',diff:{ukeireLevels:[13]}},{id:'ls_uk_13_2',diff:{ukeireLevels:[13]}},{id:'ls_uk_13_3',diff:{ukeireLevels:[13]}},{id:'ls_uk_13_4',diff:{ukeireLevels:[10,13]}}]},
    {id:'st_uk_full', title:'実戦形', chest:{after:3}, lessons:[
-    {diff:{ukeireLevels:[34]}},{diff:{ukeireLevels:[34]}},{diff:{ukeireLevels:[34]}},{diff:{ukeireLevels:[34]}},{diff:{ukeireLevels:[13,34]}}]},
+    {id:'ls_uk_full_1',diff:{ukeireLevels:[34]}},{id:'ls_uk_full_2',diff:{ukeireLevels:[34]}},{id:'ls_uk_full_3',diff:{ukeireLevels:[34]}},{id:'ls_uk_full_4',diff:{ukeireLevels:[34]}},{id:'ls_uk_full_5',diff:{ukeireLevels:[13,34]}}]},
   ]},
  {id:'th_nanikiru', course:'nanikiru', title:'何切る', sub:'受け入れ最大の1枚を選ぶ',
   subThemes:[                                  // 既存lv(作問時難易度)帯で小テーマ間を段階化・小テーマ内も帯を少しずつ上げる
    {id:'st_nk_1', title:'きほん', chest:{after:2}, lessons:[
-    {diff:{lvRange:[2,3]}},{diff:{lvRange:[2,3]}},{diff:{lvRange:[2,4]}},{diff:{lvRange:[2,4]}}]},
+    {id:'ls_nk_1_1',diff:{lvRange:[2,3]}},{id:'ls_nk_1_2',diff:{lvRange:[2,3]}},{id:'ls_nk_1_3',diff:{lvRange:[2,4]}},{id:'ls_nk_1_4',diff:{lvRange:[2,4]}}]},
    {id:'st_nk_2', title:'中級', chest:{after:2}, lessons:[
-    {diff:{lvRange:[4,5]}},{diff:{lvRange:[4,6]}},{diff:{lvRange:[5,6]}},{diff:{lvRange:[3,6]}}]},
+    {id:'ls_nk_2_1',diff:{lvRange:[4,5]}},{id:'ls_nk_2_2',diff:{lvRange:[4,6]}},{id:'ls_nk_2_3',diff:{lvRange:[5,6]}},{id:'ls_nk_2_4',diff:{lvRange:[3,6]}}]},
    {id:'st_nk_3', title:'上級', chest:{after:2}, lessons:[
-    {diff:{lvRange:[6,7]}},{diff:{lvRange:[7,8]}},{diff:{lvRange:[7,9]}},{diff:{lvRange:[5,9]}}]},
+    {id:'ls_nk_3_1',diff:{lvRange:[6,7]}},{id:'ls_nk_3_2',diff:{lvRange:[7,8]}},{id:'ls_nk_3_3',diff:{lvRange:[7,9]}},{id:'ls_nk_3_4',diff:{lvRange:[5,9]}}]},
   ]},
  {id:'th_riichi', course:'riichi', title:'リーチ判断', sub:'曲げるかダマか（実測検証済み）',
   qn:5,  // 承認済み13問のみ・lv帯プールが5〜8問のため5問維持(10にすると帯難易度が崩れる)
   subThemes:[                                  // 承認済み13問プール(lv2..5)をlv帯で抽選(問題・正解は無変更)
    {id:'st_ri_1', title:'きほん', lessons:[
-    {diff:{lvRange:[2,3]}},{diff:{lvRange:[2,3]}},{diff:{lvRange:[2,3]}}]},
+    {id:'ls_ri_1_1',diff:{lvRange:[2,3]}},{id:'ls_ri_1_2',diff:{lvRange:[2,3]}},{id:'ls_ri_1_3',diff:{lvRange:[2,3]}}]},
    {id:'st_ri_2', title:'応用', lessons:[
-    {diff:{lvRange:[3,4]}},{diff:{lvRange:[4,5]}},{diff:{lvRange:[2,5]}}]},
+    {id:'ls_ri_2_1',diff:{lvRange:[3,4]}},{id:'ls_ri_2_2',diff:{lvRange:[4,5]}},{id:'ls_ri_2_3',diff:{lvRange:[2,5]}}]},
   ]},
 ];
 /* R63: 点数を独立したSECTIONにした。
@@ -4238,11 +4274,11 @@ const THEMES=[
    ここへ1つ差しこんでも既存ユーザーの進捗・解放状態は1つも変わらない。
    「初級」は中身をそのままに SECTION5 へ繰り下がる。 */
 const SECTIONS=[
- {name:'麻雀を打てる',desc:'第1章：麻雀のきほん構造を体で覚える'},
- {name:'アガリが見える',desc:'第2章：待ち牌を見つける目を育てる'},
- {name:'役がわかる',desc:'第3章：アガリ形から役を見つけられるようになる'},
- {name:'点数がわかる',desc:'第4章：そのアガリが何点くらいなのかが分かる'},
- {name:'初級',desc:'手作りの技術を磨く'},
+ {id:'sec_1',name:'麻雀を打てる',desc:'第1章：麻雀のきほん構造を体で覚える'},
+ {id:'sec_2',name:'アガリが見える',desc:'第2章：待ち牌を見つける目を育てる'},
+ {id:'sec_3',name:'役がわかる',desc:'第3章：アガリ形から役を見つけられるようになる'},
+ {id:'sec_4',name:'点数がわかる',desc:'第4章：そのアガリが何点くらいなのかが分かる'},
+ {id:'sec_5',name:'初級',desc:'手作りの技術を磨く'},
 ];
 /* SECTION(2026-09-21整理): 長い一本道Roadを学習段階ごとに分ける「大きな入口」=ナビゲーション単位。
    SECTION一覧 → 選んだSECTIONだけのRoad → 大テーマ → 小テーマ → Lesson。
@@ -5065,8 +5101,8 @@ const BRAND={name:'ツモッピィ',nameEn:'TSUMOPPY',brandLine:'TSUMOPPY by ZOE
    ・版を上げるとき: 中身を変えたら必ずBUILD_IDを新しくする(同じ日に複数回なら -02, -03 …)
    ・localStorage(jantore-v1)には保存しない=学習データには一切関係しない
    ・名前について: 既存の APP_VERSION は「v3問題データのスキーマ版」で別物なので、表示用は APP_VER を使う */
-const APP_VER='0.94.0';
-const BUILD_ID='20261031-01';
+const APP_VER='0.95.0';
+const BUILD_ID='20261101-04';
 function appVersionText(){ return 'バージョン '+APP_VER+' / build '+BUILD_ID; }
 
 /* ================= プロトタイプモード（P6） =================
@@ -5500,6 +5536,9 @@ function rvPrune(st){
 }
 function rvNorm(q){
   const o=JSON.parse(JSON.stringify(q,(k,v)=>(k.charAt(0)==='_'||typeof v==='function')?undefined:v));
+  /* R107.4: 翻を 答える 問題は 選択肢を 3つに した。問題の id は 前の 選択肢(_idChoices)で 数える
+     (今日の復習・実力チェックが id で 照合して いるので、id を かえない)。答えの 値は 同じ */
+  if(Array.isArray(q._idChoices)&&Array.isArray(o.choices)&&typeof o.a==='number'){ const av=o.choices[o.a]; o.choices=q._idChoices.slice(); o.a=o.choices.indexOf(av); }
   let done=false;
   ['choices','tchoices','cands'].forEach(f=>{
     if(done||!Array.isArray(o[f])) return;
@@ -5704,7 +5743,11 @@ function placeBuild(it){
     }
     if(!q||rvId(q)!==it.id) return null;
     q=Object.assign({},q,{_pl:{k:it.k,cid,key:!!it.key,hi:!!it.hi,topic:it.topic,lv:it.lv}});
-    if(Array.isArray(q.choices)&&typeof q.a==='number'){        // 選択肢の 並べかえ(きまった 順。答えの 位置を 正しく つけかえる)
+    if(Array.isArray(q.choices)&&typeof q.a==='number'&&Array.isArray(q._choicePts)&&q._choicePts.length===q.choices.length){
+      /* R107.3: 点の 選択肢は まぜずに 点の 小さい順(_choicePts = 計算した 点)。答えの 位置を 正しく つけかえる */
+      const idx=q.choices.map((_,i)=>i).sort((x,y)=>(q._choicePts[x]-q._choicePts[y])||(x-y));
+      q.choices=idx.map(i=>q.choices[i]); q._choicePts=idx.map(i=>q._choicePts[i]); q.a=idx.indexOf(q.a);
+    }else if(Array.isArray(q.choices)&&typeof q.a==='number'){        // 選択肢の 並べかえ(きまった 順。答えの 位置を 正しく つけかえる)
       /* もとの 並びが 毎回 ちがう 問題も あるので、いったん 文字の 順に そろえてから まぜる(いつも 同じ 並び) */
       const ch=q.choices, rng=mulberry32(dmHash('pl|'+PL_SET+'|'+it.k)), idx=ch.map((_,i)=>i).sort((x,y)=>{ const a=String(ch[x]), b=String(ch[y]); return a<b?-1:a>b?1:x-y; });
       for(let i=idx.length-1;i>0;i--){ const j=Math.floor(rng()*(i+1)); const t=idx[i]; idx[i]=idx[j]; idx[j]=t; }
@@ -12699,7 +12742,7 @@ function lineStepMcq(id,i,exp,opt){
   const e=scoreHandForLine(id,han);
   /* R67 §8: 点は子/親・ロン/ツモで変わる。代表ラインは【子のロン】の数字なので、問いに書く */
   const base={q:RB_KO+'の<b>ロン</b>。<b>'+l.short+'</b>の<b>'+l.han[i]+'</b>。何点？',
-    choices,a:choices.indexOf(right+'点'),exp};
+    choices,a:choices.indexOf(right+'点'),_choicePts:choices.map(c=>parseInt(c,10)),exp};   // R107.3: vals(数)から 作った 文字なので 数に もどす
   /* R78: 点を答える問題なので、ほかの点数問題と同じ「牌姿 → 条件 → ヒント → 問い」のならびにする(捨て牌は出さない) */
   if(e){ base.hand=e.hand; base.ctx3=scoreHandCtx(e); base.view=QV_SCORE; base.sqDora=e.doraInd||null;
     base.panel=scoreHandPanel(e,{noDora:true}); }
@@ -12715,7 +12758,7 @@ function lineSeqMcq(id,i,exp,opt){
   const choices=(vals.length>1?vals:[right,right+700].sort((a,b)=>a-b)).map(v=>v+'点');
   /* R67 §8: 代表ラインは【子のロン】の数字。条件を書かずに数字だけならべない */
   return Object.assign({q:RB_KO+'の<b>ロン</b>でよく出る点のならび。<b>？</b>に入るのは？<br>'+seq,
-    choices,a:choices.indexOf(right+'点'),exp},opt||{});
+    choices,a:choices.indexOf(right+'点'),_choicePts:choices.map(c=>parseInt(c,10)),exp},opt||{});
 }
 /* ===== 点数問題の牌姿(R64 §6〜§11・§13) =====
    R63までのSECTION4は「1300のライン。2翻だと、だいたいいくつ？」のような
@@ -12944,37 +12987,40 @@ function scoreHandPanel(e,opt){
 /* ===== R68 §6・§14 答えの選択肢 =====
    正解も まちがいも、かならず fuHanAnswer(= scoreByFuHan)から作る。
    ロンの問題にツモの形、ツモの問題にロンの形が混ざることは構造的に起きない。 */
-function scoreHandChoices(e){
+function scoreHandChoiceList(e,opt){
+  const spread=!!(opt&&opt.spread);   // R107.3: true = 点数トレーニング(窓を 問題ごとに かえる)
   const ctx=scoreHandCtx(e), fu=scoreHandFu(e), han=scoreHandHan(e), oya=scoreHandIsOya(e);
   const right=scoreHandAnswer(e); if(right==null) return [];
+  const rv=fuHanTotal(fu,han,oya,ctx.win);
   const cands=[];
   /* 子のロンで代表ラインに乗る手は、まちがいを【ほかの系統の同じ段の点】にする。
      実際に迷う数字どうしがならぶので、系統を教えている文脈ではこちらがよい */
   if(scoreHandLineUsable(e)&&scoreHandPts(e)!=null){
     const i=scoreLineHanIndex(scoreHandLine(e),han);
-    SCORE_LINES.forEach(x=>{ if(x.pts[i]!=null) cands.push(x.pts[i]+'点'); });
+    SCORE_LINES.forEach(x=>{ if(x.pts[i]!=null) cands.push({t:x.pts[i]+'点',v:x.pts[i]}); });   // 子のロンの 点 = くらべる数
   }
   /* それ以外(ツモ・親・系統のない符)は【おなじ条件で翻が1つちがう点】 */
   const addHan=hs=>hs.forEach(h=>{
-    if(h>=1&&fuHanExists(fu,h,ctx.win)) cands.push(fuHanAnswer(fu,h,oya,ctx.win)); });
-  addHan([han-1,han+1,han+2]);
-  const num=x=>parseInt(String(x).replace(/[^0-9]/,''),10)||0;
-  const uniq=()=>{ const a=[]; [right].concat(cands).forEach(v=>{ if(v&&!a.includes(v)) a.push(v); }); return a; };
+    if(h>=1&&fuHanExists(fu,h,ctx.win)) cands.push({t:fuHanAnswer(fu,h,oya,ctx.win),v:fuHanTotal(fu,h,oya,ctx.win)}); });
+  /* R107.3: トレーニングでは 2つ下(han-2)も 候補に 入れる。下が 1つだけ だと、正解が 3番め(いちばん高い)に なる ことが ほぼ ない */
+  addHan(spread?[han-2,han-1,han+1,han+2]:[han-1,han+1,han+2]);
+  const uniq=()=>scoreChoiceSort([{t:right,v:rv}].concat(cands));
   /* 満貫以上はとなりの翻でも点が同じになる(6翻と7翻はどちらも跳満)。
      2択になると当てずっぽうで当たってしまうので、3つそろうまで翻を広げてさがす(R69 §18) */
   if(uniq().length<3) addHan([han-2,han+3,han-3,han+4,han+5]);
+  /* R107.3: 小さい順は 文字から 読んだ数(R69〜: 先頭の 区切り 1文字だけ 消して parseInt)ではなく、計算した 点で ならべる */
   const all=uniq();
-  all.sort((a,b)=>num(a)-num(b));
-  if(all.length<2) return [right];
-  const ri=all.indexOf(right);
-  const st=Math.max(0,Math.min(ri-1,all.length-3));
+  if(all.length<2) return [{t:right,v:rv}];
+  const ri=all.findIndex(x=>x.t===right);
+  const st=spread?scoreChoiceWindow(all.length,ri,'sh|'+(e.vid||e.id||e.hand)):Math.max(0,Math.min(ri-1,all.length-3));
   return all.slice(st,st+3);
 }
+function scoreHandChoices(e){ return scoreHandChoiceList(e).map(x=>x.t); }
 /* 点を答えさせる問題。level で見せる情報を変える(A=役＋翻 / B=役だけ / C=牌姿だけ) */
 function scoreHandPointMcq(id,exp,opt){
   const e=scoreHand(id); const o=opt||{}, lv=scoreLevelOf(o);
   if(!e||scoreHandAnswer(e)==null) return {q:'(定義エラー)',choices:['-','-'],a:-1,exp:exp||''};
-  const ctx=scoreHandCtx(e), right=scoreHandAnswer(e), choices=scoreHandChoices(e);
+  const ctx=scoreHandCtx(e), right=scoreHandAnswer(e), cl=scoreHandChoiceList(e), choices=cl.map(x=>x.t);
   const ask=ctx.win==='tsumo'
     ?'このアガリ、<b>払いは</b>？'          // ツモは「だれがいくら払うか」
     :'このアガリは<b>何点</b>？';
@@ -12984,19 +13030,34 @@ function scoreHandPointMcq(id,exp,opt){
     :((scoreHandIsOya(e)?RB_OYA:RB_KO)+'の'+(ctx.win==='tsumo'?'ツモ':'ロン')
       +'で'+scoreHandHan(e)+'翻。'+right+'だよ。');
   return Object.assign({q:ask,hand:e.hand,ctx3:ctx,view:QV_SCORE,sqDora:e.doraInd||null,
-    choices,a:choices.indexOf(right),
+    choices,a:choices.indexOf(right),_choicePts:cl.map(x=>x.v),
     panel:scoreHandPanel(e,{level:lv,han:true,line:lv==='A',dora:QV_SCORE.dora,noDora:true}),
     exp:exp||(base+e.why)},o);
 }
 /* 【中盤】役は見せるが、翻の合計は自分で出す */
+/* ===== R107.4 翻を 答える 問題の 選択肢 =====
+   正解を ふくむ【となりあった 3つの 翻】(例: 正解4翻 → 2・3・4 / 3・4・5 / 4・5・6 の どれか)。上から 小さい順。
+   ・0翻 以下は 作らない(正解1翻 → 1・2・3、正解2翻 → 1・2・3 か 2・3・4)
+   ・どの 窓に するかは 問題ごとに きまった 数(key)で えらぶ(同じ 問題は いつも 同じ 選択肢・正解の 位置は 問題ごとに かわる)
+   ・もとの まちがいの 選択肢(「2役だから2翻」の 役の数・鳴いた ときと 鳴かない ときの 翻)が 窓に 入れられる ときは、それが 入る 窓から えらぶ
+     (その 問題が 確かめたい まちがいを 残す)
+   ・正解の 翻は 呼び出し側が これまでの 計算で 出した 値を そのまま 使う(ここでは 計算しない)
+   ・_idChoices = もとの 選択肢(問題の id は これで 数える: rvNorm)。_choicePts = 翻の 数(実力チェックは この 小さい順に ならべる) */
+function hanChoiceQ(right,key,legacy){
+  const starts=[]; for(let st=Math.max(1,right-2);st<=right;st++) starts.push(st);
+  const keep=(legacy||[]).map(x=>parseInt(x,10)).filter(w=>w>=1&&w!==right);
+  const pref=starts.filter(st=>keep.some(w=>w>=st&&w<=st+2)), use=pref.length?pref:starts;
+  const st=use[dmHash(String(key))%use.length], vals=[st,st+1,st+2], choices=vals.map(v=>v+'翻');
+  return {choices,a:choices.indexOf(right+'翻'),_choicePts:vals,_idChoices:(legacy||[]).slice()};
+}
 function scoreHandHanMcq(id,exp,opt){
   const e=scoreHand(id); if(!e) return {q:'(定義エラー)',choices:['-','-'],a:-1,exp:exp||''};
   const han=scoreHandHan(e), nY=e.keys.length;
   const wrong=(nY!==han)?nY:han+1;
-  const vals=Array.from(new Set([han,wrong])).sort((a,b)=>a-b).map(v=>v+'翻');
-  return Object.assign({q:'このアガリ、<b>翻の合計</b>は？',hand:e.hand,ctx3:scoreHandCtx(e),view:QV_SCORE,sqDora:e.doraInd||null,
-    choices:vals,a:vals.indexOf(han+'翻'),panel:scoreHandPanel(e,{dora:QV_SCORE.dora,noDora:true}),
-    exp:exp||e.why},opt||{});
+  const vals=Array.from(new Set([han,wrong])).sort((a,b)=>a-b).map(v=>v+'翻');   // R106 までの 2択(問題の id に 使う)
+  return Object.assign({q:'このアガリ、<b>翻の合計</b>は？',hand:e.hand,ctx3:scoreHandCtx(e),view:QV_SCORE,sqDora:e.doraInd||null},
+    hanChoiceQ(han,'hh|'+id,vals),   // R107.4: となりあった 3つ
+    {panel:scoreHandPanel(e,{dora:QV_SCORE.dora,noDora:true}),exp:exp||e.why},opt||{});
 }
 /* 【中盤】翻までは見せて、どの系統かを答えさせる(系統は点への橋) */
 function scoreHandLineMcq(id,exp,opt){
@@ -13050,7 +13111,7 @@ function tsumoKoMcq(i,who,exp,opt){
   const e=(opt&&opt.hand)?scoreHandByAnswer(t.ko+'点・'+t.oya+'点'):null;
   const base={q:RB_KO+'のツモアガリで「<b>'+t.ko+'・'+t.oya+'</b>」。'
       +(who==='oya'?RB_OYA:RB_KO+'1人')+'が払うのは？',
-    choices:vals,a:vals.indexOf(right+'点'),exp,panel:tsumoPayHTML(t.ko,t.oya)};
+    choices:vals,a:vals.indexOf(right+'点'),_choicePts:[right,other].sort((a,b)=>a-b),exp,panel:tsumoPayHTML(t.ko,t.oya)};
   if(e){ base.hand=e.hand; base.ctx3=scoreHandCtx(e); base.view=QV_SCORE; base.sqDora=e.doraInd||null; }
   const o=Object.assign({},opt||{}); delete o.hand;
   return Object.assign(base,o);
@@ -13061,7 +13122,7 @@ function tsumoOyaMcq(i,exp,opt){
   /* R78: こちらも【◯点オールになる手】をさがして出す(R77まで: to の手は 2600点オール で、問いの数字と合っていなかった) */
   const e=(opt&&opt.hand)?scoreHandByAnswer(v+'点オール'):null;
   const base={q:RB_OYA+'のツモアガリで「<b>'+v+'点オール</b>」。'+RB_KO+'1人が払うのは？',
-    choices:vals,a:vals.indexOf(v+'点'),exp,panel:tsumoPayHTML(v,null)};
+    choices:vals,a:vals.indexOf(v+'点'),_choicePts:[v,v*3].sort((a,b)=>a-b),exp,panel:tsumoPayHTML(v,null)};
   if(e){ base.hand=e.hand; base.ctx3=scoreHandCtx(e); base.view=QV_SCORE; base.sqDora=e.doraInd||null; }
   const o=Object.assign({},opt||{}); delete o.hand;
   return Object.assign(base,o);
@@ -15449,12 +15510,16 @@ function lhSuitGroups(ts){
 }
 /* --lh-g = いちばん長い まとまりの牌の数。1つのまとまり(例: 13枚ぜんぶ萬子の清一色)が 24px では 入りきらないときだけ、
    そのまとまりが 1行に入る大きさまで 小さくする(はみ出さない・まとまりの途中で折り返さない を 優先) */
-function lhStyle(n,gap,gs){ const g=Math.max(1,...gs.map(x=>x.length)); return '--lh-n:'+n+';--lh-gap:'+gap+'px;--lh-g:'+g; }
+function lhStyle(n,gap,gs,hn,hgap){ const g=Math.max(1,...gs.map(x=>x.length));
+  return '--lh-n:'+n+';--lh-gap:'+gap+'px;--lh-g:'+g+(hn!=null?';--lh-hn:'+hn+';--lh-hgap:'+hgap+'px':''); }
+/* R107.3: 行の中の すきまの合計(px)。まとまりの あいだ 6px・まとまりの 中 1px・アガリ牌の 前 4px(CSS の gap・margin と 同じ 数)。
+   R89 は まとまりの 中の 1px を 数えていなかった(折り返してよかったので 問題に ならなかった) */
+function lhGapPx(gs,items,win){ return 6*(items-1)+gs.reduce((a,g)=>a+Math.max(0,g.length-1),0)+(win?4:0); }
 function lhRowHTML(tiles,o){
   o=o||{};
   const gs=(o.groups&&o.groups.length)?o.groups:lhSuitGroups(tiles);
-  const n=gs.reduce((a,g)=>a+g.length,0)+(o.win?1:0), gap=6*(gs.length-1+(o.win?1:0))+(o.win?4:0);
-  return '<div class="hand lh'+(o.win?' ch3-tsumo-row':'')+(o.cls?' '+o.cls:'')+'" style="'+lhStyle(n,gap,gs)+'">'
+  const n=gs.reduce((a,g)=>a+g.length,0)+(o.win?1:0), gap=lhGapPx(gs,gs.length+(o.win?1:0),!!o.win);
+  return '<div class="hand lh lh-one'+(o.win?' ch3-tsumo-row':'')+(o.cls?' '+o.cls:'')+'" style="'+lhStyle(n,gap,gs,n,gap)+'">'
     +gs.map(g=>'<span class="hgrp lh-g">'+g.map(t=>tileHTML(t)).join('')+'</span>').join('')
     +(o.win?'<span class="ch3-now lh-win">'+tileHTML(o.win)+'<span class="ch3-now-lab">'+(o.winLab||'アガリ牌')+'</span></span>':'')
     +'</div>';
@@ -15651,9 +15716,10 @@ function yakuHanMcq(key,open,exp,opt){
   const vals=[m.closedHan,m.openHan].filter(v=>v!=null);
   const uniq=Array.from(new Set(vals)).sort((a,b)=>a-b);
   const right=open?m.openHan:m.closedHan;
-  const choices=(uniq.length>1?uniq:[right,right+1].sort((a,b)=>a-b)).map(v=>v+'翻');
-  return Object.assign({q:'<b>'+m.label+'</b>を'+(open?'<b>鳴いて</b>':'<b>鳴かずに</b>')+'アガった。何翻？',
-    choices,a:choices.indexOf(right+'翻'),exp,panel:yakuBadgeHTML(key)},opt||{});
+  const choices=(uniq.length>1?uniq:[right,right+1].sort((a,b)=>a-b)).map(v=>v+'翻');   // R106 までの 2択(問題の id に 使う)
+  return Object.assign({q:'<b>'+m.label+'</b>を'+(open?'<b>鳴いて</b>':'<b>鳴かずに</b>')+'アガった。何翻？'},
+    hanChoiceQ(right,'yh|'+key+'|'+(open?1:0),choices),   // R107.4: となりあった 3つ
+    {exp,panel:yakuBadgeHTML(key)},opt||{});
 }
 function yakuNakiMcq(key,exp,opt){
   // 「鳴いても成立する？」。正解は openAllowed そのもの
@@ -15672,12 +15738,12 @@ function yakuSumMcq(keys,opt){
   const nYaku=keys.length;
   const wrong=(nYaku!==han)?nYaku:han+1;
   const vals=Array.from(new Set([han,wrong])).sort((a,b)=>a-b);
-  const choices=vals.map(v=>v+'翻');
+  const choices=vals.map(v=>v+'翻');   // R106 までの 2択(問題の id に 使う)
   const names=keys.map(k=>CH3_YAKU_META[k].label).join('＋');
   const q='<b>'+names+'</b>'+(o.dora?'＋<b>ドラ'+o.dora+'枚</b>':'')
     +'でアガった'+(o.open?'（<b>鳴いている</b>）':'（鳴いていない）')+'。翻の合計は？';
-  return Object.assign({q,choices,a:choices.indexOf(han+'翻'),exp:o.exp,
-    panel:yakuRowsHTML(keys)},o.opt||{});
+  return Object.assign({q},hanChoiceQ(han,'ys|'+keys.join('+')+'|'+(o.open?1:0)+'|'+(o.dora||0),choices),   // R107.4: となりあった 3つ
+    {exp:o.exp,panel:yakuRowsHTML(keys)},o.opt||{});
 }
 /* R67 §2: 「◯翻はどの大きさ？」という名前あての問題ビルダー(tierOfHanMcq)は廃止した。
    実戦で要るのは名前ではなく点なので、fuHanPointMcq(条件→実際の点)に置きかえている。
@@ -15692,11 +15758,13 @@ function tierPointMcq(tierId,oya,win,exp,opt){
   const others=SCORE_TIERS.map(x=>x.id).filter(id=>id!==tierId).map(val).filter(v=>v&&v!==right);
   const choices=[right,others[0],others[1]].filter(Boolean);
   // 表示順は点の安い順(=表とおなじならび)にして、位置で覚えられないようにしない
-  const ordered=SCORE_TIERS.map(x=>val(x.id)).filter(v=>choices.includes(v));
-  const uniq=Array.from(new Set(ordered));
+  /* R107.3: くらべる数は 表(SCORE_TIERS)の 点(ツモは 払う点の合計)。ならびは その数の 小さい順 */
+  const tv=id=>{ const x=scoreTier(id); return win==='tsumo'?(oya?x.oya.tsumoAll*3:x.ko.tsumo[0]*2+x.ko.tsumo[1]):(oya?x.oya.ron:x.ko.ron); };
+  const all=scoreChoiceSort(SCORE_TIERS.map(x=>({t:val(x.id),v:tv(x.id)})).filter(x=>choices.includes(x.t)));
+  const uniq=all.map(x=>x.t);
   return Object.assign({q:(oya?RB_OYA:RB_KO)+'の<b>'+t.name
     +'</b>を<b>'+(win==='tsumo'?'ツモ':'ロン')+'</b>でアガった。点は？',
-    choices:uniq,a:uniq.indexOf(right),exp},opt||{});
+    choices:uniq,a:uniq.indexOf(right),_choicePts:all.map(x=>x.v),exp},opt||{});
 }
 /* ===== R67 §3〜§6・§12 「条件 → 実際の点」を答えさせる問題ビルダー =====
    R66までのSECTION4には「◯翻はどの大きさ？」という【名前を当てるだけ】の問題が多かった。
@@ -15713,36 +15781,57 @@ function fuHanAnswer(fu,han,oya,win){
   const r=scoreByFuHan(fu,han,oya);
   return win==='tsumo'?scorePayText(r,oya):(r.ron+'点');
 }
+/* ===== R107.3 点の選択肢の ならび =====
+   点の選択肢は【上から 点の小さい順】。くらべる数は 表示の文字から 読まず、点数の計算(scoreByFuHan)の結果から 出す:
+     ロン = その点 / 子のツモ = 子2人ぶん＋親のぶん(500・1000 → 2000) / 親のツモ = 子3人ぶん(2000オール → 6000)
+   問題には _choicePts(選択肢と 同じ 順の 数)を つける。ならべかえる ところ(実力チェック)は この数で ならべる。
+   名前の 先頭を「_」に するのは、問題の id(rvId: 今日の復習・実力チェックの 問題の 照合)に 入れない ため(id を かえない)。
+   ならびを かえても rvId は かわらない(rvNorm が 選択肢を 文字の順に そろえて から 数える) */
+function scorePayTotal(r,oya,win){ return win==='tsumo'?(oya?r.tsumo[0]*3:r.tsumo[0]*2+r.tsumo[1]):r.ron; }
+function fuHanTotal(fu,han,oya,win){ return scorePayTotal(scoreByFuHan(fu,han,oya),oya,win); }
+/* 正解を ふくむ 3つの 窓(となりの点)を えらぶ(点数トレーニングだけ)。R69〜: 正解の 1つ下から 3つ → トレーニングでは 正解が ほぼ いつも まん中(2番め)だった。
+   正解を ふくむ 窓の うち どれにするかを 問題ごとに きまった 数(key)で えらぶ(同じ 問題は いつも 同じ ならび。正解の 位置は 問題ごとに かわる)。
+   Road の レッスンの 問題は 選択肢の 組を かえない(今日の復習・実力チェックが 問題の id で 照合して いるため。位置は もとから 問題ごとに ちがう) */
+function scoreChoiceWindow(n,ri,key){
+  if(n<=3||ri<0) return 0;
+  const lo=Math.max(0,ri-2), hi=Math.min(ri,n-3);
+  return hi<=lo?Math.max(0,lo):lo+(dmHash(String(key))%(hi-lo+1));
+}
+/* [{t:文字, v:くらべる数}] を 小さい順に ならべ、同じ 文字を 1つにする(ならびが 同じ数なら もとの順) */
+function scoreChoiceSort(list){
+  const out=[]; list.forEach(x=>{ if(x&&x.t&&!out.some(y=>y.t===x.t)) out.push(x); });
+  return out.map((x,i)=>[x,i]).sort((a,b)=>(a[0].v-b[0].v)||(a[1]-b[1])).map(p=>p[0]);
+}
 function fuHanPointMcq(o){
   /* o={fu,han,oya,win,exp,cond}
      fu を省くと「満貫以上=符にかかわらず翻だけで決まる」問題になる(5翻以上のみ) */
   const oya=!!o.oya, win=o.win||'ron', han=o.han;
   const fu=o.fu!=null?o.fu:null;
   if(fu==null&&han<5) return {q:'(定義エラー)',choices:['-','-'],a:-1,exp:o.exp||''};
-  const right=fuHanAnswer(fu==null?30:fu,han,oya,win);
+  const fx=fu==null?30:fu;
+  const right=fuHanAnswer(fx,han,oya,win);
   /* まちがいの選択肢は【実際にありえるほかの条件の点】。
      ・満貫以上 … となりの大きさの点 ・満貫未満 … おなじ符の±1翻の点 */
   const cands=[];
   if(fu==null||scoreByFuHan(fu,han,oya).tier){
     /* 役満は【翻を足しても届かない】(数え役満なし)ので、翻の問題の選択肢には入れない */
     SCORE_TIERS.filter(t=>t.lo!=null).forEach(t=>{
-      cands.push(fuHanAnswer(fu==null?30:fu,t.lo,oya,win)); });
+      cands.push({t:fuHanAnswer(fx,t.lo,oya,win),v:fuHanTotal(fx,t.lo,oya,win)}); });
   }else{
-    [han-1,han+1,han+2].forEach(h=>{ if(h>=1&&fuHanExists(fu,h,win)) cands.push(fuHanAnswer(fu,h,oya,win)); });
+    [han-1,han+1,han+2].forEach(h=>{ if(h>=1&&fuHanExists(fu,h,win)) cands.push({t:fuHanAnswer(fu,h,oya,win),v:fuHanTotal(fu,h,oya,win)}); });
   }
-  const num=s=>parseInt(String(s).replace(/[^0-9]/,''),10)||0;
-  const all=[]; [right].concat(cands).forEach(v=>{ if(v&&!all.includes(v)) all.push(v); });
-  all.sort((a,b)=>num(a)-num(b));
+  /* R107.3: 小さい順は 計算した 点(払う点の合計)で ならべる(R69〜: 文字から 読んだ 数。満貫と 30符4翻の ツモのように 先頭の 数が 同じだと 順が 決まらなかった) */
+  const all=scoreChoiceSort([{t:right,v:fuHanTotal(fx,han,oya,win)}].concat(cands));
   /* まちがいの選択肢は【正解のとなりの点】にする。遠い数字をならべると消去法で解けてしまう。
      ならび順は点の安い順＝表とおなじなので、位置で覚えられないようにもなる */
-  const ri=all.indexOf(right);
-  let st=Math.max(0,Math.min(ri-1,all.length-3));
-  const choices=all.slice(st,st+3);
+  const ri=all.findIndex(x=>x.t===right);
+  const st=Math.max(0,Math.min(ri-1,all.length-3));
+  const pick=all.slice(st,st+3), choices=pick.map(x=>x.t);
   const who=oya?RB_OYA:RB_KO, w=win==='tsumo'?'ツモ':'ロン';
   const cond=(fu==null?'<b>'+han+'翻</b>':'<b>'+fu+'符'+han+'翻</b>');
   return Object.assign({
     q:who+'が<b>'+w+'</b>でアガった。'+cond+'。'+(win==='tsumo'?'払いは？':'点は？'),
-    choices,a:choices.indexOf(right),exp:o.exp||''},o.opt||{});
+    choices,a:choices.indexOf(right),_choicePts:pick.map(x=>x.v),exp:o.exp||''},o.opt||{});
 }
 /* ===== R69 点数トレーニング =====
    Roadで学んだ「牌姿 → 役 → 翻 → 点」を、何度でも反復する場所。
@@ -15850,9 +15939,9 @@ function scoreTrainRevealHTML(e){
 /* 1問ぶんの問題オブジェクト。見せる量は level だけで変える */
 function scoreTrainQ(e,level,no){
   const lv=scoreTrainLevel(level), c=scoreHandCtx(e);
-  const right=scoreHandAnswer(e), choices=scoreHandChoices(e);
+  const right=scoreHandAnswer(e), cl=scoreHandChoiceList(e,{spread:true}), choices=cl.map(x=>x.t);
   return {q:c.win==='tsumo'?'このアガリ、<b>払いは</b>？':'このアガリは<b>何点</b>？',
-    hand:e.hand,ctx3:c,view:QV_SCORE,sqDora:e.doraInd||null,choices,a:choices.indexOf(right),
+    hand:e.hand,ctx3:c,view:QV_SCORE,sqDora:e.doraInd||null,choices,a:choices.indexOf(right),_choicePts:cl.map(x=>x.v),
     /* R78: Trainingは符を習ったあとの反復なので「符はまだ自分で数えなくていいよ」は毎回は書かない(fuShort) */
     panel:scoreHandPanel(e,{level:lv.lv,han:true,line:false,dora:QV_SCORE.dora,noDora:true,fuShort:true}),
     exp:scoreTrainRevealHTML(e),
@@ -18571,9 +18660,11 @@ const CH3_LESSONS={
       ch1Teach('ここで大事なこと！リーチして七対子でアガると…役は<b>2つ</b>でも、翻は'
         +yakuHanText('riichi')+'＋'+yakuHanText('chiitoi')+'＝<b>合計3翻</b>。<b>2役だけど2翻じゃない</b>んだ！',
         {tlab:'2役だけど3翻',panel:yakuRowsHTML(['riichi','chiitoi'])}),
-      {q:'リーチ＋七対子でアガった。翻の合計は？',choices:['3翻','2翻'],a:0,
+      Object.assign({q:'リーチ＋七対子でアガった。翻の合計は？'},
+       hanChoiceQ(CH3_YAKU_META.riichi.closedHan+CH3_YAKU_META.chiitoi.closedHan,'yf2_2|riichi+chiitoi',['3翻','2翻']),   // R107.4: となりあった 3つ(もとの 2択は id 用)
+       {
        exp:'リーチ'+yakuHanText('riichi')+'と七対子'+yakuHanText('chiitoi')+'を足して3翻。役の数（2役）とはべつの数だよ。',
-       panel:yakuRowsHTML(['riichi','chiitoi'])},
+       panel:yakuRowsHTML(['riichi','chiitoi'])}),
       ch1Teach('注意が2つ。<b>①おなじ牌4枚を「2組」には数えられない ②ポンやチーをしたら作れない</b>(トイツがくずれるからね)。',
         {tlab:'七対子の注意'}),
       ch3HasMcq('chiitoi','1m1m3m3m5p5p7p7p9s9s1s1sEE',ch3Ctx({}),
@@ -19574,8 +19665,8 @@ const CH3_LESSONS={
         +RB_KO+'の満貫ツモ「'+tierTsumoText('mangan')+'」は、<b>'+RB_KO+'2人が'+mg.ko.tsumo[0]
         +'点ずつ・'+RB_OYA+'が'+mg.ko.tsumo[1]+'点</b>という意味なんだ。',
         {tlab:RB_KO+'ツモは'+RB_OYA+'が多く払う（ふくしゅう）',panel:tierTableHTML(['mangan'])}),
-      {q:RB_KO+'の満貫をツモでアガった。'+RB_OYA+'が払うのは？',
-       choices:[mg.ko.tsumo[1]+'点',mg.ko.tsumo[0]+'点'],a:0,
+      {q:RB_KO+'の満貫をツモでアガった。'+RB_OYA+'が払うのは？',   // R107.3: 点の 小さい順(正解 = 親の 払い = 大きいほう)
+       choices:[mg.ko.tsumo[0]+'点',mg.ko.tsumo[1]+'点'],a:1,_choicePts:[mg.ko.tsumo[0],mg.ko.tsumo[1]],
        exp:'2つならんだ点の、大きいほうが'+RB_OYA+'の払い。小さいほうを'+RB_KO+'2人が払うよ。',
        panel:tierTableHTML(['mangan'])},
     ];
@@ -22138,6 +22229,7 @@ function renderProfile(){
     +'<div class="av-me-txt"><span class="av-me-k">あなたのアバター</span><b class="av-me-n">'+avatarOf(S.avatarId).name+'</b>'
     +'<span class="av-me-s">ツモッピィ 見習い雀士</span>'
     +'<button class="btn au-btn" id="av-change" onclick="openAvatarPicker()">アバターをかえる</button></div></div>'
+    +accCardHTML()       // R107: アカウント(ゲストのままでも 学べる。登録は 任意)
     +placeMyCardHTML()   // R104: 実力チェックの 入口(既存ユーザーも)
     +'<div class="card"><b style="font-size:14px;">📊 記録</b><div class="stat-grid" style="margin-top:10px;">'
     +'<div class="stat-box"><div class="v">'+S.xp+'</div><div class="k">合計XP</div></div>'
@@ -22532,7 +22624,384 @@ function openModal(html){
   document.getElementById('modal-body').innerHTML=html;
   document.getElementById('modal-bg').classList.add('show');
 }
-function closeModal(){ document.getElementById('modal-bg').classList.remove('show'); }
+function closeModal(){ document.getElementById('modal-bg').classList.remove('show');
+  if(typeof ACC!=='undefined'&&ACC.open){ ACC.open=false; if(ACC.timer){ clearInterval(ACC.timer); ACC.timer=null; } }   // R107: 背景を タップして とじた ときも アカウント画面の 状態を もどす
+}
+
+/* ================= R107 アカウント(メール OTP ログイン・ゲスト記録の引き継ぎ) =================
+   ・ゲストのまま 学べる(登録は 強制しない)。ゲストは アカウント画面を ひらかない かぎり 通信しない
+   ・ログインは Supabase Auth の メール OTP(6けたの コード)。パスワードは 使わない
+   ・ゲストの記録(jantore-v1 ほか)は 読むだけ。消さない・書きかえない(引き継ぎに 失敗しても そのまま)
+   ・引き継ぎは 新しいアカウントに 1回だけ。サーバー(Edge Function import-guest)が ログインを 確かめて 実行する
+     (ブラウザには 公開してよい anon key しか 置かない。service_role key は 置かない)
+   ・R107 では 自動同期しない。ログイン中も 学習の記録は この端末に 保存する(画面にも そう 書く)
+   保存: tsumoppy-auth-v1    = ログインの セッション(Supabase の SDK が 管理)
+         tsumoppy-account-v1 = {v:1, owner:{uid,email,at,ev}|null, pending:{ev,uid,email,at}|null}(email は R107.2 から。ない 古い 印も 読める)
+           owner   = この端末の記録を 引き継いだ アカウント(R108 の 同期で 持ち主の 確認に 使う)
+           pending = 送信中/結果が わからない 引き継ぎ(同じ event_id で もう一度 送る → サーバーで 二重にならない)
+   キーの 名前は jantore- で はじめない(placePristine の「学習の 跡」に 数えないため) */
+const ACC_CFG={
+  url:'https://rimunbylqrigulgspzyl.supabase.co',   // tsumoppy-dev(開発用)。本番に 切りかえる ときは ここと key を かえる
+  key:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpbXVuYnlscXJpZ3VsZ3NwenlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI0Nzg3ODMsImV4cCI6MjEwODA1NDc4M30.D8BDwe1bw9I6snD4BSOrkyS_QKngXFeJDp5YfGXECj8',                                // 公開してよい anon key(RLS が 前提)
+  sdk:'assets/vendor/supabase-js-2.117.2.umd.js',     // @supabase/supabase-js 2.117.2(MIT)。同じ サーバーから 読む
+  sri:'sha384-Rj26LVGvoeRVR6+mwQmFfcR3QOBEwT+ZmuCWpuiqeTzJpCs0ER4ITAWGb4Hiy3Ok',
+  fnImport:'/functions/v1/import-guest',
+  env:'dev'
+};
+const ACC_KEY='tsumoppy-account-v1', ACC_AUTH_KEY='tsumoppy-auth-v1', ACC_OTP_LEN=6, ACC_RESEND_SEC=60;
+let ACC={sb:null, ready:null, user:null, view:null, busy:false, email:'', sentAt:0, err:'', info:'',
+  overview:null, ovErr:'', result:null, open:false, timer:null};
+function accEnabled(){ return !!(ACC_CFG.url&&ACC_CFG.key&&ACC_CFG.key.indexOf('%%')<0); }
+function accRead(){
+  try{ const o=JSON.parse(localStorage.getItem(ACC_KEY)||'null'); if(o&&o.v===1) return o; }catch(e){}
+  return {v:1, owner:null, pending:null};
+}
+function accWrite(o){ try{ localStorage.setItem(ACC_KEY,JSON.stringify(o)); return true; }catch(e){ return false; } }
+function accEsc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function accUuid(){
+  try{ if(crypto&&crypto.randomUUID) return crypto.randomUUID(); }catch(e){}
+  const b=new Uint8Array(16); crypto.getRandomValues(b); b[6]=(b[6]&15)|64; b[8]=(b[8]&63)|128;
+  const h=[...b].map(x=>x.toString(16).padStart(2,'0')).join('');
+  return h.slice(0,8)+'-'+h.slice(8,12)+'-'+h.slice(12,16)+'-'+h.slice(16,20)+'-'+h.slice(20);
+}
+/* ---- SDK と クライアント(必要に なった ときだけ 読む) ---- */
+function accEnsure(){
+  if(ACC.ready) return ACC.ready;
+  ACC.ready=new Promise((res,rej)=>{
+    const make=()=>{
+      try{
+        ACC.sb=window.supabase.createClient(ACC_CFG.url,ACC_CFG.key,{auth:{storageKey:ACC_AUTH_KEY,persistSession:true,
+          autoRefreshToken:true,detectSessionInUrl:false}});
+        ACC.sb.auth.onAuthStateChange((ev,session)=>{ setTimeout(()=>accOnAuth(ev,session),0); });
+        res(ACC.sb);
+      }catch(e){ rej(e); }
+    };
+    if(window.supabase&&window.supabase.createClient) return make();
+    const s=document.createElement('script');
+    s.src=ACC_CFG.sdk; if(ACC_CFG.sri&&ACC_CFG.sri.indexOf('%%')<0){ s.integrity=ACC_CFG.sri; s.crossOrigin='anonymous'; }
+    const to=setTimeout(()=>rej(new Error('sdk_timeout')),15000);
+    s.onload=()=>{ clearTimeout(to); if(window.supabase&&window.supabase.createClient) make(); else rej(new Error('sdk_missing')); };
+    s.onerror=()=>{ clearTimeout(to); rej(new Error('sdk_load_failed')); };
+    document.head.appendChild(s);
+  });
+  ACC.ready.catch(()=>{ ACC.ready=null; });   // 失敗したら 次に ひらいた ときに もう一度
+  return ACC.ready;
+}
+function accHasStoredSession(){ try{ return !!localStorage.getItem(ACC_AUTH_KEY); }catch(e){ return false; } }
+function accOnAuth(ev,session){
+  const prev=ACC.user?ACC.user.id:null;
+  ACC.user=session&&session.user?session.user:null;
+  if(!ACC.user){ ACC.overview=null; if(prev&&ev==='SIGNED_OUT'&&!ACC.info) ACC.info='ログアウトしました。この端末の 記録は そのまま 残っています'; }
+  else if(prev!==ACC.user.id){ ACC.overview=null; accRefreshOverview(); }
+  accRerender();
+}
+function accBoot(){
+  if(!accEnabled()) return;
+  window.addEventListener('storage',e=>{
+    if(e.key===ACC_AUTH_KEY){
+      if(ACC.sb) ACC.sb.auth.getSession().then(r=>accOnAuth('TAB',r.data.session)).catch(()=>{});
+      else if(accHasStoredSession()) accEnsure().then(sb=>sb.auth.getSession()).then(r=>accOnAuth('TAB',r.data.session)).catch(()=>{});
+    }
+    if(e.key===ACC_KEY) accRerender();
+  });
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&ACC.open&&!ACC.busy) accClose(); });
+  if(!accHasStoredSession()) return;      // ゲスト: 何も 読まない・通信しない
+  accEnsure().then(sb=>sb.auth.getSession()).then(r=>accOnAuth('BOOT',r.data.session)).catch(()=>{ accRerender(); });
+}
+/* ---- サーバー ---- */
+function accRefreshOverview(){
+  if(!ACC.sb||!ACC.user) return Promise.resolve(null);
+  ACC.ovErr='';
+  return ACC.sb.rpc('ensure_account').then(r=>{ if(r.error) throw r.error; return ACC.sb.rpc('account_overview'); })
+    .then(r=>{ if(r.error) throw r.error; ACC.overview=r.data; accRerender(); return r.data; })
+    .catch(e=>{ ACC.ovErr=accErrMsg(e); accRerender(); return null; });
+}
+function accErrMsg(e){
+  const m=String((e&&(e.code||e.error_code||e.message))||e||'');
+  if(!navigator.onLine||/Failed to fetch|NetworkError|network|fetch/i.test(m)) return 'インターネットに つながって いません。つながってから もう一度 ためしてください';
+  if(/over_email_send_rate_limit|rate.?limit|429|too many/i.test(m)) return '送信の 回数が 多すぎます。しばらく 待ってから もう一度 ためしてください';
+  if(/otp_expired|expired|invalid.*token|token.*invalid/i.test(m)) return 'コードが ちがうか、有効期限が 切れています。もう一度 送って ためしてください';
+  if(/email_address_invalid|invalid.*email|validation_failed/i.test(m)) return 'メールアドレスを たしかめてください';
+  if(/signup.*disabled|not allowed/i.test(m)) return 'いまは 新しい 登録を うけつけて いません';
+  if(/sdk_/.test(m)) return 'ログインの 準備が できませんでした。通信を たしかめてから もう一度 ひらいてください';
+  return 'うまく いきませんでした。時間を おいて もう一度 ためしてください';
+}
+/* ---- この端末の ゲスト記録 ---- */
+function accLocalHasData(){
+  let rv=0; try{ rv=Object.keys((rvLoad()||{}).items||{}).length; }catch(e){}
+  return !placePristine()||!!S.place||rv>0;
+}
+function accGuestSummary(){
+  let lessons=0; THEMES.forEach(t=>{ lessons+=Math.min(S.roadProgress[t.id]|0,themeLessons(t).length); });
+  const days=Object.keys(S.learningDays||{}).filter(k=>S.learningDays[k]==='completed').length;
+  let rv=0; try{ rv=Object.keys((rvLoad()||{}).items||{}).length; }catch(e){}
+  return {xp:S.xp|0, gems:S.gems|0, freeze:S.freeze|0, ratings:Object.assign({},S.ratings), ratingN:Object.assign({},S.ratingN),
+    streak:S.streak|0, bestStreak:S.bestStreak|0, lessons, days, review:rv, start:placeStart()};
+}
+function accBuildPayload(){
+  const pick=(o,ks)=>{ const r={}; ks.forEach(k=>{ if(o[k]!==undefined) r[k]=o[k]; }); return r; };
+  const state=pick(S,['xp','gems','freeze','ratings','ratingN','roadProgress','learningDays','place','sound','rubyMode','avatarId','chests','daily','soloBingo','soloYaku']);
+  let review={items:{},bonus:null};
+  try{ const st=rvLoad(); review={items:Object.assign({},st.items||{}),bonus:st.bonus||null}; }catch(e){}
+  const training={};
+  ['trainingBest','solo','soloBingo','soloYaku','mwSet','mwPat','fuTrain','fuCourse','seenNk','seenRq','crowns','best',
+   'studyHistory','dailyArchive','frz'].forEach(k=>{ const v=S[k]; if(v&&typeof v==='object'&&!Array.isArray(v)) training[k]=v; });
+  training.counters={answered:S.answered|0,correct:S.correct|0,streak:S.streak|0,bestStreak:S.bestStreak|0,
+    lastDay:S.lastDay||null,streakFxDay:S.streakFxDay||null};
+  return {format:'tsumoppy-guest', v:2, app_ver:APP_VER, build_id:BUILD_ID, exported_at:new Date().toISOString(),
+    state:JSON.parse(JSON.stringify(state)), review:JSON.parse(JSON.stringify(review)), training:JSON.parse(JSON.stringify(training))};
+}
+/* 引き継げるか(ログイン中・この端末の記録が まだ どこにも 引き継がれて いない・アカウントが 新しい) */
+function accPendingWho(){ const a=accRead(); return a.pending&&a.pending.email?a.pending.email:'前の アカウント'; }
+function accImportState(){
+  const a=accRead(), uid=ACC.user?ACC.user.id:null, ov=ACC.overview;
+  if(!uid) return a.owner?'owner_logged_out':'guest';
+  if(a.owner&&a.owner.uid===uid) return 'mine';
+  if(a.owner&&a.owner.uid!==uid) return 'other_owner';
+  if(a.pending&&a.pending.uid===uid) return 'pending';
+  /* R107.2: 別の アカウントへの 引き継ぎの 結果が わからない(サーバーでは 成功して いる かも しれない)あいだは、
+     この端末の 記録を ほかの アカウントに 引き継がない(1つの 端末の 記録が 2つの アカウントに 入るのを ふせぐ) */
+  if(a.pending&&a.pending.uid!==uid) return 'other_pending';
+  if(!ov) return ACC.ovErr?'ov_error':'checking';
+  if(ov.imported) return 'already_imported';
+  if(ov.has_records) return 'account_has_records';
+  if(!accLocalHasData()) return 'no_local';
+  return 'eligible';
+}
+/* ---- 画面 ---- */
+function accCardHTML(){
+  if(!accEnabled()) return '';
+  const a=accRead(), st=accImportState(), u=ACC.user;
+  let line='', sub='';
+  if(!u){
+    line='いまは ゲストです（記録は この端末に 保存）';
+    sub=a.owner?'この端末の 記録は '+accEsc(a.owner.email||'アカウント')+' に 引き継ぎ済みです。ログアウト中も 記録は この端末に 残っています'
+      :'登録しなくても これまでどおり 学べます。アカウントを 作ると、のちの 版で ほかの 端末とも 記録を 共有できるように なります';
+  }else{
+    line='ログイン中：'+accEsc(u.email||'');
+    sub=({mine:'この端末の 記録は このアカウントに 引き継ぎ済みです',
+      other_owner:'この端末の 記録は 別の アカウントに 引き継ぎ済みです（このアカウントには 引き継げません）',
+      pending:'引き継ぎの 結果を 確かめています。「アカウント」から もう一度 ためせます',
+      other_pending:accEsc(accPendingWho())+' への 引き継ぎの 結果が まだ わかりません。そのアカウントで ログインして 確かめてください（このアカウントには 引き継げません）',
+      eligible:'この端末の 記録を このアカウントに 引き継げます',
+      already_imported:'このアカウントには 引き継ぎ済みです',
+      account_has_records:'このアカウントには すでに 記録が あります。この端末の 記録は 合算・上書きしません',
+      no_local:'この端末には 引き継ぐ 記録が ありません',
+      checking:'アカウントを 確かめています…', ov_error:accEsc(ACC.ovErr)})[st]||'';
+  }
+  return '<div class="card ac-card" id="ac-card"><b style="font-size:14px;">👤 アカウント</b>'
+    +'<p class="ac-line" id="ac-line">'+line+'</p><p class="ac-sub" id="ac-sub">'+sub+'</p>'
+    +(u?'<p class="ac-sync" id="ac-sync">☁️ クラウドへの 自動保存は 準備中です。いまは ログイン中も 学習の 記録は この端末に 保存されます</p>':'')
+    +'<button class="btn'+(u?' gray':'')+'" id="ac-open" onclick="accOpen()">'+(u?'アカウント':'アカウント登録・ログイン')+'</button>'
+    +(ACC.info&&!ACC.open?'<p class="ac-note" id="ac-note">'+accEsc(ACC.info)+'</p>':'')
+    +'</div>';
+}
+function accRerender(){
+  const c=document.getElementById('ac-card');
+  if(c){ const d=document.createElement('div'); d.innerHTML=accCardHTML(); if(d.firstChild) c.replaceWith(d.firstChild); }
+  if(ACC.open) accRender();
+}
+function accOpen(){
+  if(!accEnabled()) return;
+  ACC.open=true; ACC.err=''; ACC.info='';
+  ACC.view=ACC.user?(accImportState()==='eligible'?'import':'account'):(ACC.view==='code'&&ACC.email?'code':'email');
+  if(!ACC.sb){ ACC.view='loading'; }
+  accRender();
+  accEnsure().then(sb=>sb.auth.getSession()).then(r=>{
+    const s=r.data.session; ACC.user=s&&s.user?s.user:null;
+    if(ACC.view==='loading') ACC.view=ACC.user?'account':'email';
+    accRender();
+    if(ACC.user) accRefreshOverview().then(()=>{ if(ACC.open&&ACC.view==='account'&&accImportState()==='eligible'){ ACC.view='import'; accRender(); } });
+  }).catch(e=>{ ACC.view='sdk_error'; ACC.err=accErrMsg(e); accRender(); });
+}
+function accClose(){
+  if(ACC.busy) return;
+  ACC.open=false; clearInterval(ACC.timer); ACC.timer=null;
+  if(ACC.view!=='code') ACC.view=null;
+  closeModal(); accRerender();
+}
+function accRender(){
+  if(!ACC.open) return;
+  const v=ACC.view, b=ACC.busy, err=ACC.err?'<p class="ac-err" id="ac-err" role="alert">'+accEsc(ACC.err)+'</p>':'';
+  const close='<button class="btn gray ac-close" id="ac-close" onclick="accClose()"'+(b?' disabled':'')+'>とじる</button>';
+  const devTag=ACC_CFG.env==='dev'?'<span class="ac-dev">開発用</span>':'';
+  let h='';
+  if(v==='loading') h='<h3>アカウント'+devTag+'</h3><p>じゅんび中…</p>'+close;
+  else if(v==='sdk_error') h='<h3>アカウント'+devTag+'</h3>'+err+'<p>登録しなくても これまでどおり 学べます。</p>'+close;
+  else if(v==='email'){
+    h='<h3>アカウント登録・ログイン'+devTag+'</h3>'
+      +'<p>メールに とどく 6けたの コードで ログインします。パスワードは いりません。はじめての 人は そのまま 登録に なります。</p>'
+      +'<form id="ac-form-email" onsubmit="return accSendOtp(event)" novalidate>'
+      +'<label class="ac-lbl" for="ac-email">メールアドレス</label>'
+      +'<input class="ac-inp" id="ac-email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" maxlength="254" value="'+accEsc(ACC.email)+'"'+(b?' disabled':'')+'>'
+      +err+'<button class="btn" id="ac-send" type="submit"'+(b?' disabled':'')+'>'+(b?'送信しています…':'認証コードを 送る')+'</button></form>'
+      +'<p class="ac-small">登録しなくても これまでどおり 学べます。この画面を とじても、この端末の 記録は そのまま です。</p>'+close;
+  }else if(v==='code'){
+    const left=Math.max(0,ACC_RESEND_SEC-Math.floor((Date.now()-ACC.sentAt)/1000));
+    h='<h3>認証コードを 入力'+devTag+'</h3>'
+      +'<p><b class="ac-mail" id="ac-mail">'+accEsc(ACC.email)+'</b> に 6けたの コードを 送りました。メールが 見つからない ときは 迷惑メールも 見てください。</p>'
+      +(ACC.info?'<p class="ac-ok" id="ac-info">'+accEsc(ACC.info)+'</p>':'')
+      +'<form id="ac-form-code" onsubmit="return accVerify(event)" novalidate>'
+      +'<label class="ac-lbl" for="ac-code">認証コード（6けた）</label>'
+      +'<input class="ac-inp ac-code" id="ac-code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]*" maxlength="'+ACC_OTP_LEN+'"'+(b?' disabled':'')+'>'
+      +err+'<button class="btn" id="ac-verify" type="submit"'+(b?' disabled':'')+'>'+(b?'確かめています…':'ログイン')+'</button></form>'
+      +'<button class="btn gray ac-sub-btn" id="ac-resend" onclick="accResend()"'+(b||left>0?' disabled':'')+'>'+(left>0?'コードを もう一度 送る（'+left+'秒後）':'コードを もう一度 送る')+'</button>'
+      +'<button class="btn gray ac-sub-btn" id="ac-edit" onclick="accEditEmail()"'+(b?' disabled':'')+'>メールアドレスを なおす</button>'+close;
+    if(left>0&&!ACC.timer) ACC.timer=setInterval(()=>{ if(!ACC.open||ACC.view!=='code'){ clearInterval(ACC.timer); ACC.timer=null; return; }
+      const r=document.getElementById('ac-resend'); const l=Math.max(0,ACC_RESEND_SEC-Math.floor((Date.now()-ACC.sentAt)/1000));
+      if(r){ r.textContent=l>0?'コードを もう一度 送る（'+l+'秒後）':'コードを もう一度 送る'; r.disabled=ACC.busy||l>0; }
+      if(l<=0){ clearInterval(ACC.timer); ACC.timer=null; } },1000);
+  }else if(v==='account'){
+    const st=accImportState(), u=ACC.user||{}, w=ACC.overview&&ACC.overview.wallet;
+    h='<h3>アカウント'+devTag+'</h3>'
+      +'<div class="ac-box"><div class="ac-kv"><span>メール</span><b id="ac-acc-mail">'+accEsc(u.email||'')+'</b></div>'
+      +'<div class="ac-kv"><span>状態</span><b>ログイン中</b></div>'
+      +(w?'<div class="ac-kv"><span>アカウントの 記録</span><b id="ac-acc-wallet">'+w.xp+' XP・ジェム '+w.gems+'</b></div>':'')
+      +'</div>'
+      +'<p class="ac-sync">☁️ クラウドへの 自動保存は 準備中です。いまは ログイン中も 学習の 記録は この端末に 保存され、アカウントの 記録とは まだ 同期されません。</p>'
+      +'<p class="ac-st" id="ac-st">'+({mine:'この端末の 記録は このアカウントに 引き継ぎ済みです。',
+          other_owner:'この端末の 記録は 別の アカウントに 引き継ぎ済みです。このアカウントには 引き継げません（記録は この端末に 残っています）。',
+          pending:'前回の 引き継ぎの 結果が わかりません。下の ボタンで もう一度 送ると、二重には ならずに 結果を 確かめられます。',
+          other_pending:accEsc(accPendingWho())+' への 引き継ぎの 結果が まだ わかりません。そのアカウントで ログインし、「引き継ぎを もう一度 送る」で 確かめてください。このアカウントには 引き継げません（記録は この端末に 残っています）。',
+          already_imported:'このアカウントには すでに 引き継ぎ済みです。この端末の 記録は 合算・上書きしません。',
+          account_has_records:'このアカウントには すでに 記録が あります。この端末の 記録は 合算・上書きしません（この端末に 残ります）。',
+          no_local:'この端末には 引き継ぐ 記録が ありません。',
+          eligible:'この端末の ゲストの 記録を、このアカウントに 引き継げます（1回だけ）。',
+          checking:'アカウントを 確かめています…', ov_error:accEsc(ACC.ovErr)})[st]+'</p>'
+      +err
+      +(st==='eligible'?'<button class="btn" id="ac-to-import" onclick="ACC.view=\'import\';ACC.err=\'\';accRender()">この端末の 記録を 引き継ぐ</button>':'')
+      +(st==='pending'?'<button class="btn" id="ac-retry" onclick="accImport()"'+(b?' disabled':'')+'>'+(b?'送信しています…':'引き継ぎを もう一度 送る')+'</button>':'')
+      +(st==='ov_error'?'<button class="btn" id="ac-reload" onclick="accRefreshOverview()">もう一度 確かめる</button>':'')
+      +'<button class="btn gray ac-sub-btn" id="ac-logout" onclick="accLogout()"'+(b?' disabled':'')+'>ログアウト</button>'
+      +'<p class="ac-small">ログアウトしても、この端末の 記録は 消えません。</p>'+close;
+  }else if(v==='import'){
+    const g=accGuestSummary(), R=g.ratings||{}, N=g.ratingN||{};
+    const rt=k=>(N[k]|0)>0?Math.round(R[k]):'－';
+    h='<h3>この端末の 記録を 引き継ぐ'+devTag+'</h3>'
+      +'<p>ゲストで 学んだ 記録を、ログイン中の アカウント（'+accEsc((ACC.user||{}).email||'')+'）に 引き継ぎます。</p>'
+      +'<div class="ac-box" id="ac-sum">'
+      +'<div class="ac-kv"><span>XP</span><b id="ac-s-xp">'+g.xp+'</b></div>'
+      +'<div class="ac-kv"><span>ジェム</span><b id="ac-s-gems">'+g.gems+'</b></div>'
+      +'<div class="ac-kv"><span>レーティング</span><b id="ac-s-rt">待ち '+rt('waits')+'・何切る '+rt('nanikiru')+'・リーチ '+rt('riichi')+'</b></div>'
+      +'<div class="ac-kv"><span>連続学習</span><b id="ac-s-streak">'+g.streak+'日（最長 '+g.bestStreak+'日）</b></div>'
+      +'<div class="ac-kv"><span>クリアした レッスン</span><b id="ac-s-lessons">'+g.lessons+'</b></div>'
+      +'<div class="ac-kv"><span>学習した 日</span><b id="ac-s-days">'+g.days+'日</b></div>'
+      +'<div class="ac-kv"><span>今日の復習</span><b id="ac-s-review">'+g.review+'問</b></div>'
+      +(g.start?'<div class="ac-kv"><span>スタート地点</span><b>SECTION '+(g.start+1)+'</b></div>':'')
+      +'</div>'
+      +'<ul class="ac-list"><li>引き継げるのは 1回だけ です。</li><li>アカウントの はじめの 120ジェムと 足し算は しません（ジェムは この端末の 数に なります）。</li>'
+      +'<li>この端末の 記録は 消えません。</li><li>引き継いだ 記録は「ゲストの ときの 記録」として 区別して 保存されます。</li>'
+      +'<li>この後の 学習は、まだ 自動では クラウドに 保存されません。</li></ul>'
+      +err+'<button class="btn" id="ac-do-import" onclick="accImport()"'+(b?' disabled':'')+'>'+(b?'引き継いでいます…':'引き継ぐ')+'</button>'
+      +'<button class="btn gray ac-sub-btn" id="ac-skip-import" onclick="ACC.view=\'account\';ACC.err=\'\';accRender()"'+(b?' disabled':'')+'>いまは しない</button>';
+  }else if(v==='result'){
+    const r=ACC.result||{};
+    h='<h3>'+(r.ok?'引き継ぎました':'引き継げませんでした')+devTag+'</h3>'
+      +'<p id="ac-res-msg" class="'+(r.ok?'ac-ok':'ac-err')+'">'+accEsc(r.msg||'')+'</p>'
+      +(r.reasons&&r.reasons.length?'<ul class="ac-list" id="ac-reasons">'+r.reasons.map(x=>'<li>'+accEsc(x)+'</li>').join('')+'</ul>':'')
+      +(r.ok?'':'<p class="ac-small">この端末の 記録は そのまま です。</p>')
+      +(r.retry?'<button class="btn" id="ac-retry" onclick="accImport()">もう一度 送る</button>':'')
+      +'<button class="btn gray ac-sub-btn" id="ac-to-account" onclick="ACC.view=\'account\';accRender()">アカウントへ もどる</button>'+close;
+  }
+  openModal('<div class="ac-modal" id="ac-modal">'+h+'</div>');
+  const f=document.getElementById(v==='email'?'ac-email':v==='code'?'ac-code':'');
+  if(f&&!b) setTimeout(()=>{ try{ f.focus(); }catch(e){} },30);
+}
+/* ---- 操作 ---- */
+function accSendOtp(ev){
+  if(ev) ev.preventDefault();
+  if(ACC.busy) return false;
+  const inp=document.getElementById('ac-email'), email=(inp?inp.value:ACC.email).trim().toLowerCase();
+  ACC.email=email;
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||email.length>254){ ACC.err='メールアドレスを たしかめてください'; accRender(); return false; }
+  ACC.busy=true; ACC.err=''; ACC.info=''; accRender();
+  accEnsure().then(sb=>sb.auth.signInWithOtp({email,options:{shouldCreateUser:true}})).then(r=>{
+    if(r.error) throw r.error;
+    ACC.busy=false; ACC.sentAt=Date.now(); ACC.view='code'; accRender();
+  }).catch(e=>{ ACC.busy=false; ACC.err=accErrMsg(e); accRender(); });
+  return false;
+}
+function accResend(){
+  if(ACC.busy||Date.now()-ACC.sentAt<ACC_RESEND_SEC*1000) return;
+  ACC.busy=true; ACC.err=''; ACC.info=''; accRender();
+  accEnsure().then(sb=>sb.auth.signInWithOtp({email:ACC.email,options:{shouldCreateUser:true}})).then(r=>{
+    if(r.error) throw r.error;
+    ACC.busy=false; ACC.sentAt=Date.now(); ACC.info='新しい コードを 送りました（前の コードは 使えません）'; accRender();
+  }).catch(e=>{ ACC.busy=false; ACC.err=accErrMsg(e); accRender(); });
+}
+function accEditEmail(){ if(ACC.busy) return; ACC.view='email'; ACC.err=''; ACC.info=''; accRender(); }
+function accVerify(ev){
+  if(ev) ev.preventDefault();
+  if(ACC.busy) return false;
+  const inp=document.getElementById('ac-code'), code=(inp?inp.value:'').replace(/\s/g,'');
+  if(!new RegExp('^\\d{'+ACC_OTP_LEN+'}$').test(code)){ ACC.err=ACC_OTP_LEN+'けたの 数字を 入力してください'; accRender(); return false; }
+  ACC.busy=true; ACC.err=''; accRender();
+  accEnsure().then(sb=>sb.auth.verifyOtp({email:ACC.email,token:code,type:'email'})).then(r=>{
+    if(r.error) throw r.error;
+    ACC.user=r.data&&r.data.user?r.data.user:(r.data&&r.data.session?r.data.session.user:null);
+    ACC.busy=false; ACC.view='account'; ACC.overview=null; accRender();
+    return accRefreshOverview().then(()=>{ if(ACC.open&&ACC.view==='account'&&accImportState()==='eligible'){ ACC.view='import'; accRender(); } });
+  }).catch(e=>{ ACC.busy=false; ACC.err=accErrMsg(e); accRender(); });
+  return false;
+}
+function accLogout(){
+  if(ACC.busy||!ACC.sb) return;
+  ACC.busy=true; accRender();
+  ACC.sb.auth.signOut({scope:'local'}).catch(()=>{}).then(()=>{
+    ACC.busy=false; ACC.user=null; ACC.overview=null; ACC.view='email'; ACC.email='';
+    ACC.info='ログアウトしました。この端末の 記録は そのまま 残っています';
+    accClose();
+  });
+}
+const ACC_REASON_JA={xp_over_limit:'XP が 多すぎます', gems_over_limit:'ジェムが 多すぎます', freeze_out_of_range:'フリーズの 数が 正しく ありません',
+  unknown_theme:'知らない テーマの 進み具合が あります', invalid_progress:'進み具合の 値が 正しく ありません', progress_over_lessons:'レッスン数より 多い 進み具合が あります',
+  invalid_learning_day:'学習した 日の 記録が 正しく ありません', learning_day_before_start:'サービス開始より 前の 学習日が あります',
+  learning_day_in_future:'未来の 学習日が あります', too_many_learning_days:'学習した 日が 多すぎます',
+  rating_out_of_range:'レーティングの 値が 正しく ありません', rating_count_over_limit:'レーティングの 回答数が 多すぎます', unknown_rating_category:'知らない レーティングが あります',
+  invalid_place_start:'スタート地点が 正しく ありません', too_many_review_items:'今日の復習が 多すぎます', invalid_review_item:'今日の復習の 記録が 正しく ありません',
+  invalid_training_record:'トレーニングの 記録が 正しく ありません', too_many_training_records:'トレーニングの 記録が 多すぎます',
+  unknown_chest:'知らない 宝箱の 記録が あります', invalid_state:'記録の 形が 正しく ありません'};
+function accReasonJa(r){ const k=String(r).split(':')[0]; return (ACC_REASON_JA[k]||'記録に 正しくない ところが あります')+(String(r).indexOf(':')>0?'（'+String(r).slice(k.length+1)+'）':''); }
+function accImport(){
+  if(ACC.busy||!ACC.sb||!ACC.user) return;
+  const uid=ACC.user.id, a=accRead();
+  if(a.owner) return;
+  if(a.pending&&a.pending.uid!==uid) return;   // R107.2: 別の アカウントの 結果が わかるまで 送らない
+  let ev=a.pending&&a.pending.uid===uid?a.pending.ev:null;
+  if(!ev){ ev=accUuid(); a.pending={ev,uid,email:(ACC.user&&ACC.user.email)||'',at:new Date().toISOString()}; if(!accWrite(a)){ ACC.err='この端末に 保存できませんでした'; accRender(); return; } }
+  let payload; try{ payload=accBuildPayload(); }catch(e){ ACC.err='記録を 読めませんでした'; accRender(); return; }
+  ACC.busy=true; ACC.err=''; accRender();
+  ACC.sb.auth.getSession().then(r=>{
+    const s=r.data.session; if(!s) throw {code:'no_session'};
+    return fetch(ACC_CFG.url+ACC_CFG.fnImport,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+s.access_token,'apikey':ACC_CFG.key},
+      body:JSON.stringify({event_id:ev,payload})}).then(res=>res.json().catch(()=>({})).then(j=>({st:res.status,j})));
+  }).then(({st,j})=>{
+    ACC.busy=false;
+    const b=accRead();
+    if(st===200&&j&&(j.status==='applied'||j.status==='duplicate')){
+      b.owner={uid,email:(ACC.user&&ACC.user.email)||'',at:new Date().toISOString(),ev}; b.pending=null; accWrite(b);
+      ACC.result={ok:true,msg:'この端末の 記録を アカウントに 引き継ぎました。この端末の 記録も そのまま 残っています。'};
+    }else if(st===422&&j&&j.error==='guest_data_rejected'){
+      b.pending=null; accWrite(b);
+      ACC.result={ok:false,msg:'記録に 正しくない ところが あるため、引き継ぎを 中止しました。',reasons:(j.reasons||[]).slice(0,8).map(accReasonJa)};
+    }else if(st===409){
+      b.pending=null; accWrite(b);
+      ACC.result={ok:false,msg:j&&j.error==='already_imported'?'このアカウントには すでに 引き継ぎ済みです。':'このアカウントには すでに 記録が あるため、引き継ぎません（合算・上書きは しません）。'};
+    }else if(st===401||st===403){
+      ACC.result={ok:false,msg:'ログインが 切れました。ログインし直してから もう一度 ためしてください。'};
+    }else if(st===413){
+      b.pending=null; accWrite(b);
+      ACC.result={ok:false,msg:'記録が 大きすぎて 送れませんでした。'};
+    }else{
+      ACC.result={ok:false,retry:true,msg:'引き継げたか わかりませんでした。もう一度 送っても 二重には なりません。'};
+    }
+    ACC.view='result'; accRender(); accRefreshOverview();
+  }).catch(e=>{
+    ACC.busy=false;
+    ACC.result={ok:false,retry:true,msg:e&&e.code==='no_session'?'ログインが 切れました。ログインし直してください。':accErrMsg(e)+'（もう一度 送っても 二重には なりません）'};
+    ACC.view='result'; accRender();
+  });
+}
 
 /* ================= 起動 ================= */
 if(PROTOTYPE_MODE){ document.getElementById('nav-shop').style.display='none'; }  // ショップタブ非表示(PROTOTYPE_MODE=falseで復帰)
@@ -22543,6 +23012,7 @@ if(S.dev){ const v=validateV3(); console.log('[v3検証]', v.ok?'OK':'NG', v.cou
 frzCheck();                     // R99: きのうまでの 休みを 判定(同じ日に 何度 ひらいても 1回だけ)
 renderHUD(); renderPath();      // コース(ロード)を先に構築しておく
 showScreen('home');             // 起動時の初期画面はホーム(今日の状況→ミッション→つづきから)
+accBoot();                      // R107: ログイン中なら セッションを 戻す(ゲストは 何も しない・通信しない)
 placeBoot();                    // R104: 実質的に 学習を 始めていない 人だけ、初回レベル選択
 if(rubyModeFull()) rubyFullApply(document.body);
 if(appUpdateAfterBoot()){       // 「最新版に更新」から起動したときだけ完了を知らせる(再読込はしない)
